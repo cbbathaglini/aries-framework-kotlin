@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.IndyCredentialView
+import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -36,6 +37,7 @@ data class CredentialExchangeRecord(
     var credentialAttributes: List<CredentialPreviewAttribute>? = null,
     var indyRequestMetadata: String? = null,
     var credentialDefinitionId: String? = null,
+    var role: CredentialRole?  = null
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
@@ -66,6 +68,12 @@ data class CredentialExchangeRecord(
     fun assertState(vararg expectedStates: CredentialState) {
         if (!expectedStates.contains(this.state)) {
             throw Exception("Credential record is in invalid state ${this.state}. Valid states are: $expectedStates")
+        }
+    }
+
+    fun assertRole(vararg expectedRoles: CredentialRole) {
+        if (!expectedRoles.contains(this.role)) {
+            throw Exception("Credential record is in invalid role ${this.role}. Valid roles are: $expectedRoles")
         }
     }
 
