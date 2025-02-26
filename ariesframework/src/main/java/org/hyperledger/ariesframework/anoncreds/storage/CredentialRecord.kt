@@ -1,11 +1,16 @@
 package org.hyperledger.ariesframework.anoncreds.storage
 
+import kotlinx.serialization.Serializable
 import anoncreds_uniffi.Credential
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
+import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
+import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -28,6 +33,7 @@ class CredentialRecord(
     var schemaIssuerId: String,
     var issuerId: String,
     var credentialDefinitionId: String,
+    var revocationNotification: RevocationNotification? = null
 ) : BaseRecord() {
     constructor(
         tags: Tags? = null,
@@ -42,6 +48,7 @@ class CredentialRecord(
         schemaIssuerId: String,
         issuerId: String,
         credentialDefinitionId: String,
+        revocationNotification: RevocationNotification
     ) : this(
         BaseRecord.generateId(),
         tags,
@@ -58,6 +65,7 @@ class CredentialRecord(
         schemaIssuerId,
         issuerId,
         credentialDefinitionId,
+        revocationNotification
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         for ((key, value) in credentialObject.values()) {
@@ -81,4 +89,34 @@ class CredentialRecord(
         tags["credentialDefinitionId"] = credentialDefinitionId
         return tags
     }
+
+
+    fun toCredentialExchangeRecord(
+        connectionId: String,
+        threadId: String,
+        state: CredentialState,
+        protocolVersion: String,
+        role: CredentialRole? = null
+    ): CredentialExchangeRecord {
+        return CredentialExchangeRecord(
+            id = this.id,
+            _tags = this._tags,
+            createdAt = this.createdAt,
+            updatedAt = this.updatedAt,
+            connectionId = connectionId,
+            threadId = threadId,
+            state = state,
+            protocolVersion = protocolVersion,
+            credentialDefinitionId = this.credentialDefinitionId,
+            revocationNotification = this.revocationNotification,
+            credentials = mutableListOf(CredentialRecordBinding(credentialRecordType = "indy", credentialRecordId = this.id)),
+            role = role
+        )
+    }
+
+    override fun toString(): String {
+        return "CredentialRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, credentialId='$credentialId', credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, linkSecretId='$linkSecretId', credential='$credential', schemaId='$schemaId', schemaName='$schemaName', schemaVersion='$schemaVersion', schemaIssuerId='$schemaIssuerId', issuerId='$issuerId', credentialDefinitionId='$credentialDefinitionId', revocationNotification=$revocationNotification)"
+    }
+
+
 }

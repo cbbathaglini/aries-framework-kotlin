@@ -357,21 +357,21 @@ class CredentialServiceV2(val agent: Agent) {
         )
 
         val credentialId = UUID.randomUUID().toString()
-        agent.credentialRepository.save(
-            CredentialRecord(
-                credentialId = credentialId,
-                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
-                revocationRegistryId = processedCredential.revRegId(),
-                linkSecretId = agent.wallet.linkSecretId!!,
-                credentialObject = processedCredential,
-                schemaId = processedCredential.schemaId(),
-                schemaName = schema.name(),
-                schemaVersion = schema.version(),
-                schemaIssuerId = schema.issuerId(),
-                issuerId = credentialDefinition.issuerId(),
-                credentialDefinitionId = processedCredential.credDefId(),
-            ),
-        )
+//        agent.credentialRepository.save(
+//            CredentialRecord(
+//                credentialId = credentialId,
+//                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
+//                revocationRegistryId = processedCredential.revRegId(),
+//                linkSecretId = agent.wallet.linkSecretId!!,
+//                credentialObject = processedCredential,
+//                schemaId = processedCredential.schemaId(),
+//                schemaName = schema.name(),
+//                schemaVersion = schema.version(),
+//                schemaIssuerId = schema.issuerId(),
+//                issuerId = credentialDefinition.issuerId(),
+//                credentialDefinitionId = processedCredential.credDefId()
+//            ),
+//        )
 
         credentialRecord.credentials.add(CredentialRecordBinding("indy", credentialId))
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, issueMessage, credentialRecord.id)

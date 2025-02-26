@@ -97,6 +97,14 @@ class WalletMainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        //show an alert on revocation of credential - revocation notification
+        app.agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEvent> {
+            lifecycleScope.launch(Dispatchers.Main) {
+                showAlert("Credential revoked")
+            }
+        }
+
         // Show an alert on basic message, this is useful for debugging.
         app.agent.eventBus.subscribe<AgentEvents.BasicMessageEvent> {
             lifecycleScope.launch(Dispatchers.Main) {

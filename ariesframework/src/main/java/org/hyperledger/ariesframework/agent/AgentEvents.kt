@@ -1,10 +1,12 @@
 package org.hyperledger.ariesframework.agent
 
+import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.problemreports.messages.BaseProblemReportMessage
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
 import org.hyperledger.ariesframework.routing.repository.MediationRecord
 
 sealed interface AgentEvents {
@@ -15,4 +17,6 @@ sealed interface AgentEvents {
     class ProofEvent(val record: ProofExchangeRecord) : AgentEvents
     class BasicMessageEvent(val message: String) : AgentEvents
     class ProblemReportEvent(val message: BaseProblemReportMessage) : AgentEvents
+    class RevocationNotificationReceivedEvent(val record: CredentialExchangeRecord) : AgentEvents
+
 }

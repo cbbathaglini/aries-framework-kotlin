@@ -8,6 +8,7 @@ import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.Routing
 import org.slf4j.LoggerFactory
+import java.util.logging.Logger
 
 class MessageReceiver(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(MessageReceiver::class.java)
@@ -24,6 +25,8 @@ class MessageReceiver(val agent: Agent) {
                 decryptedMessage.senderKey,
                 decryptedMessage.recipientKey,
             )
+
+            logger.info("[MSG RECEIVED] message: ${message.toJsonString()} || ${decryptedMessage.plaintextMessage}")
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
             logger.error("failed to receive message: $e")

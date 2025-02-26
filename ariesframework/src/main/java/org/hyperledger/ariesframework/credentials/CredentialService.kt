@@ -39,9 +39,12 @@ import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
+import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
+import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
+import java.util.Date
 import java.util.UUID
 
 class CredentialService(val agent: Agent) {
@@ -358,6 +361,18 @@ class CredentialService(val agent: Agent) {
         )
 
         val credentialId = UUID.randomUUID().toString()
+
+
+        val revocationMessage = messageContext.plaintextMessage?.let {
+            MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV1
+        }
+        val revocationNotification = revocationMessage?.let {
+            RevocationNotification(
+                comment = it.comment,
+                revocationDate = Date()
+            )
+        } ?: RevocationNotification()
+
         agent.credentialRepository.save(
             CredentialRecord(
                 credentialId = credentialId,
@@ -371,6 +386,7 @@ class CredentialService(val agent: Agent) {
                 schemaIssuerId = schema.issuerId(),
                 issuerId = credentialDefinition.issuerId(),
                 credentialDefinitionId = processedCredential.credDefId(),
+                revocationNotification = revocationNotification
             ),
         )
 

@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.agent
 
+import RevocationNotificationService
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
@@ -56,6 +57,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val credentials = CredentialsCommand(this, dispatcher)
     val credentialRepository = CredentialRepository(this)
     val revocationService = RevocationService(this)
+    val revocationNotificationService = RevocationNotificationService(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
     val proofs = ProofCommand(this, dispatcher)

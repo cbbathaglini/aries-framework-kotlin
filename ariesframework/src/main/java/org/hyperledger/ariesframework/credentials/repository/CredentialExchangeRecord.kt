@@ -10,6 +10,7 @@ import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttrib
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.IndyCredentialView
 import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
+import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -37,7 +38,8 @@ data class CredentialExchangeRecord(
     var credentialAttributes: List<CredentialPreviewAttribute>? = null,
     var indyRequestMetadata: String? = null,
     var credentialDefinitionId: String? = null,
-    var role: CredentialRole?  = null
+    var role: CredentialRole?  = null,
+    var revocationNotification: RevocationNotification? = null
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

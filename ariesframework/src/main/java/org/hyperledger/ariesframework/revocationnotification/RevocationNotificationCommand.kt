@@ -1,0 +1,14 @@
+package org.hyperledger.ariesframework.revocationnotification
+
+import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.credentials.messages.CredentialAckMessage
+import org.hyperledger.ariesframework.credentials.messages.IssueCredentialMessage
+import org.hyperledger.ariesframework.credentials.messages.OfferCredentialMessage
+import org.hyperledger.ariesframework.credentials.messages.ProposeCredentialMessage
+import org.hyperledger.ariesframework.credentials.messages.RequestCredentialMessage
+import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
+
+class RevocationNotificationCommand {
+
+
+}
