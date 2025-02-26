@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-class Formats(
+class Format(
     @SerialName("attach_id")
     var attachId: String? = null,
 
