@@ -17,7 +17,6 @@ import org.hyperledger.ariesframework.revocationnotification.message.RevocationN
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher){
     private val logger = LoggerFactory.getLogger(RevocationNotificationService::class.java)

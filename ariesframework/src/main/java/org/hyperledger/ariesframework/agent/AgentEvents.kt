@@ -18,5 +18,6 @@ sealed interface AgentEvents {
     class BasicMessageEvent(val message: String) : AgentEvents
     class ProblemReportEvent(val message: BaseProblemReportMessage) : AgentEvents
     class RevocationNotificationReceivedEvent(val record: CredentialExchangeRecord) : AgentEvents
+    class RevocationNotificationReceivedEventV2(val record: CredentialExchangeRecord) : AgentEvents
 
 }
