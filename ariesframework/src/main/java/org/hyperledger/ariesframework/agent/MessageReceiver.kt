@@ -25,8 +25,6 @@ class MessageReceiver(val agent: Agent) {
                 decryptedMessage.senderKey,
                 decryptedMessage.recipientKey,
             )
-
-            logger.info("[MSG RECEIVED] message: ${message.toJsonString()} || ${decryptedMessage.plaintextMessage}")
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
             logger.error("failed to receive message: $e")
