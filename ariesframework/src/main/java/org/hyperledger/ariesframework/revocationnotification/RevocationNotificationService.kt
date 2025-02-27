@@ -1,5 +1,4 @@
 
-import org.slf4j.Logger
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -9,15 +8,14 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
+import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.revocationnotification.handler.RevocationNotificationHandlerV1
 import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher){
     private val logger = LoggerFactory.getLogger(RevocationNotificationService::class.java)

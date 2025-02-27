@@ -9,9 +9,8 @@ import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
-import org.hyperledger.ariesframework.wallet.Wallet
 import java.io.File
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"

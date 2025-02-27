@@ -1,0 +1,32 @@
+package org.hyperledger.ariesframework.credentials.v2.handlers
+
+import org.hyperledger.ariesframework.InboundMessageContext
+import org.hyperledger.ariesframework.OutboundMessage
+import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.agent.MessageHandler
+import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.slf4j.LoggerFactory
+
+class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
+
+    private val logger = LoggerFactory.getLogger(OfferCredentialHandlerV2::class.java)
+    override val messageType = OfferCredentialMessageV2.type
+
+    override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
+        logger.info("[log][handle] OFFER CREDENTIAL HANDLER 2.0")
+        val credentialRecord = agent.credentialServiceV2.processOffer(messageContext)
+
+        if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
+            agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
+        ) {
+            val message = agent.credentialServiceV2.createRequest(AcceptOfferOptions(credentialRecord.id))
+            return OutboundMessage(message, messageContext.connection!!)
+        }
+
+        logger.info("[log][handle] returning null")
+        return null
+    }
+
+}

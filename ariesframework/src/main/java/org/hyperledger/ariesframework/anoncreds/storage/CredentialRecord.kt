@@ -6,10 +6,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import org.hyperledger.ariesframework.Tags
-import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
+import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v1.repository.CredentialRecordBinding
+import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 

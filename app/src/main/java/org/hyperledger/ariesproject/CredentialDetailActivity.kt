@@ -33,6 +33,10 @@ class CredentialDetailActivity : AppCompatActivity() {
                         CredentialDetailFragment.ARG_CREDENTIAL,
                         intent.getStringExtra(CredentialDetailFragment.ARG_CREDENTIAL),
                     )
+                    putString(
+                        CredentialDetailFragment.ARG_CREDENTIAL_ID,
+                        intent.getStringExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID),
+                    )
                 }
             }
 

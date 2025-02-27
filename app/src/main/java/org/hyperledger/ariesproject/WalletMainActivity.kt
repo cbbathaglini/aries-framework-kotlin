@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.AgentEvents
-import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
@@ -83,6 +83,24 @@ class WalletMainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        /* CredentialEvent for version 2.0 */
+        app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
+            lifecycleScope.launch(Dispatchers.Main) {
+                if (it.record.state == CredentialState.OfferReceived) {
+                    Log.e("[log]state", it.record.toString())
+                    runOnConfirm("(2.0) Accept credential?", action = {
+                        getCredentialV2(it.record.id)
+                    }, negAction = {
+                        declineCredentialV2(it.record.id)
+                    })
+                } else if (it.record.state == CredentialState.Done) {
+                    credentialProgress?.dismiss()
+                    showAlert("(2.0) Credential received")
+                }
+            }
+        }
+
         app.agent.eventBus.subscribe<AgentEvents.ProofEvent> {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == ProofState.RequestReceived) {
@@ -203,6 +221,28 @@ class WalletMainActivity : AppCompatActivity() {
         }
     }
 
+
+    /* v2.0 */
+    private fun declineCredentialV2(id: String) {
+        val app = application as WalletApp
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                app.agent.credentialsV2.declineOffer(
+                    AcceptOfferOptions(
+                        credentialRecordId = id,
+                        autoAcceptCredential = AutoAcceptCredential.Never,
+                    ),
+                )
+            } catch (e: Exception) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    Log.d("demo", e.localizedMessage)
+                    showAlert("Failed to decline a credential.")
+                }
+            }
+        }
+    }
+
     private fun declineProof(id: String) {
         val app = application as WalletApp
 
@@ -242,6 +282,37 @@ class WalletMainActivity : AppCompatActivity() {
             job.cancel()
         }
         progress.show()
+        credentialProgress = progress
+    }
+
+    private fun getCredentialV2(id: String) {
+        val app = application as WalletApp
+        val progress = ProgressDialog(this)
+        progress.setTitle("Loading")
+        progress.setCancelable(true)
+
+
+        val job = lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                app.agent.credentialsV2.acceptOffer(
+                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                )
+            } catch (e: Exception) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    Log.d("demo", e.localizedMessage)
+                    progress.dismiss()
+                    showAlert("Failed to receive a credential.")
+                }
+            }
+        }
+
+        Log.e("[log] get", "getcredential" )
+        progress.setOnCancelListener {
+            job.cancel()
+        }
+        progress.show()
+
+
         credentialProgress = progress
     }
 

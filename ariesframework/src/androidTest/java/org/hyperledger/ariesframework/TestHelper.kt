@@ -12,7 +12,7 @@ import org.hyperledger.ariesframework.connection.models.ConnectionState
 import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
