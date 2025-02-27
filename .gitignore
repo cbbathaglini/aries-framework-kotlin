@@ -1,0 +1,32 @@
+# Ignore Android Studio specific files
+.idea/
+*.iml
+*.hprof
+
+# Ignore build-related files
+/build/
+.gradle/
+.local/
+captures/
+
+# Ignore log files and system files
+/logs/
+*.log
+*.swp
+*.swo
+*.DS_Store
+
+# Ignore dependency caches
+/.cxx/
+/.externalNativeBuild/
+/gradle/
+/out/
+
+# Ignore local properties (like SDK paths)
+/local.properties
+
+# Ignore Generated Files (APT, DataBinding, etc.)
+/.navigation/
+/intermediates/
+/generated/
+/incremental/

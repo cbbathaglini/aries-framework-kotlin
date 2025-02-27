@@ -35,6 +35,7 @@ import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CreateOfferOptions
 import org.hyperledger.ariesframework.credentials.models.CreateProposalOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialPreview
+import org.hyperledger.ariesframework.credentials.models.CredentialRecordType
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
@@ -390,7 +391,7 @@ class CredentialService(val agent: Agent) {
             ),
         )
 
-        credentialRecord.credentials.add(CredentialRecordBinding("indy", credentialId))
+        credentialRecord.credentials.add(CredentialRecordBinding(CredentialRecordType.Indy, credentialId))
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, issueMessage, credentialRecord.id)
         updateState(credentialRecord, CredentialState.CredentialReceived)
 

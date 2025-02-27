@@ -7,15 +7,16 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialRecordType
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.IndyCredentialView
-import org.hyperledger.ariesframework.credentialsv2.models.CredentialRole
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
 data class CredentialRecordBinding(
-    val credentialRecordType: String,
+    val credentialRecordType: CredentialRecordType,
     val credentialRecordId: String,
 )
 
