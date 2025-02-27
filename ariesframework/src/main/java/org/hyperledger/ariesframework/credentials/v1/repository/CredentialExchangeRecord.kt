@@ -75,6 +75,10 @@ data class CredentialExchangeRecord(
         }
     }
 
+    fun setToRequestSent(){
+        this.state = CredentialState.RequestSent
+    }
+
     fun assertRole(vararg expectedRoles: CredentialRole) {
         if (!expectedRoles.contains(this.role)) {
             throw Exception("Credential record is in invalid role ${this.role}. Valid roles are: $expectedRoles")

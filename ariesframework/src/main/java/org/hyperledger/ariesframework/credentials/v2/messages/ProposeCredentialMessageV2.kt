@@ -6,7 +6,7 @@ import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
-import org.hyperledger.ariesframework.credentials.v2.formats.Format
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 class ProposeCredentialMessageV2(

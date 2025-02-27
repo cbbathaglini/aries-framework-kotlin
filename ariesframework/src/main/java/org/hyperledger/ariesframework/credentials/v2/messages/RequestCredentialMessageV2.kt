@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.REQUEST_CREDENTIAL
-import org.hyperledger.ariesframework.credentials.v2.formats.Format
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 class RequestCredentialMessageV2(
@@ -25,10 +25,12 @@ class RequestCredentialMessageV2(
 
     companion object {
         const val INDY_CREDENTIAL_REQUEST_ATTACHMENT_ID = "libindy-cred-request-0"
+        const val FORMAT = "hlindy/cred-abstract@v2.0"
         val type = REQUEST_CREDENTIAL
     }
 
     fun getRequestAttachmentById(id: String): Attachment? {
         return requestAttachments.find { it.id == id }
     }
+
 }

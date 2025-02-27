@@ -6,7 +6,6 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
-import org.hyperledger.ariesframework.credentials.v2.formats.Format
 
 @Serializable
 data class CreateProposalOptionsV2(

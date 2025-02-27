@@ -63,4 +63,8 @@ class Attachment(
             )
         }
     }
+
+    override fun toString(): String {
+        return "Attachment(id='$id', description=$description, filename=$filename, mimetype=$mimetype, lastModified=$lastModified, byteCount=$byteCount, data=$data)"
+    }
 }

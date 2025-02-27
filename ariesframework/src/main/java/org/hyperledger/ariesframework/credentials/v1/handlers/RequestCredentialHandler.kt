@@ -7,11 +7,14 @@ import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
+import org.slf4j.LoggerFactory
 
 class RequestCredentialHandler(val agent: Agent) : MessageHandler {
+    private val logger = LoggerFactory.getLogger(RequestCredentialHandler::class.java)
     override val messageType = RequestCredentialMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
+        logger.info("[IDD][ORDER][handle] RequestCredentialHandler ")
         val credentialRecord = agent.credentialService.processRequest(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||

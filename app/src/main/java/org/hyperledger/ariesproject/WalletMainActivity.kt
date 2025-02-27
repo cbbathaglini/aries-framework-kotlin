@@ -88,7 +88,7 @@ class WalletMainActivity : AppCompatActivity() {
         app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == CredentialState.OfferReceived) {
-                    Log.e("[log]state", it.record.toString())
+                    Log.e("[IDD] state", it.record.toString())
                     runOnConfirm("(2.0) Accept credential?", action = {
                         getCredentialV2(it.record.id)
                     }, negAction = {

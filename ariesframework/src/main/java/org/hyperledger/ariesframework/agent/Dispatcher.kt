@@ -16,15 +16,18 @@ class Dispatcher(val agent: Agent) {
     suspend fun dispatch(messageContext: InboundMessageContext) {
         logger.debug("Dispatching message of type: ${messageContext.message.type}")
 
-        logger.info("OFFER CREDENTIAL HANDLER")
+        logger.info("[IDD][DISPATCHER] my message: ${messageContext.message}")
+        logger.info("[IDD][DISPATCHER] my type of message: ${messageContext.message.type}")
+        logger.info("[IDD] all handlers available --------------------------------------------------------")
         handlers.forEach { (key, value) ->
-            logger.info("Available handler: Type = $key, Handler = $value")
+            logger.info("[IDD] Available handler: Type = $key, Handler = $value")
         }
 
         val handler = handlers[messageContext.message.type]
             ?: throw Exception("No handler for message type: ${messageContext.message.type}")
 
         try {
+
             val outboundMessage = handler.handle(messageContext)
             if (outboundMessage != null) {
                 logger.debug("Finishing dispatch with message of type: ${outboundMessage.payload.type}")

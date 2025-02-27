@@ -44,11 +44,17 @@ open class AgentMessage(
         type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)
     }
 
+    override fun toString(): String {
+        return "AgentMessage(id='$id', type='$type', thread=$thread, transport=$transport)"
+    }
+
     companion object {
         fun generateId(): String {
             return UUID.randomUUID().toString()
         }
     }
+
+
 }
 
 object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentMessage::class) {

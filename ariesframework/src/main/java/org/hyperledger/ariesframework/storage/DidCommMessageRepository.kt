@@ -3,8 +3,11 @@ package org.hyperledger.ariesframework.storage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.Dispatcher
+import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
+import org.slf4j.LoggerFactory
 
 class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(DidCommMessageRecord::class, agent) {
+    private val logger = LoggerFactory.getLogger(DidCommMessageRepository::class.java)
     override suspend fun save(record: DidCommMessageRecord) {
         throw Exception("Do not call save() directly. We need to change the prefix of the message type before save the record.")
     }
@@ -32,10 +35,13 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
 
     suspend fun getAgentMessage(associatedRecordId: String, messageType: String): String {
         var type = messageType
+        logger.info("[IDD] type: ${type} || associatedRecordId: ${associatedRecordId}")
         if (agent.agentConfig.useLegacyDidSovPrefix) {
             type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
         }
+        logger.info("[IDD] type again: ${type}")
         val record = getSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"$type\"}")
+        logger.info("[IDD] message: ${record.message} || role: ${record.role}")
         return record.message
     }
 

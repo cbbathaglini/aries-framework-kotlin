@@ -24,4 +24,10 @@ class CredentialPreviewAttribute (
     fun toJSON(): String {
         return Json.encodeToString(this)
     }
+
+    override fun toString(): String {
+        return "CredentialPreviewAttribute(name='$name', mimeType=$mimeType, value='$value')"
+    }
+
+
 }

@@ -4,7 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.v2.formats.Format
+import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.ISSUE_CREDENTIAL
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 class IssueCredentialMessageV2(
@@ -20,7 +21,8 @@ class IssueCredentialMessageV2(
 ) : AgentMessage(generateId(), type) {
 
     companion object {
-        val type = "https://didcomm.org/issue-credential/2.0/issue-credential"
+        const val INDY_CREDENTIAL_ATTACHMENT_ID = "libindy-cred-0"
+        val type = ISSUE_CREDENTIAL
     }
 
     fun getCredentialAttachmentById(id: String): Attachment? {

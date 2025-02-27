@@ -6,6 +6,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
@@ -15,28 +16,8 @@ import org.slf4j.LoggerFactory
 class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
 
-//    init {
-//        registerHandlers(dispatcher)
-//        registerMessages()
-//    }
-//
-//    private fun registerHandlers(dispatcher: Dispatcher) {
-//        dispatcher.registerHandler(CredentialAckHandlerV2(agent))
-//        //dispatcher.registerHandler(IssueCredentialHandlerV2(agent))
-//        dispatcher.registerHandler(OfferCredentialHandlerV2(agent))
-//        //dispatcher.registerHandler(RequestCredentialHandlerV2(agent))
-//    }
-//
-//    private fun registerMessages() {
-//        MessageSerializer.registerMessage(CredentialAckMessageV2.type, CredentialAckMessageV2::class)
-//        MessageSerializer.registerMessage(IssueCredentialMessageV2.type, IssueCredentialMessageV2::class)
-//        MessageSerializer.registerMessage(OfferCredentialMessageV2.type, OfferCredentialMessageV2::class)
-//        MessageSerializer.registerMessage(ProposeCredentialMessageV2.type, ProposeCredentialMessageV2::class)
-//        MessageSerializer.registerMessage(RequestCredentialMessageV2.type, RequestCredentialMessageV2::class)
-//    }
-
     suspend fun proposeCredential(options: CreateProposalOptionsV2): CredentialExchangeRecord {
-        val (message, credentialRecord) = agent.credentialServiceV2.createProposal(options)
+        val (message, credentialRecord) = agent.credentialServiceV2.createProposeCredentialMessageV2(options)
         agent.messageSender.send(OutboundMessage(message, options.connection))
         return credentialRecord
     }
@@ -48,20 +29,28 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 //        return credentialRecord
 //    }
 //
-    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
-        logger.info("[log]ACCEPTING OFFER")
-        val message = agent.credentialServiceV2.createRequest(options)
-        logger.info("[log]message: ${message.toJsonString()}")
+    suspend fun acceptOffer(options: AcceptOfferOptions) : CredentialExchangeRecord {
+        logger.info("[IDD] initializing credentials command - acceptoffer")
+
+        val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+        printAttributesOfCredential(credentialRecord.credentialAttributes);
 
-        logger.info("[log]credentialRecord: ${credentialRecord.toString()}")
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-        logger.info("[log]connection: ${connection.toString()}")
 
+        logger.info("[IDD] before send message: ${credentialRecord.toString()}")
         agent.messageSender.send(OutboundMessage(message, connection))
-        logger.info("[log]agent.messageSender.send: ${message.toJsonString()}")
-        logger.info("[log]RETURN CredentialExchangeRecord: ${credentialRecord.toString()}")
+
+        logger.info("[IDD] after send message: ${credentialRecord.toString()}")
         return credentialRecord
+    }
+
+    private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
+        if (credentialAttributes != null) {
+            credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
+                logger.info("[IDD] Attribute name: ${attribute.name}, Value: ${attribute.value}")
+            }
+        }
     }
 
     /**

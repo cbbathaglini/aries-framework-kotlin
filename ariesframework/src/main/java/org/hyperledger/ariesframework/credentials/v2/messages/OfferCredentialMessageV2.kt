@@ -4,11 +4,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.messages.IOfferCredentialMessage
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
-import org.hyperledger.ariesframework.credentials.v2.formats.Format
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 class OfferCredentialMessageV2(
@@ -30,10 +28,7 @@ class OfferCredentialMessageV2(
     @SerialName("replacement_id")
     val replacementId: String? = null,
 
-    override val attachment: Attachment,
-    override val credentialRecord: CredentialExchangeRecord,
-
-    ) : AgentMessage(generateId(), type), IOfferCredentialMessage {
+    ) : AgentMessage(generateId(), type) {
 
     companion object {
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "indy"

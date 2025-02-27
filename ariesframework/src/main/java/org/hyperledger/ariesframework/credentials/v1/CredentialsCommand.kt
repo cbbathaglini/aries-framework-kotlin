@@ -14,6 +14,7 @@ import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
 import org.slf4j.LoggerFactory
 
@@ -38,6 +39,14 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         MessageSerializer.registerMessage(OfferCredentialMessage.type, OfferCredentialMessage::class)
         MessageSerializer.registerMessage(ProposeCredentialMessage.type, ProposeCredentialMessage::class)
         MessageSerializer.registerMessage(RequestCredentialMessage.type, RequestCredentialMessage::class)
+    }
+
+    private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
+        if (credentialAttributes != null) {
+            credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
+                logger.info("[IDD][1.0] Attribute name: ${attribute.name}, Value: ${attribute.value}")
+            }
+        }
     }
 
     /**
@@ -80,8 +89,14 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         val message = agent.credentialService.createRequest(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-        agent.messageSender.send(OutboundMessage(message, connection))
 
+        logger.info("[IDD] VERSION 1.0 message: ${message.toString()}")
+        printAttributesOfCredential(credentialRecord.credentialAttributes);
+
+        logger.info("[IDD] messageSender before")
+        agent.messageSender.send(OutboundMessage(message, connection))
+        logger.info("[IDD] messageSender after")
+        logger.info("[IDD] VERSION 1.0 CredentialExchangeRecord: ${credentialRecord.toString()}")
         return credentialRecord
     }
 

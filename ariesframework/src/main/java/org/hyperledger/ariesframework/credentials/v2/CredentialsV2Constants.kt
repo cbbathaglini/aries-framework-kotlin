@@ -8,5 +8,7 @@ class CredentialsV2Constants {
         const val OFFER_CREDENTIAL = "https://didcomm.org/issue-credential/2.0/offer-credential"
         const val REQUEST_CREDENTIAL = "https://didcomm.org/issue-credential/2.0/request-credential"
         const val CREDENTIAL_PREVIEW = "https://didcomm.org/issue-credential/2.0/credential-preview"
+        const val ACK = "https://didcomm.org/issue-credential/2.0/ack"
+        const val ISSUE_CREDENTIAL = "https://didcomm.org/issue-credential/2.0/issue-credential"
     }
 }

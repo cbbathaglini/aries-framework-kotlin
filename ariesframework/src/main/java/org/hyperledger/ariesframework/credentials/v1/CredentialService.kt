@@ -137,13 +137,14 @@ class CredentialService(val agent: Agent) {
      * @return credential record associated with the credential offer message.
      */
     suspend fun processOffer(messageContext: InboundMessageContext): CredentialExchangeRecord {
+        logger.info("[log][handle] process offer 1.0")
         val offerMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as OfferCredentialMessage
 
         require(offerMessage.getOfferAttachmentById(OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID) != null) {
             "Indy attachment with id ${OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
         }
 
-        var credentialRecord = credentialExchangeRepository.findByThreadAndConnectionId(offerMessage.threadId, messageContext.connection?.id)
+        var credentialRecord = credentialExchangeRepository.findByThreadAndConnectionId(offerMessage.threadId, messageContext.connection?.id) // role of credential not searched
         if (credentialRecord != null) {
             agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, offerMessage, credentialRecord.id)
             updateState(credentialRecord, CredentialState.OfferReceived)
@@ -157,7 +158,11 @@ class CredentialService(val agent: Agent) {
                 protocolVersion = "v1",
             )
 
-            agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, offerMessage, credentialRecord.id)
+            agent.didCommMessageRepository.saveAgentMessage(
+                DidCommMessageRole.Receiver,
+                offerMessage,
+                credentialRecord.id
+            )
             credentialExchangeRepository.save(credentialRecord)
             agent.eventBus.publish(AgentEvents.CredentialEvent(credentialRecord.copy()))
         }
@@ -211,13 +216,14 @@ class CredentialService(val agent: Agent) {
             listOf(attachment),
         )
         requestMessage.thread = ThreadDecorator(credentialRecord.threadId)
-
+        logger.info("[IDD][1.0][10] requestMessage: ${requestMessage.toString()}")
         credentialRecord.credentialAttributes = offerMessage.credentialPreview.attributes
         credentialRecord.autoAcceptCredential = options.autoAcceptCredential ?: credentialRecord.autoAcceptCredential
 
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, requestMessage, credentialRecord.id)
         updateState(credentialRecord, CredentialState.RequestSent)
 
+        logger.info("[IDD][1.0] requestMessage: ${requestMessage.toString()}")
         return requestMessage
     }
 
@@ -448,6 +454,7 @@ class CredentialService(val agent: Agent) {
     }
 
     suspend fun updateState(credentialRecord: CredentialExchangeRecord, newState: CredentialState) {
+        logger.info("[IDD][UPDATE] newstate: ${newState}")
         credentialRecord.state = newState
         credentialExchangeRepository.update(credentialRecord)
         agent.eventBus.publish(AgentEvents.CredentialEvent(credentialRecord.copy()))
