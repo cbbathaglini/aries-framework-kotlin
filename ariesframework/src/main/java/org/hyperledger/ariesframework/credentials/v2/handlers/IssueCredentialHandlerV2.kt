@@ -7,17 +7,19 @@ import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v1.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.slf4j.LoggerFactory
 
 class IssueCredentialHandlerV2(val agent: Agent)  : MessageHandler {
 
     private val logger = LoggerFactory.getLogger(IssueCredentialHandlerV2::class.java)
-    override val messageType = IssueCredentialMessage.type
+    override val messageType = IssueCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.info("[IDD][ORDER][handle] IssueCredentialHandlerV2 ")
         val credentialRecord = agent.credentialServiceV2.processIssueCredentialMessage(messageContext)
 
+        logger.info("[IDD][ORDER][handle] afeter processIssueCredentialMessage: ${credentialRecord} ")
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
@@ -25,7 +27,7 @@ class IssueCredentialHandlerV2(val agent: Agent)  : MessageHandler {
             val message = agent.credentialServiceV2.createCredentialAckMessageV2(AcceptCredentialOptions(credentialRecord.id))
             return OutboundMessage(message, messageContext.connection!!)
         }
-        logger.info("[IDD][ORDER][handle] NULLING ")
+        logger.info("[IDD][ORDER][handle] IssueCredentialHandlerV2 returning NULLING ")
         return null
     }
 }

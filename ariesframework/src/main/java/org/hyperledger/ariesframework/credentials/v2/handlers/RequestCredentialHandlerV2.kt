@@ -8,7 +8,6 @@ import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 
 class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
@@ -24,7 +23,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
             val message = agent.credentialServiceV2.createIssueCredentialMessageV2(AcceptRequestOptions(credentialRecord.id))
-            return null //OutboundMessage(message, messageContext.connection!!)
+            return OutboundMessage(message, messageContext.connection!!)
         }
 
         return null

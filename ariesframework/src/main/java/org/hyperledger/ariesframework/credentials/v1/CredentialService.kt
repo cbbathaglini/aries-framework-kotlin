@@ -377,23 +377,30 @@ class CredentialService(val agent: Agent) {
             )
         } ?: RevocationNotification()
 
-        agent.credentialRepository.save(
-            CredentialRecord(
-                credentialId = credentialId,
-                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
-                revocationRegistryId = processedCredential.revRegId(),
-                linkSecretId = agent.wallet.linkSecretId!!,
-                credentialObject = processedCredential,
-                schemaId = processedCredential.schemaId(),
-                schemaName = schema.name(),
-                schemaVersion = schema.version(),
-                schemaIssuerId = schema.issuerId(),
-                issuerId = credentialDefinition.issuerId(),
-                credentialDefinitionId = processedCredential.credDefId(),
-                revocationNotification = revocationNotification
-            ),
-        )
+        logger.info("[IDD] revocationNotification ${revocationNotification.toString()}")
+        try {
 
+            agent.credentialRepository.save(
+                CredentialRecord(
+                    credentialId = credentialId,
+                    credentialRevocationId = processedCredential.revRegIndex()?.toString(),
+                    revocationRegistryId = processedCredential.revRegId(),
+                    linkSecretId = agent.wallet.linkSecretId!!,
+                    credentialObject = processedCredential,
+                    schemaId = processedCredential.schemaId(),
+                    schemaName = schema.name(),
+                    schemaVersion = schema.version(),
+                    schemaIssuerId = schema.issuerId(),
+                    issuerId = credentialDefinition.issuerId(),
+                    credentialDefinitionId = processedCredential.credDefId(),
+                    revocationNotification = revocationNotification
+                ),
+            )
+        }catch (e:Exception){
+            logger.error("[IDD] message error: ${e.message} || ${e.cause}")
+        }
+
+        logger.info("[IDD] revocationNotification ${revocationNotification.toString()}")
         credentialRecord.credentials.add(CredentialRecordBinding("indy", credentialId))
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, issueMessage, credentialRecord.id)
         updateState(credentialRecord, CredentialState.CredentialReceived)

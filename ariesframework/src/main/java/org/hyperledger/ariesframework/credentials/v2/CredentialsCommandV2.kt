@@ -10,6 +10,7 @@ import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAtt
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.slf4j.LoggerFactory
 
@@ -22,23 +23,26 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return credentialRecord
     }
 
-//    suspend fun offerCredential(options: CreateOfferOptionsV2): CredentialExchangeRecord {
-//        val (message, credentialRecord) = agent.credentialServiceV2.createOffer(options)
-//        val connection = options.connection ?: throw Exception("Connection is required for sending credential offer")
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//        return credentialRecord
-//    }
-//
+    suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
+        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessageV2(options)
+        val connection = options.connection ?: throw Exception("Connection is required for sending credential offer")
+        agent.messageSender.send(OutboundMessage(message, connection))
+        return credentialRecord
+    }
+
     suspend fun acceptOffer(options: AcceptOfferOptions) : CredentialExchangeRecord {
         logger.info("[IDD] initializing credentials command - acceptoffer")
 
         val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+
         printAttributesOfCredential(credentialRecord.credentialAttributes);
 
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
 
+        logger.info("[IDD] send message: ${message.toJsonString()}")
         logger.info("[IDD] before send message: ${credentialRecord.toString()}")
+
         agent.messageSender.send(OutboundMessage(message, connection))
 
         logger.info("[IDD] after send message: ${credentialRecord.toString()}")

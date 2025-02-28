@@ -4,9 +4,10 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.problemreports.handlers.ProblemReportHandler
-import org.hyperledger.ariesframework.problemreports.handlers.ProblemReportNotificationHandler
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
-import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportNotificationMessage
+
+//import org.hyperledger.ariesframework.problemreports.handlers.ProblemReportNotificationHandler
+//import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportNotificationMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.slf4j.LoggerFactory
@@ -22,7 +23,7 @@ class ProblemReportsCommand(val agent: Agent, private val dispatcher: Dispatcher
     private fun registerHandlers(dispatcher: Dispatcher) {
         dispatcher.registerHandler(ProblemReportHandler(agent, PresentationProblemReportMessage.type))
         dispatcher.registerHandler(ProblemReportHandler(agent, CredentialProblemReportMessage.type))
-        dispatcher.registerHandler(ProblemReportNotificationHandler(agent, CredentialProblemReportNotificationMessage.type))
+        //dispatcher.registerHandler(ProblemReportNotificationHandler(agent, CredentialProblemReportNotificationMessage.type))
         dispatcher.registerHandler(ProblemReportHandler(agent, MediationProblemReportMessage.type))
     }
 
@@ -30,6 +31,6 @@ class ProblemReportsCommand(val agent: Agent, private val dispatcher: Dispatcher
         MessageSerializer.registerMessage(PresentationProblemReportMessage.type, PresentationProblemReportMessage::class)
         MessageSerializer.registerMessage(CredentialProblemReportMessage.type, CredentialProblemReportMessage::class)
         MessageSerializer.registerMessage(MediationProblemReportMessage.type, MediationProblemReportMessage::class)
-        MessageSerializer.registerMessage(CredentialProblemReportNotificationMessage.type, CredentialProblemReportNotificationMessage::class)
+        //MessageSerializer.registerMessage(CredentialProblemReportNotificationMessage.type, CredentialProblemReportNotificationMessage::class)
     }
 }

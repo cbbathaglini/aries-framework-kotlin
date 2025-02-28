@@ -21,7 +21,7 @@ class IssueCredentialMessageV2(
 ) : AgentMessage(generateId(), type) {
 
     companion object {
-        const val INDY_CREDENTIAL_ATTACHMENT_ID = "libindy-cred-0"
+        const val INDY_CREDENTIAL_ATTACHMENT_ID = "indy"
         val type = ISSUE_CREDENTIAL
     }
 
