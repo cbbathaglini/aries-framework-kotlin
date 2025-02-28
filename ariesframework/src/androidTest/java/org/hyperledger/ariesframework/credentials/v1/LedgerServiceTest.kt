@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials
+package org.hyperledger.ariesframework.credentials.v1
 
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry

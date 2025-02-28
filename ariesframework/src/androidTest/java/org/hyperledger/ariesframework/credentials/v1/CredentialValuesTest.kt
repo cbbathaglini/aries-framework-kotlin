@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials
+package org.hyperledger.ariesframework.credentials.v1
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials
+package org.hyperledger.ariesframework.credentials.v2
 
 import androidx.test.filters.LargeTest
 import kotlinx.coroutines.test.runTest
@@ -10,11 +10,7 @@ import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
-import org.hyperledger.ariesframework.credentials.v1.AcceptCredentialOptions
-import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
-import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
@@ -25,7 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.time.Duration.Companion.seconds
 
-class CredentialsTest {
+class CredentialsV2Test {
     lateinit var faberAgent: Agent
     lateinit var aliceAgent: Agent
     lateinit var credDefId: String
