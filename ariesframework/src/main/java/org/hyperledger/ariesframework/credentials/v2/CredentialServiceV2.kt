@@ -53,6 +53,7 @@ import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
 import org.hyperledger.ariesframework.didcomm.models.Protocol
 import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
+import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
@@ -401,7 +402,7 @@ class CredentialServiceV2(val agent: Agent) {
         val credentialId = UUID.randomUUID().toString()
 
         val revocationMessage = messageContext.plaintextMessage?.let {
-            MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV1
+            MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV2
         }
         logger.info("[IDD] revocationMessage ${revocationMessage?.toJsonString()}")
 
@@ -415,7 +416,7 @@ class CredentialServiceV2(val agent: Agent) {
         logger.info("[IDD] revocationNotification ${revocationNotification.toString()}")
         try {
             //credentialRecord =
-            credentialRepository.save(
+            agent.credentialRepository.save(
                 CredentialRecord(
                     credentialId = credentialId,
                     credentialRevocationId = processedCredential.revRegIndex()?.toString(),
@@ -432,7 +433,7 @@ class CredentialServiceV2(val agent: Agent) {
                 ),
             )
         }catch (e:Exception){
-            logger.error("[IDD] message error: ${e.message} || ${e.cause}")
+            logger.error("[IDD] message error: ${e.message} || ${e.cause} || ${e.stackTrace}")
         }
 
         logger.info("[IDD] credentialRecord ${credentialRecord.toString()}")
@@ -447,8 +448,11 @@ class CredentialServiceV2(val agent: Agent) {
     suspend fun createCredentialAckMessageV2(options: AcceptCredentialOptions): CredentialAckMessageV2 {
         logger.debug("[IDD] initializing createCredentialAckMessageV2")
         var credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
+        logger.debug("[IDD] createCredentialAckMessageV2-credentialRecord ${credentialRecord.toString()}")
         credentialRecord.assertProtocolVersion(CredentialsV2Constants.PROTOCOL_VERSION)
         credentialRecord.assertState(CredentialState.CredentialReceived)
+
+        logger.debug("[IDD] createCredentialAckMessageV2 ${credentialRecord.toString()}")
 
         updateState(credentialRecord, CredentialState.Done)
 
@@ -554,8 +558,8 @@ class CredentialServiceV2(val agent: Agent) {
     }
 
     suspend fun updateState(credentialRecord: CredentialExchangeRecord, newState: CredentialState) {
-        logger.info("[IDD] Updating credential record ${credentialRecord.id} to state ${newState} (previous=${credentialRecord.state}")
-        credentialRecord.setToRequestSent()
+        logger.info("[IDD][UPDATE STATE] Updating credential record ${credentialRecord.id} to state ${newState} (previous=${credentialRecord.state}")
+        credentialRecord.setToState(newState)
         credentialExchangeRepository.update(credentialRecord)
 
         logger.info("[IDD] publish event of ${credentialRecord.toString()}")

@@ -75,9 +75,10 @@ data class CredentialExchangeRecord(
         }
     }
 
-    fun setToRequestSent(){
-        this.state = CredentialState.RequestSent
+    fun setToState(newState:CredentialState){
+        this.state = newState
     }
+
 
     fun assertRole(vararg expectedRoles: CredentialRole) {
         if (!expectedRoles.contains(this.role)) {

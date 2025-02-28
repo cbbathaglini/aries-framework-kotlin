@@ -370,6 +370,8 @@ class CredentialService(val agent: Agent) {
         val revocationMessage = messageContext.plaintextMessage?.let {
             MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV1
         }
+
+        logger.info("[IDD] revocationMessage ${revocationMessage.toString()}")
         val revocationNotification = revocationMessage?.let {
             RevocationNotification(
                 comment = it.comment,
@@ -396,8 +398,9 @@ class CredentialService(val agent: Agent) {
                     revocationNotification = revocationNotification
                 ),
             )
+
         }catch (e:Exception){
-            logger.error("[IDD] message error: ${e.message} || ${e.cause}")
+            logger.error("[IDD] message error: ${e.message} || ${e.cause} || ${e.stackTrace}")
         }
 
         logger.info("[IDD] revocationNotification ${revocationNotification.toString()}")

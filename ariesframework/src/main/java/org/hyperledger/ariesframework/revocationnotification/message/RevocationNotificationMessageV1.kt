@@ -26,4 +26,9 @@ class RevocationNotificationMessageV1(
         pleaseAck = options.pleaseAck
     )
 
+    override fun toString(): String {
+        return "RevocationNotificationMessageV1(issueThread='$issueThread', comment=$comment, pleaseAck=$pleaseAck, messageTypeUri='$messageTypeUri')"
+    }
+
+
 }
