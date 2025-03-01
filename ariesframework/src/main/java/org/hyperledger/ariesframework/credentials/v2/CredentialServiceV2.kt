@@ -316,8 +316,6 @@ class CredentialServiceV2(val agent: Agent) {
         if (credentialExchangeRecord != null) {
             logger.info("[IDD] credential record already exists")
             agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, offerMessage, credentialExchangeRecord.id)
-            //credentialRecord.assertProtocolVersion(CredentialsV2Constants.PROTOCOL_VERSION)
-            //credentialRecord.assertState(CredentialState.ProposalSent)
             updateState(credentialExchangeRecord, CredentialState.OfferReceived)
         } else {
             logger.info("[IDD] credential record doesnt exists")

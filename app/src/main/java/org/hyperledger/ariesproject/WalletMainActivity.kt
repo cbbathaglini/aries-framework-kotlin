@@ -389,6 +389,7 @@ class WalletMainActivity : AppCompatActivity() {
                     val intent = Intent(v.context, CredentialListActivity::class.java)
                     v.context.startActivity(intent)
                 }
+
             }
         }
 
