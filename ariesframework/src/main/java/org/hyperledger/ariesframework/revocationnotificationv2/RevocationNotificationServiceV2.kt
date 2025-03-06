@@ -99,33 +99,17 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         comment: String? = null,
         threadId: String
     ) {
-
-        logger.info("Init processRevocationNotification...")
-        logger.info("-----> connection id: ${connection.id}")
-
-        val credentials = agent.credentialRepository.getAll()
-
-        credentials.forEach { credential ->
-            logger.info("--> Credential: ${credential.toString()}")
-        }
-
-        // Query to search for revocation registry in both qualified and unqualified forms
-        var query = "";
-
-        try {
-            query = Json.encodeToString(
-                mapOf(
-                    "\$or" to listOf(
-                        mapOf(
-                            "revocationRegistryId" to anonCredsRevocationRegistryId,
-                            "credentialRevocationId" to anonCredsCredentialRevocationId
-                        )
+        val query = Json.encodeToString(
+            mapOf(
+                "\$or" to listOf(
+                    mapOf(
+                        "revocationRegistryId" to anonCredsRevocationRegistryId,
+                        "credentialRevocationId" to anonCredsCredentialRevocationId
                     )
                 )
             )
-        }catch (e : Exception){
-            logger.error("error in query: ${e.message.toString()}")
-        }
+        )
+
 
         logger.trace("Getting record by query for revocation notification: $query")
         val credentialRecord = credentialRepository.getSingleByQuery(query)
@@ -134,18 +118,18 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         credentialRecord.revocationNotification = RevocationNotification(comment)
         agent.credentialRepository.update(credentialRecord)
 
-        logger.trace("Emitting RevocationNotificationReceivedEvent")
+        logger.trace("Emitting RevocationNotificationReceivedEventV2")
 
 
         val credentialExchangeRecord = credentialRecord.toCredentialExchangeRecord(
             connection.id,
             threadId,
             CredentialState.Revoked,
-            "v1",
+            "v2",
             CredentialRole.Holder
         )
 
-        agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEvent(credentialExchangeRecord.copy()))
+        agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEventV2(credentialExchangeRecord.copy()))
     }
 
     private fun registerMessageHandlers(dispatcher: Dispatcher) {
