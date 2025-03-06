@@ -192,7 +192,11 @@ class CredentialService(val agent: Agent) {
 
         val credentialOfferJson = offerMessage.getCredentialOffer()
         val credentialOffer = CredentialOffer(credentialOfferJson)
+
+        logger.info("[IDD] credentialOffer: ${credentialOffer.toString()}")
+        logger.info("[IDD] credentialOfferJson: ${credentialOfferJson.toString()}")
         val credentialDefinition = ledgerService.getCredentialDefinition(credentialOffer.credDefId())
+        logger.info("[IDD] credential definition: ${credentialDefinition.toString()}")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val credReqTuple = Prover().createCredentialRequest(

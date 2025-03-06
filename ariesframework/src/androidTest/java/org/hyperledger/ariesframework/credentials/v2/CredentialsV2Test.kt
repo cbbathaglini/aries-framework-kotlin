@@ -8,93 +8,124 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.agent.decorators.AttachmentData
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
-import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 class CredentialsV2Test {
-//    lateinit var faberAgent: Agent
-//    lateinit var aliceAgent: Agent
-//    lateinit var credDefId: String
-//    lateinit var faberConnection: ConnectionRecord
-//    lateinit var aliceConnection: ConnectionRecord
-//
-//    val credentialPreview = CredentialPreview.fromDictionary(mapOf("name" to "John", "age" to "99"))
-//
-//    @Before
-//    fun setUp() = runTest(timeout = 30.seconds) {
-//        val (agents, connections) = TestHelper.setupCredentialTests()
-//        faberAgent = agents.first
-//        aliceAgent = agents.second
-//        faberConnection = connections.first
-//        aliceConnection = connections.second
-//        credDefId = TestHelper.prepareForIssuance(faberAgent, listOf("name", "age"))
-//    }
-//
-//    @After
-//    fun tearDown() = runTest {
-//        faberAgent.reset()
-//        aliceAgent.reset()
-//    }
-//
-//    suspend fun getCredentialRecord(agent: Agent, threadId: String): CredentialExchangeRecord {
-//        return agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
-//    }
-//
-//    @Test @LargeTest
-//    fun testCredentialOffer() = runTest {
-//        // Faber starts with credential offer to Alice.
-//        var faberCredentialRecord = faberAgent.credentials.offerCredential(
-//            CreateOfferOptions(faberConnection, credDefId, credentialPreview.attributes, null, "Offer to Alice"),
-//        )
-//
-//        val threadId = faberCredentialRecord.threadId
-//        var aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
-//        assertEquals(aliceCredentialRecord.state, CredentialState.OfferReceived)
-//
-//        aliceAgent.credentials.acceptOffer(AcceptOfferOptions(aliceCredentialRecord.id))
-//        faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
-//        assertEquals(faberCredentialRecord.state, CredentialState.RequestReceived)
-//
-//        faberAgent.credentials.acceptRequest(AcceptRequestOptions(faberCredentialRecord.id))
-//        aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
-//        assertEquals(aliceCredentialRecord.state, CredentialState.CredentialReceived)
-//
-//        aliceAgent.credentials.acceptCredential(AcceptCredentialOptions(aliceCredentialRecord.id))
-//        aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
-//        assertEquals(aliceCredentialRecord.state, CredentialState.Done)
-//        faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
-//        assertEquals(faberCredentialRecord.state, CredentialState.Done)
-//
-//        val credentialMessage = aliceAgent.credentials.findCredentialMessage(aliceCredentialRecord.id)
-//        assertNotNull(credentialMessage)
-//        val attachment = credentialMessage?.getCredentialAttachmentById(IssueCredentialMessage.INDY_CREDENTIAL_ATTACHMENT_ID)
-//        assertNotNull(attachment)
-//
-//        val credentialJson = attachment?.getDataAsString()
-//        val credential = Json.decodeFromString<JsonObject>(credentialJson!!)
-//        val values = credential["values"]!!.jsonObject
-//        val age = values["age"]!!.jsonObject
-//        assertEquals(age["raw"]!!.jsonPrimitive.content, "99")
-//        assertEquals(age["encoded"]!!.jsonPrimitive.content, "99")
-//
-//        val name = values["name"]!!.jsonObject
-//        assertEquals(name["raw"]!!.jsonPrimitive.content, "John")
-//        assertEquals(
-//            name["encoded"]!!.jsonPrimitive.content,
-//            "76355713903561865866741292988746191972523015098789458240077478826513114743258",
-//        )
-//    }
-//
+    lateinit var faberAgent: Agent
+    lateinit var aliceAgent: Agent
+    lateinit var credDefId: String
+    lateinit var faberConnection: ConnectionRecord
+    lateinit var aliceConnection: ConnectionRecord
+    lateinit var formats: List<Format>
+    lateinit var offerAttachments: List<Attachment>
+
+    val credentialPreview = CredentialPreviewV2.fromDictionary(mapOf("name" to "John", "age" to "99"))
+
+    @Before
+    fun setUp() = runTest(timeout = 30.seconds) {
+        val (agents, connections) = TestHelper.setupCredentialTests()
+        faberAgent = agents.first
+        aliceAgent = agents.second
+        faberConnection = connections.first
+        aliceConnection = connections.second
+        credDefId = TestHelper.prepareForIssuance(faberAgent, listOf("name", "age"))
+        formats = listOf(Format("indy", "hlindy/cred@v2.0" ))
+        offerAttachments = listOf(
+            Attachment(
+                id = "indy",
+                mimetype= "application/json",
+                data = AttachmentData()
+            )
+        )
+
+
+    }
+
+    @After
+    fun tearDown() = runTest {
+        faberAgent.reset()
+        aliceAgent.reset()
+    }
+
+    suspend fun getCredentialRecord(agent: Agent, threadId: String): CredentialExchangeRecord {
+        return agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
+    }
+
+    @Test @LargeTest
+    fun testCredentialOffer() = runTest {
+        // Faber starts with credential offer to Alice.
+        var faberCredentialRecord = faberAgent.credentialsV2.offerCredential(
+            CreateCredentialOfferOptionsV2(
+                connection= faberConnection,
+                credentialDefinitionId= credDefId,
+                attributes= credentialPreview.attributes,
+                autoAcceptCredential= null,
+                comment= "Offer to Alice",
+                formats= formats,
+                goalCode= null,
+                goal= null,
+                credentialPreview= credentialPreview,
+                replacementId= null,
+                offerAttachments = offerAttachments
+            )
+        )
+
+        val threadId = faberCredentialRecord.threadId
+        var aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
+        assertEquals(aliceCredentialRecord.state, CredentialState.OfferReceived)
+
+        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptionsV2(aliceCredentialRecord.id))
+        faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
+        assertEquals(faberCredentialRecord.state, CredentialState.RequestReceived)
+
+        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptionsV2(faberCredentialRecord.id))
+        aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
+        assertEquals(aliceCredentialRecord.state, CredentialState.CredentialReceived)
+
+        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptionsV2(aliceCredentialRecord.id))
+        aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
+        assertEquals(aliceCredentialRecord.state, CredentialState.Done)
+        faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
+        assertEquals(faberCredentialRecord.state, CredentialState.Done)
+
+        val credentialMessage = aliceAgent.credentialsV2.findCredentialMessage(aliceCredentialRecord.id)
+        assertNotNull(credentialMessage)
+        val attachment = credentialMessage?.getCredentialAttachmentById(IssueCredentialMessage.INDY_CREDENTIAL_ATTACHMENT_ID)
+        assertNotNull(attachment)
+
+        val credentialJson = attachment?.getDataAsString()
+        val credential = Json.decodeFromString<JsonObject>(credentialJson!!)
+        val values = credential["values"]!!.jsonObject
+        val age = values["age"]!!.jsonObject
+        assertEquals(age["raw"]!!.jsonPrimitive.content, "99")
+        assertEquals(age["encoded"]!!.jsonPrimitive.content, "99")
+
+        val name = values["name"]!!.jsonObject
+        assertEquals(name["raw"]!!.jsonPrimitive.content, "John")
+        assertEquals(
+            name["encoded"]!!.jsonPrimitive.content,
+            "76355713903561865866741292988746191972523015098789458240077478826513114743258",
+        )
+    }
+
 //    @Test @LargeTest
 //    fun testAutoAcceptAgentConfig() = runTest {
 //        aliceAgent.agentConfig.autoAcceptCredential = AutoAcceptCredential.Always

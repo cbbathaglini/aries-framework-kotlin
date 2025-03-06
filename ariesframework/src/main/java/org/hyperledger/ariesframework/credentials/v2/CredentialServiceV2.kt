@@ -45,6 +45,9 @@ import org.hyperledger.ariesframework.credentials.v2.handlers.IssueCredentialHan
 import org.hyperledger.ariesframework.credentials.v2.handlers.OfferCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.handlers.RequestCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportNotificationMessage
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
@@ -194,7 +197,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @param options options for the request.
      * @return request message.
      */
-    suspend fun createRequestCredentialMessage(options: AcceptOfferOptions): RequestCredentialMessageV2 {
+    suspend fun createRequestCredentialMessage(options: AcceptOfferOptionsV2): RequestCredentialMessageV2 {
         logger.debug("[IDD] initializing createRequestCredentialMessage")
         logger.info("[IDD] credentialRecordid: ${options.credentialRecordId}")
 
@@ -443,7 +446,7 @@ class CredentialServiceV2(val agent: Agent) {
         return credentialRecord
     }
 
-    suspend fun createCredentialAckMessageV2(options: AcceptCredentialOptions): CredentialAckMessageV2 {
+    suspend fun createCredentialAckMessageV2(options: AcceptCredentialOptionsV2): CredentialAckMessageV2 {
         logger.debug("[IDD] initializing createCredentialAckMessageV2")
         var credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
         logger.debug("[IDD] createCredentialAckMessageV2-credentialRecord ${credentialRecord.toString()}")
@@ -464,7 +467,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @param options options for the credential issueance.
      * @return credential message.
      */
-    suspend fun createIssueCredentialMessageV2(options: AcceptRequestOptions): IssueCredentialMessageV2 {
+    suspend fun createIssueCredentialMessageV2(options: AcceptRequestOptionsV2): IssueCredentialMessageV2 {
         logger.debug("[IDD] initializing createIssueCredentialMessageV2")
         logger.debug("[IDD] ioptions: ${options}")
 

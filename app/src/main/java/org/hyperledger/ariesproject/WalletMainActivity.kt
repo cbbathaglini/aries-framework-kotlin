@@ -20,6 +20,7 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
+import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
@@ -302,7 +303,7 @@ class WalletMainActivity : AppCompatActivity() {
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentialsV2.acceptOffer(
-                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    AcceptOfferOptionsV2(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
