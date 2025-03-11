@@ -4,13 +4,11 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
-import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
-import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
-import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
@@ -21,6 +19,7 @@ import org.slf4j.LoggerFactory
 class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
 
+
     suspend fun proposeCredential(options: CreateProposalOptionsV2): CredentialExchangeRecord {
         val (message, credentialRecord) = agent.credentialServiceV2.createProposeCredentialMessageV2(options)
         agent.messageSender.send(OutboundMessage(message, options.connection))
@@ -29,6 +28,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
     suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
         val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessageV2(options)
+        logger.info("[IDD] message: ${message.toJsonString()}")
         val connection = options.connection ?: throw Exception("Connection is required for sending credential offer")
         agent.messageSender.send(OutboundMessage(message, connection))
         return credentialRecord
@@ -37,6 +37,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     suspend fun acceptOffer(options: AcceptOfferOptionsV2) : CredentialExchangeRecord {
         logger.info("[IDD] initializing credentials command - acceptoffer")
 
+        logger.info("[IDD] options: ${options.toString()}")
         val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
 
@@ -67,7 +68,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @param options options to decline the offer.
      * @return credential record associated with the declined credential.
      */
-    suspend fun declineOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
+    suspend fun declineOffer(options: AcceptOfferOptionsV2): CredentialExchangeRecord {
         val message = agent.credentialServiceV2.createOfferDeclinedProblemReport(options)
         var credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
@@ -140,16 +141,17 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     /**
-     * Find a ``IssueCredentialMessage`` by credential record id.
+     * Find a ``IssueCredentialMessageV2`` by credential record id.
      *
      * @param credentialRecordId: the id of the credential record.
      * @return the credential message associated with the credential record.
      */
-    suspend fun findCredentialMessage(credentialRecordId: String): IssueCredentialMessage? {
-        val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, IssueCredentialMessage.type)
+    suspend fun findCredentialMessage(credentialRecordId: String): IssueCredentialMessageV2? {
+        val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, IssueCredentialMessageV2.type)
+
 
         return if (messageJson != null) {
-            Json.decodeFromString<IssueCredentialMessage>(messageJson)
+            Json.decodeFromString<IssueCredentialMessageV2>(messageJson)
         } else {
             null
         }

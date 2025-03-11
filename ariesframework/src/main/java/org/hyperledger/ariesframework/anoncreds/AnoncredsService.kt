@@ -1,12 +1,16 @@
 package org.hyperledger.ariesframework.anoncreds
 
+import anoncreds_uniffi.RevocationStatusList
 import askar_uniffi.AskarEntryOperation
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.toJsonString
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class AnoncredsService(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(AnoncredsService::class.java)
@@ -15,7 +19,14 @@ class AnoncredsService(val agent: Agent) {
     suspend fun createLinkSecret(): String {
         val linkSecretId = java.util.UUID.randomUUID().toString()
         val linkSecret = anoncreds_uniffi.createLinkSecret()
-        agent.wallet.session!!.update(AskarEntryOperation.INSERT, secretCategory, linkSecretId, linkSecret.toByteArray(), null, null)
+        agent.wallet.session!!.update(
+            AskarEntryOperation.INSERT,
+            secretCategory,
+            linkSecretId,
+            linkSecret.toByteArray(),
+            null,
+            null
+        )
         return linkSecretId
     }
 
@@ -25,8 +36,12 @@ class AnoncredsService(val agent: Agent) {
         return String(linkSecret.value())
     }
 
-    suspend fun getCredentialsForProofRequest(proofRequest: ProofRequest, referent: String): List<IndyCredentialInfo> {
-        val requestedAttribute = proofRequest.requestedAttributes[referent] ?: proofRequest.requestedPredicates[referent]?.asProofAttributeInfo()
+    suspend fun getCredentialsForProofRequest(
+        proofRequest: ProofRequest,
+        referent: String
+    ): List<IndyCredentialInfo> {
+        val requestedAttribute = proofRequest.requestedAttributes[referent]
+            ?: proofRequest.requestedPredicates[referent]?.asProofAttributeInfo()
             ?: throw Exception("Referent not found in proof request")
         val tags = mutableMapOf<String, String>()
         if (requestedAttribute.names == null && requestedAttribute.name == null) {

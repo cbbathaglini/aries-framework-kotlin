@@ -3,6 +3,7 @@ package org.hyperledger.ariesframework.agent
 import RevocationNotificationService
 import RevocationNotificationServiceV2
 import android.content.Context
+import anoncreds_uniffi.RevocationStatusList
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnoncredsService

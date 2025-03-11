@@ -11,7 +11,7 @@ class CredentialAckHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = CredentialAckMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        agent.credentialService.processAck(messageContext)
+        agent.credentialServiceV2.processAck(messageContext)
         return null
     }
 }

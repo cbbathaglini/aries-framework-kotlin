@@ -20,10 +20,10 @@ class Dispatcher(val agent: Agent) {
         logger.info("[IDD][DISPATCHER] my plaintextMessage: ${messageContext.plaintextMessage}")
         logger.info("[IDD][DISPATCHER] my type of message: ${messageContext.message.type}")
 
-        logger.info("[IDD] all handlers available --------------------------------------------------------")
-        handlers.forEach { (key, value) ->
-            logger.info("[IDD] Available handler: Type = $key, Handler = $value")
-        }
+//        logger.info("[IDD] all handlers available --------------------------------------------------------")
+//        handlers.forEach { (key, value) ->
+//            logger.info("[IDD] Available handler: Type = $key, Handler = $value")
+//        }
 
         val handler = handlers[messageContext.message.type]
             ?: throw Exception("No handler for message type: ${messageContext.message.type}")

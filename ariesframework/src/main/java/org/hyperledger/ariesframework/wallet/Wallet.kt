@@ -87,6 +87,8 @@ class Wallet(private val agent: Agent) {
             linkSecretId = agent.anoncredsService.createLinkSecret()
             userDefaults.edit().putString(secretIdKey, linkSecretId).commit()
         }
+
+        //agent.anoncredsService.getRevocationStatusList()
     }
 
     suspend fun close() {

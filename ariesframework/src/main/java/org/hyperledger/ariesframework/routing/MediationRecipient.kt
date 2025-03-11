@@ -58,6 +58,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
         dispatcher.registerHandler(MediationGrantHandler(agent))
         dispatcher.registerHandler(BatchHandler(agent))
         dispatcher.registerHandler(KeylistUpdateResponseHandler(agent))
+
     }
 
     private fun registerMessages() {
@@ -97,7 +98,13 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
     suspend fun initialize(mediatorConnectionsInvite: String) {
         logger.debug("Initialize mediation with invitation: $mediatorConnectionsInvite")
 
-        val (outOfBandInvitation, invitation) = InvitationUrlParser.parseUrl(mediatorConnectionsInvite)
+        val listmediators: List<MediationRecord> =repository.getAll()
+        listmediators.forEach { record ->
+            logger.info("--> [IDD]mediation Record: $record")
+        }
+
+
+            val (outOfBandInvitation, invitation) = InvitationUrlParser.parseUrl(mediatorConnectionsInvite)
         val recipientKey = outOfBandInvitation?.invitationKey() ?: invitation?.recipientKeys?.first()
             ?: throw RuntimeException("Invalid mediation invitation. Invitation must have at least one recipient key.")
 

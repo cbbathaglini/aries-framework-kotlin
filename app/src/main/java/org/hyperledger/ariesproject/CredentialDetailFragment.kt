@@ -1,6 +1,7 @@
 package org.hyperledger.ariesproject
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,8 @@ import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialDetailBinding
 import anoncreds_uniffi.Credential
+import org.hyperledger.ariesframework.anoncreds.AnoncredsService
+import org.hyperledger.ariesframework.credentials.v1.CredentialService
 
 class CredentialDetailFragment : Fragment() {
 
@@ -33,6 +36,8 @@ class CredentialDetailFragment : Fragment() {
         arguments?.let {
             if (it.containsKey(ARG_CREDENTIAL)) {
                 item = Credential(it.getString(ARG_CREDENTIAL)!!)
+                Log.i("[IDD]","itval: ${it.toString()}")
+                Log.i("[IDD]","itval: ${it.get("state")}")
                 credentialId = it.getString(ARG_CREDENTIAL_ID)
                 detailBinding = ActivityCredentialDetailBinding.inflate(layoutInflater)
                 detailBinding.toolbarLayout.title = getString(R.string.title_credential_detail)

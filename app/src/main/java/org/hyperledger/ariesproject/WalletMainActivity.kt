@@ -56,7 +56,7 @@ class WalletMainActivity : AppCompatActivity() {
                         val (_, connection) = app.agent.oob.receiveInvitationFromUrl(invitation)
                         showAlert("Connected to ${connection?.theirLabel ?: "unknown agent"}")
                     } catch (e: Exception) {
-                        showAlert("Unable to connect: ${e.localizedMessage}")
+                        showAlert("Unable to connect: ${e.message}")
                     }
                 }
             }
@@ -223,7 +223,7 @@ class WalletMainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Log.d("demo", e.localizedMessage)
-                    showAlert("Failed to decline a credential.")
+                    showAlert("Failed to decaline a credential.")
                 }
             }
         }
@@ -237,7 +237,7 @@ class WalletMainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentialsV2.declineOffer(
-                    AcceptOfferOptions(
+                    AcceptOfferOptionsV2(
                         credentialRecordId = id,
                         autoAcceptCredential = AutoAcceptCredential.Never,
                     ),

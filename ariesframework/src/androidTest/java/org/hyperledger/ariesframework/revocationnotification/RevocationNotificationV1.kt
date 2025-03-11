@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.proofs
+package org.hyperledger.ariesframework.revocationnotification
 
 import androidx.test.filters.LargeTest
 import kotlinx.coroutines.delay
@@ -7,21 +7,15 @@ import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
-import org.hyperledger.ariesframework.proofs.models.AttributeFilter
-import org.hyperledger.ariesframework.proofs.models.PredicateType
-import org.hyperledger.ariesframework.proofs.models.ProofAttributeInfo
-import org.hyperledger.ariesframework.proofs.models.ProofPredicateInfo
-import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.ProofState
-import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -30,7 +24,7 @@ import org.junit.Test
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
-class RevocationTest {
+class RevocationNotificationV1 {
     lateinit var faberAgent: Agent
     lateinit var aliceAgent: Agent
     lateinit var credDefId: String
@@ -76,6 +70,7 @@ class RevocationTest {
         return credDefId
     }
 
+
     suspend fun getCredentialRecord(agent: Agent, threadId: String): CredentialExchangeRecord {
         return agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
     }
@@ -110,86 +105,13 @@ class RevocationTest {
         faberAgent.ledgerService.revokeCredential(didInfo, credDefId, 1)
     }
 
-    suspend fun getProofRequest(): ProofRequest {
-        val attributes = mapOf(
-            "name" to ProofAttributeInfo("name", null, null, listOf(AttributeFilter(credentialDefinitionId = credDefId))),
-        )
-        val predicates = mapOf(
-            "age" to ProofPredicateInfo(
-                "age",
-                null,
-                PredicateType.GreaterThanOrEqualTo,
-                50,
-                listOf(AttributeFilter(credentialDefinitionId = credDefId)),
-            ),
-        )
-        val nonce = ProofService.generateProofRequestNonce()
-        return ProofRequest(
-            nonce = nonce,
-            requestedAttributes = attributes,
-            requestedPredicates = predicates,
-            nonRevoked = RevocationInterval(null, (System.currentTimeMillis() / 1000L).toInt()),
-        )
-    }
-
-    @Test @LargeTest
-    fun testProofRequestWithNonRevoked() = runTest(timeout = 20.seconds) {
-        issueCredential()
-        val proofRequest = getProofRequest()
-        var faberProofRecord = faberAgent.proofs.requestProof(
-            connectionId = faberConnection.id,
-            proofRequest = proofRequest,
-        )
-        delay(0.1.seconds)
-
-        val threadId = faberProofRecord.threadId
-        var aliceProofRecord = getProofRecord(aliceAgent, threadId)
-        assertEquals(ProofState.RequestReceived, aliceProofRecord.state)
-
-        val retrievedCredentials = aliceAgent.proofs.getRequestedCredentialsForProofRequest(aliceProofRecord.id)
-        val requestedCredentials = aliceAgent.proofService.autoSelectCredentialsForProofRequest(retrievedCredentials)
-        aliceProofRecord = aliceAgent.proofs.acceptRequest(aliceProofRecord.id, requestedCredentials)
-        delay(0.1.seconds)
-
-        faberProofRecord = getProofRecord(faberAgent, threadId)
-        assertEquals(ProofState.PresentationReceived, faberProofRecord.state)
-        assertEquals(true, faberProofRecord.isVerified)
-
-        faberProofRecord = faberAgent.proofs.acceptPresentation(faberProofRecord.id)
-        delay(0.1.seconds)
-
-        aliceProofRecord = getProofRecord(aliceAgent, threadId)
-        assertEquals(ProofState.Done, aliceProofRecord.state)
-        assertEquals(ProofState.Done, faberProofRecord.state)
-    }
-
-    @Test @LargeTest
+    @Test
+    @LargeTest
     fun testVerifyAfterRevocation() = runBlocking {
         aliceAgent.agentConfig.ignoreRevocationCheck = true
 
         issueCredential()
         revokeCredential()
 
-        delay(10.seconds) // Wait for revocation to take effect
-
-        val proofRequest = getProofRequest()
-        var faberProofRecord = faberAgent.proofs.requestProof(
-            connectionId = faberConnection.id,
-            proofRequest = proofRequest,
-        )
-        delay(0.1.seconds)
-
-        val threadId = faberProofRecord.threadId
-        val aliceProofRecord = getProofRecord(aliceAgent, threadId)
-        assertEquals(ProofState.RequestReceived, aliceProofRecord.state)
-
-        val retrievedCredentials = aliceAgent.proofs.getRequestedCredentialsForProofRequest(aliceProofRecord.id)
-        val requestedCredentials = aliceAgent.proofService.autoSelectCredentialsForProofRequest(retrievedCredentials)
-        aliceAgent.proofs.acceptRequest(aliceProofRecord.id, requestedCredentials)
-        delay(0.1.seconds)
-
-        faberProofRecord = getProofRecord(faberAgent, threadId)
-        assertEquals(ProofState.PresentationReceived, faberProofRecord.state)
-        assertEquals(false, faberProofRecord.isVerified)
     }
 }

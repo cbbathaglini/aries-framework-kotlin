@@ -114,12 +114,10 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         logger.trace("Getting record by query for revocation notification: $query")
         val credentialRecord = credentialRepository.getSingleByQuery(query)
 
-
         credentialRecord.revocationNotification = RevocationNotification(comment)
         agent.credentialRepository.update(credentialRecord)
 
         logger.trace("Emitting RevocationNotificationReceivedEventV2")
-
 
         val credentialExchangeRecord = credentialRecord.toCredentialExchangeRecord(
             connection.id,
