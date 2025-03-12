@@ -36,8 +36,6 @@ class CredentialDetailFragment : Fragment() {
         arguments?.let {
             if (it.containsKey(ARG_CREDENTIAL)) {
                 item = Credential(it.getString(ARG_CREDENTIAL)!!)
-                Log.i("[IDD]","itval: ${it.toString()}")
-                Log.i("[IDD]","itval: ${it.get("state")}")
                 credentialId = it.getString(ARG_CREDENTIAL_ID)
                 detailBinding = ActivityCredentialDetailBinding.inflate(layoutInflater)
                 detailBinding.toolbarLayout.title = getString(R.string.title_credential_detail)

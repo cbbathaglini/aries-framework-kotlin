@@ -11,10 +11,14 @@ import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.decorators.AckDecorator
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.revocationnotification.handler.RevocationNotificationHandlerV1
 import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
+import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotificationMessageV1Options
+import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
+import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
 
@@ -27,6 +31,19 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
         registerMessages()
     }
 
+    fun createRevocationNotification(options: RevocationNotificationMessageV1Options): Map<String, RevocationNotificationMessageV1> {
+
+        val (issueThread, id, comment, pleaseAck) = options
+
+        val message = RevocationNotificationMessageV1(
+            issueThread= issueThread,
+            comment= comment,
+            pleaseAck= pleaseAck
+        )
+
+        return mapOf("message" to message)
+    }
+
     suspend fun processRevocationNotification(messageContext: InboundMessageContext) {
         logger.debug("processRevocationNotification init")
 
@@ -37,7 +54,6 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
         if (!threadId.startsWith("indy::")) {
             throw IllegalArgumentException("Invalid threadId format: $threadId. Expected format: indy::<revocation_registry_id>::<credential_revocation_id>")
         }
-
 
         val threadIdGroups = RevocationIdentifier.v1ThreadRegex.find(threadId)?.groupValues
         if (threadIdGroups == null || threadIdGroups.size < 3) {
