@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.credentials.v2.messages
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment

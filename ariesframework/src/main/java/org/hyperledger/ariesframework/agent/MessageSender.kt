@@ -37,9 +37,7 @@ class MessageSender(val agent: Agent) {
     }
 
     private fun decorateMessage(message: OutboundMessage): AgentMessage {
-        logger.info("[IDD][decorateMessage] message: ${message.toString()}")
         val agentMessage = message.payload
-        logger.info("[IDD][decorateMessage] agentMessage: ${agentMessage.toJsonString()}")
 
         // If the agent is initialized, and the message is a TrustPing message, set the transport to "all".
         // This enables the agent to receive undelivered messages from the mediator.
@@ -78,7 +76,6 @@ class MessageSender(val agent: Agent) {
 
     suspend fun send(message: OutboundMessage, endpointPrefix: String? = null) {
         val agentMessage = decorateMessage(message)
-        logger.info("[IDD][SEND] agentMessage: ${agentMessage.toJsonString()}")
 
         val services = findDidCommServices(message.connection)
         if (services.isEmpty()) {

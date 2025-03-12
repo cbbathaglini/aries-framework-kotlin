@@ -7,6 +7,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
@@ -26,50 +27,71 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
         registerMessages()
     }
 
+    suspend fun processRevocationNotification(messageContext: InboundMessageContext) {
+        logger.debug("processRevocationNotification init")
+
+        val revocationMessage = messageContext.message as? RevocationNotificationMessageV1
+            ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV1")
+
+        val threadId = revocationMessage.issueThread
+        if (!threadId.startsWith("indy::")) {
+            throw IllegalArgumentException("Invalid threadId format: $threadId. Expected format: indy::<revocation_registry_id>::<credential_revocation_id>")
+        }
+
+
+        val threadIdGroups = RevocationIdentifier.v1ThreadRegex.find(threadId)?.groupValues
+        if (threadIdGroups == null || threadIdGroups.size < 3) {
+            throw CredoError(
+                "Incorrect revocation notification threadId format: \n$threadId\ndoes not match\n" +
+                        "\"indy::<revocation_registry_id>::<credential_revocation_id>\""
+            )
+        }
+
+        val anonCredsRevocationRegistryId = threadIdGroups[2]
+        val anonCredsCredentialRevocationId = threadIdGroups[3]
+
+        val comment = revocationMessage.comment
+        val connection = messageContext.assertReadyConnection()
+
+        processRevocationNotification(
+            revocationRegistryId = anonCredsRevocationRegistryId,
+            credentialRevocationId = anonCredsCredentialRevocationId,
+            connection = connection,
+            comment = comment,
+            threadId = threadId
+        )
+
+    }
+
     private suspend fun processRevocationNotification(
-        anonCredsRevocationRegistryId: String,
-        anonCredsCredentialRevocationId: String,
+        revocationRegistryId: String,
+        credentialRevocationId: String,
         connection: ConnectionRecord,
         comment: String? = null,
         threadId: String
     ) {
 
-        logger.info("Init processRevocationNotification...")
-        logger.info("-----> connection id: ${connection.id}")
-
-        val credentials = agent.credentialRepository.getAll()
-
-        credentials.forEach { credential ->
-            logger.info("--> Credential: ${credential.toString()}")
-        }
-
-        // Query to search for revocation registry in both qualified and unqualified forms
-        var query = "";
-
+        lateinit var credentialRecord: CredentialRecord
+        var error = false
         try {
-            query = Json.encodeToString(
-                mapOf(
-                    "\$or" to listOf(
-                        mapOf(
-                            "revocationRegistryId" to anonCredsRevocationRegistryId,
-                            "credentialRevocationId" to anonCredsCredentialRevocationId
-                        )
-                    )
+            credentialRecord =
+                credentialRepository.getByCredentialRevocationIdAndRevocationRegistryId(
+                    credentialRevocationId,
+                    revocationRegistryId
                 )
-            )
-        }catch (e : Exception){
-            logger.error("error in query: ${e.message.toString()}")
+        }catch (e:Exception){
+            logger.warn("Not found credential record by CredentialRevocationId and RevocationRegistryId")
+            error = true;
         }
 
-        logger.trace("Getting record by query for revocation notification: $query")
-        val credentialRecord = credentialRepository.getSingleByQuery(query)
-
+        if (error){
+            credentialRecord = credentialRepository.getByCredentialRevocationId(credentialRevocationId)
+        }
 
         credentialRecord.revocationNotification = RevocationNotification(comment)
         agent.credentialRepository.update(credentialRecord)
 
         logger.trace("Emitting RevocationNotificationReceivedEvent")
-
 
         val credentialExchangeRecord = credentialRecord.toCredentialExchangeRecord(
             connection.id,
@@ -82,57 +104,8 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
         agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEvent(credentialExchangeRecord.copy()))
     }
 
-    /**
-     * Process a received RevocationNotificationMessageV1.
-     */
-    suspend fun v1ProcessRevocationNotification(messageContext: InboundMessageContext) {
-        logger.info("Processing revocation notification v1 ->> ${messageContext.message.toJsonString()}")
 
-        logger.info("MESSAGE CAMED: ${messageContext.message.toJsonString()}")
 
-        // Explicit cast
-        val revocationMessage = messageContext.message as? RevocationNotificationMessageV1
-            ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV1")
-
-        val threadId = revocationMessage.issueThread
-        if (!threadId.startsWith("indy::")) {
-            throw IllegalArgumentException("Invalid threadId format: $threadId. Expected format: indy::<revocation_registry_id>::<credential_revocation_id>")
-        }
-        logger.info("threadId: ${threadId}")
-
-        try {
-            val threadIdGroups = RevocationIdentifier.v1ThreadRegex.find(threadId)?.groupValues
-            logger.info("threadIdGroups: ${threadIdGroups.toString()}")
-            if (threadIdGroups != null) {
-                logger.info("threadIdGroups[2]: ${threadIdGroups.get(2).toString()}")
-            }
-            if (threadIdGroups == null || threadIdGroups.size < 3) {
-                throw CredoError(
-                    "Incorrect revocation notification threadId format: \n$threadId\ndoes not match\n" +
-                            "\"indy::<revocation_registry_id>::<credential_revocation_id>\""
-                )
-            }
-
-            val anonCredsRevocationRegistryId = threadIdGroups[2]
-            val anonCredsCredentialRevocationId = threadIdGroups[3]
-
-            logger.info("anoncreds getted")
-
-            val comment = revocationMessage.comment
-            val connection = messageContext.assertReadyConnection()
-
-            processRevocationNotification(
-                anonCredsRevocationRegistryId,
-                anonCredsCredentialRevocationId,
-                connection,
-                comment,
-                threadId
-            )
-        } catch (error: Exception) {
-            logger.error("Failed to process revocation notification message: ${error.message.toString()}")
-            logger.warn("Failed to process revocation notification message", mapOf("error" to error, "threadId" to threadId))
-        }
-    }
 
     private fun registerMessageHandlers(dispatcher: Dispatcher) {
         dispatcher.registerHandler(RevocationNotificationHandlerV1(agent))

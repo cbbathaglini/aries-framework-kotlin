@@ -19,41 +19,37 @@ import org.slf4j.LoggerFactory
 class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
 
-
     suspend fun proposeCredential(options: CreateProposalOptionsV2): CredentialExchangeRecord {
-        val (message, credentialRecord) = agent.credentialServiceV2.createProposeCredentialMessageV2(options)
+        val (message, credentialRecord) = agent.credentialServiceV2.createProposeCredentialMessage(options)
         agent.messageSender.send(OutboundMessage(message, options.connection))
         return credentialRecord
     }
 
     suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
-        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessageV2(options)
-        logger.info("[IDD] message: ${message.toJsonString()}")
+        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessage(options)
         val connection = options.connection ?: throw Exception("Connection is required for sending credential offer")
         agent.messageSender.send(OutboundMessage(message, connection))
         return credentialRecord
     }
 
     suspend fun acceptOffer(options: AcceptOfferOptionsV2) : CredentialExchangeRecord {
-        logger.info("[IDD] initializing credentials command - acceptoffer")
+        logger.info("acceptOffer init")
 
-        logger.info("[IDD] options: ${options.toString()}")
         val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
 
-        printAttributesOfCredential(credentialRecord.credentialAttributes);
+        //printAttributesOfCredential(credentialRecord.credentialAttributes);
 
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
 
-        logger.info("[IDD] send message: ${message.toJsonString()}")
-        logger.info("[IDD] before send message: ${credentialRecord.toString()}")
-
         agent.messageSender.send(OutboundMessage(message, connection))
 
-        logger.info("[IDD] after send message: ${credentialRecord.toString()}")
         return credentialRecord
     }
 
+    /*
+    * helper method to show the attributes
+    * */
     private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
         if (credentialAttributes != null) {
             credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
@@ -104,12 +100,11 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))
-
         return credentialRecord
     }
 
     /**
-     * Find a ``OfferCredentialMessage`` by credential record id.
+     * Find a ``OfferCredentialMessageV2`` by credential record id.
      *
      * @param credentialRecordId: the id of the credential record.
      * @return the offer message associated with the credential record.
@@ -125,7 +120,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     /**
-     * Find a ``RequestCredentialMessage`` by credential record id.
+     * Find a ``RequestCredentialMessageV2`` by credential record id.
      *
      * @param credentialRecordId: the id of the credential record.
      * @return the request message associated with the credential record.
@@ -148,8 +143,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      */
     suspend fun findCredentialMessage(credentialRecordId: String): IssueCredentialMessageV2? {
         val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, IssueCredentialMessageV2.type)
-
-
         return if (messageJson != null) {
             Json.decodeFromString<IssueCredentialMessageV2>(messageJson)
         } else {

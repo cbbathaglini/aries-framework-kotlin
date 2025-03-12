@@ -14,7 +14,6 @@ class RequestCredentialHandler(val agent: Agent) : MessageHandler {
     override val messageType = RequestCredentialMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("[IDD][ORDER][handle] RequestCredentialHandler ")
         val credentialRecord = agent.credentialService.processRequest(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||

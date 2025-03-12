@@ -14,18 +14,15 @@ class IssueCredentialHandler(val agent: Agent) : MessageHandler {
     override val messageType = IssueCredentialMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("[IDD][ORDER][handle] IssueCredentialHandler ")
         val credentialRecord = agent.credentialService.processCredential(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
-            logger.info("[IDD][ORDER][handle] createAck ")
             val message = agent.credentialService.createAck(AcceptCredentialOptions(credentialRecord.id))
             return OutboundMessage(message, messageContext.connection!!)
         }
 
-        logger.info("[IDD][ORDER][handle] NULLING ")
         return null
     }
 }

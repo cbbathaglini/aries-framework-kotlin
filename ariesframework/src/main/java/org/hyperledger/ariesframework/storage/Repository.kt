@@ -63,7 +63,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     @OptIn(InternalSerializationApi::class)
     suspend fun update(record: T) {
-        logger.info("[IDD] update credential record: ${record.toString()}")
         val value = jsonFormat.encodeToString(type.serializer(), record).toByteArray()
         val tags = record.getTags().toJsonString()
         wallet.session!!.update(AskarEntryOperation.REPLACE, type.simpleName!!, record.id, value, tags, null)
@@ -116,7 +115,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
     }
 
     suspend fun getSingleByQuery(query: String): T {
-        logger.info("[IDD] getSingleByQuery")
         val record = findSingleByQuery(query)
         return record ?: throw ErrorCode.NotFound("Record not found for query $query")
     }

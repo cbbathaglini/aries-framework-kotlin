@@ -41,6 +41,9 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         MessageSerializer.registerMessage(RequestCredentialMessage.type, RequestCredentialMessage::class)
     }
 
+    /*
+     * helper method to show the attributes of credential
+     * */
     private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
         if (credentialAttributes != null) {
             credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
@@ -90,13 +93,10 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
 
-        logger.info("[IDD] VERSION 1.0 message: ${message.toString()}")
-        printAttributesOfCredential(credentialRecord.credentialAttributes);
+        //printAttributesOfCredential(credentialRecord.credentialAttributes);
 
-        logger.info("[IDD] messageSender before")
         agent.messageSender.send(OutboundMessage(message, connection))
-        logger.info("[IDD] messageSender after")
-        logger.info("[IDD] VERSION 1.0 CredentialExchangeRecord: ${credentialRecord.toString()}")
+
         return credentialRecord
     }
 

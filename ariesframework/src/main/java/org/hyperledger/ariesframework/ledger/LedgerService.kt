@@ -155,7 +155,7 @@ class LedgerService(val agent: Agent) {
     suspend fun getCredentialDefinition(id: String): String {
         logger.debug("Get CredentialDefinition with id: $id")
         val request = ledger.buildGetCredDefRequest(null, id)
-        logger.info("[IDD] request LEDGER: ${request.toString()}")
+
         val response = submitReadRequest(request)
         val json = Json.decodeFromString<JsonObject>(response)
         val result = json.get("result") as JsonObject?
@@ -364,7 +364,6 @@ class LedgerService(val agent: Agent) {
         }
 
         val response = pool!!.submitRequest(request)
-        logger.info("[IDD] response: ${response.toString()}")
         validateResponse(response)
         return response
     }

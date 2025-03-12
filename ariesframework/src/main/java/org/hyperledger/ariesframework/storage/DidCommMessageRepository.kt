@@ -35,13 +35,13 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
 
     suspend fun getAgentMessage(associatedRecordId: String, messageType: String): String {
         var type = messageType
-        logger.info("[IDD] type: ${type} || associatedRecordId: ${associatedRecordId}")
+
         if (agent.agentConfig.useLegacyDidSovPrefix) {
             type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
         }
-        logger.info("[IDD] type again: ${type}")
+
         val record = getSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"$type\"}")
-        logger.info("[IDD] message: ${record.message} || role: ${record.role}")
+
         return record.message
     }
 

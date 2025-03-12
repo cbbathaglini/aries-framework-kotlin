@@ -31,7 +31,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         registerMessages()
     }
 
-    suspend fun createRevocationNotification(options: RevocationNotificationMessageV2Options): Map<String, RevocationNotificationMessageV2> {
+    fun createRevocationNotification(options: RevocationNotificationMessageV2Options): Map<String, RevocationNotificationMessageV2> {
 
         val (credentialId, revocationFormat, comment, requestAck) = options
 
@@ -41,10 +41,9 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             comment = comment
         )
 
-// TODO
-//        if (message.pleaseAck.on) {
-//            message.setPleaseAck()
-//        }
+        if (!message.pleaseAckIsEmpty()) {
+            message.setPleaseAck()
+        }
 
         return mapOf("message" to message)
     }

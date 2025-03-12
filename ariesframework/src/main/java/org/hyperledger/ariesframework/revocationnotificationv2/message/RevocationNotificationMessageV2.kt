@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.decorators.AckDecorator
+import org.hyperledger.ariesframework.decorators.AckValues
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotificationMessageV1Options
 import org.hyperledger.ariesframework.revocationnotificationv2.RevocationNotificationConstants
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
@@ -27,5 +28,14 @@ class RevocationNotificationMessageV2(
 
     fun getThreadId(anonCredsRevocationRegistryId: String, anonCredsCredentialRevocationId:String): String {
        return "indy::${anonCredsRevocationRegistryId}::${anonCredsCredentialRevocationId}";
+    }
+
+    fun setPleaseAck(on: List<AckValues> = listOf(AckValues.Receipt)) {
+        this.pleaseAck = AckDecorator(on)
+    }
+
+    fun pleaseAckIsEmpty(): Boolean {
+        val empty = this.pleaseAck?.isNotEmpty() ?: true
+        return empty
     }
 }

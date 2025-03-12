@@ -4,7 +4,6 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
@@ -16,8 +15,8 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = OfferCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("[IDD][ORDER] OfferCredentialHandlerV2 init")
-        val credentialRecord = agent.credentialServiceV2.processOfferCredentialMessageV2(messageContext)
+        logger.debug("OfferCredentialHandlerV2 init")
+        val credentialRecord = agent.credentialServiceV2.processOfferCredentialMessage(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always

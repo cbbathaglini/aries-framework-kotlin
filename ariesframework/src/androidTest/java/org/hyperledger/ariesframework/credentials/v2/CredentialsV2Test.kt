@@ -57,8 +57,6 @@ class CredentialsV2Test {
                 data = AttachmentData()
             )
         )
-
-
     }
 
     @After
@@ -71,7 +69,6 @@ class CredentialsV2Test {
         var credential =  agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
         credential.setToProtocolVersionV2()
 
-        logger.info("[IDD] credential: ${credential.toString()}")
         return  credential;
     }
 

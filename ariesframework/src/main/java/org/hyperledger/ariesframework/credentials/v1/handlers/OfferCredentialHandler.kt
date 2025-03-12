@@ -14,18 +14,15 @@ class OfferCredentialHandler(val agent: Agent) : MessageHandler {
     override val messageType = OfferCredentialMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("[IDD][ORDER][handle] OfferCredentialHandler ")
         val credentialRecord = agent.credentialService.processOffer(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
-            logger.info("[IDD][ORDER][handle] createRequest ")
             val message = agent.credentialService.createRequest(AcceptOfferOptions(credentialRecord.id))
             return OutboundMessage(message, messageContext.connection!!)
         }
 
-        logger.info("[IDD][ORDER][handle] OfferCredentialHandler RETURNING NULL ")
         return null
     }
 }

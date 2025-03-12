@@ -14,7 +14,6 @@ class ProblemReportHandler(val agent: Agent, override val messageType: String) :
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         val message = messageContext.message as BaseProblemReportMessage
-        logger.error("[IDD] Problem report: ${message.toJsonString()}")
         agent.eventBus.publish(AgentEvents.ProblemReportEvent(message))
         return null
     }

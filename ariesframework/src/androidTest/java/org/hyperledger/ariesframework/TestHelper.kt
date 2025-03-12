@@ -178,9 +178,6 @@ object TestHelper {
         delay(0.1.seconds)
         val (schema, seqNo) = agent.ledgerService.getSchema(schemaId)
 
-        logger.info("[IDD] didInfo: ${didInfo.toString()}")
-        logger.info("[IDD] schema: ${schema.toString()}")
-
         return agent.ledgerService.registerCredentialDefinition(
             didInfo,
             CredentialDefinitionTemplate(schema, "default", false, seqNo),

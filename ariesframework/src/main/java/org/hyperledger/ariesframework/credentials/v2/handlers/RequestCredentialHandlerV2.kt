@@ -4,12 +4,10 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
 import org.slf4j.LoggerFactory
-
 
 class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
@@ -17,7 +15,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType =  RequestCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("[IDD] Initializing handle of RequestCredentialHandlerV2")
+        logger.info("RequestCredentialHandlerV2 init")
         val credentialRecord = agent.credentialServiceV2.processRequestCredentialMessage(messageContext)
 
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||

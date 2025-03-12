@@ -25,7 +25,6 @@ class RequestCredentialMessageV2(
 
     companion object {
         const val INDY_CREDENTIAL_REQUEST_ATTACHMENT_ID = "indy"
-        const val FORMAT = "hlindy/cred-abstract@v2.0"
         val type = REQUEST_CREDENTIAL
     }
 

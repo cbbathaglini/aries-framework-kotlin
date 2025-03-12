@@ -5,9 +5,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.ISSUE_CREDENTIAL
-import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2.Companion.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
