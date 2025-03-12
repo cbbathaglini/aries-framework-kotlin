@@ -1,7 +1,6 @@
 package org.hyperledger.ariesproject
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +12,6 @@ import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialDetailBinding
 import anoncreds_uniffi.Credential
-import org.hyperledger.ariesframework.anoncreds.AnoncredsService
-import org.hyperledger.ariesframework.credentials.v1.CredentialService
 
 class CredentialDetailFragment : Fragment() {
 
