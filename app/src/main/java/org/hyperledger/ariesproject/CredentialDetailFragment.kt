@@ -26,13 +26,6 @@ class CredentialDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        arguments?.let { bundle ->
-            bundle.keySet().forEach { key ->
-                println("FragmentArgs Key: $key, Value: ${bundle.get(key)}")
-            }
-        }
-
-
         arguments?.let {
             if (it.containsKey(ARG_CREDENTIAL)) {
                 item = Credential(it.getString(ARG_CREDENTIAL)!!)

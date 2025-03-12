@@ -1,0 +1,41 @@
+# Android Studio
+*.iml
+.idea/
+.gradle/
+local.properties
+/.cxx/
+/captures/
+/.externalNativeBuild/
+/build/
+/outputs/
+/intermediates/
+/navigation.json
+
+# Gradle
+.gradle
+gradle-app.setting
+gradle.properties
+gradlew
+gradlew.bat
+settings.gradle
+*.lock
+
+# APKs
+*.apk
+*.ap_
+
+# Assets
+*.keystore
+*.jks
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Jetpack Compose previews
+.preview/
+
+# Dependency directories
+/.maven/
+/node_modules/
+/yarn.lock
