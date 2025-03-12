@@ -2,7 +2,9 @@ package org.hyperledger.ariesframework.credentials.v2.messages
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.agent.AgentMessage
+import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
@@ -31,6 +33,10 @@ class OfferCredentialMessageV2(
     ) : AgentMessage(generateId(), type) {
 
     companion object {
+        fun decode(decode: String): OfferCredentialMessageV2 {
+            return MessageSerializer.decodeFromString(decode) as OfferCredentialMessageV2
+        }
+
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "indy"
         const val type = CredentialsV2Constants.OFFER_CREDENTIAL
     }
@@ -48,6 +54,12 @@ class OfferCredentialMessageV2(
     fun getCredentialOffer(): String {
         val attachment = getOfferAttachmentById(INDY_CREDENTIAL_OFFER_ATTACHMENT_ID)
         return attachment?.getDataAsString() ?: throw Exception("Credential offer attachment not found")
+    }
+
+    fun validateIndyAttachId() {
+        checkNotNull(this.findIndyFormatByAttachId()) {
+            "Indy attachment with id ${INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
+        }
     }
 
 }

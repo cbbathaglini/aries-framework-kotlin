@@ -9,6 +9,4 @@ data class RevocationNotificationMessageV2Options (
     val revocationFormat: String,
     val comment: String? = null,
     val pleaseAck: AckDecorator? = null
-){
-
-}
+)

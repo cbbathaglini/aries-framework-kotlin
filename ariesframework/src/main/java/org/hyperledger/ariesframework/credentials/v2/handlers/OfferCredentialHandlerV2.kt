@@ -16,23 +16,17 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = OfferCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("[IDD][ORDER] OfferCredentialHandlerV2")
-        logger.info("[IDD][ORDER] message: ${messageContext.message}")
-        logger.info("[IDD][ORDER] plaintextMessage: ${messageContext.plaintextMessage}")
+        logger.debug("[IDD][ORDER] OfferCredentialHandlerV2 init")
         val credentialRecord = agent.credentialServiceV2.processOfferCredentialMessageV2(messageContext)
 
-        logger.info("[IDD][ORDER] OfferCredentialHandlerV2 credentialRecord ${credentialRecord}")
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
-            logger.info("[IDD][ORDER][handle] OfferCredentialHandlerV2 - createRequest ")
             val message = agent.credentialServiceV2.createRequestCredentialMessage(
                 AcceptOfferOptionsV2(credentialRecord.id)
             )
             return OutboundMessage(message, messageContext.connection!!)
         }
-
-        logger.info("[IDD][ORDER][handle] OfferCredentialHandlerV2 - returning null")
         return null
     }
 

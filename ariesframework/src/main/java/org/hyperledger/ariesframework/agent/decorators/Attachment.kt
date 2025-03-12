@@ -17,7 +17,11 @@ class AttachmentData(
     val links: List<String>? = null,
     var jws: Jws? = null,
     val sha256: String? = null,
-)
+){
+    override fun toString(): String {
+        return "AttachmentData(base64=$base64, json=$json, links=$links, jws=$jws, sha256=$sha256)"
+    }
+}
 
 @Serializable
 class Attachment(

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.decorators.AckDecorator
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotificationMessageV1Options
+import org.hyperledger.ariesframework.revocationnotificationv2.RevocationNotificationConstants
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
 
 @Serializable
@@ -18,24 +19,13 @@ class RevocationNotificationMessageV2(
     var comment: String? = null,
 
     var pleaseAck: AckDecorator? = null
-) : AgentMessage(generateId(), RevocationNotificationMessageV2.type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
-        val type = "https://didcomm.org/revocation_notification/2.0/revoke"
+        val type = RevocationNotificationConstants.TYPE_MESSAGE
     }
 
-    val messageTypeUri: String = type
-
-    constructor(options: RevocationNotificationMessageV2Options) : this(
-        revocationFormat = options.revocationFormat,
-        credentialId = options.credentialId,
-        comment = options.comment,
-        pleaseAck = options.pleaseAck
-    )
-
-    override fun toString(): String {
-        return "RevocationNotificationMessageV2(revocationFormat='$revocationFormat', credentialId='$credentialId', comment=$comment, pleaseAck=$pleaseAck, messageTypeUri='$messageTypeUri')"
+    fun getThreadId(anonCredsRevocationRegistryId: String, anonCredsCredentialRevocationId:String): String {
+       return "indy::${anonCredsRevocationRegistryId}::${anonCredsCredentialRevocationId}";
     }
-
-
 }

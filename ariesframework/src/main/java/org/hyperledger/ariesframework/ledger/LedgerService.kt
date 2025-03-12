@@ -327,6 +327,13 @@ class LedgerService(val agent: Agent) {
 
         revocationRecord.revocStatusList = revokedStatusList.toJson()
         agent.revocationRegistryRepository.update(revocationRecord)
+
+        // descomment lines below if you wanna to see the revocation record information
+//        agent.revocationRegistryRepository.getAll().forEach { rev ->
+//            logger.debug("Revocation record: creddefid= ${rev.credDefId} | \n revocRegDef= ${rev.revocRegDef} | \n revocRegId= ${rev.revocRegId} | \n createdat= ${rev.createdAt} | \n updatedat= ${rev.updatedAt.toString()}"
+//            )
+//        }
+
     }
 
     private fun validateResponse(response: String) {

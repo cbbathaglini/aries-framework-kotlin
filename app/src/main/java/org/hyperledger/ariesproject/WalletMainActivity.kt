@@ -314,7 +314,6 @@ class WalletMainActivity : AppCompatActivity() {
             }
         }
 
-        Log.e("[log] get", "getcredential" )
         progress.setOnCancelListener {
             job.cancel()
         }

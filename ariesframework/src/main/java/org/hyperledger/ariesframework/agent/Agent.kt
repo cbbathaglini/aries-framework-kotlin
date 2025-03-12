@@ -138,6 +138,10 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         messageSender.setOutboundTransport(outboundTransport)
     }
 
+    override fun toString(): String {
+        return "Agent(context=$context, agentConfig=$agentConfig, wallet=$wallet, eventBus=$eventBus, dispatcher=$dispatcher, messageReceiver=$messageReceiver, messageSender=$messageSender, connectionRepository=$connectionRepository, connectionService=$connectionService, didExchangeService=$didExchangeService, peerDIDService=$peerDIDService, jwsService=$jwsService, connections=$connections, mediationRecipient=$mediationRecipient, outOfBandRepository=$outOfBandRepository, outOfBandService=$outOfBandService, oob=$oob, didCommMessageRepository=$didCommMessageRepository, credentialExchangeRepository=$credentialExchangeRepository, ledgerService=$ledgerService, credentialDefinitionRepository=$credentialDefinitionRepository, revocationRegistryRepository=$revocationRegistryRepository, anoncredsService=$anoncredsService, credentialService=$credentialService, credentialServiceV2=$credentialServiceV2, credentials=$credentials, credentialsV2=$credentialsV2, credentialRepository=$credentialRepository, revocationService=$revocationService, revocationNotificationService=$revocationNotificationService, revocationNotificationServicev2=$revocationNotificationServicev2, proofRepository=$proofRepository, proofService=$proofService, proofs=$proofs, basicMessages=$basicMessages, problemReports=$problemReports, _isInitialized=$_isInitialized)"
+    }
+
     companion object {
         /**
          * Generate a key to encrypt the wallet.
@@ -146,4 +150,6 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             return AskarStoreManager().generateRawStoreKey(null)
         }
     }
+
+
 }

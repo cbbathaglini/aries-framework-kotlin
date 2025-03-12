@@ -11,4 +11,8 @@ class ProofRepository(agent: Agent) : Repository<ProofExchangeRecord>(ProofExcha
             getSingleByQuery("{\"threadId\": \"$threadId\"}")
         }
     }
+
+    suspend fun getByConnectionId(connectionId: String?): ProofExchangeRecord {
+        return getSingleByQuery("{ \"connectionId\": \"$connectionId\"}");
+    }
 }

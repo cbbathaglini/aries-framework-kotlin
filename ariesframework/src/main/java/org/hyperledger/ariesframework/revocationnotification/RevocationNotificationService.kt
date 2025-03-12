@@ -134,75 +134,8 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
         }
     }
 
-//    /**
-//     * Create a V2 Revocation Notification message.
-//     */
-//    suspend fun v2CreateRevocationNotification(
-//        options: V2CreateRevocationNotificationMessageOptions
-//    ): Map<String, V2RevocationNotificationMessage> {
-//        val (credentialId, revocationFormat, comment, requestAck) = options
-//
-//        val message = V2RevocationNotificationMessage(
-//            credentialId = credentialId,
-//            revocationFormat = revocationFormat,
-//            comment = comment
-//        )
-//
-//        if (requestAck) {
-//            message.setPleaseAck()
-//        }
-//
-//        return mapOf("message" to message)
-//    }
-
-    /**
-     * Process a received V2RevocationNotificationMessage.
-     */
-//    suspend fun v2ProcessRevocationNotification(
-//        messageContext: InboundMessageContext<V2RevocationNotificationMessage>
-//    ) {
-//        logger.info("Processing revocation notification v2", mapOf("message" to messageContext.message))
-//
-//        val credentialId = messageContext.message.credentialId
-//
-//        if (messageContext.message.revocationFormat !in listOf(v2IndyRevocationFormat, v2AnonCredsRevocationFormat)) {
-//            throw CredoError(
-//                "Unknown revocation format: ${messageContext.message.revocationFormat}. Supported formats are indy-anoncreds and anoncreds"
-//            )
-//        }
-//
-//        try {
-//            val credentialIdGroups =
-//                v2IndyRevocationIdentifierRegex.find(credentialId)?.groupValues
-//                    ?: v2AnonCredsRevocationIdentifierRegex.find(credentialId)?.groupValues
-//
-//            if (credentialIdGroups == null || credentialIdGroups.size < 2) {
-//                throw CredoError(
-//                    "Incorrect revocation notification credentialId format: \n$credentialId\ndoes not match\n" +
-//                            "\"<revocation_registry_id>::<credential_revocation_id>\""
-//                )
-//            }
-//
-//            val anonCredsRevocationRegistryId = credentialIdGroups[1]
-//            val anonCredsCredentialRevocationId = credentialIdGroups[2]
-//            val comment = messageContext.message.comment
-//            val connection = messageContext.assertReadyConnection()
-//
-//            processRevocationNotification(
-//                messageContext.agentContext,
-//                anonCredsRevocationRegistryId,
-//                anonCredsCredentialRevocationId,
-//                connection,
-//                comment
-//            )
-//        } catch (error: Exception) {
-//            logger.warn("Failed to process revocation notification message", mapOf("error" to error, "credentialId" to credentialId))
-//        }
-//    }
-
     private fun registerMessageHandlers(dispatcher: Dispatcher) {
         dispatcher.registerHandler(RevocationNotificationHandlerV1(agent))
-        //dispatcher.registerHandler(RevocationNotificationHandlerV1(this))
     }
 
     private fun registerMessages() {
