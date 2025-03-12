@@ -24,7 +24,9 @@ import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
 import org.hyperledger.ariesframework.problemreports.ProblemReportsCommand
 import org.hyperledger.ariesframework.proofs.ProofCommand
+import org.hyperledger.ariesframework.proofs.ProofCommandV2
 import org.hyperledger.ariesframework.proofs.ProofService
+import org.hyperledger.ariesframework.proofs.ProofServiceV2
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
 import org.hyperledger.ariesframework.routing.MediationRecipient
@@ -60,7 +62,9 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationNotificationService = RevocationNotificationService(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
+    val proofServiceV2 = ProofServiceV2(this)
     val proofs = ProofCommand(this, dispatcher)
+    val proofsV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
     val problemReports = ProblemReportsCommand(this, dispatcher)
 

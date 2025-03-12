@@ -60,11 +60,13 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     @OptIn(InternalSerializationApi::class)
     fun <T : AgentMessage> registerMessage(type: String, clazz: KClass<T>) {
         serializers[type] = clazz.serializer() as KSerializer<AgentMessage>
+        logger.debug(type)
         serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = clazz.serializer() as KSerializer<AgentMessage>
     }
 
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
+        logger.debug(type)
         return if (serializers.containsKey(type)) {
             serializers[type]!!
         } else {
