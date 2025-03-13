@@ -1,5 +1,6 @@
-package org.hyperledger.ariesframework.ledger
+package org.hyperledger.ariesframework.ledger.ledgerIndy
 
+import ILedgerService
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
 import anoncreds_uniffi.RevocationRegistryDefinition
@@ -22,33 +23,25 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRecord
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRecord
+import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
+import org.hyperledger.ariesframework.ledger.IndyResponse
+import org.hyperledger.ariesframework.ledger.RevRegDeltaResponse
+import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
+import org.hyperledger.ariesframework.ledger.SchemaResponse
+import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.slf4j.LoggerFactory
 
-class SchemaTemplate(val name: String, val version: String, val attributes: List<String>)
-class CredentialDefinitionTemplate(
-    val schema: String,
-    val tag: String,
-    val supportRevocation: Boolean,
-    val seqNo: Int,
-)
-class RevocationRegistryDefinitionTemplate(
-    val credDefId: String,
-    val tag: String,
-    val maxCredNum: Int,
-    val tailsDirPath: String? = null,
-)
-
-class LedgerService(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(LedgerService::class.java)
+class LedgerIndyService(val agent: Agent) : ILedgerService {
+    private val logger = LoggerFactory.getLogger(LedgerIndyService::class.java)
     private var pool: Pool? = null
     private val ledger = Ledger()
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-    suspend fun initialize() {
+    override suspend fun initialize() {
         logger.info("Initializing Pool")
         if (pool != null) {
             logger.warn("Pool already initialized.")
@@ -69,7 +62,7 @@ class LedgerService(val agent: Agent) {
         }
     }
 
-    suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
+    override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
         val schema = issuer.createSchema(
             schemaTemplate.name,
             schemaTemplate.version,
@@ -91,7 +84,7 @@ class LedgerService(val agent: Agent) {
         return schema.schemaId()
     }
 
-    suspend fun getSchema(schemaId: String): Pair<String, Int> {
+    override suspend fun getSchema(schemaId: String): Pair<String, Int> {
         logger.debug("Get Schema with id: $schemaId")
         val request = ledger.buildGetSchemaRequest(null, schemaId)
         val res = submitReadRequest(request)
@@ -113,7 +106,7 @@ class LedgerService(val agent: Agent) {
         return Pair(schemaJson, seqNo)
     }
 
-    suspend fun registerCredentialDefinition(
+    override suspend fun registerCredentialDefinition(
         did: DidInfo,
         credentialDefinitionTemplate: CredentialDefinitionTemplate,
     ): String {
@@ -152,7 +145,7 @@ class LedgerService(val agent: Agent) {
         return credDefId
     }
 
-    suspend fun getCredentialDefinition(id: String): String {
+    override suspend fun getCredentialDefinition(id: String): String {
         logger.debug("Get CredentialDefinition with id: $id")
         val request = ledger.buildGetCredDefRequest(null, id)
         val response = submitReadRequest(request)
@@ -178,7 +171,7 @@ class LedgerService(val agent: Agent) {
         return Json.encodeToString(credDef)
     }
 
-    suspend fun registerRevocationRegistryDefinition(
+    override suspend fun registerRevocationRegistryDefinition(
         did: DidInfo,
         revRegDefTemplate: RevocationRegistryDefinitionTemplate,
     ): String {
@@ -239,7 +232,7 @@ class LedgerService(val agent: Agent) {
         return revRegId
     }
 
-    suspend fun getRevocationRegistryDefinition(id: String): String {
+    override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.debug("Get RevocationRegistryDefinition with id: $id")
         val request = ledger.buildGetRevocRegDefRequest(null, id)
         val response = submitReadRequest(request)
@@ -258,10 +251,10 @@ class LedgerService(val agent: Agent) {
         return Json.encodeToString(data)
     }
 
-    suspend fun getRevocationRegistryDelta(
+    override suspend fun getRevocationRegistryDelta(
         id: String,
-        to: Int = (System.currentTimeMillis() / 1000L).toInt(),
-        from: Int = 0,
+        to: Int, // TODO to: Int = (System.currentTimeMillis() / 1000L).toInt(),
+        from: Int, // = 0
     ): Pair<String, Int> {
         logger.debug("Get RevocationRegistryDelta with id: $id")
         val request = ledger.buildGetRevocRegDeltaRequest(null, id, from.toLong(), to.toLong())
@@ -279,7 +272,7 @@ class LedgerService(val agent: Agent) {
         return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp)
     }
 
-    suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
+    override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
         logger.debug("Get RevocationRegistry with id: $id, timestamp: $timestamp")
         val request = ledger.buildGetRevocRegRequest(null, id, timestamp.toLong())
         val response = submitReadRequest(request)
@@ -295,7 +288,7 @@ class LedgerService(val agent: Agent) {
         return Pair(Json.encodeToString(value), txnTime)
     }
 
-    suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {
+    override suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {
         logger.debug("Revoking credential with index: $revocationIndex")
         val credentialDefinitionRecord = agent.credentialDefinitionRepository.getByCredDefId(credDefId)
         val revocationRecord = agent.revocationRegistryRepository.findByCredDefId(credDefId)

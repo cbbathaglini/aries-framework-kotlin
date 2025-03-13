@@ -15,7 +15,7 @@ import org.hyperledger.ariesframework.wallet.Wallet
 import java.io.File
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
-const val genesisPath = "bcovrin-genesis.txn"
+const val genesisPath = "genesiscpqd.txn"
 
 class WalletApp : Application() {
     lateinit var agent: Agent

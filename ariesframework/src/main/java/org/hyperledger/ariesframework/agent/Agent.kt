@@ -17,7 +17,8 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRepository
 import org.hyperledger.ariesframework.credentials.CredentialService
 import org.hyperledger.ariesframework.credentials.CredentialsCommand
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
-import org.hyperledger.ariesframework.ledger.LedgerService
+import org.hyperledger.ariesframework.ledger.ledgerBesu.LedgerBesuService
+import org.hyperledger.ariesframework.ledger.ledgerIndy.LedgerIndyService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
@@ -48,7 +49,6 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val oob = OutOfBandCommand(this, dispatcher)
     val didCommMessageRepository = DidCommMessageRepository(this)
     val credentialExchangeRepository = CredentialExchangeRepository(this)
-    val ledgerService = LedgerService(this)
     val credentialDefinitionRepository = CredentialDefinitionRepository(this)
     val revocationRegistryRepository = RevocationRegistryRepository(this)
     val anoncredsService = AnoncredsService(this)
@@ -61,6 +61,13 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val proofs = ProofCommand(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
     val problemReports = ProblemReportsCommand(this, dispatcher)
+
+    // Escolher entre LedgerService e LedgerBesuService
+    val ledgerService = if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
+        LedgerBesuService(this)
+    } else {
+        LedgerIndyService(this)
+    }
 
     private var _isInitialized = false
 
