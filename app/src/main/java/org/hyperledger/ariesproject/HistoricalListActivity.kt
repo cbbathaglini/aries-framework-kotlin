@@ -11,32 +11,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
-import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
-import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
-import org.hyperledger.ariesproject.databinding.CredentialListContentBinding
+import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesproject.databinding.ActivityHistoricalListBinding
+import org.hyperledger.ariesproject.databinding.HistoricalListContentBinding
+import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 
-class CredentialListActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityCredentialListBinding
-    private lateinit var connectionId : String
+class HistoricalListActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityHistoricalListBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityCredentialListBinding.inflate(layoutInflater)
+        binding = ActivityHistoricalListBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        println("[IDD] intent: ${intent.toString()}")
-        connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
-        println("[IDD] connectionId: ==${connectionId}==")
     }
 
     override fun onResume() {
         super.onResume()
-        setupRecyclerView(binding.credentialList.credentialList)
+        setupRecyclerView(binding.historicalList.historicalList)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) =
@@ -50,40 +46,36 @@ class CredentialListActivity : AppCompatActivity() {
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
-        lateinit var credentials : List<CredentialRecord>
-        println("[IDD]connectionId: ${connectionId} ")
-        if (connectionId != "") {
-            credentials = runBlocking { app.agent.credentialRepository.getByConnectionId(connectionId) }
-        }else{
-            println("[IDD] Entrou else")
-            credentials = runBlocking { app.agent.credentialRepository.getAll() }
-            println("[IDD] credentials: ${credentials.toString()}")
-        }
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentials)
+        val connections = runBlocking { app.agent.connectionRepository.getAll() }
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, connections)
     }
 
     class SimpleItemRecyclerViewAdapter(
-        private val parentActivity: CredentialListActivity,
-        private val values: List<CredentialRecord>,
+        private val parentActivity: HistoricalListActivity,
+        private val values: List<ConnectionRecord>,
     ) : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
         private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
-            val item = v.tag as CredentialRecord
-            val intent = Intent(v.context, CredentialDetailActivity::class.java).apply {
-                putExtra(CredentialDetailFragment.ARG_CREDENTIAL, item.credential)
-                putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, item.credentialId)
+            val item = v.tag as ConnectionRecord
+
+            val intent = Intent(v.context, HistoricalDetailActivity::class.java).apply {
+                putExtra(HistoricalDetailFragment.ARG_CONNECTION_ID, item.id)
+                putExtra(HistoricalDetailFragment.ARG_CONNECTION_RECORD, ConnectionRecordWrapper(item))
+                putExtra(HistoricalDetailFragment.ARG_CONNECTION_THREADID, item.threadId)
+                putExtra(HistoricalDetailFragment.ARG_CONNECTION_MEDIATORID, item.mediatorId)
             }
+
             v.context.startActivity(intent)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.credential_list_content, parent, false)
+                .inflate(R.layout.historical_list_content, parent, false)
             return ViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = values[position]
-            holder.contentView.text = item.credentialId
+            holder.contentView.text = item.theirLabel
 
             with(holder.itemView) {
                 tag = item
@@ -94,7 +86,7 @@ class CredentialListActivity : AppCompatActivity() {
         override fun getItemCount() = values.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            var contentBinding = CredentialListContentBinding.bind(view)
+            var contentBinding = HistoricalListContentBinding.bind(view)
             val contentView: TextView = contentBinding.content
         }
     }

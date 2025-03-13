@@ -24,6 +24,7 @@ import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemR
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.models.ProofState
+import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
@@ -53,6 +54,8 @@ class WalletMainActivity : AppCompatActivity() {
                 lifecycleScope.launch(Dispatchers.Main) {
                     try {
                         val (_, connection) = app.agent.oob.receiveInvitationFromUrl(invitation)
+                        val connections = app.agent.connectionRepository.getAll()
+                        println(">> connections: ${connections.toString()}")
                         showAlert("Connected to ${connection?.theirLabel ?: "unknown agent"}")
                     } catch (e: Exception) {
                         showAlert("Unable to connect: ${e.localizedMessage}")
@@ -283,7 +286,7 @@ class WalletMainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST))
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL))
     }
 
     class SimpleItemRecyclerViewAdapter(
@@ -301,6 +304,11 @@ class WalletMainActivity : AppCompatActivity() {
 
                 MainMenu.LIST -> {
                     val intent = Intent(v.context, CredentialListActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.HISTORICAL -> {
+                    val intent = Intent(v.context, HistoricalListActivity::class.java)
                     v.context.startActivity(intent)
                 }
             }

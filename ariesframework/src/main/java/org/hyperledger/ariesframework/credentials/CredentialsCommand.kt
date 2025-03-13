@@ -84,6 +84,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createRequest(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+        logger.debug("[IDD] CREDENTIAL RECORD: ${credentialRecord.toString()}")
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))
 
