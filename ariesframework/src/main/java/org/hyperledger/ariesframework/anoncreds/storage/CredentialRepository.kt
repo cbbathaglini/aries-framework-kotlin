@@ -10,8 +10,4 @@ class CredentialRepository(agent: Agent) : Repository<CredentialRecord>(
     suspend fun getByCredentialId(credentialId: String): CredentialRecord {
         return getSingleByQuery("{\"credentialId\": \"$credentialId\"}")
     }
-
-    suspend fun getByConnectionId(connectionId: String) : List<CredentialRecord> {
-        return findByQuery("{\"connectionId\": \"$connectionId\"}")
-    }
 }

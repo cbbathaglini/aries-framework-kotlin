@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.storage.Repository
 
 class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(CredentialExchangeRecord::class, agent) {
@@ -17,6 +18,17 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
             getSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")
         } else {
             getSingleByQuery("{\"threadId\": \"$threadId\"}")
+        }
+    }
+
+    suspend fun getByConnectionId(connectionId: String) : List<CredentialExchangeRecord> {
+        return findByQuery("{\"connectionId\": \"$connectionId\"}")
+    }
+
+    suspend fun getCredentialRecordId(credentialRecordId: String?): CredentialExchangeRecord? {
+        val allRecords : List<CredentialExchangeRecord> = getAll()
+        return allRecords.find { record ->
+            record.credentials.any { it.credentialRecordId == credentialRecordId }
         }
     }
 }

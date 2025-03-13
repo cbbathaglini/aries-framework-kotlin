@@ -81,4 +81,10 @@ class CredentialRecord(
         tags["credentialDefinitionId"] = credentialDefinitionId
         return tags
     }
+
+    override fun toString(): String {
+        return "CredentialRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, credentialId='$credentialId', credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, linkSecretId='$linkSecretId', credential='$credential', schemaId='$schemaId', schemaName='$schemaName', schemaVersion='$schemaVersion', schemaIssuerId='$schemaIssuerId', issuerId='$issuerId', credentialDefinitionId='$credentialDefinitionId')"
+    }
+
+
 }
