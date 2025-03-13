@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.proofs
 
-import android.util.Log
 import anoncreds_uniffi.Credential
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Presentation
@@ -25,9 +24,10 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
-import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.messages.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessageV2
+//import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessage
+import org.hyperledger.ariesframework.proofs.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.PartialProof
@@ -45,8 +45,8 @@ import org.hyperledger.ariesframework.util.concurrentMap
 import org.slf4j.LoggerFactory
 import kotlin.math.max
 
-class ProofService(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(ProofService::class.java)
+class ProofServiceV2(val agent: Agent) {
+    private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
 
     companion object {
         /**
@@ -73,12 +73,12 @@ class ProofService(val agent: Agent) {
         connectionRecord: ConnectionRecord? = null,
         comment: String? = null,
         autoAcceptProof: AutoAcceptProof? = null,
-    ): Pair<RequestPresentationMessage, ProofExchangeRecord> {
+    ): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
         connectionRecord?.assertReady()
 
         val proofRequestJson = Json.encodeToString(proofRequest)
-        val attachment = Attachment.fromData(proofRequestJson.toByteArray(), RequestPresentationMessage.INDY_PROOF_REQUEST_ATTACHMENT_ID)
-        val message = RequestPresentationMessage(comment, listOf(attachment))
+        val attachment = Attachment.fromData(proofRequestJson.toByteArray(), RequestPresentationMessageV2.INDY_PROOF_REQUEST_ATTACHMENT_ID)
+        val message = RequestPresentationMessageV2(comment, listOf(attachment))
 
         val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord?.id ?: "connectionless-proof-request",
@@ -134,16 +134,16 @@ class ProofService(val agent: Agent) {
         proofRecord: ProofExchangeRecord,
         requestedCredentials: RequestedCredentials,
         comment: String? = null,
-    ): Pair<PresentationMessage, ProofExchangeRecord> {
+    ): Pair<PresentationMessageV2, ProofExchangeRecord> {
         proofRecord.assertState(ProofState.RequestReceived)
 
-        val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessage.type)
-        val proofRequestMessage = MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessage
+        val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessageV2.type)
+        val proofRequestMessage = MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
 
         val proof = createProof(proofRequestMessage.indyProofRequest(), requestedCredentials)
 
-        val attachment = Attachment.fromData(proof, PresentationMessage.INDY_PROOF_ATTACHMENT_ID)
-        val presentationMessage = PresentationMessage(comment, listOf(attachment))
+        val attachment = Attachment.fromData(proof, PresentationMessageV2.INDY_PROOF_ATTACHMENT_ID)
+        val presentationMessage = PresentationMessageV2(comment, listOf(attachment))
         presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
 
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, presentationMessage, proofRecord.id)
@@ -162,14 +162,14 @@ class ProofService(val agent: Agent) {
      * @return proof record associated with the presentation message.
      */
     suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
-        val presentationMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessage
+        val presentationMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessageV2
 
         val proofRecord = agent.proofRepository.getByThreadAndConnectionId(presentationMessage.threadId, null)
         proofRecord.assertState(ProofState.RequestSent)
 
         val indyProofJson = presentationMessage.indyProof()
-        val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessage.type)
-        val requestMessage = MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
+        val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessageV2.type)
+        val requestMessage = MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessageV2
         val indyProofRequest = requestMessage.indyProofRequest()
 
         proofRecord.isVerified = verifyProof(indyProofRequest, indyProofJson)
@@ -186,10 +186,10 @@ class ProofService(val agent: Agent) {
      * @param proofRecord the proof record for which to create the presentation acknowledgement.
      * @return the presentation acknowledgement message and an associated proof record.
      */
-    suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessage, ProofExchangeRecord> {
+    suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
         proofRecord.assertState(ProofState.PresentationReceived)
 
-        val ackMessage = PresentationAckMessage(proofRecord.threadId, AckStatus.OK)
+        val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
         updateState(proofRecord, ProofState.Done)
 
         return Pair(ackMessage, proofRecord)
@@ -431,7 +431,7 @@ class ProofService(val agent: Agent) {
                 schemas,
                 credentialDefinitions,
             )
-            Log.d("TESTES", presentation.toJson().toString())
+
             return presentation.toJson().toByteArray()
         } catch (e: Exception) {
             throw Exception("Cannot create a proof using the provided credentials. $e")

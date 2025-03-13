@@ -11,7 +11,7 @@ data class ProofRequest(
     @EncodeDefault
     val name: String = "proof-request",
     @EncodeDefault
-    val version: String = "1.0",
+    var version: String = "1.0",
     val nonce: String,
     @SerialName("requested_attributes")
     val requestedAttributes: Map<String, ProofAttributeInfo>,

@@ -8,7 +8,6 @@ class Dispatcher(val agent: Agent) {
     var handlers = mutableMapOf<String, MessageHandler>()
 
     fun registerHandler(handler: MessageHandler) {
-        logger.info("Listing all my handlers: ${handlers.keys}")
         handlers[handler.messageType] = handler
         handlers[replaceNewDidCommPrefixWithLegacyDidSov(handler.messageType)] = handler
     }

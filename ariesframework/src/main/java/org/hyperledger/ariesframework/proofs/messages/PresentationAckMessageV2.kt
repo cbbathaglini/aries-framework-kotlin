@@ -1,4 +1,5 @@
-package org.hyperledger.ariesframework.credentials.v1.messages
+package org.hyperledger.ariesframework.proofs.messages
+
 
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.AckStatus
@@ -6,14 +7,14 @@ import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 
 @Serializable
-class CredentialAckMessage private constructor(
+class PresentationAckMessageV2 private constructor(
     val status: AckStatus,
-) : AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), PresentationAckMessageV2.type) {
     constructor(threadId: String, status: AckStatus) : this(status) {
         thread = ThreadDecorator(threadId)
     }
     companion object {
-        const val type = "https://didcomm.org/issue-credential/1.0/ack"
+        const val type = "https://didcomm.org/present-proof/2.0/ack"
     }
 
     override fun requestResponse(): Boolean {
