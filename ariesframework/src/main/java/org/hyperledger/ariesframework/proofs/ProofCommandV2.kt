@@ -152,3 +152,4 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
     }
 }
+
