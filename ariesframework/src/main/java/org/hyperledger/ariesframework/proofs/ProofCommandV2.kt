@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.proofs
 
+import android.util.Log
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
@@ -63,7 +64,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             comment,
             autoAcceptProof,
         )
-
+        Log.d("MAIN_MESSAGE", "requestProof")
         agent.messageSender.send(OutboundMessage(message, connection))
 
         return record
@@ -91,6 +92,9 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         )
 
         val connection = agent.connectionRepository.getById(record.connectionId)
+        Log.d("MAIN_MESSAGE", "acceptRequest")
+        Log.d("MAIN_MESSAGE", "acceptRequest "+ connection.toString())
+        Log.d("MAIN_MESSAGE", "acceptRequest "+ message.toJsonString())
         agent.messageSender.send(OutboundMessage(message, connection))
 
         return proofRecord
@@ -126,6 +130,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val record = agent.proofRepository.getById(proofRecordId)
         val connection = agent.connectionRepository.getById(record.connectionId)
         val (message, proofRecord) = agent.proofServiceV2.createAck(record)
+        Log.d("MAIN_MESSAGE", "acceptPresentation")
         agent.messageSender.send(OutboundMessage(message, connection))
         return proofRecord
     }
@@ -148,7 +153,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val proofRequestJson = proofRequestMessage.indyProofRequest()
         logger.debug("Proof request json: $proofRequestJson")
         val proofRequest = Json.decodeFromString<ProofRequest>(proofRequestJson)
-        proofRequest.version = "2.0"
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
     }
 }

@@ -87,6 +87,7 @@ class MessageSender(val agent: Agent) {
                 continue
             }
             logger.debug("Send outbound message of type ${agentMessage.type} to endpoint ${service.serviceEndpoint}")
+            logger.debug("Message value ${agentMessage.toJsonString()} to endpoint ${service.serviceEndpoint}")
             if (endpointPrefix == null && outboundTransportForEndpoint(service.serviceEndpoint) == null) {
                 logger.debug("endpoint is not supported")
                 continue

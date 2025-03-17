@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.proofs
 
+import android.util.Log
 import anoncreds_uniffi.Credential
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Presentation
@@ -21,6 +22,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.agent.decorators.ProofFormat
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
@@ -143,7 +145,8 @@ class ProofServiceV2(val agent: Agent) {
         val proof = createProof(proofRequestMessage.indyProofRequest(), requestedCredentials)
 
         val attachment = Attachment.fromData(proof, PresentationMessageV2.INDY_PROOF_ATTACHMENT_ID)
-        val presentationMessage = PresentationMessageV2(comment, listOf(attachment))
+        val format = ProofFormat()
+        val presentationMessage = PresentationMessageV2(comment, listOf(format), listOf(attachment))
         presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
 
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, presentationMessage, proofRecord.id)
@@ -431,7 +434,7 @@ class ProofServiceV2(val agent: Agent) {
                 schemas,
                 credentialDefinitions,
             )
-
+            Log.d("TESTES", presentation.toJson().toString())
             return presentation.toJson().toByteArray()
         } catch (e: Exception) {
             throw Exception("Cannot create a proof using the provided credentials. $e")
