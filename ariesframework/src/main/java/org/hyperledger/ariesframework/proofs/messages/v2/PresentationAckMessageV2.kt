@@ -1,5 +1,4 @@
-package org.hyperledger.ariesframework.proofs.messages
-
+package org.hyperledger.ariesframework.proofs.messages.v2
 
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.AckStatus
@@ -9,7 +8,7 @@ import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 @Serializable
 class PresentationAckMessageV2 private constructor(
     val status: AckStatus,
-) : AgentMessage(generateId(), PresentationAckMessageV2.type) {
+) : AgentMessage(generateId(), type) {
     constructor(threadId: String, status: AckStatus) : this(status) {
         thread = ThreadDecorator(threadId)
     }

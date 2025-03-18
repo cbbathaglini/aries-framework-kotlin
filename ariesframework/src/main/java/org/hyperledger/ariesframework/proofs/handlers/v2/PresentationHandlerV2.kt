@@ -1,14 +1,14 @@
-package org.hyperledger.ariesframework.proofs.handlers
+package org.hyperledger.ariesframework.proofs.handlers.v2
 
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.proofs.messages.PresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 
-class PresentationHandler(val agent: Agent) : MessageHandler {
-    override val messageType = PresentationMessage.type
+class PresentationHandlerV2(val agent: Agent) : MessageHandler {
+    override val messageType = PresentationMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         val presentationRecord = agent.proofService.processPresentation(messageContext)

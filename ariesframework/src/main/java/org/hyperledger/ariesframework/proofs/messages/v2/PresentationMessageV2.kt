@@ -1,19 +1,22 @@
-package org.hyperledger.ariesframework.proofs.messages
+package org.hyperledger.ariesframework.proofs.messages.v2
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.agent.decorators.ProofFormat
 
 @Serializable
-class PresentationMessage(
+class PresentationMessageV2(
     val comment: String? = null,
+    @SerialName("formats")
+    val formsts: List<ProofFormat>,
     @SerialName("presentations~attach")
     val presentationAttachments: List<Attachment>,
-) : AgentMessage(generateId(), PresentationMessage.type) {
+) : AgentMessage(generateId(), type) {
     companion object {
-        const val INDY_PROOF_ATTACHMENT_ID = "libindy-presentation-0"
-        const val type = "https://didcomm.org/present-proof/1.0/presentation"
+        const val INDY_PROOF_ATTACHMENT_ID = "indy"
+        const val type = "https://didcomm.org/present-proof/2.0/presentation"
     }
 
     fun getPresentationAttachmentById(id: String): Attachment? {
