@@ -27,8 +27,10 @@ import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessageV2
+import org.hyperledger.ariesframework.proofs.messages.PresentationMessage
 //import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
@@ -125,7 +127,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     /**
-     * Create a ``PresentationMessage`` as response to a received presentation request.
+     * Create a ``PresentationMessage`` Protocol Version 1.0` as response to a received presentation request.
      *
      * @param proofRecord the proof record for which to create the presentation.
      * @param requestedCredentials the requested credentials object specifying which credentials to use for the proof.
@@ -147,6 +149,37 @@ class ProofServiceV2(val agent: Agent) {
         val attachment = Attachment.fromData(proof, PresentationMessageV2.INDY_PROOF_ATTACHMENT_ID)
         val format = ProofFormat()
         val presentationMessage = PresentationMessageV2(comment, listOf(format), listOf(attachment))
+        presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
+
+        agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, presentationMessage, proofRecord.id)
+        updateState(proofRecord, ProofState.PresentationSent)
+
+        return Pair(presentationMessage, proofRecord)
+    }
+
+    /**
+     * Create a ``PresentationMessage Protocol Version 1.0`` as response to a received presentation request.
+     *
+     * @param proofRecord the proof record for which to create the presentation.
+     * @param requestedCredentials the requested credentials object specifying which credentials to use for the proof.
+     * @param comment a comment to include in the presentation.
+     * @return the presentation message and an associated proof record.
+     */
+    suspend fun createPresentationV1(
+        proofRecord: ProofExchangeRecord,
+        requestedCredentials: RequestedCredentials,
+        comment: String? = null,
+    ): Pair<PresentationMessage, ProofExchangeRecord> {
+        proofRecord.assertState(ProofState.RequestReceived)
+
+        val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessage.type)
+        val proofRequestMessage = MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessage
+
+        val proof = createProof(proofRequestMessage.indyProofRequest(), requestedCredentials)
+
+        val attachment = Attachment.fromData(proof, PresentationMessage.INDY_PROOF_ATTACHMENT_ID)
+        val format = ProofFormat()
+        val presentationMessage = PresentationMessage(comment, listOf(attachment))
         presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
 
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, presentationMessage, proofRecord.id)

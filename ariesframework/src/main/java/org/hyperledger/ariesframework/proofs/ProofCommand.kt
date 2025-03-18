@@ -7,16 +7,11 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.proofs.handlers.PresentationAckHandler
-import org.hyperledger.ariesframework.proofs.handlers.PresentationAckHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.PresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.PresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.RequestPresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.RequestPresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.messages.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials

@@ -334,19 +334,19 @@ class WalletMainActivity : AppCompatActivity() {
             try {
                 val requestedCredentials : RequestedCredentials
                 val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
-                if(message.message.contains("/2.0/")) {
+                //if(message.message.contains("/2.0/")) {
                     val retrievedCredentials = app.agent.proofsV2.getRequestedCredentialsForProofRequest(id)
                     requestedCredentials = app.agent.proofServiceV2.autoSelectCredentialsForProofRequest(
                         retrievedCredentials
                     )
                     app.agent.proofsV2.acceptRequest(id, requestedCredentials)
-                }else{
+                /*}else{
                     val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
                     requestedCredentials = app.agent.proofService.autoSelectCredentialsForProofRequest(
                         retrievedCredentials
                     )
                     app.agent.proofs.acceptRequest(id, requestedCredentials)
-                }
+                }*/
 
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
