@@ -30,8 +30,10 @@ import org.hyperledger.ariesframework.proofs.repository.ProofRepository
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.wallet.Wallet
+import org.slf4j.LoggerFactory
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
+    private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
     val wallet: Wallet = Wallet(this)
     val eventBus = EventBus()
     val dispatcher = Dispatcher(this)
@@ -64,7 +66,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
 
     // Escolher entre LedgerService e LedgerBesuService
     val ledgerService = if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
-        LedgerBesuService(this)
+        LedgerBesuService(this, context)
     } else {
         LedgerIndyService(this)
     }
@@ -76,6 +78,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
      * It will also connect to the mediator if configured and connect to the ledger.
      */
     suspend fun initialize() {
+        logger.info("Initializing o LedgerService")
         wallet.initialize()
 
         agentConfig.publicDidSeed?.let {
@@ -83,6 +86,8 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         }
 
         if (agentConfig.useLedgerService) {
+            ledgerService.initialize()
+        } else if (agentConfig.useBesuLedger){
             ledgerService.initialize()
         }
 

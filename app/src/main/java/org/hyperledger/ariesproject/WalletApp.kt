@@ -8,6 +8,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentConfig
+import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
 import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
@@ -39,6 +40,9 @@ class WalletApp : Application() {
 
         val invitationUrl = "https://blockchain.cpqd.com.br/cpqdid/agent-mediator-endpoint-com?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiMGEyYzc4MTYtMGYxZC00OTc3LTg5YzAtMGE0NmNhNTg4Nzk0IiwgInJlY2lwaWVudEtleXMiOiBbIjRFVFhHZGM3UjJzYVBzZktZR1g1dU15dDNFWU5aQVdyejJpN3VXbnN0eGJkIl0sICJsYWJlbCI6ICJNZWRpYWRvciBTT1UgaUQiLCAic2VydmljZUVuZHBvaW50IjogImh0dHBzOi8vYmxvY2tjaGFpbi5jcHFkLmNvbS5ici9jcHFkaWQvYWdlbnQtbWVkaWF0b3ItZW5kcG9pbnQtY29tIn0=" // ktlint-disable max-line-length
 
+        val besuLedgerContig = BesuLedgerConfig( chainId= 1337u,
+            nodeAddress= "http://localhost:8545",
+        )
         val config = AgentConfig(
             walletKey = key,
             genesisPath = File(applicationContext.filesDir.absolutePath, genesisPath).absolutePath,
@@ -47,6 +51,9 @@ class WalletApp : Application() {
             label = "SampleApp",
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
+            useLedgerService = false,
+            useBesuLedger =  true,
+            besuLedgerConfig = besuLedgerContig,
         )
         agent = Agent(applicationContext, config)
         agent.initialize()
@@ -57,7 +64,6 @@ class WalletApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         GlobalScope.launch(Dispatchers.IO) {
             openWallet()
         }
