@@ -10,5 +10,4 @@ class RevocationNotification(
 
     @Serializable(with = DateSerializer::class)
     val revocationDate: Date = Date()
-
 )

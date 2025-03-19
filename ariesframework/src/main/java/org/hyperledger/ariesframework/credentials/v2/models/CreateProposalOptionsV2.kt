@@ -23,8 +23,7 @@ data class CreateProposalOptionsV2(
     val issuerDid: String? = null,
     val threadId: String,
     val parentThreadId: String? = null,
-
-    ){
+) {
     class Builder(private val connection: ConnectionRecord, private val credentialRecord: CredentialExchangeRecord) {
         private var autoAcceptCredential: AutoAcceptCredential? = null
         private var comment: String? = null
@@ -98,7 +97,7 @@ data class CreateProposalOptionsV2(
                 parentThreadId = parentThreadId,
                 protocolVersion = CredentialsV2Constants.PROTOCOL_VERSION,
                 proposalAttachments = proposalAttachments,
-                formats = formats
+                formats = formats,
             )
         }
     }

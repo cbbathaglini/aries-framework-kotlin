@@ -9,7 +9,7 @@ import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
 import org.slf4j.LoggerFactory
 
-class IssueCredentialHandlerV2(val agent: Agent)  : MessageHandler {
+class IssueCredentialHandlerV2(val agent: Agent): MessageHandler {
 
     private val logger = LoggerFactory.getLogger(IssueCredentialHandlerV2::class.java)
     override val messageType = IssueCredentialMessageV2.type
@@ -22,7 +22,7 @@ class IssueCredentialHandlerV2(val agent: Agent)  : MessageHandler {
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
             val message = agent.credentialServiceV2.createCredentialAckMessageV2(
-                AcceptCredentialOptionsV2(credentialRecord.id)
+                AcceptCredentialOptionsV2(credentialRecord.id),
             )
             return OutboundMessage(message, messageContext.connection!!)
         }

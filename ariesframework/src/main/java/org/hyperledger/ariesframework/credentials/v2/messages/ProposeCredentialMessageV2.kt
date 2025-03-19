@@ -24,8 +24,7 @@ class ProposeCredentialMessageV2(
     val goal: String? = null,
 
     val comment: String? = null,
-
-    ) : AgentMessage(generateId(), type) {
+): AgentMessage(generateId(), type) {
 
     companion object {
         val type = CredentialsV2Constants.PROPOSE_CREDENTIAL

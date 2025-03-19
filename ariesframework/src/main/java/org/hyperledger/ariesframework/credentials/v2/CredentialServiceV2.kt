@@ -323,7 +323,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         val credentialId = UUID.randomUUID().toString()
 
-        val revocationMessage = messageContext.plaintextMessage?.let {
+        val revocationMessage = messageContext.plaintextMessage.let {
             MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV2
         }
 
@@ -395,7 +395,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         val formats = offerMessage.formats
         val goal = offerMessage.goal
-        val comment = offerMessage.comment
+        val comment = options.comment
         val offer = CredentialOffer(offerAttachment.getDataAsString())
         val request = CredentialRequest(requestAttachment.getDataAsString())
         val credDefId = offer.credDefId()
@@ -432,7 +432,7 @@ class CredentialServiceV2(val agent: Agent) {
             formats,
             listOf(attachment),
             goal,
-            options.comment,
+            comment,
         )
         issueMessage.thread = ThreadDecorator(credentialRecord.threadId)
 

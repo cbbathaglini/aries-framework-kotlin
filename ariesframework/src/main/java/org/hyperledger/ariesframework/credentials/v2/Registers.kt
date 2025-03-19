@@ -13,10 +13,9 @@ import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 
-
 class Registers(val agent: Agent) {
 
-    fun initialize(){
+    fun initialize() {
         registerHandlers(agent.dispatcher)
         registerMessages()
     }
@@ -35,5 +34,4 @@ class Registers(val agent: Agent) {
         MessageSerializer.registerMessage(ProposeCredentialMessageV2.type, ProposeCredentialMessageV2::class)
         MessageSerializer.registerMessage(RequestCredentialMessageV2.type, RequestCredentialMessageV2::class)
     }
-
 }

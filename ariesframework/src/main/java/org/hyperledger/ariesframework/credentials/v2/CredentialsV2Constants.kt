@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.credentials.v2
 
 class CredentialsV2Constants {
-    companion object{
+    companion object {
         const val PROTOCOL_VERSION = "v2"
         const val PROPOSE_CREDENTIAL = "https://didcomm.org/issue-credential/2.0/propose-credential"
         const val PROBLEM_REPORT = "https://didcomm.org/issue-credential/2.0/problem-report"

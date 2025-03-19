@@ -9,6 +9,4 @@ data class ProblemReportBody(
     @SerialName("comment") val comment: String,
     @SerialName("args") val args: List<String>? = null,
     @SerialName("escalate_to") val escalateTo: String? = null
-){
-
-}
+)

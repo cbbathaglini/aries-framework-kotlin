@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
 
-
 class CreateCredentialOfferOptionsV2(
     val connection: ConnectionRecord? = null,
     val credentialDefinitionId: String,

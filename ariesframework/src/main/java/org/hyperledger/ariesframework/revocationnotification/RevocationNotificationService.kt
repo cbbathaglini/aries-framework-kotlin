@@ -33,7 +33,7 @@ class RevocationNotificationService(val agent: Agent, val dispatcher: Dispatcher
 
     fun createRevocationNotification(options: RevocationNotificationMessageV1Options): Map<String, RevocationNotificationMessageV1> {
 
-        val (issueThread, id, comment, pleaseAck) = options
+        val (issueThread, comment, pleaseAck) = options
 
         val message = RevocationNotificationMessageV1(
             issueThread= issueThread,

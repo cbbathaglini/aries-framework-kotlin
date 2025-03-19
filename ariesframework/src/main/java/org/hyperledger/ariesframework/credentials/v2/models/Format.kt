@@ -16,12 +16,12 @@ class Format(
 )  {
 
     fun constructor(options: FormatSpec) {
-        this.attachId = options.attachmentId ?: UUID.randomUUID().toString()
+        this.attachId = options.attachmentId
         this.format = options.format
     }
 
     override fun toString(): String {
         return "Format(attachId=$attachId, format='$format')"
     }
-
 }
+

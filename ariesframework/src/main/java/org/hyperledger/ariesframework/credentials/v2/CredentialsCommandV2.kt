@@ -1,5 +1,4 @@
 package org.hyperledger.ariesframework.credentials.v2
-
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
@@ -32,13 +31,13 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return credentialRecord
     }
 
-    suspend fun acceptOffer(options: AcceptOfferOptionsV2) : CredentialExchangeRecord {
+    suspend fun acceptOffer(options: AcceptOfferOptionsV2): CredentialExchangeRecord {
         logger.info("acceptOffer init")
 
         val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
 
-        //printAttributesOfCredential(credentialRecord.credentialAttributes);
+        // printAttributesOfCredential(credentialRecord.credentialAttributes);
 
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
 
@@ -49,10 +48,10 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
     /*
     * helper method to show the attributes
-    * */
+    */
     private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
         if (credentialAttributes != null) {
-            credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
+            credentialAttributes.forEach { attribute ->
                 logger.info("[IDD] Attribute name: ${attribute.name}, Value: ${attribute.value}")
             }
         }

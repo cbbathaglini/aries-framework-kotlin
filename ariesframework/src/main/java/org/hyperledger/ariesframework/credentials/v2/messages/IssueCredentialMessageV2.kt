@@ -19,7 +19,7 @@ class IssueCredentialMessageV2(
     val goal: String? = null,
 
     val comment: String? = null
-) : AgentMessage(generateId(), type) {
+): AgentMessage(generateId(), type) {
 
     companion object {
         fun decode(decode: String): IssueCredentialMessageV2 {
@@ -37,6 +37,4 @@ class IssueCredentialMessageV2(
         }
         return issueAttachment;
     }
-
-
 }

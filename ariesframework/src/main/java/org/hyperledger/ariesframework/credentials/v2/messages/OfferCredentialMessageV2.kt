@@ -28,8 +28,7 @@ class OfferCredentialMessageV2(
 
     @SerialName("replacement_id")
     val replacementId: String? = null,
-
-    ) : AgentMessage(generateId(), type) {
+): AgentMessage(generateId(), type) {
 
     companion object {
         fun decode(decode: String): OfferCredentialMessageV2 {
@@ -60,5 +59,4 @@ class OfferCredentialMessageV2(
             "Indy attachment with id ${INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
         }
     }
-
 }

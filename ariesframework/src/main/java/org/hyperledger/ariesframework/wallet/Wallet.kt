@@ -87,8 +87,6 @@ class Wallet(private val agent: Agent) {
             linkSecretId = agent.anoncredsService.createLinkSecret()
             userDefaults.edit().putString(secretIdKey, linkSecretId).commit()
         }
-
-        //agent.anoncredsService.getRevocationStatusList()
     }
 
     suspend fun close() {
@@ -237,8 +235,8 @@ class Wallet(private val agent: Agent) {
         for (recipient in protected.recipients) {
             val kid = recipient.header?.get("kid")
                 ?: throw RuntimeException("Blank recipient key")
-            val sender = recipient.header?.get("sender")?.decodeBase64url()
-            val iv = recipient.header?.get("iv")?.decodeBase64url()
+            val sender = recipient.header.get("sender")?.decodeBase64url()
+            val iv = recipient.header.get("iv")?.decodeBase64url()
             if (sender != null && iv == null) {
                 throw RuntimeException("Missing IV")
             } else if (sender == null && iv != null) {
