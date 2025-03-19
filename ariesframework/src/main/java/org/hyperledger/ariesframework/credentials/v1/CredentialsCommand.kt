@@ -5,6 +5,9 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.handlers.CredentialAckHandler
 import org.hyperledger.ariesframework.credentials.v1.handlers.IssueCredentialHandler
 import org.hyperledger.ariesframework.credentials.v1.handlers.OfferCredentialHandler

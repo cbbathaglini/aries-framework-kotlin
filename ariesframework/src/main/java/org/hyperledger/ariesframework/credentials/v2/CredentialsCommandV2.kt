@@ -9,8 +9,8 @@ import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialM
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.slf4j.LoggerFactory
@@ -31,7 +31,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return credentialRecord
     }
 
-    suspend fun acceptOffer(options: AcceptOfferOptionsV2): CredentialExchangeRecord {
+    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         logger.info("acceptOffer init")
 
         val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
@@ -63,7 +63,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @param options options to decline the offer.
      * @return credential record associated with the declined credential.
      */
-    suspend fun declineOffer(options: AcceptOfferOptionsV2): CredentialExchangeRecord {
+    suspend fun declineOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         val message = agent.credentialServiceV2.createOfferDeclinedProblemReport(options)
         var credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
@@ -78,7 +78,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @param options options to accept the request.
      * @return credential record associated with the sent credential message (IssueCredentialMessageV2).
      */
-    suspend fun acceptRequest(options: AcceptRequestOptionsV2): CredentialExchangeRecord {
+    suspend fun acceptRequest(options: AcceptRequestOptions): CredentialExchangeRecord {
         val message = agent.credentialServiceV2.createIssueCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)

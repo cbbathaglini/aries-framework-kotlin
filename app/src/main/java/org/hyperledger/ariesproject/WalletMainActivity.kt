@@ -17,10 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.AgentEvents
-import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
@@ -237,7 +236,7 @@ class WalletMainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentialsV2.declineOffer(
-                    AcceptOfferOptionsV2(
+                    AcceptOfferOptions(
                         credentialRecordId = id,
                         autoAcceptCredential = AutoAcceptCredential.Never,
                     ),
@@ -303,7 +302,7 @@ class WalletMainActivity : AppCompatActivity() {
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentialsV2.acceptOffer(
-                    AcceptOfferOptionsV2(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {

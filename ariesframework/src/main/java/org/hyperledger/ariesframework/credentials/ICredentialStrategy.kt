@@ -3,6 +3,7 @@ package org.hyperledger.ariesframework.credentials
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
+import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportNotificationMessage
 
 //CreateProposalOptionsV2
 //CreateCredentialOfferOptionsV2
@@ -15,7 +16,7 @@ import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemR
 //RequestCredentialMessageV2
 //CredentialAckMessageV2
 //IssueCredentialMessageV2
-interface ICredentialStrategy<O1, O2, O3, O4, O5, R1, R2, R3, R4, R5> {
+interface ICredentialStrategy<O1, O2, O3, O4, O5, R1, R2, R3, R4, R5, P> {
 
     suspend fun createProposeCredentialMessage(options: O1): Pair<R1, CredentialExchangeRecord>
 
@@ -33,5 +34,5 @@ interface ICredentialStrategy<O1, O2, O3, O4, O5, R1, R2, R3, R4, R5> {
 
     suspend fun createIssueCredentialMessage(options: O5): R5
 
-    suspend fun createOfferDeclinedProblemReport(options: O3): CredentialProblemReportMessage
+    suspend fun createOfferDeclinedProblemReport(options: O3): P
 }

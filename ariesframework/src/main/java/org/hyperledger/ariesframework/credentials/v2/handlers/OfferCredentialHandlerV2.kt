@@ -4,9 +4,9 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.slf4j.LoggerFactory
 
 class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
@@ -22,7 +22,7 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
             val message = agent.credentialServiceV2.createRequestCredentialMessage(
-                AcceptOfferOptionsV2(credentialRecord.id)
+                AcceptOfferOptions(credentialRecord.id)
             )
             return OutboundMessage(message, messageContext.connection!!)
         }
