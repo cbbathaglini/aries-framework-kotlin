@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
@@ -36,7 +36,7 @@ class OfferCredentialMessageV2(
         }
 
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "indy"
-        const val type = CredentialsV2Constants.OFFER_CREDENTIAL
+        const val type = CredentialsConstants.OFFER_CREDENTIAL_V2
     }
 
 

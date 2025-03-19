@@ -3,9 +3,9 @@ package org.hyperledger.ariesframework.credentials.v2.models
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 @Serializable
 data class CreateProposalOptionsV2(
@@ -95,7 +95,7 @@ data class CreateProposalOptionsV2(
                 issuerDid = issuerDid,
                 threadId = threadId,
                 parentThreadId = parentThreadId,
-                protocolVersion = CredentialsV2Constants.PROTOCOL_VERSION,
+                protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
                 proposalAttachments = proposalAttachments,
                 formats = formats,
             )

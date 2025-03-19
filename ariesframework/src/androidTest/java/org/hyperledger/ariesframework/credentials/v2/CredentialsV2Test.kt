@@ -12,12 +12,12 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.AttachmentData
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
@@ -102,7 +102,7 @@ class CredentialsV2Test {
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.CredentialReceived)
 
-        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptions(aliceCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.Done)
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)

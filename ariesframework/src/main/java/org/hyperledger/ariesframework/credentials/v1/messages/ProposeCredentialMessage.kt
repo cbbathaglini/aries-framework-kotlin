@@ -3,6 +3,7 @@ package org.hyperledger.ariesframework.credentials.v1.messages
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 
 @Serializable
@@ -24,6 +25,6 @@ class ProposeCredentialMessage(
     val issuerDid: String? = null,
 ) : AgentMessage(generateId(), type) {
     companion object {
-        const val type = "https://didcomm.org/issue-credential/1.0/propose-credential"
+        const val type = CredentialsConstants.PROPOSE_CREDENTIAL_V1
     }
 }

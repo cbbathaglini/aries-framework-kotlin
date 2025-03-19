@@ -3,6 +3,7 @@ package org.hyperledger.ariesframework.credentials.v1.models
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
 @Serializable
 class CredentialPreview(

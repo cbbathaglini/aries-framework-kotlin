@@ -9,7 +9,7 @@ import org.hyperledger.ariesframework.connection.models.ConnectionState
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.oob.models.CreateOutOfBandInvitationConfig
 import org.hyperledger.ariesframework.proofs.ProofService
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter

@@ -1,7 +1,7 @@
-package org.hyperledger.ariesframework.credentials.v1.repository
+package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.storage.Repository
 
 class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(

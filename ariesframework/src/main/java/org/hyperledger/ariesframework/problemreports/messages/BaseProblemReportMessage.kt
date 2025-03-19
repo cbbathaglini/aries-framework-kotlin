@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.problemreports.messages
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
-import org.hyperledger.ariesframework.credentials.v1.CredentialsV1Constants
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 
 @Serializable
 data class DescriptionOptions(
@@ -26,6 +26,6 @@ open class BaseProblemReportMessage(
         throw Exception("Creating a ProblemReportMessage is not supported")
     }
     companion object {
-        const val type = CredentialsV1Constants.PROBLEM_REPORT
+        const val type = CredentialsConstants.PROBLEM_REPORT_V1
     }
 }

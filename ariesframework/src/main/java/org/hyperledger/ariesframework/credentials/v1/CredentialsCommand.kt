@@ -14,8 +14,8 @@ import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.slf4j.LoggerFactory
 
 class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {

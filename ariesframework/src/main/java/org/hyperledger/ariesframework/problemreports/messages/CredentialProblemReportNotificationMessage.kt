@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.problemreports.messages
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
 import org.hyperledger.ariesframework.credentials.v2.models.ProblemReportBody
 
 @Serializable

@@ -19,7 +19,7 @@ import org.hyperledger.ariesframework.connection.PeerDIDService
 import org.hyperledger.ariesframework.connection.repository.ConnectionRepository
 import org.hyperledger.ariesframework.credentials.v1.CredentialService
 import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRepository
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
 import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
 import org.hyperledger.ariesframework.ledger.LedgerService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand

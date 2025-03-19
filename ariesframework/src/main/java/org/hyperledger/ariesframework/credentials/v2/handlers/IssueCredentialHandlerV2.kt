@@ -6,7 +6,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.slf4j.LoggerFactory
 
 class IssueCredentialHandlerV2(val agent: Agent): MessageHandler {
@@ -21,8 +21,8 @@ class IssueCredentialHandlerV2(val agent: Agent): MessageHandler {
         if (credentialRecord.autoAcceptCredential == AutoAcceptCredential.Always ||
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
-            val message = agent.credentialServiceV2.createCredentialAckMessageV2(
-                AcceptCredentialOptionsV2(credentialRecord.id),
+            val message = agent.credentialServiceV2.createCredentialAckMessage(
+                AcceptCredentialOptions(credentialRecord.id),
             )
             return OutboundMessage(message, messageContext.connection!!)
         }

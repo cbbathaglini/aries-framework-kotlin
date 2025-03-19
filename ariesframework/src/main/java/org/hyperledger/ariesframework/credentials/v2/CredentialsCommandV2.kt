@@ -3,14 +3,14 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.slf4j.LoggerFactory
@@ -79,7 +79,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @return credential record associated with the sent credential message (IssueCredentialMessageV2).
      */
     suspend fun acceptRequest(options: AcceptRequestOptionsV2): CredentialExchangeRecord {
-        val message = agent.credentialServiceV2.createIssueCredentialMessageV2(options)
+        val message = agent.credentialServiceV2.createIssueCredentialMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))
@@ -94,8 +94,8 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @param options options to accept the credential.
      * @return credential record associated with the sent credential acknowledgement message.
      */
-    suspend fun acceptCredential(options: AcceptCredentialOptionsV2): CredentialExchangeRecord {
-        val message = agent.credentialServiceV2.createCredentialAckMessageV2(options)
+    suspend fun acceptCredential(options: AcceptCredentialOptions): CredentialExchangeRecord {
+        val message = agent.credentialServiceV2.createCredentialAckMessage(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))

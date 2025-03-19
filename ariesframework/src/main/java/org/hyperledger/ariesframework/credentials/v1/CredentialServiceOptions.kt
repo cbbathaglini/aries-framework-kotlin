@@ -1,10 +1,9 @@
 package org.hyperledger.ariesframework.credentials.v1
 
-import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
 class CreateProposalOptions(
     val connection: ConnectionRecord,
@@ -25,22 +24,4 @@ class CreateOfferOptions(
     val attributes: List<CredentialPreviewAttribute>,
     val autoAcceptCredential: AutoAcceptCredential? = null,
     val comment: String? = null,
-)
-
-@Serializable
-data class AcceptOfferOptions(
-    val credentialRecordId: String,
-    val holderDid: String? = null,
-    val autoAcceptCredential: AutoAcceptCredential? = null,
-    val comment: String? = null,
-)
-
-class AcceptRequestOptions(
-    val credentialRecordId: String,
-    val autoAcceptCredential: AutoAcceptCredential? = null,
-    val comment: String? = null,
-)
-
-class AcceptCredentialOptions(
-    val credentialRecordId: String,
 )

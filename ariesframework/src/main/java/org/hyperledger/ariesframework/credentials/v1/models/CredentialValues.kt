@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.credentials.v1.models
 
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.toJsonString
 import java.math.BigInteger
 import java.security.MessageDigest

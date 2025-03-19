@@ -24,16 +24,17 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v1.messages.CredentialAckMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.revocationnotification.message.RevocationNotificationMessageV1
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
@@ -61,7 +62,7 @@ class CredentialService(val agent: Agent) {
             state = CredentialState.ProposalSent,
             role = CredentialRole.Holder,
             autoAcceptCredential = options.autoAcceptCredential,
-            protocolVersion = CredentialsV1Constants.PROTOCOL_VERSION,
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V1,
         )
 
         val message = ProposeCredentialMessage(
@@ -198,7 +199,7 @@ class CredentialService(val agent: Agent) {
      */
     suspend fun createRequest(options: AcceptOfferOptions): RequestCredentialMessage {
         val credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
-        credentialRecord.assertProtocolVersion(CredentialsV1Constants.PROTOCOL_VERSION)
+        credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V1)
         credentialRecord.assertState(CredentialState.OfferReceived)
 
         val offerMessageJson = agent.didCommMessageRepository.getAgentMessage(

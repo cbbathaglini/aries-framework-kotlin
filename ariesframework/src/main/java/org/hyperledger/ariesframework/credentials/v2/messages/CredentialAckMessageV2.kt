@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.ACK
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 
 @Serializable
 class CredentialAckMessageV2 private constructor(val status: AckStatus) : AgentMessage(generateId(), type) {
@@ -12,7 +12,7 @@ class CredentialAckMessageV2 private constructor(val status: AckStatus) : AgentM
         thread = ThreadDecorator(threadId)
     }
     companion object {
-        const val type = ACK
+        const val type = CredentialsConstants.ACK_V2
     }
 
 }

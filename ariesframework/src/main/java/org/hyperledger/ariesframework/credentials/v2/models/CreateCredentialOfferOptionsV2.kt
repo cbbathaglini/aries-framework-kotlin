@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.credentials.v2.models
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
 class CreateCredentialOfferOptionsV2(
     val connection: ConnectionRecord? = null,

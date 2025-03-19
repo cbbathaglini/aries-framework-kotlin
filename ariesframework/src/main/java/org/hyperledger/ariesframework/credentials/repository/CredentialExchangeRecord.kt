@@ -1,17 +1,16 @@
-package org.hyperledger.ariesframework.credentials.v1.repository
+package org.hyperledger.ariesframework.credentials.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
-import org.hyperledger.ariesframework.credentials.v1.CredentialsV1Constants
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v1.models.IndyCredentialView
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
@@ -77,16 +76,16 @@ data class CredentialExchangeRecord(
         }
     }
 
-    fun setToState(newState:CredentialState){
+    fun setToState(newState: CredentialState){
         this.state = newState
     }
 
     fun setToProtocolVersionV1(){
-        this.protocolVersion = CredentialsV1Constants.PROTOCOL_VERSION
+        this.protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V1
     }
 
     fun setToProtocolVersionV2(){
-        this.protocolVersion = CredentialsV2Constants.PROTOCOL_VERSION
+        this.protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2
     }
 
 

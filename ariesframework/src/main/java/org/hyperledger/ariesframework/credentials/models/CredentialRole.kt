@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials.v2.models
+package org.hyperledger.ariesframework.credentials.models
 
 import kotlinx.serialization.Serializable
 

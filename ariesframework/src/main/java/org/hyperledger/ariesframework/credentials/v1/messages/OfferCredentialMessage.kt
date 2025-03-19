@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.CredentialsV1Constants.Companion.OFFER_CREDENTIAL
+import org.hyperledger.ariesframework.credentials.CredentialsConstants.Companion.OFFER_CREDENTIAL_V1
 
 @Serializable
 class OfferCredentialMessage(
@@ -17,7 +17,7 @@ class OfferCredentialMessage(
 ) : AgentMessage(generateId(), type) {
     companion object {
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "libindy-cred-offer-0"
-        const val type = OFFER_CREDENTIAL
+        const val type = OFFER_CREDENTIAL_V1
     }
 
     fun getOfferAttachmentById(id: String): Attachment? {
