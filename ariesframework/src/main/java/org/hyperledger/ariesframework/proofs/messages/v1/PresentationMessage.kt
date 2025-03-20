@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.proofs.messages
+package org.hyperledger.ariesframework.proofs.messages.v1
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,7 +10,7 @@ class PresentationMessage(
     val comment: String? = null,
     @SerialName("presentations~attach")
     val presentationAttachments: List<Attachment>,
-) : AgentMessage(generateId(), PresentationMessage.type) {
+) : AgentMessage(generateId(), type) {
     companion object {
         const val INDY_PROOF_ATTACHMENT_ID = "libindy-presentation-0"
         const val type = "https://didcomm.org/present-proof/1.0/presentation"

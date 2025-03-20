@@ -67,7 +67,9 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
+    //val proofServiceV2 = ProofServiceV2(this)
     val proofs = ProofCommand(this, dispatcher)
+    //val proofsV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
     val problemReports = ProblemReportsCommand(this, dispatcher)
 

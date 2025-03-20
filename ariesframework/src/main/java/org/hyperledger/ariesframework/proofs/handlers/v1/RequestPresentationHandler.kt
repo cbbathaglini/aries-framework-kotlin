@@ -1,10 +1,10 @@
-package org.hyperledger.ariesframework.proofs.handlers
+package org.hyperledger.ariesframework.proofs.handlers.v1
 
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.proofs.messages.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 

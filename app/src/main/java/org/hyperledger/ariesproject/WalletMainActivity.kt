@@ -24,6 +24,7 @@ import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemR
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.models.ProofState
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
@@ -330,9 +331,15 @@ class WalletMainActivity : AppCompatActivity() {
 
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val requestedCredentials : RequestedCredentials
+                val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
+
                 val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                val requestedCredentials = app.agent.proofService.autoSelectCredentialsForProofRequest(retrievedCredentials)
+                requestedCredentials = app.agent.proofService.autoSelectCredentialsForProofRequest(
+                    retrievedCredentials
+                )
                 app.agent.proofs.acceptRequest(id, requestedCredentials)
+
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Log.d("demo", e.localizedMessage)
@@ -348,6 +355,7 @@ class WalletMainActivity : AppCompatActivity() {
         progress.show()
         proofProgress = progress
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val app = application as WalletApp
