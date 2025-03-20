@@ -62,7 +62,7 @@ class AnoncredsService(val agent: Agent) {
         return credentials.map { credentialRecord ->
             IndyCredentialInfo(
                 credentialRecord.credentialId,
-                emptyMap(), // We don't use attrs.
+                credentialRecord.parseCredential(credentialRecord.credential),
                 credentialRecord.schemaId,
                 credentialRecord.credentialDefinitionId,
                 credentialRecord.revocationRegistryId,

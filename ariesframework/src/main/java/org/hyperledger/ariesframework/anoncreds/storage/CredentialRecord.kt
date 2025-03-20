@@ -2,6 +2,8 @@ package org.hyperledger.ariesframework.anoncreds.storage
 
 import kotlinx.serialization.Serializable
 import anoncreds_uniffi.Credential
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
@@ -118,5 +120,21 @@ class CredentialRecord(
         return "CredentialRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, credentialId='$credentialId', credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, linkSecretId='$linkSecretId', credential='$credential', schemaId='$schemaId', schemaName='$schemaName', schemaVersion='$schemaVersion', schemaIssuerId='$schemaIssuerId', issuerId='$issuerId', credentialDefinitionId='$credentialDefinitionId', revocationNotification=$revocationNotification)"
     }
 
+    fun parseCredential(credentialJson: String): Map<String, String> {
+        if (credentialJson.isNotBlank()) {
+            val jsonObject = JsonParser.parseString(credentialJson).asJsonObject
+
+            val valuesNode: JsonObject? = jsonObject.getAsJsonObject("values")
+            val result = mutableMapOf<String, String>()
+
+            valuesNode?.entrySet()?.forEach { (key, valueElement) ->
+                val rawValue = valueElement.asJsonObject.get("raw")?.asString ?: "N/A"
+                result[key] = rawValue
+            }
+
+            return result
+        }
+        return emptyMap()
+    }
 
 }
