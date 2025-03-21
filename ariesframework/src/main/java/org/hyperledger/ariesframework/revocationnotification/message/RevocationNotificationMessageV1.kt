@@ -23,6 +23,6 @@ class RevocationNotificationMessageV1(
     constructor(options: RevocationNotificationMessageV1Options) : this(
         issueThread = options.issueThread,
         comment = options.comment,
-        pleaseAck = options.pleaseAck
+        pleaseAck = options.pleaseAck,
     )
 }

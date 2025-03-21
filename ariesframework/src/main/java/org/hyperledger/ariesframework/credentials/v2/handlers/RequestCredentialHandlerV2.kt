@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
     private val logger = LoggerFactory.getLogger(RequestCredentialHandlerV2::class.java)
-    override val messageType =  RequestCredentialMessageV2.type
+    override val messageType = RequestCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.info("RequestCredentialHandlerV2 init")
@@ -22,7 +22,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
             agent.agentConfig.autoAcceptCredential == AutoAcceptCredential.Always
         ) {
             val message = agent.credentialServiceV2.createIssueCredentialMessage(
-                AcceptRequestOptions(credentialRecord.id)
+                AcceptRequestOptions(credentialRecord.id),
             )
             return OutboundMessage(message, messageContext.connection!!)
         }

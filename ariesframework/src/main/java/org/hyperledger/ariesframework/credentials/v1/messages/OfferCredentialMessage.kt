@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.credentials.CredentialsConstants.Companion.OFFER_CREDENTIAL_V1
+import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 
 @Serializable
 class OfferCredentialMessage(

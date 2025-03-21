@@ -7,16 +7,15 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
-
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.v1.RequestPresentationHandler
 import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
+import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.v2.RequestPresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
@@ -49,7 +48,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         MessageSerializer.registerMessage(PresentationAckMessage.type, PresentationAckMessage::class)
         MessageSerializer.registerMessage(PresentationMessageV2.type, PresentationMessageV2::class)
         MessageSerializer.registerMessage(RequestPresentationMessageV2.type, RequestPresentationMessageV2::class)
-        //MessageSerializer.registerMessage(PresentationAckMessageV2.type, PresentationAckMessageV2::class)
+        // MessageSerializer.registerMessage(PresentationAckMessageV2.type, PresentationAckMessageV2::class)
     }
 
     /**
@@ -106,12 +105,12 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
             val connection = agent.connectionRepository.getById(record.connectionId)
             Log.d("MAIN_MESSAGE", "acceptRequest")
-            Log.d("MAIN_MESSAGE", "acceptRequest "+ connection.toString())
-            Log.d("MAIN_MESSAGE", "acceptRequest "+ message.toJsonString())
+            Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
+            Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
 
             return proofRecord
-        }catch(e: Exception){
+        } catch (e: Exception) {
             val record = agent.proofRepository.getById(proofRecordId)
             val (message, proofRecord) = agent.proofService.createPresentationV1(
                 record,
@@ -121,12 +120,11 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
             val connection = agent.connectionRepository.getById(record.connectionId)
             Log.d("MAIN_MESSAGE", "acceptRequest")
-            Log.d("MAIN_MESSAGE", "acceptRequest "+ connection.toString())
-            Log.d("MAIN_MESSAGE", "acceptRequest "+ message.toJsonString())
+            Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
+            Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
 
             return proofRecord
-
         }
     }
 
@@ -174,10 +172,10 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentials {
         val record = agent.proofRepository.getById(proofRecordId)
-        //Select protocol version
+        // Select protocol version
         val recordMessageType = agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
 
-        if(recordMessageType.message.contains("/2.0/")) {
+        if (recordMessageType.message.contains("/2.0/")) {
             logger.debug("Select Version 2.0")
             val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
                 record.id,
@@ -191,7 +189,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             val proofRequest = Json.decodeFromString<ProofRequest>(proofRequestJson)
             return agent.proofService.getRequestedCredentialsForProofRequest(proofRequest)
         }
-        //Select version 1.0
+        // Select version 1.0
 
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             record.id,
@@ -205,6 +203,4 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         return agent.proofService.getRequestedCredentialsForProofRequest(proofRequest)
     }
-
 }
-

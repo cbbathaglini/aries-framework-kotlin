@@ -8,6 +8,8 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.handlers.CredentialAckHandler
 import org.hyperledger.ariesframework.credentials.v1.handlers.IssueCredentialHandler
 import org.hyperledger.ariesframework.credentials.v1.handlers.OfferCredentialHandler
@@ -17,8 +19,6 @@ import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
-import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.slf4j.LoggerFactory
 
 class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
@@ -49,7 +49,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
      * */
     private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
         if (credentialAttributes != null) {
-            credentialAttributes.forEach { attribute ->  // Corrected the lambda parameter
+            credentialAttributes.forEach { attribute -> // Corrected the lambda parameter
                 logger.info("[IDD][1.0] Attribute name: ${attribute.name}, Value: ${attribute.value}")
             }
         }
@@ -96,7 +96,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
 
-        //printAttributesOfCredential(credentialRecord.credentialAttributes);
+        // printAttributesOfCredential(credentialRecord.credentialAttributes);
 
         agent.messageSender.send(OutboundMessage(message, connection))
 

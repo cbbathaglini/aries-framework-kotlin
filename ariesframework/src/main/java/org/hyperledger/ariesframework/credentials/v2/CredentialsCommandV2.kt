@@ -3,14 +3,14 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
-import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.slf4j.LoggerFactory
@@ -47,8 +47,8 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     /*
-    * helper method to show the attributes
-    */
+     * helper method to show the attributes
+     */
     private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
         if (credentialAttributes != null) {
             credentialAttributes.forEach { attribute ->

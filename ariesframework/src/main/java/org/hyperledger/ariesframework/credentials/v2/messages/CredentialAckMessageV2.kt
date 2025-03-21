@@ -14,5 +14,4 @@ class CredentialAckMessageV2 private constructor(val status: AckStatus) : AgentM
     companion object {
         const val type = CredentialsConstants.ACK_V2
     }
-
 }

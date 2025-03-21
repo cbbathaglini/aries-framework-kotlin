@@ -17,15 +17,15 @@ class RevocationNotificationMessageV2(
 
     var comment: String? = null,
 
-    var pleaseAck: AckDecorator? = null
+    var pleaseAck: AckDecorator? = null,
 ) : AgentMessage(generateId(), type) {
 
     companion object {
         val type = RevocationNotificationConstants.TYPE_MESSAGE
     }
 
-    fun getThreadId(anonCredsRevocationRegistryId: String, anonCredsCredentialRevocationId:String): String {
-        return "indy::${anonCredsRevocationRegistryId}::${anonCredsCredentialRevocationId}"
+    fun getThreadId(anonCredsRevocationRegistryId: String, anonCredsCredentialRevocationId: String): String {
+        return "indy::$anonCredsRevocationRegistryId::$anonCredsCredentialRevocationId"
     }
 
     fun setPleaseAck(on: List<AckValues> = listOf(AckValues.Receipt)) {

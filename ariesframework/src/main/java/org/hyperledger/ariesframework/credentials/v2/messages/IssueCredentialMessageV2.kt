@@ -18,8 +18,8 @@ class IssueCredentialMessageV2(
     @SerialName("goal_code") val goalCode: String? = null,
     val goal: String? = null,
 
-    val comment: String? = null
-): AgentMessage(generateId(), type) {
+    val comment: String? = null,
+) : AgentMessage(generateId(), type) {
 
     companion object {
         fun decode(decode: String): IssueCredentialMessageV2 {
@@ -33,8 +33,8 @@ class IssueCredentialMessageV2(
     fun getCredentialAttachmentById(id: String): Attachment {
         val issueAttachment = credentialAttachments.find { it.id == id }
         check(issueAttachment != null) {
-            "Indy attachment with id ${INDY_CREDENTIAL_ATTACHMENT_ID} not found in issue message"
+            "Indy attachment with id $INDY_CREDENTIAL_ATTACHMENT_ID not found in issue message"
         }
-        return issueAttachment;
+        return issueAttachment
     }
 }

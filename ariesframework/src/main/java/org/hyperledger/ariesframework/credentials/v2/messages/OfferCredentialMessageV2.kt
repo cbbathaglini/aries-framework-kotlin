@@ -28,7 +28,7 @@ class OfferCredentialMessageV2(
 
     @SerialName("replacement_id")
     val replacementId: String? = null,
-): AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
         fun decode(decode: String): OfferCredentialMessageV2 {
@@ -39,11 +39,9 @@ class OfferCredentialMessageV2(
         const val type = CredentialsConstants.OFFER_CREDENTIAL_V2
     }
 
-
     fun findIndyFormatByAttachId(): Format? {
         return formats.find { it.attachId == INDY_CREDENTIAL_OFFER_ATTACHMENT_ID }
     }
-
 
     fun getOfferAttachmentById(id: String): Attachment? {
         return offerAttachments.find { it.id == id }
@@ -56,7 +54,7 @@ class OfferCredentialMessageV2(
 
     fun validateIndyAttachId() {
         checkNotNull(this.findIndyFormatByAttachId()) {
-            "Indy attachment with id ${INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
+            "Indy attachment with id $INDY_CREDENTIAL_OFFER_ATTACHMENT_ID not found in offer message"
         }
     }
 }

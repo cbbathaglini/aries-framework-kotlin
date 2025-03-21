@@ -7,7 +7,7 @@ import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
 import org.slf4j.LoggerFactory
 
-class CredentialAckHandlerV2(val agent: Agent): MessageHandler {
+class CredentialAckHandlerV2(val agent: Agent) : MessageHandler {
 
     private val logger = LoggerFactory.getLogger(CredentialAckHandlerV2::class.java)
     override val messageType = CredentialAckMessageV2.type

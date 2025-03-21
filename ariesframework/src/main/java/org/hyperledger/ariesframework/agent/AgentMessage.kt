@@ -53,8 +53,6 @@ open class AgentMessage(
             return UUID.randomUUID().toString()
         }
     }
-
-
 }
 
 object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentMessage::class) {

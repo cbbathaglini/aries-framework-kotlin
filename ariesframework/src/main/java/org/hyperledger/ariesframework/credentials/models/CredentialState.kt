@@ -36,5 +36,5 @@ enum class CredentialState {
     Done,
 
     @SerialName("credential-revoked")
-    Revoked
+    Revoked,
 }

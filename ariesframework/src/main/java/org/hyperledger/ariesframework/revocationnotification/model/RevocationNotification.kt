@@ -9,5 +9,5 @@ class RevocationNotification(
     val comment: String? = null,
 
     @Serializable(with = DateSerializer::class)
-    val revocationDate: Date = Date()
+    val revocationDate: Date = Date(),
 )

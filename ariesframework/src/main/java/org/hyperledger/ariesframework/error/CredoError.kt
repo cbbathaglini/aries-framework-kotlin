@@ -4,5 +4,5 @@ open class BaseError(message: String, cause: Throwable? = null) : Exception(mess
 
 class CredoError(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : BaseError(message, cause)

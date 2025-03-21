@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeatureQueryOptions(
     val featureType: String,
-    val match: String
+    val match: String,
 )

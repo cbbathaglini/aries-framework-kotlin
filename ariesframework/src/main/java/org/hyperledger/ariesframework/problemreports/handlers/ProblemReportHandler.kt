@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.problemreports.messages.BaseProblemReportMessage
 import org.slf4j.LoggerFactory
 

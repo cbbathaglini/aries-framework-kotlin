@@ -9,5 +9,5 @@ enum class AckValues {
     Receipt,
 
     @SerialName("OUTCOME")
-    Outcome
+    Outcome,
 }

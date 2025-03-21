@@ -19,5 +19,4 @@ sealed interface AgentEvents {
     class RevocationNotificationReceivedEvent(val record: CredentialExchangeRecord) : AgentEvents
     class RevocationNotificationReceivedEventV2(val record: CredentialExchangeRecord) : AgentEvents
     class CredentialEventV2(val record: CredentialExchangeRecord) : AgentEvents
-
 }

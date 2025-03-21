@@ -19,7 +19,7 @@ class CredentialRepository(agent: Agent) : Repository<CredentialRecord>(
         return getSingleByQuery("{\"credentialRevocationId\": \"$credentialRevocationId\"}")
     }
 
-    suspend fun getByCredentialRevocationIdAndRevocationRegistryId(credentialRevocationId: String, revocationRegistryId:String): CredentialRecord {
+    suspend fun getByCredentialRevocationIdAndRevocationRegistryId(credentialRevocationId: String, revocationRegistryId: String): CredentialRecord {
         return getSingleByQuery("{\"credentialRevocationId\": \"$credentialRevocationId\", \"revocationRegistryId\": \"$revocationRegistryId\"}")
     }
 }

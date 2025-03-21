@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.problemreports.handlers.ProblemReportHandler
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
-
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.slf4j.LoggerFactory

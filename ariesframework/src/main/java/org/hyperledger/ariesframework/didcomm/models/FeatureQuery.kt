@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeatureQuery(
     @SerialName("feature-type") val featureType: String,
-    val match: String
+    val match: String,
 ) {
     constructor(options: FeatureQueryOptions) : this(options.featureType, options.match)
 }

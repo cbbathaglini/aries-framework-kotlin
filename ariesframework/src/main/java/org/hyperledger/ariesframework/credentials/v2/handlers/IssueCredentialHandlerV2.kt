@@ -4,12 +4,12 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.slf4j.LoggerFactory
 
-class IssueCredentialHandlerV2(val agent: Agent): MessageHandler {
+class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
     private val logger = LoggerFactory.getLogger(IssueCredentialHandlerV2::class.java)
     override val messageType = IssueCredentialMessageV2.type

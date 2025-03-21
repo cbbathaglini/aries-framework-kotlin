@@ -4,14 +4,14 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
-import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 
 @Serializable
 data class CreateProposalOptionsV2(
     val connection: ConnectionRecord,
     val autoAcceptCredential: AutoAcceptCredential? = null,
-    val credentialRecord : CredentialExchangeRecord,
+    val credentialRecord: CredentialExchangeRecord,
     val formats: List<Format>,
     val proposalAttachments: List<Attachment>,
     val comment: String? = null,

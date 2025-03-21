@@ -20,7 +20,7 @@ class RequestCredentialMessageV2(
     val goal: String? = null,
 
     val comment: String? = null,
-): AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
         const val INDY_CREDENTIAL_REQUEST_ATTACHMENT_ID = "indy"

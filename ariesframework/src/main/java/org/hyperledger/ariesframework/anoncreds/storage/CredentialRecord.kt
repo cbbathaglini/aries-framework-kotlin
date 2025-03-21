@@ -1,17 +1,17 @@
 package org.hyperledger.ariesframework.anoncreds.storage
 
-import kotlinx.serialization.Serializable
 import anoncreds_uniffi.Credential
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
@@ -35,7 +35,7 @@ class CredentialRecord(
     var schemaIssuerId: String,
     var issuerId: String,
     var credentialDefinitionId: String,
-    var revocationNotification: RevocationNotification? = null
+    var revocationNotification: RevocationNotification? = null,
 ) : BaseRecord() {
     constructor(
         tags: Tags? = null,
@@ -50,7 +50,7 @@ class CredentialRecord(
         schemaIssuerId: String,
         issuerId: String,
         credentialDefinitionId: String,
-        revocationNotification: RevocationNotification
+        revocationNotification: RevocationNotification,
     ) : this(
         BaseRecord.generateId(),
         tags,
@@ -67,7 +67,7 @@ class CredentialRecord(
         schemaIssuerId,
         issuerId,
         credentialDefinitionId,
-        revocationNotification
+        revocationNotification,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         for ((key, value) in credentialObject.values()) {
@@ -92,13 +92,12 @@ class CredentialRecord(
         return tags
     }
 
-
     fun toCredentialExchangeRecord(
         connectionId: String,
         threadId: String,
         state: CredentialState,
         protocolVersion: String,
-        role: CredentialRole? = null
+        role: CredentialRole? = null,
     ): CredentialExchangeRecord {
         return CredentialExchangeRecord(
             id = this.id,
@@ -112,7 +111,7 @@ class CredentialRecord(
             credentialDefinitionId = this.credentialDefinitionId,
             revocationNotification = this.revocationNotification,
             credentials = mutableListOf(CredentialRecordBinding(credentialRecordType = "indy", credentialRecordId = this.id)),
-            role = role
+            role = role,
         )
     }
 
@@ -136,5 +135,4 @@ class CredentialRecord(
         }
         return emptyMap()
     }
-
 }

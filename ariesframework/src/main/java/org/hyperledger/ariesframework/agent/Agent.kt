@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.agent
 import RevocationNotificationService
 import RevocationNotificationServiceV2
 import android.content.Context
-import anoncreds_uniffi.RevocationStatusList
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnoncredsService
@@ -17,9 +16,10 @@ import org.hyperledger.ariesframework.connection.DidExchangeService
 import org.hyperledger.ariesframework.connection.JwsService
 import org.hyperledger.ariesframework.connection.PeerDIDService
 import org.hyperledger.ariesframework.connection.repository.ConnectionRepository
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
 import org.hyperledger.ariesframework.credentials.v1.CredentialService
 import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
+import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
 import org.hyperledger.ariesframework.ledger.LedgerService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
@@ -30,7 +30,6 @@ import org.hyperledger.ariesframework.proofs.ProofCommand
 import org.hyperledger.ariesframework.proofs.ProofService
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.wallet.Wallet
@@ -67,9 +66,11 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
-    //val proofServiceV2 = ProofServiceV2(this)
+
+    // val proofServiceV2 = ProofServiceV2(this)
     val proofs = ProofCommand(this, dispatcher)
-    //val proofsV2 = ProofCommandV2(this, dispatcher)
+
+    // val proofsV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
     val problemReports = ProblemReportsCommand(this, dispatcher)
 
@@ -152,6 +153,4 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             return AskarStoreManager().generateRawStoreKey(null)
         }
     }
-
-
 }

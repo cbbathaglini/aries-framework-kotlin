@@ -333,7 +333,6 @@ class LedgerService(val agent: Agent) {
 //            logger.debug("Revocation record: creddefid= ${rev.credDefId} | \n revocRegDef= ${rev.revocRegDef} | \n revocRegId= ${rev.revocRegId} | \n createdat= ${rev.createdAt} | \n updatedat= ${rev.updatedAt.toString()}"
 //            )
 //        }
-
     }
 
     private fun validateResponse(response: String) {
