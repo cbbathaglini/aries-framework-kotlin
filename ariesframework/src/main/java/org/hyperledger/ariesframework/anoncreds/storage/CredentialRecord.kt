@@ -50,7 +50,7 @@ class CredentialRecord(
         schemaIssuerId: String,
         issuerId: String,
         credentialDefinitionId: String,
-        revocationNotification: RevocationNotification,
+        revocationNotification: RevocationNotification?,
     ) : this(
         BaseRecord.generateId(),
         tags,

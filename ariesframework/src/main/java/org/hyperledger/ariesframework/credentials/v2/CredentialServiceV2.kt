@@ -325,17 +325,6 @@ class CredentialServiceV2(val agent: Agent) :
 
         val credentialId = UUID.randomUUID().toString()
 
-        val revocationMessage = messageContext.plaintextMessage.let {
-            MessageSerializer.decodeFromString(it) as? RevocationNotificationMessageV2
-        }
-
-        val revocationNotification = revocationMessage?.let {
-            RevocationNotification(
-                comment = it.comment,
-                revocationDate = Date(),
-            )
-        } ?: RevocationNotification()
-
         agent.credentialRepository.save(
             CredentialRecord(
                 credentialId = credentialId,
@@ -349,7 +338,7 @@ class CredentialServiceV2(val agent: Agent) :
                 schemaIssuerId = schema.issuerId(),
                 issuerId = credentialDefinition.issuerId(),
                 credentialDefinitionId = processedCredential.credDefId(),
-                revocationNotification = revocationNotification,
+                revocationNotification = null,
             ),
         )
 
