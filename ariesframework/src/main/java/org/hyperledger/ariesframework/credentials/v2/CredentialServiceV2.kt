@@ -42,12 +42,9 @@ import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOffe
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportNotificationMessage
-import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
-import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
-import java.util.Date
 import java.util.UUID
 
 class CredentialServiceV2(val agent: Agent) :
