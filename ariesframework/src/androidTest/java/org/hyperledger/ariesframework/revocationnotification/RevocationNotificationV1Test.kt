@@ -10,11 +10,11 @@ import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v1.AcceptCredentialOptions
-import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
-import org.hyperledger.ariesframework.credentials.v1.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
@@ -87,10 +87,10 @@ class RevocationNotificationV1Test {
     @LargeTest
     fun should_not_emit_revocation_notification_event_because_threadid_is_invalid() = runTest {
         val eventReceived = CompletableDeferred<Boolean>()
-        val eventListener = mock<(AgentEvents.RevocationNotificationReceivedEventV2) -> Unit>()
+        val eventListener = mock<(AgentEvents.RevocationNotificationReceivedEvent) -> Unit>()
 
         // Subscribe to the event listener
-        aliceAgent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> { event ->
+        aliceAgent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEvent> { event ->
             println("✅ Credential revoked (1.0): ${event.record.id}")
             eventReceived.complete(true); // Mark event as received
         }

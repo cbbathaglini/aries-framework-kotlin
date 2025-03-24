@@ -12,12 +12,12 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.AttachmentData
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
-import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
@@ -94,11 +94,11 @@ class CredentialsV2Test {
         var aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.OfferReceived)
 
-        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptions(aliceCredentialRecord.id))
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
         assertEquals(faberCredentialRecord.state, CredentialState.RequestReceived)
 
-        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptionsV2(faberCredentialRecord.id))
+        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptions(faberCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.CredentialReceived)
 
@@ -181,7 +181,7 @@ class CredentialsV2Test {
 
         // aliceAgent auto accepts too.
         aliceAgent.credentialsV2.acceptOffer(
-            AcceptOfferOptionsV2(
+            AcceptOfferOptions(
                 aliceCredentialRecord.id,
                 autoAcceptCredential = AutoAcceptCredential.Always,
             ),
