@@ -17,9 +17,11 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.AgentEvents
+import org.hyperledger.ariesframework.basicmessage.messages.BasicMessageInfos
 import org.hyperledger.ariesframework.credentials.v1.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
+import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
@@ -135,7 +137,9 @@ class WalletMainActivity : AppCompatActivity() {
         // Show an alert on basic message, this is useful for debugging.
         app.agent.eventBus.subscribe<AgentEvents.BasicMessageEvent> {
             lifecycleScope.launch(Dispatchers.Main) {
-                showAlert("${it.message}")
+                if (it.message is BasicMessageInfos) {
+                    showAlert("${it.message.content}")
+                }
             }
         }
 
