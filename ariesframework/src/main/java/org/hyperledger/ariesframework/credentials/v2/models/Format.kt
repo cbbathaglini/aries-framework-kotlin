@@ -2,8 +2,6 @@ package org.hyperledger.ariesframework.credentials.v2.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.util.UUID
-
 
 @Serializable
 class Format(
@@ -11,17 +9,16 @@ class Format(
     var attachId: String? = null,
 
     @SerialName("format")
-    var format: String
+    var format: String,
 
-)  {
+) {
 
     fun constructor(options: FormatSpec) {
-        this.attachId = options.attachmentId ?: UUID.randomUUID().toString()
+        this.attachId = options.attachmentId
         this.format = options.format
     }
 
     override fun toString(): String {
         return "Format(attachId=$attachId, format='$format')"
     }
-
 }

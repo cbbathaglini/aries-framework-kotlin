@@ -1,16 +1,12 @@
 package org.hyperledger.ariesframework.anoncreds
 
-import anoncreds_uniffi.RevocationStatusList
 import askar_uniffi.AskarEntryOperation
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.toJsonString
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class AnoncredsService(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(AnoncredsService::class.java)
@@ -25,7 +21,7 @@ class AnoncredsService(val agent: Agent) {
             linkSecretId,
             linkSecret.toByteArray(),
             null,
-            null
+            null,
         )
         return linkSecretId
     }
@@ -38,7 +34,7 @@ class AnoncredsService(val agent: Agent) {
 
     suspend fun getCredentialsForProofRequest(
         proofRequest: ProofRequest,
-        referent: String
+        referent: String,
     ): List<IndyCredentialInfo> {
         val requestedAttribute = proofRequest.requestedAttributes[referent]
             ?: proofRequest.requestedPredicates[referent]?.asProofAttributeInfo()
@@ -62,7 +58,7 @@ class AnoncredsService(val agent: Agent) {
         return credentials.map { credentialRecord ->
             IndyCredentialInfo(
                 credentialRecord.credentialId,
-                emptyMap(), // We don't use attrs.
+                credentialRecord.parseCredential(credentialRecord.credential),
                 credentialRecord.schemaId,
                 credentialRecord.credentialDefinitionId,
                 credentialRecord.revocationRegistryId,

@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
@@ -28,8 +28,7 @@ class OfferCredentialMessageV2(
 
     @SerialName("replacement_id")
     val replacementId: String? = null,
-
-    ) : AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
         fun decode(decode: String): OfferCredentialMessageV2 {
@@ -37,14 +36,12 @@ class OfferCredentialMessageV2(
         }
 
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "indy"
-        const val type = CredentialsV2Constants.OFFER_CREDENTIAL
+        const val type = CredentialsConstants.OFFER_CREDENTIAL_V2
     }
-
 
     fun findIndyFormatByAttachId(): Format? {
         return formats.find { it.attachId == INDY_CREDENTIAL_OFFER_ATTACHMENT_ID }
     }
-
 
     fun getOfferAttachmentById(id: String): Attachment? {
         return offerAttachments.find { it.id == id }
@@ -57,8 +54,7 @@ class OfferCredentialMessageV2(
 
     fun validateIndyAttachId() {
         checkNotNull(this.findIndyFormatByAttachId()) {
-            "Indy attachment with id ${INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
+            "Indy attachment with id $INDY_CREDENTIAL_OFFER_ATTACHMENT_ID not found in offer message"
         }
     }
-
 }

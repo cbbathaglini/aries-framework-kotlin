@@ -6,7 +6,6 @@ import org.hyperledger.ariesframework.decorators.AckDecorator
 @Serializable
 data class RevocationNotificationMessageV1Options(
     val issueThread: String,
-    val id: String? = null,
     val comment: String? = null,
-    val pleaseAck: AckDecorator? = null
+    val pleaseAck: AckDecorator? = null,
 )

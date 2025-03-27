@@ -11,5 +11,4 @@ class MediationRepository(agent: Agent) : Repository<MediationRecord>(MediationR
     suspend fun getDefault(): MediationRecord? {
         return findSingleByQuery("{}")
     }
-
 }

@@ -1,5 +1,4 @@
 package org.hyperledger.ariesframework.connectionless
-
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.test.runTest
@@ -7,10 +6,10 @@ import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.SubjectOutboundTransport
 import org.hyperledger.ariesframework.connection.models.ConnectionState
-import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
 import org.hyperledger.ariesframework.oob.models.CreateOutOfBandInvitationConfig
 import org.hyperledger.ariesframework.proofs.ProofService
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter

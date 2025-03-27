@@ -11,13 +11,13 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.AttachmentData
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
@@ -49,13 +49,13 @@ class CredentialsV2Test {
         faberConnection = connections.first
         aliceConnection = connections.second
         credDefId = TestHelper.prepareForIssuance(faberAgent, listOf("name", "age"))
-        formats = listOf(Format("indy", "hlindy/cred@v2.0" ))
+        formats = listOf(Format("indy", "hlindy/cred@v2.0"))
         offerAttachments = listOf(
             Attachment(
                 id = "indy",
-                mimetype= "application/json",
-                data = AttachmentData()
-            )
+                mimetype = "application/json",
+                data = AttachmentData(),
+            ),
         )
     }
 
@@ -66,10 +66,9 @@ class CredentialsV2Test {
     }
 
     suspend fun getCredentialRecord(agent: Agent, threadId: String): CredentialExchangeRecord {
-        var credential =  agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
+        var credential = agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
         credential.setToProtocolVersionV2()
-
-        return  credential;
+        return credential
     }
 
     @Test @LargeTest
@@ -77,34 +76,33 @@ class CredentialsV2Test {
         // Faber starts with credential offer to Alice.
         var faberCredentialRecord = faberAgent.credentialsV2.offerCredential(
             CreateCredentialOfferOptionsV2(
-                connection= faberConnection,
-                credentialDefinitionId= credDefId,
-                attributes= credentialPreview.attributes,
-                autoAcceptCredential= null,
-                comment= "Offer to Alice",
-                formats= formats,
-                goalCode= null,
-                goal= null,
-                credentialPreview= credentialPreview,
-                replacementId= null,
-                offerAttachments = offerAttachments
-            )
+                connection = faberConnection,
+                credentialDefinitionId = credDefId,
+                attributes = credentialPreview.attributes,
+                autoAcceptCredential = null,
+                comment = "Offer to Alice",
+                formats = formats,
+                goalCode = null,
+                goal = null,
+                credentialPreview = credentialPreview,
+                replacementId = null,
+                offerAttachments = offerAttachments,
+            ),
         )
 
         val threadId = faberCredentialRecord.threadId
         var aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.OfferReceived)
 
-
-        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptions(aliceCredentialRecord.id))
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
         assertEquals(faberCredentialRecord.state, CredentialState.RequestReceived)
 
-        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptionsV2(faberCredentialRecord.id))
+        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptions(faberCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.CredentialReceived)
 
-        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptions(aliceCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(aliceCredentialRecord.state, CredentialState.Done)
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
@@ -145,7 +143,8 @@ class CredentialsV2Test {
                 goal = null,
                 goalCode = null,
                 formats = formats,
-                offerAttachments = offerAttachments),
+                offerAttachments = offerAttachments,
+            ),
         )
 
         val threadId = faberCredentialRecord.threadId
@@ -169,7 +168,7 @@ class CredentialsV2Test {
                 goal = null,
                 goalCode = null,
                 formats = formats,
-                offerAttachments = offerAttachments
+                offerAttachments = offerAttachments,
             ),
         )
 
@@ -181,8 +180,12 @@ class CredentialsV2Test {
         assertEquals(faberCredentialRecord.state, CredentialState.OfferSent)
 
         // aliceAgent auto accepts too.
-        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptionsV2(
-            aliceCredentialRecord.id, autoAcceptCredential = AutoAcceptCredential.Always))
+        aliceAgent.credentialsV2.acceptOffer(
+            AcceptOfferOptions(
+                aliceCredentialRecord.id,
+                autoAcceptCredential = AutoAcceptCredential.Always,
+            ),
+        )
 
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)

@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 
 @Serializable
 class CredentialAckMessage private constructor(
@@ -13,7 +14,7 @@ class CredentialAckMessage private constructor(
         thread = ThreadDecorator(threadId)
     }
     companion object {
-        const val type = "https://didcomm.org/issue-credential/1.0/ack"
+        const val type = CredentialsConstants.ACK_V1
     }
 
     override fun requestResponse(): Boolean {

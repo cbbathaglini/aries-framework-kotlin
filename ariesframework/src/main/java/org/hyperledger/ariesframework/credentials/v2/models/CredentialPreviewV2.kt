@@ -4,21 +4,20 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.CREDENTIAL_PREVIEW
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
 @Serializable
 class CredentialPreviewV2(
     var attributes: List<CredentialPreviewAttribute>,
 ) {
     @SerialName("@type")
-    val type: String = CREDENTIAL_PREVIEW
+    val type: String = CredentialsConstants.CREDENTIAL_PREVIEW_V2
 
     constructor(options: CredentialPreviewOptions) : this(
         attributes = options.attributes.map {
             CredentialPreviewAttribute(it)
-        }
+        },
     )
 
     fun toJSON(): String {
@@ -33,5 +32,4 @@ class CredentialPreviewV2(
             return CredentialPreviewV2(attributes)
         }
     }
-
 }

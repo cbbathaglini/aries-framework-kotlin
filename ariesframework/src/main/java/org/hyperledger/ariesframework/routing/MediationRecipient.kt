@@ -58,7 +58,6 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
         dispatcher.registerHandler(MediationGrantHandler(agent))
         dispatcher.registerHandler(BatchHandler(agent))
         dispatcher.registerHandler(KeylistUpdateResponseHandler(agent))
-
     }
 
     private fun registerMessages() {

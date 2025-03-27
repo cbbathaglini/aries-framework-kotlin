@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials.v1.models
+package org.hyperledger.ariesframework.credentials.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -36,5 +36,5 @@ enum class CredentialState {
     Done,
 
     @SerialName("credential-revoked")
-    Revoked
+    Revoked,
 }

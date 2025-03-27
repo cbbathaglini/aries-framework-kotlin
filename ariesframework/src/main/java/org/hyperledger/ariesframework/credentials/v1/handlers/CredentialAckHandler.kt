@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v1.messages.CredentialAckMessage
-import org.hyperledger.ariesframework.credentials.v2.handlers.IssueCredentialHandlerV2
 import org.slf4j.LoggerFactory
 
 class CredentialAckHandler(val agent: Agent) : MessageHandler {

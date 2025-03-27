@@ -12,7 +12,6 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.toJsonString
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 import kotlin.reflect.KClass
 
 @Serializable
@@ -74,7 +73,7 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun deleteById(id: String) {
         wallet.session!!.update(AskarEntryOperation.REMOVE, type.simpleName!!, id, ByteArray(0), null, null)
-        logger.error("deleted ${id}");
+        logger.error("deleted $id")
     }
 
     @OptIn(InternalSerializationApi::class)

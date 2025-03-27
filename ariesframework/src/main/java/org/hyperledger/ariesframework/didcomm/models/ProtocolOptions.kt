@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ProtocolOptions(
     val id: String,
-    val roles: List<String>? = null
+    val roles: List<String>? = null,
 )

@@ -1,11 +1,13 @@
-package org.hyperledger.ariesframework.credentials.v1.repository
+package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.storage.Repository
 
 class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(
-    CredentialExchangeRecord::class, agent) {
+    CredentialExchangeRecord::class,
+    agent,
+) {
     suspend fun findByThreadAndConnectionId(threadId: String, connectionId: String?): CredentialExchangeRecord? {
         return if (connectionId != null) {
             findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")
@@ -25,7 +27,7 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
     suspend fun findByThreadRoleAndConnectionId(
         threadId: String,
         role: CredentialRole?,
-        connectionId: String?
+        connectionId: String?,
     ): CredentialExchangeRecord? {
         val queryMap = mutableMapOf("threadId" to threadId)
 
@@ -35,10 +37,9 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
         val query = queryMap.entries.joinToString(
             separator = ", ",
             prefix = "{",
-            postfix = "}"
+            postfix = "}",
         ) { "\"${it.key}\": \"${it.value}\"" }
 
         return findSingleByQuery(query)
     }
-
 }

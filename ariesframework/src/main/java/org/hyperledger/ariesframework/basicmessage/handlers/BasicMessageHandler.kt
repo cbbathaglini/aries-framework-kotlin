@@ -12,7 +12,6 @@ class BasicMessageHandler(val agent: Agent) : MessageHandler {
     override val messageType = BasicMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-
         val message = messageContext.message as BasicMessage
         val connectionRecordId = messageContext.connection?.id
         val theirLabel = messageContext.connection?.theirLabel
@@ -21,7 +20,7 @@ class BasicMessageHandler(val agent: Agent) : MessageHandler {
             content = message.content,
             connectionRecordId = connectionRecordId,
             theirLabel = theirLabel,
-            createdAt = createdAt
+            createdAt = createdAt,
         )
         agent.eventBus.publish(AgentEvents.BasicMessageEvent(basicMessageInfos))
         return null

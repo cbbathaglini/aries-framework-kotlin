@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.Attachment
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
@@ -24,11 +24,10 @@ class ProposeCredentialMessageV2(
     val goal: String? = null,
 
     val comment: String? = null,
-
-    ) : AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
-        val type = CredentialsV2Constants.PROPOSE_CREDENTIAL
+        val type = CredentialsConstants.PROPOSE_CREDENTIAL_V2
     }
 
     fun getProposalAttachmentById(id: String): Attachment? {
@@ -60,7 +59,7 @@ class ProposeCredentialMessageV2(
                 credentialPreview = credentialPreview,
                 goalCode = goalCode,
                 goal = goal,
-                comment = comment
+                comment = comment,
             )
         }
     }

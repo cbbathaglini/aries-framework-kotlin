@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.basicmessage.messages
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 class BasicMessageInfos(
     val content: String,

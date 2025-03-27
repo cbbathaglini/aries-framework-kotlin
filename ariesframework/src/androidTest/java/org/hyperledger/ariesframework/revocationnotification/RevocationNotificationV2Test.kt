@@ -12,11 +12,11 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.AttachmentData
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptCredentialOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.v2.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
@@ -63,8 +63,8 @@ class RevocationNotificationV2Test {
             Attachment(
                 id = "indy",
                 mimetype = "application/json",
-                data = AttachmentData()
-            )
+                data = AttachmentData(),
+            ),
         )
     }
 
@@ -77,13 +77,12 @@ class RevocationNotificationV2Test {
     suspend fun getCredentialRecord(agent: Agent, threadId: String): CredentialExchangeRecord {
         var credential =
             agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
-        return credential;
+        return credential
     }
 
     @Test
     @LargeTest
     fun should_emit_revocation_notification_event() = runTest {
-
         val eventReceived = CompletableDeferred<Boolean>()
         val eventListener = mock<(AgentEvents.RevocationNotificationReceivedEventV2) -> Unit>()
         aliceAgent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> { event ->
@@ -100,7 +99,6 @@ class RevocationNotificationV2Test {
     @Test
     @LargeTest
     fun should_not_emit_revocation_notification_event_because_threadid_is_invalid() = runTest {
-
         val eventReceived = CompletableDeferred<Boolean>() // Async tracking for event reception
 
         // Mock event listener
@@ -112,7 +110,6 @@ class RevocationNotificationV2Test {
             eventReceived.complete(true); // Mark event as received
         }
 
-
         val invalidCredentialId = "notIndy::invalidRevRegId::invalidCredRevId"
 
         val mapMessage: Map<String, RevocationNotificationMessageV2> =
@@ -120,20 +117,20 @@ class RevocationNotificationV2Test {
                 RevocationNotificationMessageV2Options(
                     credentialId = invalidCredentialId,
                     revocationFormat = "indy-anoncreds",
-                    comment = "Credential has been revoked"
-                )
-            );
+                    comment = "Credential has been revoked",
+                ),
+            )
 
         val revocationNotificationMessage: RevocationNotificationMessageV2? = mapMessage["message"]
         if (revocationNotificationMessage != null) {
             val messageContext = InboundMessageContext(
                 revocationNotificationMessage,
-                aliceAgent.context.toString()
+                aliceAgent.context.toString(),
             )
 
             try {
                 faberAgent.revocationNotificationServicev2.processRevocationNotification(
-                    messageContext
+                    messageContext,
                 )
             } catch (e: Exception) {
                 assertNotNull(e)
@@ -146,23 +143,21 @@ class RevocationNotificationV2Test {
         } else {
             assertTrue("Error: Revocation notification message is null!", false)
         }
-
     }
 
     @Test
     @LargeTest
     fun should_emit_revocation_notification_event_2() = runTest {
-
         val eventReceived = CompletableDeferred<Boolean>()
         val eventListener = mock<(AgentEvents.RevocationNotificationReceivedEventV2) -> Unit>()
         aliceAgent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> { event ->
             println("✅ Credential revoked (2.0): ${event.record.id}")
-            eventReceived.complete(true);
+            eventReceived.complete(true)
         }
 
         val metadata = mapOf(
             "revocationRegistryId" to "3qiQGrxu7HbkobQoHZBrfy:4:3qiQGrxu7HbkobQoHZBrfy:3:CL:2722152:default:CL_ACCUM:default",
-            "credentialRevocationId" to "1"
+            "credentialRevocationId" to "1",
         )
 
         val credentialId =
@@ -173,9 +168,9 @@ class RevocationNotificationV2Test {
                 RevocationNotificationMessageV2Options(
                     credentialId = credentialId,
                     revocationFormat = "indy-anoncreds",
-                    comment = "Credential has been revoked"
-                )
-            );
+                    comment = "Credential has been revoked",
+                ),
+            )
 
         val revocationNotificationMessage: RevocationNotificationMessageV2? = mapMessage["message"]
         if (revocationNotificationMessage != null) {
@@ -184,13 +179,11 @@ class RevocationNotificationV2Test {
                 connection = aliceConnection,
                 plaintextMessage = revocationNotificationMessage.toString(),
                 senderVerkey = null,
-                recipientVerkey = null
+                recipientVerkey = null,
             )
 
             val credentialRecords = aliceAgent.credentialRepository.getAll()
-            aliceAgent.revocationNotificationServicev2.processRevocationNotification(
-                messageContext
-            )
+            aliceAgent.revocationNotificationServicev2.processRevocationNotification(messageContext)
 
             val wasEventPublished = withTimeoutOrNull(5.seconds) { eventReceived.await() } ?: false
 
@@ -198,17 +191,15 @@ class RevocationNotificationV2Test {
         } else {
             assertTrue("Error: Revocation notification message is null!", false)
         }
-
     }
-
 
     suspend fun revokeCredential(credentialRecord: CredentialExchangeRecord) {
         val didInfo = faberAgent.wallet.publicDid ?: throw Exception("Faber has no public DID.")
         faberAgent.ledgerService.revokeCredential(didInfo, credDefId, 1)
         aliceAgent.eventBus.publish(
             AgentEvents.RevocationNotificationReceivedEventV2(
-                credentialRecord.copy()
-            )
+                credentialRecord.copy(),
+            ),
         )
     }
 
@@ -233,7 +224,6 @@ class RevocationNotificationV2Test {
         return credDefId
     }
 
-
     private suspend fun issueAndAcceptCredential(): Pair<CredentialExchangeRecord, CredentialExchangeRecord> {
         var faberCredentialRecord = faberAgent.credentialsV2.offerCredential(
             CreateCredentialOfferOptionsV2(
@@ -243,23 +233,23 @@ class RevocationNotificationV2Test {
                 comment = "Offer to Alice",
                 formats = formats,
                 credentialPreview = credentialPreview,
-                offerAttachments = offerAttachments
-            )
+                offerAttachments = offerAttachments,
+            ),
         )
 
         val threadId = faberCredentialRecord.threadId
         var aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(CredentialState.OfferReceived, aliceCredentialRecord.state)
 
-        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptOffer(AcceptOfferOptions(aliceCredentialRecord.id))
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
         assertEquals(CredentialState.RequestReceived, faberCredentialRecord.state)
 
-        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptionsV2(faberCredentialRecord.id))
+        faberAgent.credentialsV2.acceptRequest(AcceptRequestOptions(faberCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         assertEquals(CredentialState.CredentialReceived, aliceCredentialRecord.state)
 
-        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptionsV2(aliceCredentialRecord.id))
+        aliceAgent.credentialsV2.acceptCredential(AcceptCredentialOptions(aliceCredentialRecord.id))
         aliceCredentialRecord = getCredentialRecord(aliceAgent, threadId)
         faberCredentialRecord = getCredentialRecord(faberAgent, threadId)
 

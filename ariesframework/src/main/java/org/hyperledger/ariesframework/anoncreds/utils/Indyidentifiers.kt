@@ -2,7 +2,7 @@ package org.hyperledger.ariesframework.anoncreds.utils
 
 import java.util.regex.Pattern
 
-object IndyIdentifierUtils {
+object Indyidentifiers {
 
     private val didIndyAnonCredsBase =
         Pattern.compile("(did:indy:((?:[a-z][_a-z0-9-]*)(?::[a-z][_a-z0-9-]*)?):([1-9A-HJ-NP-Za-km-z]{21,22}))/anoncreds/v0/")
@@ -40,7 +40,7 @@ object IndyIdentifierUtils {
         unqualifiedDid: String,
         schemaSeqNo: String,
         credentialDefinitionTag: String,
-        revocationRegistryTag: String
+        revocationRegistryTag: String,
     ): String {
         return "$unqualifiedDid:4:$unqualifiedDid:3:CL:$schemaSeqNo:$credentialDefinitionTag:CL_ACCUM:$revocationRegistryTag"
     }

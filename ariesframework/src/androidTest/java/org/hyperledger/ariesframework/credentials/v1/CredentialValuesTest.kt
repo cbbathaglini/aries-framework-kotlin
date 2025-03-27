@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.credentials.v1
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialValues
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

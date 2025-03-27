@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.didcomm.models
 
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 data class Protocol(
     override val id: String,
@@ -18,6 +17,6 @@ data class Protocol(
 
     constructor(options: ProtocolOptions) : this(
         id = options.id,
-        roles = options.roles
+        roles = options.roles,
     )
 }

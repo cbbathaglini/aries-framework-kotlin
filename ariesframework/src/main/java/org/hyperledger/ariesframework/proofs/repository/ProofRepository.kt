@@ -13,6 +13,6 @@ class ProofRepository(agent: Agent) : Repository<ProofExchangeRecord>(ProofExcha
     }
 
     suspend fun getByConnectionId(connectionId: String?): ProofExchangeRecord {
-        return getSingleByQuery("{ \"connectionId\": \"$connectionId\"}");
+        return getSingleByQuery("{ \"connectionId\": \"$connectionId\"}")
     }
 }

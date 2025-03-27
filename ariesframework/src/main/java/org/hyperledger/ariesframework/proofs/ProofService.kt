@@ -28,9 +28,8 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
-//import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo

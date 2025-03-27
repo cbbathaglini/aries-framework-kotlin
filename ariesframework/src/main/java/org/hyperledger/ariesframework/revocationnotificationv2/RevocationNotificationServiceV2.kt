@@ -1,7 +1,3 @@
-
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
@@ -9,19 +5,18 @@ import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.v1.models.CredentialState
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.revocationnotificationv2.RevocationNotificationConstants
-
 import org.hyperledger.ariesframework.revocationnotificationv2.handler.RevocationNotificationHandlerV2
 import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
 
-class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatcher){
+class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(RevocationNotificationServiceV2::class.java)
 
     private val credentialRepository = agent.credentialRepository
@@ -32,13 +27,12 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
     }
 
     fun createRevocationNotification(options: RevocationNotificationMessageV2Options): Map<String, RevocationNotificationMessageV2> {
-
-        val (credentialId, revocationFormat, comment, requestAck) = options
+        val (credentialId, revocationFormat, comment) = options
 
         val message = RevocationNotificationMessageV2(
             credentialId = credentialId,
             revocationFormat = revocationFormat,
-            comment = comment
+            comment = comment,
         )
 
         if (!message.pleaseAckIsEmpty()) {
@@ -55,21 +49,24 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
         val credentialId = revocationMessage.credentialId
 
-        if (revocationMessage.revocationFormat !in listOf(RevocationIdentifier.v2IndyRevocationFormat,
-                RevocationIdentifier.v2AnonCredsRevocationFormat)) {
+        if (revocationMessage.revocationFormat !in listOf(
+                RevocationIdentifier.v2IndyRevocationFormat,
+                RevocationIdentifier.v2AnonCredsRevocationFormat,
+            )
+        ) {
             throw CredoError(
-                "Unknown revocation format: ${revocationMessage.revocationFormat}. Supported formats are indy-anoncreds and anoncreds"
+                "Unknown revocation format: ${revocationMessage.revocationFormat}. Supported formats are indy-anoncreds and anoncreds",
             )
         }
 
         val credentialIdGroups =
             RevocationIdentifier.v2IndyRevocationIdentifierRegex.find(credentialId)?.groupValues
-                ?:  RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.find(credentialId)?.groupValues
+                ?: RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.find(credentialId)?.groupValues
 
         if (credentialIdGroups == null || credentialIdGroups.size < 2) {
             throw CredoError(
                 "Incorrect revocation notification credentialId format: \n$credentialId\ndoes not match\n" +
-                        "\"<revocation_registry_id>::<credential_revocation_id>\""
+                    "\"<revocation_registry_id>::<credential_revocation_id>\"",
             )
         }
 
@@ -85,9 +82,8 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             credentialRevocationId = anonCredsCredentialRevocationId,
             connection = connection,
             comment = comment,
-            threadId = threadId
+            threadId = threadId,
         )
-
     }
 
     private suspend fun processRevocationNotification(
@@ -95,22 +91,22 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         credentialRevocationId: String,
         connection: ConnectionRecord,
         comment: String? = null,
-        threadId: String
+        threadId: String,
     ) {
-        lateinit var credentialRecord:CredentialRecord
+        lateinit var credentialRecord: CredentialRecord
         var error = false
         try {
             credentialRecord =
                 credentialRepository.getByCredentialRevocationIdAndRevocationRegistryId(
                     credentialRevocationId,
-                    revocationRegistryId
+                    revocationRegistryId,
                 )
-        }catch (e:Exception){
+        } catch (e: Exception) {
             logger.warn("Not found credential record by CredentialRevocationId and RevocationRegistryId")
-            error = true;
+            error = true
         }
 
-        if (error){
+        if (error) {
             credentialRecord = credentialRepository.getByCredentialRevocationId(credentialRevocationId)
         }
 
@@ -121,10 +117,10 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
 
         val credentialExchangeRecord = credentialRecord.toCredentialExchangeRecord(
             connectionId = connection.id,
-            threadId= threadId,
+            threadId = threadId,
             state = CredentialState.Revoked,
             protocolVersion = RevocationNotificationConstants.PROTOCOL_VERSION,
-            role = CredentialRole.Holder
+            role = CredentialRole.Holder,
         )
 
         agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEventV2(credentialExchangeRecord.copy()))

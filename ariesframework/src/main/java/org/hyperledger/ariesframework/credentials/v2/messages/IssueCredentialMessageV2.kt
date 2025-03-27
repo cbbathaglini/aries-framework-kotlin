@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants.Companion.ISSUE_CREDENTIAL
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
@@ -18,7 +18,7 @@ class IssueCredentialMessageV2(
     @SerialName("goal_code") val goalCode: String? = null,
     val goal: String? = null,
 
-    val comment: String? = null
+    val comment: String? = null,
 ) : AgentMessage(generateId(), type) {
 
     companion object {
@@ -27,16 +27,14 @@ class IssueCredentialMessageV2(
         }
 
         const val INDY_CREDENTIAL_ATTACHMENT_ID = "indy"
-        val type = ISSUE_CREDENTIAL
+        val type = CredentialsConstants.ISSUE_CREDENTIAL_V2
     }
 
     fun getCredentialAttachmentById(id: String): Attachment {
         val issueAttachment = credentialAttachments.find { it.id == id }
         check(issueAttachment != null) {
-            "Indy attachment with id ${INDY_CREDENTIAL_ATTACHMENT_ID} not found in issue message"
+            "Indy attachment with id $INDY_CREDENTIAL_ATTACHMENT_ID not found in issue message"
         }
-        return issueAttachment;
+        return issueAttachment
     }
-
-
 }

@@ -3,15 +3,15 @@ package org.hyperledger.ariesframework.credentials.v2.models
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v1.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.CredentialsV2Constants
 
 @Serializable
 data class CreateProposalOptionsV2(
     val connection: ConnectionRecord,
     val autoAcceptCredential: AutoAcceptCredential? = null,
-    val credentialRecord : CredentialExchangeRecord,
+    val credentialRecord: CredentialExchangeRecord,
     val formats: List<Format>,
     val proposalAttachments: List<Attachment>,
     val comment: String? = null,
@@ -23,8 +23,7 @@ data class CreateProposalOptionsV2(
     val issuerDid: String? = null,
     val threadId: String,
     val parentThreadId: String? = null,
-
-    ){
+) {
     class Builder(private val connection: ConnectionRecord, private val credentialRecord: CredentialExchangeRecord) {
         private var autoAcceptCredential: AutoAcceptCredential? = null
         private var comment: String? = null
@@ -96,9 +95,9 @@ data class CreateProposalOptionsV2(
                 issuerDid = issuerDid,
                 threadId = threadId,
                 parentThreadId = parentThreadId,
-                protocolVersion = CredentialsV2Constants.PROTOCOL_VERSION,
+                protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
                 proposalAttachments = proposalAttachments,
-                formats = formats
+                formats = formats,
             )
         }
     }

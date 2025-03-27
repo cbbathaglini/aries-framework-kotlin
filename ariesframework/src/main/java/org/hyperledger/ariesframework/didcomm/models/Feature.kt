@@ -14,7 +14,7 @@ open class Feature(
     open val id: String,
 
     @SerialName("feature-type")
-    open val type: String
+    open val type: String,
 ) {
 
     /**

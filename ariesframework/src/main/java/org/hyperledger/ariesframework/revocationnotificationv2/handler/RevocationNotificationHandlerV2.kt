@@ -9,9 +9,8 @@ import org.hyperledger.ariesframework.revocationnotificationv2.message.Revocatio
 class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = RevocationNotificationMessageV2.type
 
-    override suspend fun handle(messageContext: InboundMessageContext) : OutboundMessage? {
+    override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         agent.revocationNotificationServicev2.processRevocationNotification(messageContext)
         return null
     }
 }
-

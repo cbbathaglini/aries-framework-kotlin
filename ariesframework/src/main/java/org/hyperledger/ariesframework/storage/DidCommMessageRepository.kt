@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.storage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.Dispatcher
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.slf4j.LoggerFactory
 
 class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(DidCommMessageRecord::class, agent) {

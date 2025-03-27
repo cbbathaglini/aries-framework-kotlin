@@ -11,7 +11,7 @@ class RevocationNotificationMessageV1(
     @SerialName("thread_id")
     val issueThread: String,
     var comment: String? = null,
-    var pleaseAck: AckDecorator? = null
+    var pleaseAck: AckDecorator? = null,
 ) : AgentMessage(generateId(), RevocationNotificationMessageV1.type) {
 
     companion object {
@@ -23,7 +23,6 @@ class RevocationNotificationMessageV1(
     constructor(options: RevocationNotificationMessageV1Options) : this(
         issueThread = options.issueThread,
         comment = options.comment,
-        pleaseAck = options.pleaseAck
+        pleaseAck = options.pleaseAck,
     )
-
 }
