@@ -10,6 +10,7 @@ import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRepo
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRepository
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRepository
 import org.hyperledger.ariesframework.basicmessage.BasicMessageCommand
+import org.hyperledger.ariesframework.basicmessage.repository.BasicMessageRepository
 import org.hyperledger.ariesframework.connection.ConnectionCommand
 import org.hyperledger.ariesframework.connection.ConnectionService
 import org.hyperledger.ariesframework.connection.DidExchangeService
@@ -50,6 +51,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val outOfBandRepository = OutOfBandRepository(this)
     val outOfBandService = OutOfBandService(this)
     val oob = OutOfBandCommand(this, dispatcher)
+    val basicMessageRepository = BasicMessageRepository(this)
     val didCommMessageRepository = DidCommMessageRepository(this)
     val credentialExchangeRepository = CredentialExchangeRepository(this)
     val ledgerService = LedgerService(this)
@@ -72,6 +74,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
 
     // val proofsV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
+
     val problemReports = ProblemReportsCommand(this, dispatcher)
 
     private var _isInitialized = false

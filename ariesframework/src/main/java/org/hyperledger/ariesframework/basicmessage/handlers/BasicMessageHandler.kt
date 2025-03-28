@@ -6,23 +6,23 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.basicmessage.messages.BasicMessage
-import org.hyperledger.ariesframework.basicmessage.messages.BasicMessageInfos
+import org.hyperledger.ariesframework.basicmessage.repository.BasicMessageRecord
 
 class BasicMessageHandler(val agent: Agent) : MessageHandler {
     override val messageType = BasicMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         val message = messageContext.message as BasicMessage
-        val connectionRecordId = messageContext.connection?.id
-        val theirLabel = messageContext.connection?.theirLabel
-        val createdAt = messageContext.connection?.createdAt
-        val basicMessageInfos = BasicMessageInfos(
+
+        val basicMessageRecord = BasicMessageRecord(
             content = message.content,
-            connectionRecordId = connectionRecordId,
-            theirLabel = theirLabel,
-            createdAt = createdAt,
+            connectionRecord = messageContext.connection,
         )
-        agent.eventBus.publish(AgentEvents.BasicMessageEvent(basicMessageInfos))
+
+        agent.basicMessageRepository.save(basicMessageRecord)
+
+        agent.eventBus.publish(AgentEvents.BasicMessageEvent(basicMessageRecord))
+
         return null
     }
 }
