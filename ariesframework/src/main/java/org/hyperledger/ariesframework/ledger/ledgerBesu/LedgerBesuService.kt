@@ -4,7 +4,6 @@ import ILedgerService
 import android.content.Context
 import anoncreds_uniffi.Issuer
 import indy_vdr_uniffi.Pool
-import indy_vdr_uniffi.setProtocolVersion
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -14,7 +13,6 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
-import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
@@ -104,7 +102,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             revocationRegistryConfig,
         )
         ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
-        this.getSchema("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0");
+        this.getSchema("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0")
         this.getCredentialDefinition("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/CLAIM_DEF/did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9:BasicIdentity:1.0.0/BasicIdentity")
         this.getRevocationRegistryDefinition("did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920/anoncreds/v0/REV_REG_DEF/did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry")
     }
@@ -161,13 +159,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
-        val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id);
+        val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
         val jsonObject = mapOf(
             "issuerId" to JsonPrimitive(revocationRD.issuerId),
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
             "credDefId" to JsonPrimitive(revocationRD.credDefId),
             "tag" to JsonPrimitive(revocationRD.tag),
-            "value" to Json.parseToJsonElement(revocationRD.value) // Agora tratado corretamente
+            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
         )
         return Json.encodeToString(JsonObject(jsonObject))
     }
@@ -177,7 +175,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
-        //RevocationRegistryDelta
+        // RevocationRegistryDelta
         TODO("Not yet implemented")
     }
 
