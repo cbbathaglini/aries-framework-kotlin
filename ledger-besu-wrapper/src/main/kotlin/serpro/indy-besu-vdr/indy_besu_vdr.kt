@@ -53,8 +53,8 @@ open class RustBuffer : Structure() {
             UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rustbuffer_alloc(size, status)
         }.also {
             if(it.data == null) {
-                throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
-            }
+               throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
+           }
         }
 
         internal fun create(capacity: Int, len: Int, data: Pointer?): RustBuffer.ByValue {
@@ -177,11 +177,11 @@ public interface FfiConverter<KotlinType, FfiType> {
     fun liftFromRustBuffer(rbuf: RustBuffer.ByValue): KotlinType {
         val byteBuf = rbuf.asByteBuffer()!!
         try {
-            val item = read(byteBuf)
-            if (byteBuf.hasRemaining()) {
-                throw RuntimeException("junk remaining in buffer after lifting, something is very wrong!!")
-            }
-            return item
+           val item = read(byteBuf)
+           if (byteBuf.hasRemaining()) {
+               throw RuntimeException("junk remaining in buffer after lifting, something is very wrong!!")
+           }
+           return item
         } finally {
             RustBuffer.free(rbuf)
         }
@@ -379,23 +379,23 @@ internal interface UniffiLib : Library {
     companion object {
         internal val INSTANCE: UniffiLib by lazy {
             loadIndirect<UniffiLib>(componentName = "indy_besu_vdr")
-                .also { lib: UniffiLib ->
-                    uniffiCheckContractApiVersion(lib)
-                    uniffiCheckApiChecksums(lib)
+            .also { lib: UniffiLib ->
+                uniffiCheckContractApiVersion(lib)
+                uniffiCheckApiChecksums(lib)
                 }
         }
-
+        
         // The Cleaner for the whole library
         internal val CLEANER: UniffiCleaner by lazy {
             UniffiCleaner.create()
         }
     }
 
-    fun uniffi_indy_besu_vdr_uniffi_fn_clone_ledgerclient(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_clone_ledgerclient(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_free_ledgerclient(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_free_ledgerclient(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_indy_besu_vdr_uniffi_fn_constructor_ledgerclient_new(`chainId`: Long,`nodeAddress`: RustBuffer.ByValue,`contractConfigs`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`quorumConfig`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_constructor_ledgerclient_new(`chainId`: Long,`nodeAddress`: RustBuffer.ByValue,`contractConfigs`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`quorumConfig`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_method_ledgerclient_get_receipt(`ptr`: Pointer,`hash`: RustBuffer.ByValue,
     ): Pointer
@@ -424,6 +424,10 @@ internal interface UniffiLib : Library {
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_resource_mapping_endorsing_data(`client`: Pointer,`did`: RustBuffer.ByValue,`legacyIssuerIdentifier`: RustBuffer.ByValue,`legacyIdentifier`: RustBuffer.ByValue,`newIdentifier`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_resource_mapping_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`did`: RustBuffer.ByValue,`legacyIssuerIdentifier`: RustBuffer.ByValue,`legacyIdentifier`: RustBuffer.ByValue,`newIdentifier`: RustBuffer.ByValue,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(`client`: Pointer,`revocationRegistryDefinition`: RustBuffer.ByValue,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`revocationRegistryDefinition`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_schema_endorsing_data(`client`: Pointer,`schema`: RustBuffer.ByValue,
     ): Pointer
@@ -479,6 +483,8 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_did_transaction(`client`: Pointer,`did`: RustBuffer.ByValue,
     ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(`client`: Pointer,`id`: RustBuffer.ByValue,
+    ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_schema_transaction(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_revoke_role_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`role`: Byte,`account`: RustBuffer.ByValue,
@@ -487,77 +493,89 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_update_did_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`did`: RustBuffer.ByValue,`didDoc`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_get_id(`credDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_get_id(`credDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_delegate_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_delegate_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_mapping_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_mapping_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_nonce_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_nonce_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_role_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_role_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_validators_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_validators_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_has_role_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_has_role_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_credential_definition_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_credential_definition_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_did_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_did_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_schema_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_revocation_registry_definition_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_schema_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_credential_definition(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_did(`client`: Pointer,`did`: RustBuffer.ByValue,`options`: RustBuffer.ByValue,
     ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(`client`: Pointer,`id`: RustBuffer.ByValue,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(`client`: Pointer,`id`: RustBuffer.ByValue,`toTimestamp`: Long,
+    ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_schema(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_get_id(`schema`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(`credDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_create(`type`: RustBuffer.ByValue,`to`: RustBuffer.ByValue,`from`: RustBuffer.ByValue,`nonce`: RustBuffer.ByValue,`chainId`: Long,`data`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_create(`to`: RustBuffer.ByValue,`from`: RustBuffer.ByValue,`contract`: RustBuffer.ByValue,`method`: RustBuffer.ByValue,`endorsingMethod`: RustBuffer.ByValue,`params`: RustBuffer.ByValue,`nonce`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_get_id(`schema`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_from_string(`value`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_get_signing_bytes(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_create(`type`: RustBuffer.ByValue,`to`: RustBuffer.ByValue,`from`: RustBuffer.ByValue,`nonce`: RustBuffer.ByValue,`chainId`: Long,`data`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_create(`to`: RustBuffer.ByValue,`from`: RustBuffer.ByValue,`contract`: RustBuffer.ByValue,`method`: RustBuffer.ByValue,`endorsingMethod`: RustBuffer.ByValue,`params`: RustBuffer.ByValue,`nonce`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_from_string(`value`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_from_string(`value`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_get_signing_bytes(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_get_signing_bytes(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_indy_besu_vdr_uniffi_rustbuffer_alloc(`size`: Int,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_from_string(`value`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_indy_besu_vdr_uniffi_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_get_signing_bytes(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_indy_besu_vdr_uniffi_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_transaction_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_indy_besu_vdr_uniffi_rustbuffer_alloc(`size`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_indy_besu_vdr_uniffi_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun ffi_indy_besu_vdr_uniffi_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_u8(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -565,7 +583,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_u8(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_i8(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -573,7 +591,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_i8(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i8(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_u16(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -581,7 +599,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_u16(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_i16(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -589,7 +607,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_i16(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i16(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_u32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -597,7 +615,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_u32(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_i32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -605,7 +623,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_i32(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_u64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -613,7 +631,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_u64(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_u64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_i64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -621,7 +639,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_i64(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_i64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_f32(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -629,7 +647,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_f32(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_f32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_f32(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_f64(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -637,7 +655,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_f64(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_f64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_f64(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Double
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_pointer(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -645,7 +663,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_pointer(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_pointer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_pointer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -653,7 +671,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_indy_besu_vdr_uniffi_rust_future_poll_void(`handle`: Pointer,`callback`: UniFffiRustFutureContinuationCallbackType,`callbackData`: USize,
     ): Unit
@@ -661,7 +679,7 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_indy_besu_vdr_uniffi_rust_future_free_void(`handle`: Pointer,
     ): Unit
-    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_void(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus,
+    fun ffi_indy_besu_vdr_uniffi_rust_future_complete_void(`handle`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_add_validator_transaction(
     ): Short
@@ -682,6 +700,10 @@ internal interface UniffiLib : Library {
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_resource_mapping_endorsing_data(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_resource_mapping_transaction(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_endorsing_data(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_transaction(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_endorsing_data(
     ): Short
@@ -737,6 +759,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_did_transaction(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_revocation_registry_definition_transaction(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_schema_transaction(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_revoke_role_transaction(
@@ -777,6 +801,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_did_result(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_revocation_registry_definition_result(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_schema_result(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resource_mapping_result(
@@ -785,7 +811,17 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_did(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_definition(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_schema(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_from_string(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_get_id(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_to_string(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_schema_from_string(
     ): Short
@@ -821,7 +857,7 @@ internal interface UniffiLib : Library {
     ): Short
     fun ffi_indy_besu_vdr_uniffi_uniffi_contract_version(
     ): Int
-
+    
 }
 
 private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
@@ -864,6 +900,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_resource_mapping_transaction() != 6041.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_endorsing_data() != 31574.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_transaction() != 42203.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_endorsing_data() != 24765.toShort()) {
@@ -947,6 +989,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_did_transaction() != 30138.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_revocation_registry_definition_transaction() != 22432.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_schema_transaction() != 23161.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1007,6 +1052,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_did_result() != 27898.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_revocation_registry_definition_result() != 58410.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_schema_result() != 64693.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1019,7 +1067,22 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_did() != 45456.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_definition() != 41692.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list() != 35828.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_schema() != 2703.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_from_string() != 8248.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_get_id() != 61635.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_to_string() != 63014.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_schema_from_string() != 25235.toShort()) {
@@ -1165,6 +1228,26 @@ public object FfiConverterUByte: FfiConverter<UByte, Byte> {
 
     override fun write(value: UByte, buf: ByteBuffer) {
         buf.put(value.toByte())
+    }
+}
+
+public object FfiConverterUInt: FfiConverter<UInt, Int> {
+    override fun lift(value: Int): UInt {
+        return value.toUInt()
+    }
+
+    override fun read(buf: ByteBuffer): UInt {
+        return lift(buf.getInt())
+    }
+
+    override fun lower(value: UInt): Int {
+        return value.toInt()
+    }
+
+    override fun allocationSize(value: UInt) = 4
+
+    override fun write(value: UInt, buf: ByteBuffer) {
+        buf.putInt(value.toInt())
     }
 }
 
@@ -1511,15 +1594,15 @@ object NoPointer
 
 
 public interface LedgerClientInterface {
-
+    
     suspend fun `getReceipt`(`hash`: ByteArray): String
-
+    
     suspend fun `ping`(): PingStatus
-
+    
     suspend fun `queryEvents`(`query`: EventQuery): List<EventLog>
-
+    
     suspend fun `submitTransaction`(`transaction`: Transaction): ByteArray
-
+    
     companion object
 }
 
@@ -1537,10 +1620,10 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
      */
     constructor(noPointer: NoPointer): super(noPointer)
     constructor(`chainId`: ULong, `nodeAddress`: String, `contractConfigs`: List<ContractConfig>, `network`: String?, `quorumConfig`: QuorumConfig?) :
-            this(
-                uniffiRustCallWithError(VdrException) { _status ->
-                    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_constructor_ledgerclient_new(FfiConverterULong.lower(`chainId`),FfiConverterString.lower(`nodeAddress`),FfiConverterSequenceTypeContractConfig.lower(`contractConfigs`),FfiConverterOptionalString.lower(`network`),FfiConverterOptionalTypeQuorumConfig.lower(`quorumConfig`),_status)
-                })
+        this(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_constructor_ledgerclient_new(FfiConverterULong.lower(`chainId`),FfiConverterString.lower(`nodeAddress`),FfiConverterSequenceTypeContractConfig.lower(`contractConfigs`),FfiConverterOptionalString.lower(`network`),FfiConverterOptionalTypeQuorumConfig.lower(`quorumConfig`),_status)
+})
 
     override val cleanable: UniffiCleaner.Cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
 
@@ -1562,7 +1645,7 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
         }
     }
 
-
+    
     @Throws(VdrException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
     override suspend fun `getReceipt`(`hash`: ByteArray) : String {
@@ -1582,7 +1665,7 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
             VdrException.ErrorHandler,
         )
     }
-
+    
     @Throws(VdrException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
     override suspend fun `ping`() : PingStatus {
@@ -1590,8 +1673,8 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
             callWithPointer { thisPtr ->
                 UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_method_ledgerclient_ping(
                     thisPtr,
-
-                    )
+                    
+                )
             },
             { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
             { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
@@ -1602,7 +1685,7 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
             VdrException.ErrorHandler,
         )
     }
-
+    
     @Throws(VdrException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
     override suspend fun `queryEvents`(`query`: EventQuery) : List<EventLog> {
@@ -1622,7 +1705,7 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
             VdrException.ErrorHandler,
         )
     }
-
+    
     @Throws(VdrException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
     override suspend fun `submitTransaction`(`transaction`: Transaction) : ByteArray {
@@ -1642,11 +1725,11 @@ open class LedgerClient : FFIObject, LedgerClientInterface {
             VdrException.ErrorHandler,
         )
     }
+    
 
-
-
+    
     companion object
-
+    
 }
 
 public object FfiConverterTypeLedgerClient: FfiConverter<LedgerClient, Pointer> {
@@ -1677,11 +1760,11 @@ public object FfiConverterTypeLedgerClient: FfiConverter<LedgerClient, Pointer> 
 
 
 data class ContractConfig (
-    var `address`: String,
-    var `specPath`: String?,
+    var `address`: String, 
+    var `specPath`: String?, 
     var `spec`: ContractSpec?
 ) {
-
+    
     companion object
 }
 
@@ -1696,24 +1779,24 @@ public object FfiConverterTypeContractConfig: FfiConverterRustBuffer<ContractCon
 
     override fun allocationSize(value: ContractConfig) = (
             FfiConverterString.allocationSize(value.`address`) +
-                    FfiConverterOptionalString.allocationSize(value.`specPath`) +
-                    FfiConverterOptionalTypeContractSpec.allocationSize(value.`spec`)
-            )
+            FfiConverterOptionalString.allocationSize(value.`specPath`) +
+            FfiConverterOptionalTypeContractSpec.allocationSize(value.`spec`)
+    )
 
     override fun write(value: ContractConfig, buf: ByteBuffer) {
-        FfiConverterString.write(value.`address`, buf)
-        FfiConverterOptionalString.write(value.`specPath`, buf)
-        FfiConverterOptionalTypeContractSpec.write(value.`spec`, buf)
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterOptionalString.write(value.`specPath`, buf)
+            FfiConverterOptionalTypeContractSpec.write(value.`spec`, buf)
     }
 }
 
 
 
 data class ContractSpec (
-    var `name`: String,
+    var `name`: String, 
     var `abi`: JsonValue
 ) {
-
+    
     companion object
 }
 
@@ -1727,25 +1810,25 @@ public object FfiConverterTypeContractSpec: FfiConverterRustBuffer<ContractSpec>
 
     override fun allocationSize(value: ContractSpec) = (
             FfiConverterString.allocationSize(value.`name`) +
-                    FfiConverterTypeJsonValue.allocationSize(value.`abi`)
-            )
+            FfiConverterTypeJsonValue.allocationSize(value.`abi`)
+    )
 
     override fun write(value: ContractSpec, buf: ByteBuffer) {
-        FfiConverterString.write(value.`name`, buf)
-        FfiConverterTypeJsonValue.write(value.`abi`, buf)
+            FfiConverterString.write(value.`name`, buf)
+            FfiConverterTypeJsonValue.write(value.`abi`, buf)
     }
 }
 
 
 
 data class CredentialDefinition (
-    var `issuerId`: String,
-    var `schemaId`: String,
-    var `credDefType`: String,
-    var `tag`: String,
+    var `issuerId`: String, 
+    var `schemaId`: String, 
+    var `credDefType`: String, 
+    var `tag`: String, 
     var `value`: JsonValue
 ) {
-
+    
     companion object
 }
 
@@ -1762,31 +1845,31 @@ public object FfiConverterTypeCredentialDefinition: FfiConverterRustBuffer<Crede
 
     override fun allocationSize(value: CredentialDefinition) = (
             FfiConverterString.allocationSize(value.`issuerId`) +
-                    FfiConverterString.allocationSize(value.`schemaId`) +
-                    FfiConverterString.allocationSize(value.`credDefType`) +
-                    FfiConverterString.allocationSize(value.`tag`) +
-                    FfiConverterTypeJsonValue.allocationSize(value.`value`)
-            )
+            FfiConverterString.allocationSize(value.`schemaId`) +
+            FfiConverterString.allocationSize(value.`credDefType`) +
+            FfiConverterString.allocationSize(value.`tag`) +
+            FfiConverterTypeJsonValue.allocationSize(value.`value`)
+    )
 
     override fun write(value: CredentialDefinition, buf: ByteBuffer) {
-        FfiConverterString.write(value.`issuerId`, buf)
-        FfiConverterString.write(value.`schemaId`, buf)
-        FfiConverterString.write(value.`credDefType`, buf)
-        FfiConverterString.write(value.`tag`, buf)
-        FfiConverterTypeJsonValue.write(value.`value`, buf)
+            FfiConverterString.write(value.`issuerId`, buf)
+            FfiConverterString.write(value.`schemaId`, buf)
+            FfiConverterString.write(value.`credDefType`, buf)
+            FfiConverterString.write(value.`tag`, buf)
+            FfiConverterTypeJsonValue.write(value.`value`, buf)
     }
 }
 
 
 
 data class DidAttributeChanged (
-    var `identity`: String,
-    var `name`: String,
-    var `value`: ByteArray,
-    var `validTo`: ULong,
+    var `identity`: String, 
+    var `name`: String, 
+    var `value`: ByteArray, 
+    var `validTo`: ULong, 
     var `previousChange`: ULong
 ) {
-
+    
     companion object
 }
 
@@ -1803,31 +1886,31 @@ public object FfiConverterTypeDidAttributeChanged: FfiConverterRustBuffer<DidAtt
 
     override fun allocationSize(value: DidAttributeChanged) = (
             FfiConverterString.allocationSize(value.`identity`) +
-                    FfiConverterString.allocationSize(value.`name`) +
-                    FfiConverterByteArray.allocationSize(value.`value`) +
-                    FfiConverterULong.allocationSize(value.`validTo`) +
-                    FfiConverterULong.allocationSize(value.`previousChange`)
-            )
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterByteArray.allocationSize(value.`value`) +
+            FfiConverterULong.allocationSize(value.`validTo`) +
+            FfiConverterULong.allocationSize(value.`previousChange`)
+    )
 
     override fun write(value: DidAttributeChanged, buf: ByteBuffer) {
-        FfiConverterString.write(value.`identity`, buf)
-        FfiConverterString.write(value.`name`, buf)
-        FfiConverterByteArray.write(value.`value`, buf)
-        FfiConverterULong.write(value.`validTo`, buf)
-        FfiConverterULong.write(value.`previousChange`, buf)
+            FfiConverterString.write(value.`identity`, buf)
+            FfiConverterString.write(value.`name`, buf)
+            FfiConverterByteArray.write(value.`value`, buf)
+            FfiConverterULong.write(value.`validTo`, buf)
+            FfiConverterULong.write(value.`previousChange`, buf)
     }
 }
 
 
 
 data class DidDelegateChanged (
-    var `identity`: String,
-    var `delegate`: String,
-    var `delegateType`: ByteArray,
-    var `validTo`: ULong,
+    var `identity`: String, 
+    var `delegate`: String, 
+    var `delegateType`: ByteArray, 
+    var `validTo`: ULong, 
     var `previousChange`: ULong
 ) {
-
+    
     companion object
 }
 
@@ -1844,29 +1927,29 @@ public object FfiConverterTypeDidDelegateChanged: FfiConverterRustBuffer<DidDele
 
     override fun allocationSize(value: DidDelegateChanged) = (
             FfiConverterString.allocationSize(value.`identity`) +
-                    FfiConverterString.allocationSize(value.`delegate`) +
-                    FfiConverterByteArray.allocationSize(value.`delegateType`) +
-                    FfiConverterULong.allocationSize(value.`validTo`) +
-                    FfiConverterULong.allocationSize(value.`previousChange`)
-            )
+            FfiConverterString.allocationSize(value.`delegate`) +
+            FfiConverterByteArray.allocationSize(value.`delegateType`) +
+            FfiConverterULong.allocationSize(value.`validTo`) +
+            FfiConverterULong.allocationSize(value.`previousChange`)
+    )
 
     override fun write(value: DidDelegateChanged, buf: ByteBuffer) {
-        FfiConverterString.write(value.`identity`, buf)
-        FfiConverterString.write(value.`delegate`, buf)
-        FfiConverterByteArray.write(value.`delegateType`, buf)
-        FfiConverterULong.write(value.`validTo`, buf)
-        FfiConverterULong.write(value.`previousChange`, buf)
+            FfiConverterString.write(value.`identity`, buf)
+            FfiConverterString.write(value.`delegate`, buf)
+            FfiConverterByteArray.write(value.`delegateType`, buf)
+            FfiConverterULong.write(value.`validTo`, buf)
+            FfiConverterULong.write(value.`previousChange`, buf)
     }
 }
 
 
 
 data class DidOwnerChanged (
-    var `identity`: String,
-    var `owner`: String,
+    var `identity`: String, 
+    var `owner`: String, 
     var `previousChange`: ULong
 ) {
-
+    
     companion object
 }
 
@@ -1881,24 +1964,24 @@ public object FfiConverterTypeDidOwnerChanged: FfiConverterRustBuffer<DidOwnerCh
 
     override fun allocationSize(value: DidOwnerChanged) = (
             FfiConverterString.allocationSize(value.`identity`) +
-                    FfiConverterString.allocationSize(value.`owner`) +
-                    FfiConverterULong.allocationSize(value.`previousChange`)
-            )
+            FfiConverterString.allocationSize(value.`owner`) +
+            FfiConverterULong.allocationSize(value.`previousChange`)
+    )
 
     override fun write(value: DidOwnerChanged, buf: ByteBuffer) {
-        FfiConverterString.write(value.`identity`, buf)
-        FfiConverterString.write(value.`owner`, buf)
-        FfiConverterULong.write(value.`previousChange`, buf)
+            FfiConverterString.write(value.`identity`, buf)
+            FfiConverterString.write(value.`owner`, buf)
+            FfiConverterULong.write(value.`previousChange`, buf)
     }
 }
 
 
 
 data class DidResolutionOptions (
-    var `accept`: String?,
+    var `accept`: String?, 
     var `blockTag`: ULong?
 ) {
-
+    
     companion object
 }
 
@@ -1912,23 +1995,23 @@ public object FfiConverterTypeDidResolutionOptions: FfiConverterRustBuffer<DidRe
 
     override fun allocationSize(value: DidResolutionOptions) = (
             FfiConverterOptionalString.allocationSize(value.`accept`) +
-                    FfiConverterOptionalULong.allocationSize(value.`blockTag`)
-            )
+            FfiConverterOptionalULong.allocationSize(value.`blockTag`)
+    )
 
     override fun write(value: DidResolutionOptions, buf: ByteBuffer) {
-        FfiConverterOptionalString.write(value.`accept`, buf)
-        FfiConverterOptionalULong.write(value.`blockTag`, buf)
+            FfiConverterOptionalString.write(value.`accept`, buf)
+            FfiConverterOptionalULong.write(value.`blockTag`, buf)
     }
 }
 
 
 
 data class EventLog (
-    var `topics`: List<ByteArray>,
-    var `data`: ByteArray,
+    var `topics`: List<ByteArray>, 
+    var `data`: ByteArray, 
     var `block`: ULong
 ) {
-
+    
     companion object
 }
 
@@ -1943,27 +2026,27 @@ public object FfiConverterTypeEventLog: FfiConverterRustBuffer<EventLog> {
 
     override fun allocationSize(value: EventLog) = (
             FfiConverterSequenceByteArray.allocationSize(value.`topics`) +
-                    FfiConverterByteArray.allocationSize(value.`data`) +
-                    FfiConverterULong.allocationSize(value.`block`)
-            )
+            FfiConverterByteArray.allocationSize(value.`data`) +
+            FfiConverterULong.allocationSize(value.`block`)
+    )
 
     override fun write(value: EventLog, buf: ByteBuffer) {
-        FfiConverterSequenceByteArray.write(value.`topics`, buf)
-        FfiConverterByteArray.write(value.`data`, buf)
-        FfiConverterULong.write(value.`block`, buf)
+            FfiConverterSequenceByteArray.write(value.`topics`, buf)
+            FfiConverterByteArray.write(value.`data`, buf)
+            FfiConverterULong.write(value.`block`, buf)
     }
 }
 
 
 
 data class EventQuery (
-    var `address`: String,
-    var `fromBlock`: ULong?,
-    var `toBlock`: ULong?,
-    var `eventSignature`: String?,
+    var `address`: String, 
+    var `fromBlock`: ULong?, 
+    var `toBlock`: ULong?, 
+    var `eventSignature`: String?, 
     var `eventFilter`: String?
 ) {
-
+    
     companion object
 }
 
@@ -1980,18 +2063,18 @@ public object FfiConverterTypeEventQuery: FfiConverterRustBuffer<EventQuery> {
 
     override fun allocationSize(value: EventQuery) = (
             FfiConverterString.allocationSize(value.`address`) +
-                    FfiConverterOptionalULong.allocationSize(value.`fromBlock`) +
-                    FfiConverterOptionalULong.allocationSize(value.`toBlock`) +
-                    FfiConverterOptionalString.allocationSize(value.`eventSignature`) +
-                    FfiConverterOptionalString.allocationSize(value.`eventFilter`)
-            )
+            FfiConverterOptionalULong.allocationSize(value.`fromBlock`) +
+            FfiConverterOptionalULong.allocationSize(value.`toBlock`) +
+            FfiConverterOptionalString.allocationSize(value.`eventSignature`) +
+            FfiConverterOptionalString.allocationSize(value.`eventFilter`)
+    )
 
     override fun write(value: EventQuery, buf: ByteBuffer) {
-        FfiConverterString.write(value.`address`, buf)
-        FfiConverterOptionalULong.write(value.`fromBlock`, buf)
-        FfiConverterOptionalULong.write(value.`toBlock`, buf)
-        FfiConverterOptionalString.write(value.`eventSignature`, buf)
-        FfiConverterOptionalString.write(value.`eventFilter`, buf)
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterOptionalULong.write(value.`fromBlock`, buf)
+            FfiConverterOptionalULong.write(value.`toBlock`, buf)
+            FfiConverterOptionalString.write(value.`eventSignature`, buf)
+            FfiConverterOptionalString.write(value.`eventFilter`, buf)
     }
 }
 
@@ -2000,7 +2083,7 @@ public object FfiConverterTypeEventQuery: FfiConverterRustBuffer<EventQuery> {
 data class PingStatus (
     var `status`: Status
 ) {
-
+    
     companion object
 }
 
@@ -2013,22 +2096,22 @@ public object FfiConverterTypePingStatus: FfiConverterRustBuffer<PingStatus> {
 
     override fun allocationSize(value: PingStatus) = (
             FfiConverterTypeStatus.allocationSize(value.`status`)
-            )
+    )
 
     override fun write(value: PingStatus, buf: ByteBuffer) {
-        FfiConverterTypeStatus.write(value.`status`, buf)
+            FfiConverterTypeStatus.write(value.`status`, buf)
     }
 }
 
 
 
 data class QuorumConfig (
-    var `nodes`: List<String>,
-    var `requestRetries`: UByte?,
-    var `requestTimeout`: ULong?,
+    var `nodes`: List<String>, 
+    var `requestRetries`: UByte?, 
+    var `requestTimeout`: ULong?, 
     var `retryInterval`: ULong?
 ) {
-
+    
     companion object
 }
 
@@ -2044,28 +2127,110 @@ public object FfiConverterTypeQuorumConfig: FfiConverterRustBuffer<QuorumConfig>
 
     override fun allocationSize(value: QuorumConfig) = (
             FfiConverterSequenceString.allocationSize(value.`nodes`) +
-                    FfiConverterOptionalUByte.allocationSize(value.`requestRetries`) +
-                    FfiConverterOptionalULong.allocationSize(value.`requestTimeout`) +
-                    FfiConverterOptionalULong.allocationSize(value.`retryInterval`)
-            )
+            FfiConverterOptionalUByte.allocationSize(value.`requestRetries`) +
+            FfiConverterOptionalULong.allocationSize(value.`requestTimeout`) +
+            FfiConverterOptionalULong.allocationSize(value.`retryInterval`)
+    )
 
     override fun write(value: QuorumConfig, buf: ByteBuffer) {
-        FfiConverterSequenceString.write(value.`nodes`, buf)
-        FfiConverterOptionalUByte.write(value.`requestRetries`, buf)
-        FfiConverterOptionalULong.write(value.`requestTimeout`, buf)
-        FfiConverterOptionalULong.write(value.`retryInterval`, buf)
+            FfiConverterSequenceString.write(value.`nodes`, buf)
+            FfiConverterOptionalUByte.write(value.`requestRetries`, buf)
+            FfiConverterOptionalULong.write(value.`requestTimeout`, buf)
+            FfiConverterOptionalULong.write(value.`retryInterval`, buf)
+    }
+}
+
+
+
+data class RevocationRegistryDefinition (
+    var `issuerId`: String, 
+    var `revocDefType`: String, 
+    var `credDefId`: String, 
+    var `tag`: String, 
+    var `value`: JsonValue
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRevocationRegistryDefinition: FfiConverterRustBuffer<RevocationRegistryDefinition> {
+    override fun read(buf: ByteBuffer): RevocationRegistryDefinition {
+        return RevocationRegistryDefinition(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTypeJsonValue.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RevocationRegistryDefinition) = (
+            FfiConverterString.allocationSize(value.`issuerId`) +
+            FfiConverterString.allocationSize(value.`revocDefType`) +
+            FfiConverterString.allocationSize(value.`credDefId`) +
+            FfiConverterString.allocationSize(value.`tag`) +
+            FfiConverterTypeJsonValue.allocationSize(value.`value`)
+    )
+
+    override fun write(value: RevocationRegistryDefinition, buf: ByteBuffer) {
+            FfiConverterString.write(value.`issuerId`, buf)
+            FfiConverterString.write(value.`revocDefType`, buf)
+            FfiConverterString.write(value.`credDefId`, buf)
+            FfiConverterString.write(value.`tag`, buf)
+            FfiConverterTypeJsonValue.write(value.`value`, buf)
+    }
+}
+
+
+
+data class RevocationStatusList (
+    var `issuerId`: String, 
+    var `revRegDefId`: String, 
+    var `revocationList`: List<UInt>, 
+    var `currentAccumulator`: String, 
+    var `timestamp`: ULong
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRevocationStatusList: FfiConverterRustBuffer<RevocationStatusList> {
+    override fun read(buf: ByteBuffer): RevocationStatusList {
+        return RevocationStatusList(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RevocationStatusList) = (
+            FfiConverterString.allocationSize(value.`issuerId`) +
+            FfiConverterString.allocationSize(value.`revRegDefId`) +
+            FfiConverterSequenceUInt.allocationSize(value.`revocationList`) +
+            FfiConverterString.allocationSize(value.`currentAccumulator`) +
+            FfiConverterULong.allocationSize(value.`timestamp`)
+    )
+
+    override fun write(value: RevocationStatusList, buf: ByteBuffer) {
+            FfiConverterString.write(value.`issuerId`, buf)
+            FfiConverterString.write(value.`revRegDefId`, buf)
+            FfiConverterSequenceUInt.write(value.`revocationList`, buf)
+            FfiConverterString.write(value.`currentAccumulator`, buf)
+            FfiConverterULong.write(value.`timestamp`, buf)
     }
 }
 
 
 
 data class Schema (
-    var `issuerId`: String,
-    var `name`: String,
-    var `version`: String,
+    var `issuerId`: String, 
+    var `name`: String, 
+    var `version`: String, 
     var `attrNames`: List<String>
 ) {
-
+    
     companion object
 }
 
@@ -2081,26 +2246,26 @@ public object FfiConverterTypeSchema: FfiConverterRustBuffer<Schema> {
 
     override fun allocationSize(value: Schema) = (
             FfiConverterString.allocationSize(value.`issuerId`) +
-                    FfiConverterString.allocationSize(value.`name`) +
-                    FfiConverterString.allocationSize(value.`version`) +
-                    FfiConverterSequenceString.allocationSize(value.`attrNames`)
-            )
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterString.allocationSize(value.`version`) +
+            FfiConverterSequenceString.allocationSize(value.`attrNames`)
+    )
 
     override fun write(value: Schema, buf: ByteBuffer) {
-        FfiConverterString.write(value.`issuerId`, buf)
-        FfiConverterString.write(value.`name`, buf)
-        FfiConverterString.write(value.`version`, buf)
-        FfiConverterSequenceString.write(value.`attrNames`, buf)
+            FfiConverterString.write(value.`issuerId`, buf)
+            FfiConverterString.write(value.`name`, buf)
+            FfiConverterString.write(value.`version`, buf)
+            FfiConverterSequenceString.write(value.`attrNames`, buf)
     }
 }
 
 
 
 data class SignatureData (
-    var `recoveryId`: ULong,
+    var `recoveryId`: ULong, 
     var `signature`: ByteArray
 ) {
-
+    
     companion object
 }
 
@@ -2114,28 +2279,28 @@ public object FfiConverterTypeSignatureData: FfiConverterRustBuffer<SignatureDat
 
     override fun allocationSize(value: SignatureData) = (
             FfiConverterULong.allocationSize(value.`recoveryId`) +
-                    FfiConverterByteArray.allocationSize(value.`signature`)
-            )
+            FfiConverterByteArray.allocationSize(value.`signature`)
+    )
 
     override fun write(value: SignatureData, buf: ByteBuffer) {
-        FfiConverterULong.write(value.`recoveryId`, buf)
-        FfiConverterByteArray.write(value.`signature`, buf)
+            FfiConverterULong.write(value.`recoveryId`, buf)
+            FfiConverterByteArray.write(value.`signature`, buf)
     }
 }
 
 
 
 data class Transaction (
-    var `type`: TransactionType,
-    var `from`: String?,
-    var `to`: String,
-    var `nonce`: ULong?,
-    var `chainId`: ULong,
-    var `data`: ByteArray,
-    var `signature`: SignatureData?,
+    var `type`: TransactionType, 
+    var `from`: String?, 
+    var `to`: String, 
+    var `nonce`: ULong?, 
+    var `chainId`: ULong, 
+    var `data`: ByteArray, 
+    var `signature`: SignatureData?, 
     var `hash`: ByteArray?
 ) {
-
+    
     companion object
 }
 
@@ -2155,40 +2320,40 @@ public object FfiConverterTypeTransaction: FfiConverterRustBuffer<Transaction> {
 
     override fun allocationSize(value: Transaction) = (
             FfiConverterTypeTransactionType.allocationSize(value.`type`) +
-                    FfiConverterOptionalString.allocationSize(value.`from`) +
-                    FfiConverterString.allocationSize(value.`to`) +
-                    FfiConverterOptionalULong.allocationSize(value.`nonce`) +
-                    FfiConverterULong.allocationSize(value.`chainId`) +
-                    FfiConverterByteArray.allocationSize(value.`data`) +
-                    FfiConverterOptionalTypeSignatureData.allocationSize(value.`signature`) +
-                    FfiConverterOptionalByteArray.allocationSize(value.`hash`)
-            )
+            FfiConverterOptionalString.allocationSize(value.`from`) +
+            FfiConverterString.allocationSize(value.`to`) +
+            FfiConverterOptionalULong.allocationSize(value.`nonce`) +
+            FfiConverterULong.allocationSize(value.`chainId`) +
+            FfiConverterByteArray.allocationSize(value.`data`) +
+            FfiConverterOptionalTypeSignatureData.allocationSize(value.`signature`) +
+            FfiConverterOptionalByteArray.allocationSize(value.`hash`)
+    )
 
     override fun write(value: Transaction, buf: ByteBuffer) {
-        FfiConverterTypeTransactionType.write(value.`type`, buf)
-        FfiConverterOptionalString.write(value.`from`, buf)
-        FfiConverterString.write(value.`to`, buf)
-        FfiConverterOptionalULong.write(value.`nonce`, buf)
-        FfiConverterULong.write(value.`chainId`, buf)
-        FfiConverterByteArray.write(value.`data`, buf)
-        FfiConverterOptionalTypeSignatureData.write(value.`signature`, buf)
-        FfiConverterOptionalByteArray.write(value.`hash`, buf)
+            FfiConverterTypeTransactionType.write(value.`type`, buf)
+            FfiConverterOptionalString.write(value.`from`, buf)
+            FfiConverterString.write(value.`to`, buf)
+            FfiConverterOptionalULong.write(value.`nonce`, buf)
+            FfiConverterULong.write(value.`chainId`, buf)
+            FfiConverterByteArray.write(value.`data`, buf)
+            FfiConverterOptionalTypeSignatureData.write(value.`signature`, buf)
+            FfiConverterOptionalByteArray.write(value.`hash`, buf)
     }
 }
 
 
 
 data class TransactionEndorsingData (
-    var `to`: String,
-    var `from`: String,
-    var `nonce`: ULong?,
-    var `contract`: String,
-    var `method`: String,
-    var `endorsingMethod`: String,
-    var `params`: List<JsonValue>,
+    var `to`: String, 
+    var `from`: String, 
+    var `nonce`: ULong?, 
+    var `contract`: String, 
+    var `method`: String, 
+    var `endorsingMethod`: String, 
+    var `params`: List<JsonValue>, 
     var `signature`: SignatureData?
 ) {
-
+    
     companion object
 }
 
@@ -2208,54 +2373,54 @@ public object FfiConverterTypeTransactionEndorsingData: FfiConverterRustBuffer<T
 
     override fun allocationSize(value: TransactionEndorsingData) = (
             FfiConverterString.allocationSize(value.`to`) +
-                    FfiConverterString.allocationSize(value.`from`) +
-                    FfiConverterOptionalULong.allocationSize(value.`nonce`) +
-                    FfiConverterString.allocationSize(value.`contract`) +
-                    FfiConverterString.allocationSize(value.`method`) +
-                    FfiConverterString.allocationSize(value.`endorsingMethod`) +
-                    FfiConverterSequenceTypeJsonValue.allocationSize(value.`params`) +
-                    FfiConverterOptionalTypeSignatureData.allocationSize(value.`signature`)
-            )
+            FfiConverterString.allocationSize(value.`from`) +
+            FfiConverterOptionalULong.allocationSize(value.`nonce`) +
+            FfiConverterString.allocationSize(value.`contract`) +
+            FfiConverterString.allocationSize(value.`method`) +
+            FfiConverterString.allocationSize(value.`endorsingMethod`) +
+            FfiConverterSequenceTypeJsonValue.allocationSize(value.`params`) +
+            FfiConverterOptionalTypeSignatureData.allocationSize(value.`signature`)
+    )
 
     override fun write(value: TransactionEndorsingData, buf: ByteBuffer) {
-        FfiConverterString.write(value.`to`, buf)
-        FfiConverterString.write(value.`from`, buf)
-        FfiConverterOptionalULong.write(value.`nonce`, buf)
-        FfiConverterString.write(value.`contract`, buf)
-        FfiConverterString.write(value.`method`, buf)
-        FfiConverterString.write(value.`endorsingMethod`, buf)
-        FfiConverterSequenceTypeJsonValue.write(value.`params`, buf)
-        FfiConverterOptionalTypeSignatureData.write(value.`signature`, buf)
+            FfiConverterString.write(value.`to`, buf)
+            FfiConverterString.write(value.`from`, buf)
+            FfiConverterOptionalULong.write(value.`nonce`, buf)
+            FfiConverterString.write(value.`contract`, buf)
+            FfiConverterString.write(value.`method`, buf)
+            FfiConverterString.write(value.`endorsingMethod`, buf)
+            FfiConverterSequenceTypeJsonValue.write(value.`params`, buf)
+            FfiConverterOptionalTypeSignatureData.write(value.`signature`, buf)
     }
 }
 
 
 
 sealed class DidEvents {
-
+    
     data class AttributeChangedEvent(
-
+        
         val `event`: DidAttributeChanged
-    ) : DidEvents() {
+        ) : DidEvents() {
         companion object
     }
-
+    
     data class DelegateChanged(
-
+        
         val `event`: DidDelegateChanged
-    ) : DidEvents() {
+        ) : DidEvents() {
         companion object
     }
-
+    
     data class OwnerChanged(
-
+        
         val `event`: DidOwnerChanged
-    ) : DidEvents() {
+        ) : DidEvents() {
         companion object
     }
+    
 
-
-
+    
     companion object
 }
 
@@ -2264,13 +2429,13 @@ public object FfiConverterTypeDidEvents : FfiConverterRustBuffer<DidEvents>{
         return when(buf.getInt()) {
             1 -> DidEvents.AttributeChangedEvent(
                 FfiConverterTypeDidAttributeChanged.read(buf),
-            )
+                )
             2 -> DidEvents.DelegateChanged(
                 FfiConverterTypeDidDelegateChanged.read(buf),
-            )
+                )
             3 -> DidEvents.OwnerChanged(
                 FfiConverterTypeDidOwnerChanged.read(buf),
-            )
+                )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
@@ -2279,23 +2444,23 @@ public object FfiConverterTypeDidEvents : FfiConverterRustBuffer<DidEvents>{
         is DidEvents.AttributeChangedEvent -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                    4
-                            + FfiConverterTypeDidAttributeChanged.allocationSize(value.`event`)
-                    )
+                4
+                + FfiConverterTypeDidAttributeChanged.allocationSize(value.`event`)
+            )
         }
         is DidEvents.DelegateChanged -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                    4
-                            + FfiConverterTypeDidDelegateChanged.allocationSize(value.`event`)
-                    )
+                4
+                + FfiConverterTypeDidDelegateChanged.allocationSize(value.`event`)
+            )
         }
         is DidEvents.OwnerChanged -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                    4
-                            + FfiConverterTypeDidOwnerChanged.allocationSize(value.`event`)
-                    )
+                4
+                + FfiConverterTypeDidOwnerChanged.allocationSize(value.`event`)
+            )
         }
     }
 
@@ -2325,25 +2490,25 @@ public object FfiConverterTypeDidEvents : FfiConverterRustBuffer<DidEvents>{
 
 
 sealed class Status {
-
+    
     data class Ok(
-
-        val `blockNumber`: ULong,
-
+        
+        val `blockNumber`: ULong, 
+        
         val `blockTimestamp`: ULong
-    ) : Status() {
+        ) : Status() {
         companion object
     }
-
+    
     data class Err(
-
+        
         val `msg`: String
-    ) : Status() {
+        ) : Status() {
         companion object
     }
+    
 
-
-
+    
     companion object
 }
 
@@ -2353,10 +2518,10 @@ public object FfiConverterTypeStatus : FfiConverterRustBuffer<Status>{
             1 -> Status.Ok(
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
-            )
+                )
             2 -> Status.Err(
                 FfiConverterString.read(buf),
-            )
+                )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
         }
     }
@@ -2365,17 +2530,17 @@ public object FfiConverterTypeStatus : FfiConverterRustBuffer<Status>{
         is Status.Ok -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                    4
-                            + FfiConverterULong.allocationSize(value.`blockNumber`)
-                            + FfiConverterULong.allocationSize(value.`blockTimestamp`)
-                    )
+                4
+                + FfiConverterULong.allocationSize(value.`blockNumber`)
+                + FfiConverterULong.allocationSize(value.`blockTimestamp`)
+            )
         }
         is Status.Err -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
         }
     }
 
@@ -2401,7 +2566,7 @@ public object FfiConverterTypeStatus : FfiConverterRustBuffer<Status>{
 
 
 enum class TransactionType {
-
+    
     READ,
     WRITE;
     companion object
@@ -2428,268 +2593,268 @@ public object FfiConverterTypeTransactionType: FfiConverterRustBuffer<Transactio
 
 
 sealed class VdrException: Exception() {
-
+    
     class ClientNodeUnreachable(
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = ""
     }
-
+    
     class ClientInvalidTransaction(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ClientInvalidEndorsementData(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ClientInvalidResponse(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ClientTransactionReverted(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ClientUnexpectedException(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ClientInvalidState(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ContractInvalidName(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ContractInvalidSpec(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class ContractInvalidInputData(
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = ""
     }
-
+    
     class ContractInvalidResponseData(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class SignerInvalidPrivateKey(
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = ""
     }
-
+    
     class SignerInvalidMessage(
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = ""
     }
-
+    
     class SignerMissingKey(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class SignerUnexpectedException(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class CommonInvalidData(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class QuorumNotReached(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class GetTransactionException(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidSchema(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidCredentialDefinition(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidRevocationRegistryDefinition(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidRevocationRegistryEntry(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidRevocationRegistryStatusList(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
     class InvalidDidDocument(
-
+        
         val `msg`: String
-    ) : VdrException() {
+        ) : VdrException() {
         override val message
             get() = "msg=${ `msg` }"
     }
-
+    
 
     companion object ErrorHandler : UniffiRustCallStatusErrorHandler<VdrException> {
         override fun lift(error_buf: RustBuffer.ByValue): VdrException = FfiConverterTypeVdrError.lift(error_buf)
     }
 
-
+    
 }
 
 public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
     override fun read(buf: ByteBuffer): VdrException {
-
+        
 
         return when(buf.getInt()) {
             1 -> VdrException.ClientNodeUnreachable()
             2 -> VdrException.ClientInvalidTransaction(
                 FfiConverterString.read(buf),
-            )
+                )
             3 -> VdrException.ClientInvalidEndorsementData(
                 FfiConverterString.read(buf),
-            )
+                )
             4 -> VdrException.ClientInvalidResponse(
                 FfiConverterString.read(buf),
-            )
+                )
             5 -> VdrException.ClientTransactionReverted(
                 FfiConverterString.read(buf),
-            )
+                )
             6 -> VdrException.ClientUnexpectedException(
                 FfiConverterString.read(buf),
-            )
+                )
             7 -> VdrException.ClientInvalidState(
                 FfiConverterString.read(buf),
-            )
+                )
             8 -> VdrException.ContractInvalidName(
                 FfiConverterString.read(buf),
-            )
+                )
             9 -> VdrException.ContractInvalidSpec(
                 FfiConverterString.read(buf),
-            )
+                )
             10 -> VdrException.ContractInvalidInputData()
             11 -> VdrException.ContractInvalidResponseData(
                 FfiConverterString.read(buf),
-            )
+                )
             12 -> VdrException.SignerInvalidPrivateKey()
             13 -> VdrException.SignerInvalidMessage()
             14 -> VdrException.SignerMissingKey(
                 FfiConverterString.read(buf),
-            )
+                )
             15 -> VdrException.SignerUnexpectedException(
                 FfiConverterString.read(buf),
-            )
+                )
             16 -> VdrException.CommonInvalidData(
                 FfiConverterString.read(buf),
-            )
+                )
             17 -> VdrException.QuorumNotReached(
                 FfiConverterString.read(buf),
-            )
+                )
             18 -> VdrException.GetTransactionException(
                 FfiConverterString.read(buf),
-            )
+                )
             19 -> VdrException.InvalidSchema(
                 FfiConverterString.read(buf),
-            )
+                )
             20 -> VdrException.InvalidCredentialDefinition(
                 FfiConverterString.read(buf),
-            )
+                )
             21 -> VdrException.InvalidRevocationRegistryDefinition(
                 FfiConverterString.read(buf),
-            )
+                )
             22 -> VdrException.InvalidRevocationRegistryEntry(
                 FfiConverterString.read(buf),
-            )
+                )
             23 -> VdrException.InvalidRevocationRegistryStatusList(
                 FfiConverterString.read(buf),
-            )
+                )
             24 -> VdrException.InvalidDidDocument(
                 FfiConverterString.read(buf),
-            )
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -2697,121 +2862,121 @@ public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
     override fun allocationSize(value: VdrException): Int {
         return when(value) {
             is VdrException.ClientNodeUnreachable -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
             is VdrException.ClientInvalidTransaction -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ClientInvalidEndorsementData -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ClientInvalidResponse -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ClientTransactionReverted -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ClientUnexpectedException -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ClientInvalidState -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ContractInvalidName -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ContractInvalidSpec -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.ContractInvalidInputData -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
             is VdrException.ContractInvalidResponseData -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.SignerInvalidPrivateKey -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
             is VdrException.SignerInvalidMessage -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
             is VdrException.SignerMissingKey -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.SignerUnexpectedException -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.CommonInvalidData -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.QuorumNotReached -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.GetTransactionException -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidSchema -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidCredentialDefinition -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidRevocationRegistryDefinition -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidRevocationRegistryEntry -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidRevocationRegistryStatusList -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidDidDocument -> (
-                    // Add the size for the Int that specifies the variant plus the size needed for all fields
-                    4
-                            + FfiConverterString.allocationSize(value.`msg`)
-                    )
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
         }
     }
 
@@ -3173,6 +3338,31 @@ public object FfiConverterOptionalTypeSignatureData: FfiConverterRustBuffer<Sign
 
 
 
+public object FfiConverterSequenceUInt: FfiConverterRustBuffer<List<UInt>> {
+    override fun read(buf: ByteBuffer): List<UInt> {
+        val len = buf.getInt()
+        return List<UInt>(len) {
+            FfiConverterUInt.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<UInt>): Int {
+        val sizeForLength = 4
+        val sizeForItems = value.map { FfiConverterUInt.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<UInt>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.forEach {
+            FfiConverterUInt.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceString: FfiConverterRustBuffer<List<String>> {
     override fun read(buf: ByteBuffer): List<String> {
         val len = buf.getInt()
@@ -3449,6 +3639,36 @@ suspend fun `buildCreateResourceMappingEndorsingData`(`client`: LedgerClient, `d
 suspend fun `buildCreateResourceMappingTransaction`(`client`: LedgerClient, `from`: String, `did`: String, `legacyIssuerIdentifier`: String, `legacyIdentifier`: String, `newIdentifier`: String) : Transaction {
     return uniffiRustCallAsync(
         UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_resource_mapping_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterString.lower(`did`),FfiConverterString.lower(`legacyIssuerIdentifier`),FfiConverterString.lower(`legacyIdentifier`),FfiConverterString.lower(`newIdentifier`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransaction.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `buildCreateRevocationRegistryDefinitionEndorsingData`(`client`: LedgerClient, `revocationRegistryDefinition`: String) : TransactionEndorsingData {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revocationRegistryDefinition`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransactionEndorsingData.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `buildCreateRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `from`: String, `revocationRegistryDefinition`: RevocationRegistryDefinition) : Transaction {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterTypeRevocationRegistryDefinition.lower(`revocationRegistryDefinition`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -3866,6 +4086,21 @@ suspend fun `buildResolveDidTransaction`(`client`: LedgerClient, `did`: String) 
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `buildResolveRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `id`: String) : Transaction {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransaction.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 suspend fun `buildResolveSchemaTransaction`(`client`: LedgerClient, `id`: String) : Transaction {
     return uniffiRustCallAsync(
         UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_schema_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
@@ -3927,161 +4162,170 @@ suspend fun `buildUpdateDidTransaction`(`client`: LedgerClient, `from`: String, 
 
 fun `credentialDefinitionFromString`(`string`: String): CredentialDefinition {
     return FfiConverterTypeCredentialDefinition.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_from_string(FfiConverterString.lower(`string`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_from_string(FfiConverterString.lower(`string`),_status)
+})
 }
 
 
 fun `credentialDefinitionGetId`(`credDef`: CredentialDefinition): String {
     return FfiConverterString.lift(
-        uniffiRustCall() { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_get_id(FfiConverterTypeCredentialDefinition.lower(`credDef`),_status)
-        })
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_get_id(FfiConverterTypeCredentialDefinition.lower(`credDef`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `credentialDefinitionToString`(`data`: CredentialDefinition): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(FfiConverterTypeCredentialDefinition.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(FfiConverterTypeCredentialDefinition.lower(`data`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidAttributeChangedEventResponse`(`client`: LedgerClient, `log`: EventLog): DidAttributeChanged {
     return FfiConverterTypeDidAttributeChanged.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidChangedResult`(`client`: LedgerClient, `bytes`: ByteArray): ULong {
     return FfiConverterULong.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidDelegateChangedEventResponse`(`client`: LedgerClient, `log`: EventLog): DidDelegateChanged {
     return FfiConverterTypeDidDelegateChanged.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_delegate_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_delegate_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidEventResponse`(`client`: LedgerClient, `log`: EventLog): DidEvents {
     return FfiConverterTypeDidEvents.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidMappingResult`(`client`: LedgerClient, `bytes`: ByteArray): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_mapping_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_mapping_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidNonceResult`(`client`: LedgerClient, `bytes`: ByteArray): ULong {
     return FfiConverterULong.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_nonce_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_nonce_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidOwnerChangedEventResponse`(`client`: LedgerClient, `log`: EventLog): DidOwnerChanged {
     return FfiConverterTypeDidOwnerChanged.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_changed_event_response(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeEventLog.lower(`log`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseDidOwnerResult`(`client`: LedgerClient, `bytes`: ByteArray): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_owner_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseGetRoleResult`(`client`: LedgerClient, `bytes`: ByteArray): UByte {
     return FfiConverterUByte.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_role_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_role_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseGetValidatorsResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
     return FfiConverterTypeJsonValue.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_validators_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_get_validators_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseHasRoleResult`(`client`: LedgerClient, `bytes`: ByteArray): Boolean {
     return FfiConverterBoolean.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_has_role_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_has_role_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseResolveCredentialDefinitionResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
     return FfiConverterTypeJsonValue.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_credential_definition_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_credential_definition_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseResolveDidResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
     return FfiConverterTypeJsonValue.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_did_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_did_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `parseResolveRevocationRegistryDefinitionResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
+    return FfiConverterTypeJsonValue.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_revocation_registry_definition_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseResolveSchemaResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
     return FfiConverterTypeJsonValue.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_schema_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_schema_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `parseResourceMappingResult`(`client`: LedgerClient, `bytes`: ByteArray): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
 }
 
 @Throws(VdrException::class)
@@ -4117,6 +4361,36 @@ suspend fun `resolveDid`(`client`: LedgerClient, `did`: String, `options`: DidRe
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `resolveRevocationRegistryDefinition`(`client`: LedgerClient, `id`: String) : RevocationRegistryDefinition {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeRevocationRegistryDefinition.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `resolveRevocationRegistryStatusList`(`client`: LedgerClient, `id`: String, `toTimestamp`: ULong) : RevocationStatusList {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),FfiConverterULong.lower(`toTimestamp`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeRevocationStatusList.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 suspend fun `resolveSchema`(`client`: LedgerClient, `id`: String) : Schema {
     return uniffiRustCallAsync(
         UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_schema(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
@@ -4131,100 +4405,124 @@ suspend fun `resolveSchema`(`client`: LedgerClient, `id`: String) : Schema {
 }
 @Throws(VdrException::class)
 
+fun `revocationRegistryDefinitionFromString`(`string`: String): RevocationRegistryDefinition {
+    return FfiConverterTypeRevocationRegistryDefinition.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(FfiConverterString.lower(`string`),_status)
+})
+}
+
+
+fun `revocationRegistryDefinitionGetId`(`credDef`: RevocationRegistryDefinition): String {
+    return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(FfiConverterTypeRevocationRegistryDefinition.lower(`credDef`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `revocationRegistryDefinitionToString`(`data`: RevocationRegistryDefinition): String {
+    return FfiConverterString.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(FfiConverterTypeRevocationRegistryDefinition.lower(`data`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
 fun `schemaFromString`(`string`: String): Schema {
     return FfiConverterTypeSchema.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_from_string(FfiConverterString.lower(`string`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_from_string(FfiConverterString.lower(`string`),_status)
+})
 }
 
 
 fun `schemaGetId`(`schema`: Schema): String {
     return FfiConverterString.lift(
-        uniffiRustCall() { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_get_id(FfiConverterTypeSchema.lower(`schema`),_status)
-        })
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_get_id(FfiConverterTypeSchema.lower(`schema`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `schemaToString`(`data`: Schema): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_to_string(FfiConverterTypeSchema.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_schema_to_string(FfiConverterTypeSchema.lower(`data`),_status)
+})
 }
 
 
 fun `transactionCreate`(`type`: TransactionType, `to`: String, `from`: String?, `nonce`: ULong?, `chainId`: ULong, `data`: ByteArray, `signature`: SignatureData?, `hash`: ByteArray?): Transaction {
     return FfiConverterTypeTransaction.lift(
-        uniffiRustCall() { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_create(FfiConverterTypeTransactionType.lower(`type`),FfiConverterString.lower(`to`),FfiConverterOptionalString.lower(`from`),FfiConverterOptionalULong.lower(`nonce`),FfiConverterULong.lower(`chainId`),FfiConverterByteArray.lower(`data`),FfiConverterOptionalTypeSignatureData.lower(`signature`),FfiConverterOptionalByteArray.lower(`hash`),_status)
-        })
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_create(FfiConverterTypeTransactionType.lower(`type`),FfiConverterString.lower(`to`),FfiConverterOptionalString.lower(`from`),FfiConverterOptionalULong.lower(`nonce`),FfiConverterULong.lower(`chainId`),FfiConverterByteArray.lower(`data`),FfiConverterOptionalTypeSignatureData.lower(`signature`),FfiConverterOptionalByteArray.lower(`hash`),_status)
+})
 }
 
 
 fun `transactionEndorsingDataCreate`(`to`: String, `from`: String, `contract`: String, `method`: String, `endorsingMethod`: String, `params`: List<JsonValue>, `nonce`: ULong?, `signature`: SignatureData?): TransactionEndorsingData {
     return FfiConverterTypeTransactionEndorsingData.lift(
-        uniffiRustCall() { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_create(FfiConverterString.lower(`to`),FfiConverterString.lower(`from`),FfiConverterString.lower(`contract`),FfiConverterString.lower(`method`),FfiConverterString.lower(`endorsingMethod`),FfiConverterSequenceTypeJsonValue.lower(`params`),FfiConverterOptionalULong.lower(`nonce`),FfiConverterOptionalTypeSignatureData.lower(`signature`),_status)
-        })
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_create(FfiConverterString.lower(`to`),FfiConverterString.lower(`from`),FfiConverterString.lower(`contract`),FfiConverterString.lower(`method`),FfiConverterString.lower(`endorsingMethod`),FfiConverterSequenceTypeJsonValue.lower(`params`),FfiConverterOptionalULong.lower(`nonce`),FfiConverterOptionalTypeSignatureData.lower(`signature`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionEndorsingDataFromString`(`value`: String): TransactionEndorsingData {
     return FfiConverterTypeTransactionEndorsingData.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_from_string(FfiConverterString.lower(`value`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_from_string(FfiConverterString.lower(`value`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionEndorsingDataGetSigningBytes`(`data`: TransactionEndorsingData): ByteArray {
     return FfiConverterByteArray.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_get_signing_bytes(FfiConverterTypeTransactionEndorsingData.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_get_signing_bytes(FfiConverterTypeTransactionEndorsingData.lower(`data`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionEndorsingDataToString`(`data`: TransactionEndorsingData): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_to_string(FfiConverterTypeTransactionEndorsingData.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_endorsing_data_to_string(FfiConverterTypeTransactionEndorsingData.lower(`data`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionFromString`(`value`: String): Transaction {
     return FfiConverterTypeTransaction.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_from_string(FfiConverterString.lower(`value`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_from_string(FfiConverterString.lower(`value`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionGetSigningBytes`(`data`: Transaction): ByteArray {
     return FfiConverterByteArray.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_get_signing_bytes(FfiConverterTypeTransaction.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_get_signing_bytes(FfiConverterTypeTransaction.lower(`data`),_status)
+})
 }
 
 @Throws(VdrException::class)
 
 fun `transactionToString`(`data`: Transaction): String {
     return FfiConverterString.lift(
-        uniffiRustCallWithError(VdrException) { _status ->
-            UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_to_string(FfiConverterTypeTransaction.lower(`data`),_status)
-        })
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_transaction_to_string(FfiConverterTypeTransaction.lower(`data`),_status)
+})
 }
-
-
 
 

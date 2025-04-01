@@ -3,28 +3,27 @@ package org.hyperledger.ariesframework.ledger.ledgerBesu
 import ILedgerService
 import android.content.Context
 import anoncreds_uniffi.Issuer
-import indy_vdr_uniffi.Ledger
 import indy_vdr_uniffi.Pool
-import indy_vdr_uniffi.openPool
 import indy_vdr_uniffi.setProtocolVersion
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
+import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.ContractConfig
+import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.LedgerClient
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
-import java.nio.file.Paths
-
+import uniffi.indy_besu_vdr.resolveCredentialDefinition
+import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
+import uniffi.indy_besu_vdr.resolveSchema
 
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
@@ -38,22 +37,22 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     data class ContractConfigBesu(
         val address: String,
         val specPath: String,
-        var spec: ContractSpec? = null
+        var spec: ContractSpec? = null,
     ) {
         companion object {
             // Modificar o método para aceitar um Context
             fun loadFromFile(context: Context, address: String, specPath: String): uniffi.indy_besu_vdr.ContractConfig {
                 // Usando o contexto para acessar o arquivo dentro da pasta assets
-                val inputStream = context.assets.open(specPath.trimStart('/'))  // Remove a barra inicial
+                val inputStream = context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
                 val content = inputStream.bufferedReader().use { it.readText() }
                 val jsonObject = JSONObject(content)
-                val name = jsonObject.getString("sourceName")
+                val name = jsonObject.getString("sourceName").substringAfterLast("/").substringBeforeLast(".")
                 val abi = jsonObject.getJSONArray("abi").toString()
 
                 return uniffi.indy_besu_vdr.ContractConfig(
                     address = address,
                     specPath = null,
-                    spec = ContractSpec(name, abi)
+                    spec = ContractSpec(name, abi),
                 )
             }
         }
@@ -61,39 +60,38 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     // Criando configurações individuais para cada contrato
     val didRegistryConfig: ContractConfig by lazy {
-            ContractConfigBesu.loadFromFile(
-                context = appContext,
-                address = "0x0000000000000000000000000000000000018888",
-                specPath = "/abi/EthereumExtDidRegistry.json"
-            )
+        ContractConfigBesu.loadFromFile(
+            context = appContext,
+            address = "0x0000000000000000000000000000000000018888",
+            specPath = "/abi/EthereumExtDidRegistry.json",
+        )
     }
 
     val schemaRegistryConfig: ContractConfig by lazy {
-            ContractConfigBesu.loadFromFile(
-                context = appContext,
-                address = "0x0000000000000000000000000000000000005555",
-                specPath = "/abi/SchemaRegistry.json"
-            )
+        ContractConfigBesu.loadFromFile(
+            context = appContext,
+            address = "0x0000000000000000000000000000000000005555",
+            specPath = "/abi/SchemaRegistry.json",
+        )
     }
 
-
     val credentialDefinitionRegistryConfig: ContractConfig by lazy {
-            ContractConfigBesu.loadFromFile(
-                context = appContext,
-                address = "0x0000000000000000000000000000000000004444",
-                specPath = "/abi/CredentialDefinitionRegistry.json"
-            )
+        ContractConfigBesu.loadFromFile(
+            context = appContext,
+            address = "0x0000000000000000000000000000000000004444",
+            specPath = "/abi/CredentialDefinitionRegistry.json",
+        )
     }
 
     val revocationRegistryConfig: ContractConfig by lazy {
-            ContractConfigBesu.loadFromFile(
-                context = appContext,
-                address = "0x0000000000000000000000000000000000002222",
-                specPath = "/abi/RevocationRegistry.json"
-            )
+        ContractConfigBesu.loadFromFile(
+            context = appContext,
+            address = "0x0000000000000000000000000000000000002222",
+            specPath = "/abi/RevocationRegistry.json",
+        )
     }
 
-        override suspend fun initialize() {
+    override suspend fun initialize() {
         logger.info("Initializing Pool")
         if (pool != null) {
             logger.warn("Pool already initialized.")
@@ -103,39 +101,75 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             didRegistryConfig,
             schemaRegistryConfig,
             credentialDefinitionRegistryConfig,
-            revocationRegistryConfig)
-        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
-        setProtocolVersion(2)
+            revocationRegistryConfig,
+        )
+        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
+        this.getSchema("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0");
+        this.getCredentialDefinition("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/CLAIM_DEF/did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9:BasicIdentity:1.0.0/BasicIdentity")
+        this.getRevocationRegistryDefinition("did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920/anoncreds/v0/REV_REG_DEF/did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry")
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
-        TODO("Not yet implemented")
+        throw Exception("registerSchema not implemented for Besu")
     }
 
     override suspend fun getSchema(schemaId: String): Pair<String, Int> {
-        TODO("Not yet implemented")
+        if (this.ledgerBesu == null) {
+            throw Exception("Ledger não foi inicializado")
+        }
+        var schema = resolveSchema(this.ledgerBesu!!, schemaId)
+        val seqNo = 0
+        val attrNames = schema.attrNames
+        val issuer = schema.issuerId
+        val schemaMap = mapOf(
+            "name" to JsonPrimitive(schema.name),
+            "version" to JsonPrimitive(schema.version),
+            "issuerId" to JsonPrimitive(issuer),
+            "attrNames" to JsonArray(attrNames.map { JsonPrimitive(it) }),
+        )
+        val schemaJson = Json.encodeToString(schemaMap)
+        return Pair(schemaJson, seqNo)
     }
 
     override suspend fun registerCredentialDefinition(
         did: DidInfo,
         credentialDefinitionTemplate: CredentialDefinitionTemplate,
     ): String {
-        TODO("Not yet implemented")
+        throw Exception("registerCredentialDefinition not implemented for Besu")
     }
 
-    override suspend fun getCredentialDefinition(id: String): String {
-        TODO("Not yet implemented")
+    override suspend fun getCredentialDefinition(credentialId: String): String {
+        if (this.ledgerBesu == null) {
+            throw Exception("Ledger não foi inicializado")
+        }
+        var credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+        val credDef = mapOf(
+            "issuerId" to JsonPrimitive(credentialDefinition.issuerId),
+            "schemaId" to JsonPrimitive(credentialDefinition.schemaId),
+            "type" to JsonPrimitive(credentialDefinition.credDefType),
+            "tag" to JsonPrimitive(credentialDefinition.tag),
+            "value" to JsonPrimitive(credentialDefinition.value),
+        )
+        return Json.encodeToString(credDef)
     }
 
     override suspend fun registerRevocationRegistryDefinition(
         did: DidInfo,
         revRegDefTemplate: RevocationRegistryDefinitionTemplate,
     ): String {
-        TODO("Not yet implemented")
+        throw Exception("registerRevocationRegistryDefinition not implemented for Besu")
     }
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
-        TODO("Not yet implemented")
+        val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id);
+        val jsonObject = mapOf(
+            "issuerId" to JsonPrimitive(revocationRD.issuerId),
+            "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
+            "credDefId" to JsonPrimitive(revocationRD.credDefId),
+            "tag" to JsonPrimitive(revocationRD.tag),
+            "value" to Json.parseToJsonElement(revocationRD.value) // Agora tratado corretamente
+        )
+        return Json.encodeToString(JsonObject(jsonObject))
     }
 
     override suspend fun getRevocationRegistryDelta(
@@ -143,15 +177,23 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
+        //RevocationRegistryDelta
         TODO("Not yet implemented")
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
         TODO("Not yet implemented")
+        /* val revocationRegistryDelta = RevocationRegistryDelta(
+            prevAccum = value.accum_from?.value?.accum,
+            accum = value.accum_to.value.accum,
+            issued = value.issued,
+            revoked = value.revoked,
+        )
+        val deltaTimestamp = value.accum_to.txnTime*/
     }
 
     override suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {
-        TODO("Not yet implemented")
+        throw Exception("revokeCredential not implemented for Besu")
     }
 
     fun close() {

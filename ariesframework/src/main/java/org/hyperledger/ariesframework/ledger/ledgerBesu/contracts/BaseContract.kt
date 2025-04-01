@@ -1,7 +1,4 @@
-package org.hyperledger.ariesframework.ledger.ledgerIndy.contracts
-
-import kotlinx.coroutines.runBlocking
-import org.hyperledger.ariesframework.ledger.ledgerIndy.contracts.IndyBesuSigner.IndyBesuSigner
+package org.hyperledger.ariesframework.ledger.ledgerBesu.contracts
 import uniffi.indy_besu_vdr.LedgerClient
 import uniffi.indy_besu_vdr.Transaction
 

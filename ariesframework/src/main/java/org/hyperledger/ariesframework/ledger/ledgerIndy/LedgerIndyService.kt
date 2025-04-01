@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.ledger.ledgerIndy
 
 import ILedgerService
-import android.content.Context
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
 import anoncreds_uniffi.RevocationRegistryDefinition

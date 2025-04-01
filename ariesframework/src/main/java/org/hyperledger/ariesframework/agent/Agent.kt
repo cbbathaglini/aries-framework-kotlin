@@ -87,7 +87,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
 
         if (agentConfig.useLedgerService) {
             ledgerService.initialize()
-        } else if (agentConfig.useBesuLedger){
+        } else if (agentConfig.useBesuLedger) {
             ledgerService.initialize()
         }
 
