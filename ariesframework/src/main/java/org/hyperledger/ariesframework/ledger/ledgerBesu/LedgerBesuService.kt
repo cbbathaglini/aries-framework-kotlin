@@ -13,15 +13,19 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
+import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.ContractConfig
 import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.LedgerClient
+import uniffi.indy_besu_vdr.fetchRevocationDelta
 import uniffi.indy_besu_vdr.resolveCredentialDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
+import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusList
 import uniffi.indy_besu_vdr.resolveSchema
+import java.time.Instant
 
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
@@ -102,9 +106,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             revocationRegistryConfig,
         )
         ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
-        this.getSchema("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0")
-        this.getCredentialDefinition("did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9/anoncreds/v0/CLAIM_DEF/did:ethr:0xA105536703996cDB97d0aFdCfB28C29A2AA6Dfa9:BasicIdentity:1.0.0/BasicIdentity")
-        this.getRevocationRegistryDefinition("did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920/anoncreds/v0/REV_REG_DEF/did:ethr:0x52674ED51BeDF7AD0B732E5B426ad8A92B9B7920:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry")
+        this.getSchema("did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0")
+        this.getCredentialDefinition("did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2/anoncreds/v0/CLAIM_DEF/did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2:BasicIdentity:1.0.0/BasicIdentity")
+        this.getRevocationRegistryDefinition("did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2/anoncreds/v0/REV_REG_DEF/did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry")
+        val timestamp: Int = Instant.now().epochSecond.toInt()
+        this.getRevocationRegistry("did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2/anoncreds/v0/REV_REG_DEF/did:ethr:0x40591Ff9F000f5012e75ba22ba6b794CDffF66d2:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry", timestamp)
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -175,19 +181,30 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
-        // RevocationRegistryDelta
-        TODO("Not yet implemented")
+        // RevocationRegistryDelta, from is ignored.
+        val revocationStatusList  = resolveRevocationRegistryStatusList(this.ledgerBesu!!, id,  to.toULong())
+        val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+        val revocationRegistryDelta = RevocationRegistryDelta(
+            prevAccum = revocationStatusList.currentAccumulator,
+            accum = revocationDelta!!.accum,
+            issued = revocationDelta!!.issued.map { it.toInt() },
+            revoked = revocationDelta.revoked.map { it.toInt() },
+        )
+        val deltaTimestamp = revocationStatusList.timestamp
+        return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
-        TODO("Not yet implemented")
-        /* val revocationRegistryDelta = RevocationRegistryDelta(
-            prevAccum = value.accum_from?.value?.accum,
-            accum = value.accum_to.value.accum,
-            issued = value.issued,
-            revoked = value.revoked,
+        val revocationStatusList  = resolveRevocationRegistryStatusList(this.ledgerBesu!!, id,  timestamp.toULong())
+        val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  timestamp.toULong())
+        val revocationRegistryDelta = RevocationRegistryDelta(
+            prevAccum = revocationStatusList.currentAccumulator,
+            accum = revocationDelta!!.accum,
+            issued = revocationDelta!!.issued.map { it.toInt() },
+            revoked = revocationDelta.revoked.map { it.toInt() },
         )
-        val deltaTimestamp = value.accum_to.txnTime*/
+        val deltaTimestamp = revocationStatusList.timestamp
+        return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
     }
 
     override suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {

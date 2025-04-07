@@ -499,6 +499,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_fetch_revocation_delta(`client`: Pointer,`id`: RustBuffer.ByValue,`toTimestamp`: Long,
+    ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -775,6 +777,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_credential_definition_to_string(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_fetch_revocation_delta(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_attribute_changed_event_response(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_changed_result(
@@ -1011,6 +1015,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_credential_definition_to_string() != 10206.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_fetch_revocation_delta() != 64841.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_attribute_changed_event_response() != 27285.toShort()) {
@@ -2183,6 +2190,39 @@ public object FfiConverterTypeRevocationRegistryDefinition: FfiConverterRustBuff
 
 
 
+data class RevocationRegistryDelta (
+    var `revoked`: List<UInt>, 
+    var `issued`: List<UInt>, 
+    var `accum`: String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRevocationRegistryDelta: FfiConverterRustBuffer<RevocationRegistryDelta> {
+    override fun read(buf: ByteBuffer): RevocationRegistryDelta {
+        return RevocationRegistryDelta(
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RevocationRegistryDelta) = (
+            FfiConverterSequenceUInt.allocationSize(value.`revoked`) +
+            FfiConverterSequenceUInt.allocationSize(value.`issued`) +
+            FfiConverterString.allocationSize(value.`accum`)
+    )
+
+    override fun write(value: RevocationRegistryDelta, buf: ByteBuffer) {
+            FfiConverterSequenceUInt.write(value.`revoked`, buf)
+            FfiConverterSequenceUInt.write(value.`issued`, buf)
+            FfiConverterString.write(value.`accum`, buf)
+    }
+}
+
+
+
 data class RevocationStatusList (
     var `issuerId`: String, 
     var `revRegDefId`: String, 
@@ -3309,6 +3349,35 @@ public object FfiConverterOptionalTypeQuorumConfig: FfiConverterRustBuffer<Quoru
 
 
 
+public object FfiConverterOptionalTypeRevocationRegistryDelta: FfiConverterRustBuffer<RevocationRegistryDelta?> {
+    override fun read(buf: ByteBuffer): RevocationRegistryDelta? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeRevocationRegistryDelta.read(buf)
+    }
+
+    override fun allocationSize(value: RevocationRegistryDelta?): Int {
+        if (value == null) {
+            return 1
+        } else {
+            return 1 + FfiConverterTypeRevocationRegistryDelta.allocationSize(value)
+        }
+    }
+
+    override fun write(value: RevocationRegistryDelta?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeRevocationRegistryDelta.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeSignatureData: FfiConverterRustBuffer<SignatureData?> {
     override fun read(buf: ByteBuffer): SignatureData? {
         if (buf.get().toInt() == 0) {
@@ -4184,6 +4253,21 @@ fun `credentialDefinitionToString`(`data`: CredentialDefinition): String {
 })
 }
 
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `fetchRevocationDelta`(`client`: LedgerClient, `id`: String, `toTimestamp`: ULong) : RevocationRegistryDelta? {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_fetch_revocation_delta(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),FfiConverterULong.lower(`toTimestamp`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterOptionalTypeRevocationRegistryDelta.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
 @Throws(VdrException::class)
 
 fun `parseDidAttributeChangedEventResponse`(`client`: LedgerClient, `log`: EventLog): DidAttributeChanged {
