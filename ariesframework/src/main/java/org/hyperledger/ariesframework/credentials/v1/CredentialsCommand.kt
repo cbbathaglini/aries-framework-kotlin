@@ -19,6 +19,8 @@ import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.slf4j.LoggerFactory
 
 class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
@@ -100,6 +102,16 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.messageSender.send(OutboundMessage(message, connection))
 
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferAccepted,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = options.credentialRecordId,
+                credentialPreviewAttr = credentialRecord.credentialAttributes
+            )
+        )
+
         return credentialRecord
     }
 
@@ -111,9 +123,20 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun declineOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createOfferDeclinedProblemReport(options)
-        var credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferDeclined,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = options.credentialRecordId,
+                credentialPreviewAttr = credentialRecord.credentialAttributes
+            )
+        )
+
         return credentialRecord
     }
 

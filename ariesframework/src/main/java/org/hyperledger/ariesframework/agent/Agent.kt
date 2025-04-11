@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.credentials.v1.CredentialService
 import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
 import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
+import org.hyperledger.ariesframework.history.repository.HistoryRepository
 import org.hyperledger.ariesframework.ledger.LedgerService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
@@ -63,6 +64,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val credentials = CredentialsCommand(this, dispatcher)
     val credentialsV2 = CredentialsCommandV2(this, dispatcher)
     val credentialRepository = CredentialRepository(this)
+    val historyRepository = HistoryRepository(this)
     val revocationService = RevocationService(this)
     val revocationNotificationService = RevocationNotificationService(this, dispatcher)
     val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)

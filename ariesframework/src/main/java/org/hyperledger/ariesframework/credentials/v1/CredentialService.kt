@@ -38,6 +38,8 @@ import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
@@ -185,6 +187,16 @@ class CredentialService(val agent: Agent) {
                 credentialRecord.id,
             )
             credentialExchangeRepository.save(credentialRecord)
+
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.CredentialOfferReceived,
+                    connectionId = credentialRecord.connectionId,
+                    theirLabel = connection.theirLabel,
+                    associatedRecordId = credentialRecord.id,
+                )
+            )
+
             agent.eventBus.publish(AgentEvents.CredentialEvent(credentialRecord.copy()))
         }
 

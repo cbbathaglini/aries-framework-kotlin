@@ -6,6 +6,8 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationHandler
 import org.hyperledger.ariesframework.proofs.handlers.v1.RequestPresentationHandler
@@ -109,6 +111,16 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
 
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ProofRequestAccepted,
+                    connectionId = connection.id,
+                    theirLabel = connection.theirLabel,
+                    associatedRecordId = proofRecordId,
+                    proofRequestedCredentials = requestedCredentials
+                )
+            )
+
             return proofRecord
         } catch (e: Exception) {
             val record = agent.proofRepository.getById(proofRecordId)
@@ -123,6 +135,16 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
             Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
+
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ProofRequestAccepted,
+                    connectionId = connection.id,
+                    theirLabel = connection.theirLabel,
+                    associatedRecordId = proofRecordId,
+                    proofRequestedCredentials = requestedCredentials
+                )
+            )
 
             return proofRecord
         }
@@ -143,6 +165,15 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val connection = agent.connectionRepository.getById(record.connectionId)
         agent.messageSender.send(OutboundMessage(message, connection))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestDeclined,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecordId,
+            )
+        )
 
         return proofRecord
     }

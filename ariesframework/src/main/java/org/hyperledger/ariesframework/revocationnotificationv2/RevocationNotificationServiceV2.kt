@@ -8,6 +8,8 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.revocationnotificationv2.RevocationNotificationConstants
 import org.hyperledger.ariesframework.revocationnotificationv2.handler.RevocationNotificationHandlerV2
@@ -121,6 +123,15 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             state = CredentialState.Revoked,
             protocolVersion = RevocationNotificationConstants.PROTOCOL_VERSION,
             role = CredentialRole.Holder,
+        )
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialRevoked,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = credentialRecord.id,
+            )
         )
 
         agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEventV2(credentialExchangeRecord.copy()))
