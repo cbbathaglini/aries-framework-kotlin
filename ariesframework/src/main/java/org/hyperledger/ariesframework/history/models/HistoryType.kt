@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class HistoryType {
+    @SerialName("basic-message-received")
+    BasicMessageReceived,
+
     @SerialName("credential-offer-accepted")
     CredentialOfferAccepted,
 
