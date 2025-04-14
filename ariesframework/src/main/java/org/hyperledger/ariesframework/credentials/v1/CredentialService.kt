@@ -194,7 +194,7 @@ class CredentialService(val agent: Agent) {
                     connectionId = credentialRecord.connectionId,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = credentialRecord.id,
-                )
+                ),
             )
 
             agent.eventBus.publish(AgentEvents.CredentialEvent(credentialRecord.copy()))

@@ -108,8 +108,8 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = options.credentialRecordId,
-                credentialPreviewAttr = credentialRecord.credentialAttributes
-            )
+                credentialPreviewAttr = credentialRecord.credentialAttributes,
+            ),
         )
 
         return credentialRecord
@@ -133,8 +133,8 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = options.credentialRecordId,
-                credentialPreviewAttr = credentialRecord.credentialAttributes
-            )
+                credentialPreviewAttr = credentialRecord.credentialAttributes,
+            ),
         )
 
         return credentialRecord

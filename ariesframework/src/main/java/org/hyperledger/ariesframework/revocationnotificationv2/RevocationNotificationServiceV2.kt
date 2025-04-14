@@ -131,7 +131,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = credentialRecord.id,
-            )
+            ),
         )
 
         agent.eventBus.publish(AgentEvents.RevocationNotificationReceivedEventV2(credentialExchangeRecord.copy()))

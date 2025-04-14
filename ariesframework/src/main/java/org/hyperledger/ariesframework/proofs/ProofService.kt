@@ -129,8 +129,8 @@ class ProofService(val agent: Agent) {
                 connectionId = proofRecord.connectionId,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = proofRecord.id,
-                content = proofRequestMessage.toJsonString()
-            )
+                content = proofRequestMessage.toJsonString(),
+            ),
         )
 
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))

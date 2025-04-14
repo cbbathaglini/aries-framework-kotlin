@@ -28,8 +28,8 @@ class BasicMessageHandler(val agent: Agent) : MessageHandler {
                     connectionId = messageContext.connection.id,
                     theirLabel = messageContext.connection.theirLabel,
                     associatedRecordId = basicMessageRecord.id,
-                    content = basicMessageRecord.content
-                )
+                    content = basicMessageRecord.content,
+                ),
             )
         }
 

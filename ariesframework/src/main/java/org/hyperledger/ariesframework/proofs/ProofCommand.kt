@@ -117,8 +117,8 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                     connectionId = connection.id,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = proofRecordId,
-                    proofRequestedCredentials = requestedCredentials
-                )
+                    proofRequestedCredentials = requestedCredentials,
+                ),
             )
 
             return proofRecord
@@ -142,8 +142,8 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                     connectionId = connection.id,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = proofRecordId,
-                    proofRequestedCredentials = requestedCredentials
-                )
+                    proofRequestedCredentials = requestedCredentials,
+                ),
             )
 
             return proofRecord
@@ -172,7 +172,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = proofRecordId,
-            )
+            ),
         )
 
         return proofRecord

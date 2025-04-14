@@ -24,7 +24,7 @@ data class HistoryRecord(
     var theirLabel: String? = null,
     var content: String? = null,
     var credentialPreviewAttr: List<CredentialPreviewAttribute>? = null,
-    var proofRequestedCredentials: RequestedCredentials? = null
+    var proofRequestedCredentials: RequestedCredentials? = null,
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

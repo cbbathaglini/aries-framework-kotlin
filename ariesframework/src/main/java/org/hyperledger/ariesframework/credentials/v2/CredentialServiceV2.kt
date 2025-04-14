@@ -285,7 +285,7 @@ class CredentialServiceV2(val agent: Agent) :
                     connectionId = credentialExchangeRecord.connectionId,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = credentialExchangeRecord.id,
-                )
+                ),
             )
 
             agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy())) // accept credential?
