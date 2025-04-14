@@ -29,6 +29,7 @@ data class HistoryRecord(
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
+        tags["historyType"] = historyType.name
         tags["connectionId"] = connectionId
         tags["associatedRecordId"] = associatedRecordId
 
