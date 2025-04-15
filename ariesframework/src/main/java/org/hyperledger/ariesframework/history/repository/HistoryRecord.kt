@@ -33,10 +33,19 @@ data class HistoryRecord(
         tags["connectionId"] = connectionId
         tags["associatedRecordId"] = associatedRecordId
 
+        if (proofRequestedCredentials != null) {
+            for ((_, attr) in proofRequestedCredentials!!.requestedAttributes) {
+                tags["credIdAttr:${attr.credentialId}"] = "true"
+            }
+            for ((_, pred) in proofRequestedCredentials!!.requestedPredicates) {
+                tags["credIdPred:${pred.credentialId}"] = "true"
+            }
+        }
+
         return tags
     }
 
     override fun toString(): String {
-        return "HistoryRecord(id=\"$id\", createdAt=$createdAt, theirLabel=\"$theirLabel\" historyType=\"$historyType\", connectionId=\"$connectionId\", associatedRecordId=\"$associatedRecordId\", credentialPreviewAttr=$credentialPreviewAttr, proofRequestedCredentials=$proofRequestedCredentials, content='$content')"
+        return "HistoryRecord(id=\"$id\", tags=${getTags()}, createdAt=$createdAt, theirLabel=\"$theirLabel\", historyType=\"$historyType\", connectionId=\"$connectionId\", associatedRecordId=\"$associatedRecordId\", credentialPreviewAttr=$credentialPreviewAttr, proofRequestedCredentials=$proofRequestedCredentials, content='$content')"
     }
 }
