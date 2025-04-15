@@ -425,9 +425,13 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_resource_mapping_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`did`: RustBuffer.ByValue,`legacyIssuerIdentifier`: RustBuffer.ByValue,`legacyIdentifier`: RustBuffer.ByValue,`newIdentifier`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(`client`: Pointer,`revocationRegistryDefinition`: RustBuffer.ByValue,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(`client`: Pointer,`revRegDef`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`revocationRegistryDefinition`: RustBuffer.ByValue,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`revRegDef`: RustBuffer.ByValue,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_entry_endorsing_data(`client`: Pointer,`revRegEntry`: RustBuffer.ByValue,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_entry_transaction(`client`: Pointer,`from`: RustBuffer.ByValue,`revRegEntry`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_create_schema_endorsing_data(`client`: Pointer,`schema`: RustBuffer.ByValue,
     ): Pointer
@@ -483,7 +487,7 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_did_transaction(`client`: Pointer,`did`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(`client`: Pointer,`id`: RustBuffer.ByValue,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(`client`: Pointer,`revRegDefId`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_schema_transaction(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
@@ -499,8 +503,6 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_credential_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_fetch_revocation_delta(`client`: Pointer,`id`: RustBuffer.ByValue,`toTimestamp`: Long,
-    ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_attribute_changed_event_response(`client`: Pointer,`log`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_did_changed_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -527,27 +529,37 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_did_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_revocation_registry_definition_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_schema_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_parse_revocation_registry_definition(`client`: Pointer,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_credential_definition(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_did(`client`: Pointer,`did`: RustBuffer.ByValue,`options`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(`client`: Pointer,`id`: RustBuffer.ByValue,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(`client`: Pointer,`revRegDefId`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(`client`: Pointer,`id`: RustBuffer.ByValue,`toTimestamp`: Long,
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(`client`: Pointer,`revRegDefId`: RustBuffer.ByValue,`timestamp`: Long,
+    ): Pointer
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list_full(`client`: Pointer,`revRegDefId`: RustBuffer.ByValue,`timestamp`: Long,
     ): Pointer
     fun uniffi_indy_besu_vdr_uniffi_fn_func_resolve_schema(`client`: Pointer,`id`: RustBuffer.ByValue,
     ): Pointer
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(`revRegDefStr`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(`credDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(`revRegDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(`revRegDef`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_entry_from_string(`revRegEntryStr`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_entry_to_string(`revRegEntry`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_status_list_from_string(`statusListStr`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_indy_besu_vdr_uniffi_fn_func_revocation_status_list_to_string(`statusList`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_indy_besu_vdr_uniffi_fn_func_schema_from_string(`string`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -707,6 +719,10 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_transaction(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_entry_endorsing_data(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_entry_transaction(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_endorsing_data(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_transaction(
@@ -777,8 +793,6 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_credential_definition_to_string(
     ): Short
-    fun uniffi_indy_besu_vdr_uniffi_checksum_func_fetch_revocation_delta(
-    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_attribute_changed_event_response(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_changed_result(
@@ -805,11 +819,11 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_did_result(
     ): Short
-    fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_revocation_registry_definition_result(
-    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_schema_result(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resource_mapping_result(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_parse_revocation_registry_definition(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_credential_definition(
     ): Short
@@ -819,6 +833,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list(
     ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list_full(
+    ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_schema(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_from_string(
@@ -826,6 +842,14 @@ internal interface UniffiLib : Library {
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_get_id(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_to_string(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_entry_from_string(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_entry_to_string(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_status_list_from_string(
+    ): Short
+    fun uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_status_list_to_string(
     ): Short
     fun uniffi_indy_besu_vdr_uniffi_checksum_func_schema_from_string(
     ): Short
@@ -882,7 +906,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_assign_role_transaction() != 19303.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_credential_definition_endorsing_data() != 31555.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_credential_definition_endorsing_data() != 5243.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_credential_definition_transaction() != 48372.toShort()) {
@@ -906,16 +930,22 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_resource_mapping_transaction() != 6041.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_endorsing_data() != 31574.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_endorsing_data() != 28795.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_transaction() != 42203.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_definition_transaction() != 44811.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_entry_endorsing_data() != 21966.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_revocation_registry_entry_transaction() != 54445.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_endorsing_data() != 24765.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_transaction() != 22681.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_create_schema_transaction() != 45770.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_deactivate_did_endorsing_data() != 10435.toShort()) {
@@ -993,7 +1023,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_did_transaction() != 30138.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_revocation_registry_definition_transaction() != 22432.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_revocation_registry_definition_transaction() != 33250.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_build_resolve_schema_transaction() != 23161.toShort()) {
@@ -1015,9 +1045,6 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_credential_definition_to_string() != 10206.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_fetch_revocation_delta() != 64841.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_did_attribute_changed_event_response() != 27285.toShort()) {
@@ -1059,13 +1086,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_did_result() != 27898.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_revocation_registry_definition_result() != 58410.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resolve_schema_result() != 64693.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_resource_mapping_result() != 47018.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_parse_revocation_registry_definition() != 18824.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_credential_definition() != 55906.toShort()) {
@@ -1074,22 +1101,37 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_did() != 45456.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_definition() != 41692.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_definition() != 15143.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list() != 35828.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list() != 56776.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_revocation_registry_status_list_full() != 45673.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_resolve_schema() != 2703.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_from_string() != 8248.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_from_string() != 29305.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_get_id() != 61635.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_get_id() != 31898.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_to_string() != 63014.toShort()) {
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_definition_to_string() != 12418.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_entry_from_string() != 18719.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_registry_entry_to_string() != 3641.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_status_list_from_string() != 39335.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_revocation_status_list_to_string() != 48449.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_indy_besu_vdr_uniffi_checksum_func_schema_from_string() != 25235.toShort()) {
@@ -2190,34 +2232,34 @@ public object FfiConverterTypeRevocationRegistryDefinition: FfiConverterRustBuff
 
 
 
-data class RevocationRegistryDelta (
-    var `revoked`: List<UInt>, 
-    var `issued`: List<UInt>, 
-    var `accum`: String
+data class RevocationRegistryEntry (
+    var `issuerId`: String, 
+    var `revRegDefId`: String, 
+    var `revRegEntryData`: JsonValue
 ) {
     
     companion object
 }
 
-public object FfiConverterTypeRevocationRegistryDelta: FfiConverterRustBuffer<RevocationRegistryDelta> {
-    override fun read(buf: ByteBuffer): RevocationRegistryDelta {
-        return RevocationRegistryDelta(
-            FfiConverterSequenceUInt.read(buf),
-            FfiConverterSequenceUInt.read(buf),
+public object FfiConverterTypeRevocationRegistryEntry: FfiConverterRustBuffer<RevocationRegistryEntry> {
+    override fun read(buf: ByteBuffer): RevocationRegistryEntry {
+        return RevocationRegistryEntry(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterTypeJsonValue.read(buf),
         )
     }
 
-    override fun allocationSize(value: RevocationRegistryDelta) = (
-            FfiConverterSequenceUInt.allocationSize(value.`revoked`) +
-            FfiConverterSequenceUInt.allocationSize(value.`issued`) +
-            FfiConverterString.allocationSize(value.`accum`)
+    override fun allocationSize(value: RevocationRegistryEntry) = (
+            FfiConverterString.allocationSize(value.`issuerId`) +
+            FfiConverterString.allocationSize(value.`revRegDefId`) +
+            FfiConverterTypeJsonValue.allocationSize(value.`revRegEntryData`)
     )
 
-    override fun write(value: RevocationRegistryDelta, buf: ByteBuffer) {
-            FfiConverterSequenceUInt.write(value.`revoked`, buf)
-            FfiConverterSequenceUInt.write(value.`issued`, buf)
-            FfiConverterString.write(value.`accum`, buf)
+    override fun write(value: RevocationRegistryEntry, buf: ByteBuffer) {
+            FfiConverterString.write(value.`issuerId`, buf)
+            FfiConverterString.write(value.`revRegDefId`, buf)
+            FfiConverterTypeJsonValue.write(value.`revRegEntryData`, buf)
     }
 }
 
@@ -2226,9 +2268,9 @@ public object FfiConverterTypeRevocationRegistryDelta: FfiConverterRustBuffer<Re
 data class RevocationStatusList (
     var `issuerId`: String, 
     var `revRegDefId`: String, 
+    var `timestamp`: ULong, 
     var `revocationList`: List<UInt>, 
-    var `currentAccumulator`: String, 
-    var `timestamp`: ULong
+    var `currentAccumulator`: String
 ) {
     
     companion object
@@ -2239,26 +2281,26 @@ public object FfiConverterTypeRevocationStatusList: FfiConverterRustBuffer<Revoc
         return RevocationStatusList(
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
             FfiConverterSequenceUInt.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterULong.read(buf),
         )
     }
 
     override fun allocationSize(value: RevocationStatusList) = (
             FfiConverterString.allocationSize(value.`issuerId`) +
             FfiConverterString.allocationSize(value.`revRegDefId`) +
+            FfiConverterULong.allocationSize(value.`timestamp`) +
             FfiConverterSequenceUInt.allocationSize(value.`revocationList`) +
-            FfiConverterString.allocationSize(value.`currentAccumulator`) +
-            FfiConverterULong.allocationSize(value.`timestamp`)
+            FfiConverterString.allocationSize(value.`currentAccumulator`)
     )
 
     override fun write(value: RevocationStatusList, buf: ByteBuffer) {
             FfiConverterString.write(value.`issuerId`, buf)
             FfiConverterString.write(value.`revRegDefId`, buf)
+            FfiConverterULong.write(value.`timestamp`, buf)
             FfiConverterSequenceUInt.write(value.`revocationList`, buf)
             FfiConverterString.write(value.`currentAccumulator`, buf)
-            FfiConverterULong.write(value.`timestamp`, buf)
     }
 }
 
@@ -2786,6 +2828,14 @@ sealed class VdrException: Exception() {
             get() = "msg=${ `msg` }"
     }
     
+    class InvalidDidDocument(
+        
+        val `msg`: String
+        ) : VdrException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
     class InvalidRevocationRegistryDefinition(
         
         val `msg`: String
@@ -2803,14 +2853,6 @@ sealed class VdrException: Exception() {
     }
     
     class InvalidRevocationRegistryStatusList(
-        
-        val `msg`: String
-        ) : VdrException() {
-        override val message
-            get() = "msg=${ `msg` }"
-    }
-    
-    class InvalidDidDocument(
         
         val `msg`: String
         ) : VdrException() {
@@ -2883,16 +2925,16 @@ public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
             20 -> VdrException.InvalidCredentialDefinition(
                 FfiConverterString.read(buf),
                 )
-            21 -> VdrException.InvalidRevocationRegistryDefinition(
+            21 -> VdrException.InvalidDidDocument(
                 FfiConverterString.read(buf),
                 )
-            22 -> VdrException.InvalidRevocationRegistryEntry(
+            22 -> VdrException.InvalidRevocationRegistryDefinition(
                 FfiConverterString.read(buf),
                 )
-            23 -> VdrException.InvalidRevocationRegistryStatusList(
+            23 -> VdrException.InvalidRevocationRegistryEntry(
                 FfiConverterString.read(buf),
                 )
-            24 -> VdrException.InvalidDidDocument(
+            24 -> VdrException.InvalidRevocationRegistryStatusList(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -2997,6 +3039,11 @@ public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
                 4
                 + FfiConverterString.allocationSize(value.`msg`)
             )
+            is VdrException.InvalidDidDocument -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
             is VdrException.InvalidRevocationRegistryDefinition -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
@@ -3008,11 +3055,6 @@ public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
                 + FfiConverterString.allocationSize(value.`msg`)
             )
             is VdrException.InvalidRevocationRegistryStatusList -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4
-                + FfiConverterString.allocationSize(value.`msg`)
-            )
-            is VdrException.InvalidDidDocument -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterString.allocationSize(value.`msg`)
@@ -3118,22 +3160,22 @@ public object FfiConverterTypeVdrError : FfiConverterRustBuffer<VdrException> {
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
-            is VdrException.InvalidRevocationRegistryDefinition -> {
+            is VdrException.InvalidDidDocument -> {
                 buf.putInt(21)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
-            is VdrException.InvalidRevocationRegistryEntry -> {
+            is VdrException.InvalidRevocationRegistryDefinition -> {
                 buf.putInt(22)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
-            is VdrException.InvalidRevocationRegistryStatusList -> {
+            is VdrException.InvalidRevocationRegistryEntry -> {
                 buf.putInt(23)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
-            is VdrException.InvalidDidDocument -> {
+            is VdrException.InvalidRevocationRegistryStatusList -> {
                 buf.putInt(24)
                 FfiConverterString.write(value.`msg`, buf)
                 Unit
@@ -3342,35 +3384,6 @@ public object FfiConverterOptionalTypeQuorumConfig: FfiConverterRustBuffer<Quoru
         } else {
             buf.put(1)
             FfiConverterTypeQuorumConfig.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalTypeRevocationRegistryDelta: FfiConverterRustBuffer<RevocationRegistryDelta?> {
-    override fun read(buf: ByteBuffer): RevocationRegistryDelta? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeRevocationRegistryDelta.read(buf)
-    }
-
-    override fun allocationSize(value: RevocationRegistryDelta?): Int {
-        if (value == null) {
-            return 1
-        } else {
-            return 1 + FfiConverterTypeRevocationRegistryDelta.allocationSize(value)
-        }
-    }
-
-    override fun write(value: RevocationRegistryDelta?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeRevocationRegistryDelta.write(value, buf)
         }
     }
 }
@@ -3600,9 +3613,9 @@ suspend fun `buildAssignRoleTransaction`(`client`: LedgerClient, `from`: String,
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `buildCreateCredentialDefinitionEndorsingData`(`client`: LedgerClient, `credentialDefinition`: String) : TransactionEndorsingData {
+suspend fun `buildCreateCredentialDefinitionEndorsingData`(`client`: LedgerClient, `credentialDefinition`: CredentialDefinition) : TransactionEndorsingData {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_credential_definition_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`credentialDefinition`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_credential_definition_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeCredentialDefinition.lower(`credentialDefinition`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -3720,9 +3733,9 @@ suspend fun `buildCreateResourceMappingTransaction`(`client`: LedgerClient, `fro
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `buildCreateRevocationRegistryDefinitionEndorsingData`(`client`: LedgerClient, `revocationRegistryDefinition`: String) : TransactionEndorsingData {
+suspend fun `buildCreateRevocationRegistryDefinitionEndorsingData`(`client`: LedgerClient, `revRegDef`: RevocationRegistryDefinition) : TransactionEndorsingData {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revocationRegistryDefinition`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeRevocationRegistryDefinition.lower(`revRegDef`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -3735,9 +3748,39 @@ suspend fun `buildCreateRevocationRegistryDefinitionEndorsingData`(`client`: Led
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `buildCreateRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `from`: String, `revocationRegistryDefinition`: RevocationRegistryDefinition) : Transaction {
+suspend fun `buildCreateRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `from`: String, `revRegDef`: RevocationRegistryDefinition) : Transaction {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterTypeRevocationRegistryDefinition.lower(`revocationRegistryDefinition`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterTypeRevocationRegistryDefinition.lower(`revRegDef`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransaction.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `buildCreateRevocationRegistryEntryEndorsingData`(`client`: LedgerClient, `revRegEntry`: RevocationRegistryEntry) : TransactionEndorsingData {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_entry_endorsing_data(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterTypeRevocationRegistryEntry.lower(`revRegEntry`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransactionEndorsingData.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `buildCreateRevocationRegistryEntryTransaction`(`client`: LedgerClient, `from`: String, `revRegEntry`: RevocationRegistryEntry) : Transaction {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_revocation_registry_entry_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterTypeRevocationRegistryEntry.lower(`revRegEntry`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -3765,9 +3808,9 @@ suspend fun `buildCreateSchemaEndorsingData`(`client`: LedgerClient, `schema`: S
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `buildCreateSchemaTransaction`(`client`: LedgerClient, `from`: String, `schema`: String) : Transaction {
+suspend fun `buildCreateSchemaTransaction`(`client`: LedgerClient, `from`: String, `schema`: Schema) : Transaction {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_schema_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterString.lower(`schema`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_create_schema_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`from`),FfiConverterTypeSchema.lower(`schema`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -4155,9 +4198,9 @@ suspend fun `buildResolveDidTransaction`(`client`: LedgerClient, `did`: String) 
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `buildResolveRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `id`: String) : Transaction {
+suspend fun `buildResolveRevocationRegistryDefinitionTransaction`(`client`: LedgerClient, `revRegDefId`: String) : Transaction {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_build_resolve_revocation_registry_definition_transaction(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revRegDefId`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -4253,21 +4296,6 @@ fun `credentialDefinitionToString`(`data`: CredentialDefinition): String {
 })
 }
 
-@Throws(VdrException::class)
-
-@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `fetchRevocationDelta`(`client`: LedgerClient, `id`: String, `toTimestamp`: ULong) : RevocationRegistryDelta? {
-    return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_fetch_revocation_delta(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),FfiConverterULong.lower(`toTimestamp`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterOptionalTypeRevocationRegistryDelta.lift(it) },
-        // Error FFI converter
-        VdrException.ErrorHandler,
-    )
-}
 @Throws(VdrException::class)
 
 fun `parseDidAttributeChangedEventResponse`(`client`: LedgerClient, `log`: EventLog): DidAttributeChanged {
@@ -4387,15 +4415,6 @@ fun `parseResolveDidResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonVal
 
 @Throws(VdrException::class)
 
-fun `parseResolveRevocationRegistryDefinitionResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
-    return FfiConverterTypeJsonValue.lift(
-    uniffiRustCallWithError(VdrException) { _status ->
-    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resolve_revocation_registry_definition_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
-})
-}
-
-@Throws(VdrException::class)
-
 fun `parseResolveSchemaResult`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
     return FfiConverterTypeJsonValue.lift(
     uniffiRustCallWithError(VdrException) { _status ->
@@ -4409,6 +4428,15 @@ fun `parseResourceMappingResult`(`client`: LedgerClient, `bytes`: ByteArray): St
     return FfiConverterString.lift(
     uniffiRustCallWithError(VdrException) { _status ->
     UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_resource_mapping_result(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `parseRevocationRegistryDefinition`(`client`: LedgerClient, `bytes`: ByteArray): JsonValue {
+    return FfiConverterTypeJsonValue.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_parse_revocation_registry_definition(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterByteArray.lower(`bytes`),_status)
 })
 }
 
@@ -4445,9 +4473,9 @@ suspend fun `resolveDid`(`client`: LedgerClient, `did`: String, `options`: DidRe
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `resolveRevocationRegistryDefinition`(`client`: LedgerClient, `id`: String) : RevocationRegistryDefinition {
+suspend fun `resolveRevocationRegistryDefinition`(`client`: LedgerClient, `revRegDefId`: String) : RevocationRegistryDefinition {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_definition(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revRegDefId`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -4460,9 +4488,24 @@ suspend fun `resolveRevocationRegistryDefinition`(`client`: LedgerClient, `id`: 
 @Throws(VdrException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-suspend fun `resolveRevocationRegistryStatusList`(`client`: LedgerClient, `id`: String, `toTimestamp`: ULong) : RevocationStatusList {
+suspend fun `resolveRevocationRegistryStatusList`(`client`: LedgerClient, `revRegDefId`: String, `timestamp`: ULong) : JsonValue {
     return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`id`),FfiConverterULong.lower(`toTimestamp`),),
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revRegDefId`),FfiConverterULong.lower(`timestamp`),),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJsonValue.lift(it) },
+        // Error FFI converter
+        VdrException.ErrorHandler,
+    )
+}
+@Throws(VdrException::class)
+
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+suspend fun `resolveRevocationRegistryStatusListFull`(`client`: LedgerClient, `revRegDefId`: String, `timestamp`: ULong) : RevocationStatusList {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_resolve_revocation_registry_status_list_full(FfiConverterTypeLedgerClient.lower(`client`),FfiConverterString.lower(`revRegDefId`),FfiConverterULong.lower(`timestamp`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_indy_besu_vdr_uniffi_rust_future_free_rust_buffer(future) },
@@ -4489,27 +4532,63 @@ suspend fun `resolveSchema`(`client`: LedgerClient, `id`: String) : Schema {
 }
 @Throws(VdrException::class)
 
-fun `revocationRegistryDefinitionFromString`(`string`: String): RevocationRegistryDefinition {
+fun `revocationRegistryDefinitionFromString`(`revRegDefStr`: String): RevocationRegistryDefinition {
     return FfiConverterTypeRevocationRegistryDefinition.lift(
     uniffiRustCallWithError(VdrException) { _status ->
-    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(FfiConverterString.lower(`string`),_status)
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_from_string(FfiConverterString.lower(`revRegDefStr`),_status)
 })
 }
 
 
-fun `revocationRegistryDefinitionGetId`(`credDef`: RevocationRegistryDefinition): String {
+fun `revocationRegistryDefinitionGetId`(`revRegDef`: RevocationRegistryDefinition): String {
     return FfiConverterString.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(FfiConverterTypeRevocationRegistryDefinition.lower(`credDef`),_status)
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_get_id(FfiConverterTypeRevocationRegistryDefinition.lower(`revRegDef`),_status)
 })
 }
 
 @Throws(VdrException::class)
 
-fun `revocationRegistryDefinitionToString`(`data`: RevocationRegistryDefinition): String {
+fun `revocationRegistryDefinitionToString`(`revRegDef`: RevocationRegistryDefinition): String {
     return FfiConverterString.lift(
     uniffiRustCallWithError(VdrException) { _status ->
-    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(FfiConverterTypeRevocationRegistryDefinition.lower(`data`),_status)
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_definition_to_string(FfiConverterTypeRevocationRegistryDefinition.lower(`revRegDef`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `revocationRegistryEntryFromString`(`revRegEntryStr`: String): RevocationRegistryEntry {
+    return FfiConverterTypeRevocationRegistryEntry.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_entry_from_string(FfiConverterString.lower(`revRegEntryStr`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `revocationRegistryEntryToString`(`revRegEntry`: RevocationRegistryEntry): String {
+    return FfiConverterString.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_registry_entry_to_string(FfiConverterTypeRevocationRegistryEntry.lower(`revRegEntry`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `revocationStatusListFromString`(`statusListStr`: String): RevocationStatusList {
+    return FfiConverterTypeRevocationStatusList.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_status_list_from_string(FfiConverterString.lower(`statusListStr`),_status)
+})
+}
+
+@Throws(VdrException::class)
+
+fun `revocationStatusListToString`(`statusList`: RevocationStatusList): String {
+    return FfiConverterString.lift(
+    uniffiRustCallWithError(VdrException) { _status ->
+    UniffiLib.INSTANCE.uniffi_indy_besu_vdr_uniffi_fn_func_revocation_status_list_to_string(FfiConverterTypeRevocationStatusList.lower(`statusList`),_status)
 })
 }
 
