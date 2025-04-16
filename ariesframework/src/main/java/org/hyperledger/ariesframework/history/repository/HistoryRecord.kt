@@ -6,6 +6,7 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.storage.BaseRecord
@@ -23,6 +24,7 @@ data class HistoryRecord(
     var associatedRecordId: String,
     var theirLabel: String? = null,
     var content: String? = null,
+    var credentials: MutableList<CredentialRecordBinding>? = null,
     var credentialPreviewAttr: List<CredentialPreviewAttribute>? = null,
     var proofRequestedCredentials: RequestedCredentials? = null,
 ) : BaseRecord() {
@@ -39,6 +41,12 @@ data class HistoryRecord(
             }
             for ((_, pred) in proofRequestedCredentials!!.requestedPredicates) {
                 tags["credIdPred:${pred.credentialId}"] = "true"
+            }
+        }
+
+        if (!credentials.isNullOrEmpty()) {
+            for (credential in credentials!!) {
+                tags["credRecordId:${credential.credentialRecordId}"] = "true"
             }
         }
 

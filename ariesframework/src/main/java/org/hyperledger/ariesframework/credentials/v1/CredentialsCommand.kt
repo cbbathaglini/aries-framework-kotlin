@@ -107,8 +107,9 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
                 historyType = HistoryType.CredentialOfferAccepted,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
-                associatedRecordId = options.credentialRecordId,
+                associatedRecordId = credentialRecord.id,
                 credentialPreviewAttr = credentialRecord.credentialAttributes,
+                credentials = credentialRecord.credentials,
             ),
         )
 

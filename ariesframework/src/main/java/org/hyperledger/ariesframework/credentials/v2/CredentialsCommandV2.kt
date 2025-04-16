@@ -52,6 +52,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
                 theirLabel = connection.theirLabel,
                 associatedRecordId = options.credentialRecordId,
                 credentialPreviewAttr = credentialRecord.credentialAttributes,
+                credentials = credentialRecord.credentials,
             ),
         )
 
