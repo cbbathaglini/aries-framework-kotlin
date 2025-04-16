@@ -8,6 +8,9 @@ enum class HistoryType {
     @SerialName("basic-message-received")
     BasicMessageReceived,
 
+    @SerialName("connection-created")
+    ConnectionCreated,
+
     @SerialName("credential-offer-accepted")
     CredentialOfferAccepted,
 
