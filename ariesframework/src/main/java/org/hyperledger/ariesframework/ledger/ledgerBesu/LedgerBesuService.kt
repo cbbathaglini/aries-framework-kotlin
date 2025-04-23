@@ -109,12 +109,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             revocationRegistryConfig,
         )
         ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
-        this.getSchema("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/SCHEMA/WZXL9B/1.0.0")
-        this.getCredentialDefinition("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/CLAIM_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag")
-        this.getRevocationRegistryDefinition("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag")
-        val timestamp: Int = Instant.now().epochSecond.toInt()
-        this.getRevocationRegistry("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag", timestamp)
-        this.getRevocationRegistryDelta("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag", timestamp, timestamp)
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {

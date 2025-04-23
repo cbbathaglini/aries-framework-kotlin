@@ -51,7 +51,7 @@ data class BesuLedgerConfig(
 @Serializable
 data class AgentConfig(
     var walletKey: String,
-    var genesisPath: String,
+    var genesisPath: String? = null,
     var walletId: String = "AFKDefaultWallet",
     var poolName: String = "AFKDefaultPool",
     var mediatorConnectionsInvite: String? = null,
