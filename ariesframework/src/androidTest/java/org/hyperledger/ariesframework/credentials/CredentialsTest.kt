@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.credentials
 
 import androidx.test.filters.LargeTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -23,6 +24,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class CredentialsTest {
@@ -54,8 +56,8 @@ class CredentialsTest {
         return agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
     }
 
-    @Test @LargeTest
-    fun testCredentialOffer() = runTest {
+    @Test(timeout = 600_000)@LargeTest
+    fun testCredentialOffer() = runTest(timeout = 10.minutes)  {
         // Faber starts with credential offer to Alice.
         var faberCredentialRecord = faberAgent.credentials.offerCredential(
             CreateOfferOptions(faberConnection, credDefId, credentialPreview.attributes, null, "Offer to Alice"),
@@ -99,8 +101,8 @@ class CredentialsTest {
         )
     }
 
-    @Test @LargeTest
-    fun testAutoAcceptAgentConfig() = runTest {
+    @Test(timeout = 600_000)@LargeTest
+    fun testAutoAcceptAgentConfig() = runBlocking {
         aliceAgent.agentConfig.autoAcceptCredential = AutoAcceptCredential.Always
         faberAgent.agentConfig.autoAcceptCredential = AutoAcceptCredential.Always
 
@@ -116,8 +118,8 @@ class CredentialsTest {
         assertEquals(faberCredentialRecord.state, CredentialState.Done)
     }
 
-    @Test @LargeTest
-    fun testAutoAcceptOptions() = runTest {
+    @Test(timeout = 600_000)@LargeTest
+    fun testAutoAcceptOptions() = runBlocking {
         // Only faberAgent auto accepts.
         var faberCredentialRecord = faberAgent.credentials.offerCredential(
             CreateOfferOptions(

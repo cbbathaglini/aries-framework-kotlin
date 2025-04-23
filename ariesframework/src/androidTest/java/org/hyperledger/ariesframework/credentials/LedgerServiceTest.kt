@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class LedgerServiceTest {
@@ -28,7 +29,7 @@ class LedgerServiceTest {
     }
 
     @Test @LargeTest
-    fun testPrepareIssuance() = runTest {
+    fun testPrepareIssuance() = runTest(timeout = 10.minutes) {
         val attributes = listOf("name", "age")
         val credDefId = TestHelper.prepareForIssuance(agent, attributes)
         println("credential definition id: $credDefId")

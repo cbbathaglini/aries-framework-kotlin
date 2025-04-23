@@ -70,7 +70,7 @@ data class AgentConfig(
     var agentEndpoints: List<String>? = null,
     var useReturnRoute: Boolean = true,
     var preferredHandshakeProtocol: HandshakeProtocol = HandshakeProtocol.Connections,
-    var useBesuLedger: Boolean = true,
+    var useBesuLedger: Boolean = false,
     var besuLedgerConfig: BesuLedgerConfig? = null,
 ) {
     val endpoints: List<String>

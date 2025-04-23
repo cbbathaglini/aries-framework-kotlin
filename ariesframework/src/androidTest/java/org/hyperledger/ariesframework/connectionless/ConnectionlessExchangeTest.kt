@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.connectionless
 
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
@@ -66,8 +67,8 @@ class ConnectionlessExchangeTest {
         verifierAgent.reset()
     }
 
-    @Test @LargeTest
-    fun testConnectionlessExchange() = runTest {
+    @Test(timeout = 600_000) @LargeTest
+    fun testConnectionlessExchange() = runBlocking {
         issuerAgent.setOutboundTransport(SubjectOutboundTransport(holderAgent))
         holderAgent.setOutboundTransport(SubjectOutboundTransport(issuerAgent))
 

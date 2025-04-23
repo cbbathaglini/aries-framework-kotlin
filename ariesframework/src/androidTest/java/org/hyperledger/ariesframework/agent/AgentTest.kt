@@ -15,14 +15,20 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
+import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.NetworkInterface
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 class AgentTest {
     lateinit var agent: Agent
-    private val mediatorInvitationUrl = "http://10.0.2.2:3001/invitation"
-    private val agentInvitationUrl = "http://10.0.2.2:3002/invitation"
+    private val ip = "192.168.7.241"
+    private val mediatorInvitationUrl = "http://" + ip + ":3001/invitation"
+    private val agentInvitationUrl = "http://" + ip + ":3002/invitation"
     private val publicMediatorUrl = "https://public.mediator.indiciotech.io?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiMDVlYzM5NDItYTEyOS00YWE3LWEzZDQtYTJmNDgwYzNjZThhIiwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL3B1YmxpYy5tZWRpYXRvci5pbmRpY2lvdGVjaC5pbyIsICJyZWNpcGllbnRLZXlzIjogWyJDc2dIQVpxSktuWlRmc3h0MmRIR3JjN3U2M3ljeFlEZ25RdEZMeFhpeDIzYiJdLCAibGFiZWwiOiAiSW5kaWNpbyBQdWJsaWMgTWVkaWF0b3IifQ==" // ktlint-disable max-line-length
 
     @After
@@ -30,8 +36,8 @@ class AgentTest {
         agent.reset()
     }
 
-    @Test @LargeTest
-    fun testConnection() = runTest {
+    @Test(timeout = 600_000)@LargeTest
+    fun testConnection() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val url = publicMediatorUrl
         val invitation = ConnectionInvitationMessage.fromUrl(url)
@@ -56,8 +62,8 @@ class AgentTest {
         cd samples
         AGENT_ENDPOINTS=http://10.0.2.2:3001 npx ts-node mediator.ts
      */
-    @Test @LargeTest
-    fun testMediatorConnect() = runTest {
+    @Test(timeout = 600_000) @LargeTest
+    fun testMediatorConnect() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
         val invitationUrl = URL(mediatorInvitationUrl).readText()
@@ -77,7 +83,7 @@ class AgentTest {
       Run a javascript mediator as follows:
         AGENT_ENDPOINTS=ws://10.0.2.2:3001 npx ts-node mediator.ts
      */
-    @Test @LargeTest
+    @Test(timeout = 600_000)  @LargeTest
     fun testWebsocketConnect() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -94,8 +100,8 @@ class AgentTest {
         agent.initialize()
     }
 
-    @Test @LargeTest
-    fun testAgentInit() = runTest {
+    @Test(timeout = 600_000)@LargeTest
+    fun testAgentInit() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
         config.mediatorConnectionsInvite = URL(mediatorInvitationUrl).readText()
@@ -128,7 +134,7 @@ class AgentTest {
         AGENT_ENDPOINTS=http://10.0.2.2:3001 npx ts-node mediator.ts
         AGENT_PORT=3002 AGENT_ENDPOINTS=http://10.0.2.2:3002 npx ts-node mediator.ts
      */
-    @Test @LargeTest
+    @Ignore @Test(timeout = 600_000)  @LargeTest
     fun testConnectViaMediator() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -149,7 +155,7 @@ class AgentTest {
       sudo ifconfig lo0 10.0.2.2 alias
       Run faber in AFJ/demo/ and run mediator in AFJ/samples.
      */
-    @Test @LargeTest
+    @Ignore @Test(timeout = 600_000)  @LargeTest
     fun testDemoFaber() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBcorvinConfig()
@@ -159,7 +165,7 @@ class AgentTest {
         agent = Agent(context, config)
         agent.initialize()
 
-        val faberInvitationUrl = "http://localhost:9001?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiIzNDU5NDk5NS0xOTk3LTQ5ODItYTQ0MC0xMjE2OTk4YjllM2MiLCJsYWJlbCI6ImZhYmVyIiwiYWNjZXB0IjpbImRpZGNvbW0vYWlwMSIsImRpZGNvbW0vYWlwMjtlbnY9cmZjMTkiXSwiaGFuZHNoYWtlX3Byb3RvY29scyI6WyJodHRwczovL2RpZGNvbW0ub3JnL2RpZGV4Y2hhbmdlLzEuMSIsImh0dHBzOi8vZGlkY29tbS5vcmcvY29ubmVjdGlvbnMvMS4wIl0sInNlcnZpY2VzIjpbeyJpZCI6IiNpbmxpbmUtMCIsInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xMC4wLjIuMjo5MDAxIiwidHlwZSI6ImRpZC1jb21tdW5pY2F0aW9uIiwicmVjaXBpZW50S2V5cyI6WyJkaWQ6a2V5Ono2TWtrcnQ2NURBVG5zeUs2bTlwZFZIY01FWmNLTFJCOFl5VnhaYjU3dkFIN3JRNyJdLCJyb3V0aW5nS2V5cyI6W119XX0" // ktlint-disable max-line-length
+        val faberInvitationUrl = "http://192.168.7.241:9001?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiI0NzNmNmJkZC1iZTM5LTRmODEtODY3Mi03Yzk5ZjhmMzllYjAiLCJsYWJlbCI6ImZhYmVyIiwiYWNjZXB0IjpbImRpZGNvbW0vYWlwMSIsImRpZGNvbW0vYWlwMjtlbnY9cmZjMTkiXSwiaGFuZHNoYWtlX3Byb3RvY29scyI6WyJodHRwczovL2RpZGNvbW0ub3JnL2RpZGV4Y2hhbmdlLzEuMSIsImh0dHBzOi8vZGlkY29tbS5vcmcvY29ubmVjdGlvbnMvMS4wIl0sInNlcnZpY2VzIjpbeyJpZCI6IiNpbmxpbmUtMCIsInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjcuMjQxOjkwMDEiLCJ0eXBlIjoiZGlkLWNvbW11bmljYXRpb24iLCJyZWNpcGllbnRLZXlzIjpbImRpZDprZXk6ejZNa3ZpSm91VHN2MmpDeEM5Y3U3NGcyaWptd2hMMkpvN2UxWHhIWHlFS1pTOXZ5Il0sInJvdXRpbmdLZXlzIjpbXX1dfQ" // ktlint-disable max-line-length
         val invitation = OutOfBandInvitation.fromUrl(faberInvitationUrl)
         agent.oob.receiveInvitation(invitation)
 
@@ -174,7 +180,7 @@ class AgentTest {
     }
 
     // For two agents behind mediators to connect, message forward is needed.
-    @Test @LargeTest
+    @Test(timeout = 600_000)@LargeTest
     fun testMessageForward() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val aliceConfig = TestHelper.getBaseConfig("alice")

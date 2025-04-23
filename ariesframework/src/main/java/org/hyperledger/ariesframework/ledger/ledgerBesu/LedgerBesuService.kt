@@ -109,12 +109,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             revocationRegistryConfig,
         )
         ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
-        this.getSchema("did:ethr:0x1150b7e82253A2e0E91B5CEE9219863e54e08D1e/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0")
-        this.getCredentialDefinition("did:ethr:0xE46bcFEC960e534e59A9dcE22009B29D8584A1cB/anoncreds/v0/CLAIM_DEF/did:ethr:0xE46bcFEC960e534e59A9dcE22009B29D8584A1cB:BasicIdentity:1.0.0/BasicIdentity")
-        this.getRevocationRegistryDefinition("did:ethr:0xc125559c997332BF90Ac157d42dbe998Bc04F188/anoncreds/v0/REV_REG_DEF/did:ethr:0xc125559c997332BF90Ac157d42dbe998Bc04F188:BasicIdentity:1.0.0/BasicIdentity/RevocationRegistry")
+        this.getSchema("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/SCHEMA/WZXL9B/1.0.0")
+        this.getCredentialDefinition("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/CLAIM_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag")
+        this.getRevocationRegistryDefinition("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag")
         val timestamp: Int = Instant.now().epochSecond.toInt()
         this.getRevocationRegistry("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag", timestamp)
-        this.getRevocationRegistryDelta("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag", timestamp,timestamp)
+        this.getRevocationRegistryDelta("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/REV_REG_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag/rev_reg_def_tag", timestamp, timestamp)
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -186,12 +186,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         from: Int,
     ): Pair<String, Int> {
         // RevocationRegistryDelta, from is ignored.
-        val revocationStatusList  = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id,  to.toULong()))
-        //val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+        val revocationStatusList = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, to.toULong()))
+        // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
         val revocationRegistryDelta = RevocationRegistryDelta(
-            //prevAccum = revocationStatusList.currentAccumulator,
+            // prevAccum = revocationStatusList.currentAccumulator,
             accum = revocationStatusList.currentAccumulator,
-            //issued = revocationDelta!!.issued.map { it.toInt() },
+            // issued = revocationDelta!!.issued.map { it.toInt() },
             revoked = revocationStatusList.revocationList.map { it.toInt() },
         )
         val deltaTimestamp = revocationStatusList.timestamp
@@ -199,11 +199,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
-        val revocationStatusList  = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id,  timestamp.toULong()))        //val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+        val revocationStatusList = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, timestamp.toULong())) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
         val revocationRegistryDelta = RevocationRegistryDelta(
-            //prevAccum = revocationStatusList.currentAccumulator,
+            // prevAccum = revocationStatusList.currentAccumulator,
             accum = revocationStatusList.currentAccumulator,
-            //issued = revocationDelta!!.issued.map { it.toInt() },
+            // issued = revocationDelta!!.issued.map { it.toInt() },
             revoked = revocationStatusList.revocationList.map { it.toInt() },
         )
         val deltaTimestamp = revocationStatusList.timestamp

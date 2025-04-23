@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.agent
 
+import ILedgerService
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
@@ -51,6 +52,9 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val oob = OutOfBandCommand(this, dispatcher)
     val didCommMessageRepository = DidCommMessageRepository(this)
     val credentialExchangeRepository = CredentialExchangeRepository(this)
+    val ledgerService: ILedgerService
+        get() = _ledgerService ?: error("LedgerService was not initialized")
+    private val _ledgerService: ILedgerService? = initializeLedgerService()
     val credentialDefinitionRepository = CredentialDefinitionRepository(this)
     val revocationRegistryRepository = RevocationRegistryRepository(this)
     val anoncredsService = AnoncredsService(this)
@@ -64,15 +68,16 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val basicMessages = BasicMessageCommand(this, dispatcher)
     val problemReports = ProblemReportsCommand(this, dispatcher)
 
-    // Escolher entre LedgerService e LedgerBesuService
-    val ledgerService = if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
-        LedgerBesuService(this, context)
-    } else {
-        LedgerIndyService(this)
-    }
-
     private var _isInitialized = false
 
+
+    private fun initializeLedgerService(): ILedgerService {
+        return if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
+            LedgerBesuService(this, context)
+        } else {
+            LedgerIndyService(this)
+        }
+    }
     /**
      * Initialize the agent. This will create a wallet if necessary and open it.
      * It will also connect to the mediator if configured and connect to the ledger.
