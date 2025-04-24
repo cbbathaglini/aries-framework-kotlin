@@ -70,7 +70,6 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
 
     private var _isInitialized = false
 
-
     private fun initializeLedgerService(): ILedgerService {
         return if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
             LedgerBesuService(this, context)
@@ -78,6 +77,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             LedgerIndyService(this)
         }
     }
+
     /**
      * Initialize the agent. This will create a wallet if necessary and open it.
      * It will also connect to the mediator if configured and connect to the ledger.

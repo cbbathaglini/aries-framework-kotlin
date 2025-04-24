@@ -204,8 +204,9 @@ object TestHelper {
 
     fun getBesuBaseConfig(name: String = "alice", useBesuLedger: Boolean = true): AgentConfig {
         val key = "HfyxAyKK8Z2xVzWbXXy2erY32B9Bnr8WFgR5HfzjAnGx"
-        val besuLedgerContig = BesuLedgerConfig( chainId= 1337u,
-            nodeAddress= "http://192.168.7.241:8545",
+        val besuLedgerContig = BesuLedgerConfig(
+            chainId = 1337u,
+            nodeAddress = "http://192.168.7.241:8545",
         )
         return AgentConfig(
             walletId = "AFSTestWallet_$name",

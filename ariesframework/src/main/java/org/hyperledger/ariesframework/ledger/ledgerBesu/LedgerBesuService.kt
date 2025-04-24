@@ -27,7 +27,6 @@ import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusList
 import uniffi.indy_besu_vdr.resolveSchema
 import uniffi.indy_besu_vdr.revocationStatusListFromString
-import java.time.Instant
 
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)

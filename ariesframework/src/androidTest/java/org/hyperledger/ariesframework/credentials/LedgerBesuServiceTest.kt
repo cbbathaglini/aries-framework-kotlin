@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.credentials
 
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import anoncreds_uniffi.CredentialDefinition
 import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
@@ -15,7 +14,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class LedgerBesuServiceTest {
     lateinit var agent: Agent
-
 
     /*
      Run a besu as follows:
@@ -30,7 +28,7 @@ class LedgerBesuServiceTest {
        python3 -m build
        pip3 install eth_keys
        python3 -m demo.test
-    */
+     */
 
     @Before
     fun setUp() = runTest(timeout = 30.seconds) {
@@ -44,6 +42,7 @@ class LedgerBesuServiceTest {
     fun tearDown() = runTest {
         agent.reset()
     }
+
     /*
     Adjust the data according to those generated in python demo
      */
@@ -58,8 +57,8 @@ class LedgerBesuServiceTest {
     @Test @LargeTest
     fun testBesuCredential() = runTest(timeout = 10.minutes) {
         agent.ledgerService.getCredentialDefinition("did:ethr:0xce70ce892768d46caf120b600dec29ed20198982/anoncreds/v0/CLAIM_DEF/did:ethr:0xce70ce892768d46caf120b600dec29ed20198982:WZXL9B:1.0.0/cred_def_tag")
-
     }
+
     /*
     Adjust the data according to those generated in python demo
      */

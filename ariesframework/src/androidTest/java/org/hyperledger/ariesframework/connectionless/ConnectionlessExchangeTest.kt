@@ -67,7 +67,8 @@ class ConnectionlessExchangeTest {
         verifierAgent.reset()
     }
 
-    @Test(timeout = 600_000) @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testConnectionlessExchange() = runBlocking {
         issuerAgent.setOutboundTransport(SubjectOutboundTransport(holderAgent))
         holderAgent.setOutboundTransport(SubjectOutboundTransport(issuerAgent))

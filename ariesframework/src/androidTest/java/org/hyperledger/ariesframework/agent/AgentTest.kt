@@ -17,12 +17,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
-import java.net.Inet4Address
-import java.net.InetAddress
-import java.net.NetworkInterface
 import java.net.URL
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class AgentTest {
     lateinit var agent: Agent
@@ -36,7 +33,10 @@ class AgentTest {
         agent.reset()
     }
 
-    @Test(timeout = 600_000)@LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testConnection() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val url = publicMediatorUrl
@@ -62,7 +62,8 @@ class AgentTest {
         cd samples
         AGENT_ENDPOINTS=http://10.0.2.2:3001 npx ts-node mediator.ts
      */
-    @Test(timeout = 600_000) @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testMediatorConnect() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -83,7 +84,8 @@ class AgentTest {
       Run a javascript mediator as follows:
         AGENT_ENDPOINTS=ws://10.0.2.2:3001 npx ts-node mediator.ts
      */
-    @Test(timeout = 600_000)  @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testWebsocketConnect() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -100,7 +102,10 @@ class AgentTest {
         agent.initialize()
     }
 
-    @Test(timeout = 600_000)@LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testAgentInit() = runTest(timeout = 10.minutes) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -134,7 +139,9 @@ class AgentTest {
         AGENT_ENDPOINTS=http://10.0.2.2:3001 npx ts-node mediator.ts
         AGENT_PORT=3002 AGENT_ENDPOINTS=http://10.0.2.2:3002 npx ts-node mediator.ts
      */
-    @Ignore @Test(timeout = 600_000)  @LargeTest
+    @Ignore
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testConnectViaMediator() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBaseConfig()
@@ -155,7 +162,9 @@ class AgentTest {
       sudo ifconfig lo0 10.0.2.2 alias
       Run faber in AFJ/demo/ and run mediator in AFJ/samples.
      */
-    @Ignore @Test(timeout = 600_000)  @LargeTest
+    @Ignore
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testDemoFaber() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         var config = TestHelper.getBcorvinConfig()
@@ -180,7 +189,10 @@ class AgentTest {
     }
 
     // For two agents behind mediators to connect, message forward is needed.
-    @Test(timeout = 600_000)@LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testMessageForward() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val aliceConfig = TestHelper.getBaseConfig("alice")

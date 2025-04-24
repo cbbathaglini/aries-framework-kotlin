@@ -56,8 +56,11 @@ class CredentialsTest {
         return agent.credentialExchangeRepository.getByThreadAndConnectionId(threadId, null)
     }
 
-    @Test(timeout = 600_000)@LargeTest
-    fun testCredentialOffer() = runTest(timeout = 10.minutes)  {
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
+    fun testCredentialOffer() = runTest(timeout = 10.minutes) {
         // Faber starts with credential offer to Alice.
         var faberCredentialRecord = faberAgent.credentials.offerCredential(
             CreateOfferOptions(faberConnection, credDefId, credentialPreview.attributes, null, "Offer to Alice"),
@@ -101,7 +104,10 @@ class CredentialsTest {
         )
     }
 
-    @Test(timeout = 600_000)@LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testAutoAcceptAgentConfig() = runBlocking {
         aliceAgent.agentConfig.autoAcceptCredential = AutoAcceptCredential.Always
         faberAgent.agentConfig.autoAcceptCredential = AutoAcceptCredential.Always
@@ -118,7 +124,10 @@ class CredentialsTest {
         assertEquals(faberCredentialRecord.state, CredentialState.Done)
     }
 
-    @Test(timeout = 600_000)@LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testAutoAcceptOptions() = runBlocking {
         // Only faberAgent auto accepts.
         var faberCredentialRecord = faberAgent.credentials.offerCredential(

@@ -29,7 +29,6 @@ import org.junit.Before
 import org.junit.Test
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Duration.Companion.minutes
 
 class RevocationTest {
     lateinit var faberAgent: Agent
@@ -133,7 +132,8 @@ class RevocationTest {
         )
     }
 
-    @Test(timeout = 600_000) @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testProofRequestWithNonRevoked() = runBlocking {
         issueCredential()
         val proofRequest = getProofRequest()
@@ -164,7 +164,8 @@ class RevocationTest {
         assertEquals(ProofState.Done, faberProofRecord.state)
     }
 
-    @Test(timeout = 600_000) @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testVerifyAfterRevocation() = runBlocking {
         aliceAgent.agentConfig.ignoreRevocationCheck = true
 
