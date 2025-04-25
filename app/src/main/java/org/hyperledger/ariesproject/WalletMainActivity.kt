@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.AgentEvents
-import org.hyperledger.ariesframework.basicmessage.repository.BasicMessageRecord
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState

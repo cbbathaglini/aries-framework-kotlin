@@ -22,7 +22,7 @@ data class BasicMessageRecord(
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
-        connectionRecord?.let { tags["connectionRecordId"] = connectionRecord!!.id }
+        connectionRecord?.let { tags["connectionRecordId"] = it.id }
 
         return tags
     }

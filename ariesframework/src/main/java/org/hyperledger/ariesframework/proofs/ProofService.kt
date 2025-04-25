@@ -25,6 +25,8 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.ProofFormat
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
@@ -120,6 +122,17 @@ class ProofService(val agent: Agent) {
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, proofRequestMessage, proofRecord.id)
 
         agent.proofRepository.save(proofRecord)
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestReceived,
+                connectionId = proofRecord.connectionId,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecord.id,
+                content = proofRequestMessage.toJsonString(),
+            ),
+        )
+
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
 
         return proofRecord

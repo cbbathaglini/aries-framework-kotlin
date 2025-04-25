@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.connection
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.InboundMessageContext
@@ -23,6 +24,8 @@ import org.hyperledger.ariesframework.connection.models.didauth.ReferencedAuthen
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.connection.models.didauth.publicKey.Ed25119Sig2018
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.routing.Routing
@@ -74,7 +77,7 @@ class ConnectionService(val agent: Agent) {
             authentication = listOf(auth),
         )
 
-        return ConnectionRecord(
+        val connectionRecord = ConnectionRecord(
             _tags = tags,
             state = state,
             role = role,
@@ -90,6 +93,20 @@ class ConnectionService(val agent: Agent) {
             multiUseInvitation = multiUseInvitation,
             mediatorId = routing.mediatorId,
         )
+
+        runBlocking {
+                agent.historyRepository.save(
+                    HistoryRecord(
+                        historyType = HistoryType.ConnectionCreated,
+                        connectionId = connectionRecord.id,
+                        theirLabel = theirLabel,
+                        associatedRecordId = connectionRecord.id,
+                        content = invitation.toString(),
+                    ),
+            )
+        }
+
+        return connectionRecord
     }
 
     /**
