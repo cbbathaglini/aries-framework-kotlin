@@ -69,6 +69,11 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:noHistory="true">
         </activity>
+        <activity
+            android:name=".SendMessageActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:noHistory="true">
+        </activity>
     </application>
 
 

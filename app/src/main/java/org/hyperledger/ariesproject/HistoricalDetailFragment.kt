@@ -68,6 +68,24 @@ class HistoricalDetailFragment : Fragment() {
 
         }
 
+        binding.sendMessage.setOnClickListener {
+            // To prevent multiple clicks
+            binding.sendMessage.isEnabled = false
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                activity.runOnUiThread {
+                    // Send credentialId to another activity
+                    val intent = Intent(activity, SendMessageActivity::class.java).apply {
+                        putExtra("CONNECTION_ID", item?.id)
+                    }
+                    activity.startActivity(intent)
+
+                    // Close current activity if needed
+                    activity.finish()
+                }
+            }
+        }
+
         return rootView
     }
 
