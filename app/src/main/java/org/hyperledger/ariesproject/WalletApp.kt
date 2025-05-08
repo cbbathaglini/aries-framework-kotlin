@@ -2,6 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.app.Application
 import android.content.res.Configuration
+import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -39,12 +40,20 @@ class WalletApp : Application() {
 
         val invitationUrl = "https://blockchain.cpqd.com.br/cpqdid/agent-mediator-endpoint-com?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiMGEyYzc4MTYtMGYxZC00OTc3LTg5YzAtMGE0NmNhNTg4Nzk0IiwgInJlY2lwaWVudEtleXMiOiBbIjRFVFhHZGM3UjJzYVBzZktZR1g1dU15dDNFWU5aQVdyejJpN3VXbnN0eGJkIl0sICJsYWJlbCI6ICJNZWRpYWRvciBTT1UgaUQiLCAic2VydmljZUVuZHBvaW50IjogImh0dHBzOi8vYmxvY2tjaGFpbi5jcHFkLmNvbS5ici9jcHFkaWQvYWdlbnQtbWVkaWF0b3ItZW5kcG9pbnQtY29tIn0=" // ktlint-disable max-line-length
 
+        val androidId = Settings.Secure.getString(
+            applicationContext.contentResolver,
+            Settings.Secure.ANDROID_ID
+        )
+
+        // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
+        val agentLabel = "SimpleApp-1X$androidId"
+
         val config = AgentConfig(
             walletKey = key,
             genesisPath = File(applicationContext.filesDir.absolutePath, genesisPath).absolutePath,
             mediatorConnectionsInvite = invitationUrl,
             mediatorPickupStrategy = MediatorPickupStrategy.Implicit,
-            label = "SampleApp",
+            label = agentLabel,
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
         )

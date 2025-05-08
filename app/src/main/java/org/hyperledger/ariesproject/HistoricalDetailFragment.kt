@@ -86,6 +86,24 @@ class HistoricalDetailFragment : Fragment() {
             }
         }
 
+        binding.requestProof.setOnClickListener {
+            // To prevent multiple clicks
+            binding.requestProof.isEnabled = false
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                activity.runOnUiThread {
+                    // Send credentialId to another activity
+                    val intent = Intent(activity, RequestProofActivity::class.java).apply {
+                        putExtra("CONNECTION_ID", item?.id)
+                    }
+                    activity.startActivity(intent)
+
+                    // Close current activity if needed
+                    activity.finish()
+                }
+            }
+        }
+
         return rootView
     }
 
