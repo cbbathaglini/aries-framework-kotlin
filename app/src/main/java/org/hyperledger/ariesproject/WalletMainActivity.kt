@@ -66,8 +66,6 @@ class WalletMainActivity : AppCompatActivity() {
                 lifecycleScope.launch(Dispatchers.Main) {
                     try {
                         val (_, connection) = app.agent.oob.receiveInvitationFromUrl(invitation)
-                        val connections = app.agent.connectionRepository.getAll()
-                        println(">> connections: ${connections.toString()}")
                         showAlert("Connected to ${connection?.theirLabel ?: "unknown agent"}")
                     } catch (e: Exception) {
                         showAlert("Unable to connect: ${e.message}")

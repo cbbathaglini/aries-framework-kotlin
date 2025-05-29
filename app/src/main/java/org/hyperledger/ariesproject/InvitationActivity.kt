@@ -48,7 +48,8 @@ class InvitationActivity : AppCompatActivity() {
             handshake = true,
         )
         val app = application as WalletApp
-        val endpoint =  "https://blockchain.cpqd.com.br/cpqdid/agent-mediator-endpoint-com" //app.agent.agentConfig.endpoints.get(0);
+        val properties = ConfigLoader.loadProperties(this)
+        val endpoint =  properties.getProperty("endpoint") //app.agent.agentConfig.endpoints.get(0);
         val outOfBandRecord = app.agent.oob.createInvitation(config)
         val invitation: String = outOfBandRecord.outOfBandInvitation.toUrl(endpoint)
         Log.e("URL", invitation);
