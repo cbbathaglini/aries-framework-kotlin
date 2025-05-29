@@ -27,7 +27,7 @@ class RequestPresentationHandler(val agent: Agent) : MessageHandler {
         val retrievedCredentials = agent.proofs.getRequestedCredentialsForProofRequest(record.id)
         val requestedCredentials = agent.proofService.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
-        val (message, _) = agent.proofService.createPresentation(record, requestedCredentials)
+        val (message, _) = agent.proofService.createPresentationV1(record, requestedCredentials)
         return OutboundMessage(message, messageContext.connection!!)
     }
 }

@@ -36,7 +36,6 @@ import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
@@ -104,7 +103,6 @@ class WalletMainActivity : AppCompatActivity() {
         app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == CredentialState.OfferReceived) {
-                    Log.e("[IDD] state", it.record.toString())
                     runOnConfirm("(2.0) Accept credential?", action = {
                         getCredentialV2(it.record.id)
                     }, negAction = {
@@ -179,7 +177,7 @@ class WalletMainActivity : AppCompatActivity() {
         val (message, proofRecord) = app.agent.proofService.createAck(it.record)
         val connection = app.agent.connectionRepository.getById(it.record.connectionId)
         app.agent.messageSender.send(OutboundMessage(message, connection))
-        val presentationMessageJson = app.agent.didCommMessageRepository.getById(proofRecord.id).message;
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(proofRecord.id, PresentationMessageV2.type)
         val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
 
         // Primeiro, parseia como JsonElement
@@ -192,6 +190,7 @@ class WalletMainActivity : AppCompatActivity() {
             proofRecord.id,
             PresentationMessage.type
         )*/
+
         if (type == "https://didcomm.org/present-proof/1.0/presentation") {
             val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessage
             showProofInfo(presentationMessage.indyProof())
@@ -255,31 +254,6 @@ class WalletMainActivity : AppCompatActivity() {
         }
 
         showAlert(messageToShow)
-    }
-
-    private suspend fun getProofRecord(agent: Agent, threadId: String): ProofExchangeRecord {
-        return agent.proofRepository.getByThreadAndConnectionId(threadId, null)
-    }
-
-    private suspend fun processPresentation(record: ProofExchangeRecord) {
-        val app = application as WalletApp
-        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(record.id, PresentationMessage.type)
-        val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessage
-
-        val messageContext = InboundMessageContext(
-            plaintextMessage = presentationMessageJson,
-            message = presentationMessage,
-            recipientVerkey = null,
-            senderVerkey = null
-        )
-
-        val proofRecord = app.agent.proofService.processPresentation(messageContext)
-
-        if (proofRecord.isVerified == true) {
-            showAlert("✅ Prova verificada com sucesso!")
-        } else {
-            showAlert("❌ A prova falhou na verificação!")
-        }
     }
 
     private fun showAlert(message: String) {
