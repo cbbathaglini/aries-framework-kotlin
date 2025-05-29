@@ -42,4 +42,15 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
 
         return findSingleByQuery(query)
     }
+
+    suspend fun getByConnectionId(connectionId: String): List<CredentialExchangeRecord> {
+        return findByQuery("{\"connectionId\": \"$connectionId\"}")
+    }
+
+    suspend fun getCredentialRecordId(credentialRecordId: String?): CredentialExchangeRecord? {
+        val allRecords: List<CredentialExchangeRecord> = getAll()
+        return allRecords.find { record ->
+            record.credentials.any { it.credentialRecordId == credentialRecordId }
+        }
+    }
 }

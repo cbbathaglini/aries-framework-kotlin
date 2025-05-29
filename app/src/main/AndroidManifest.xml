@@ -35,6 +35,26 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".CredentialListActivity" />
         </activity>
+
+        <activity
+            android:name=".HistoricalListActivity"
+            android:label="@string/title_historical_list"
+            android:parentActivityName=".WalletMainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".WalletMainActivity" />
+        </activity>
+        <activity
+            android:name=".HistoricalDetailActivity"
+            android:label="@string/title_historical_detail"
+            android:parentActivityName=".HistoricalListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HistoricalListActivity" />
+        </activity>
+
         <activity
             android:name=".WalletMainActivity"
             android:label="@string/app_name"
@@ -42,7 +62,6 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -50,6 +69,24 @@
             android:name=".BarcodeScannerActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:noHistory="true">
+        </activity>
+        <activity
+            android:name=".SendMessageActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:noHistory="true">
+        </activity>
+        <activity
+            android:name=".InvitationActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:noHistory="true">
+        </activity>
+        <activity
+            android:name=".RequestProofActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:noHistory="true">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".WalletMainActivity" />
         </activity>
     </application>
 

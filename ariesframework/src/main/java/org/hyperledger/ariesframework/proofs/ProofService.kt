@@ -93,7 +93,6 @@ class ProofService(val agent: Agent) {
         )
 
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, message, proofRecord.id)
-
         agent.proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
 
@@ -162,7 +161,6 @@ class ProofService(val agent: Agent) {
         val format = ProofFormat()
         val presentationMessage = PresentationMessageV2(comment, listOf(format), listOf(attachment))
         presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
-
         agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Sender, presentationMessage, proofRecord.id)
         updateState(proofRecord, ProofState.PresentationSent)
 
@@ -208,7 +206,7 @@ class ProofService(val agent: Agent) {
      * @param messageContext the message context containing a presentation message.
      * @return proof record associated with the presentation message.
      */
-    suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
+    suspend fun processPresentationV1(messageContext: InboundMessageContext): ProofExchangeRecord {
         val presentationMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessage
 
         val proofRecord = agent.proofRepository.getByThreadAndConnectionId(presentationMessage.threadId, null)
@@ -217,6 +215,25 @@ class ProofService(val agent: Agent) {
         val indyProofJson = presentationMessage.indyProof()
         val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessage.type)
         val requestMessage = MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
+        val indyProofRequest = requestMessage.indyProofRequest()
+
+        proofRecord.isVerified = verifyProof(indyProofRequest, indyProofJson)
+
+        agent.didCommMessageRepository.saveAgentMessage(DidCommMessageRole.Receiver, presentationMessage, proofRecord.id)
+        updateState(proofRecord, ProofState.PresentationReceived)
+
+        return proofRecord
+    }
+
+    suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
+        val presentationMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessageV2
+        Log.e("presentation received", presentationMessage.toJsonString())
+        val proofRecord = agent.proofRepository.getByThreadAndConnectionId(presentationMessage.threadId, null)
+        proofRecord.assertState(ProofState.RequestSent)
+
+        val indyProofJson = presentationMessage.indyProof()
+        val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(proofRecord.id, RequestPresentationMessageV2.type)
+        val requestMessage = MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessageV2
         val indyProofRequest = requestMessage.indyProofRequest()
 
         proofRecord.isVerified = verifyProof(indyProofRequest, indyProofJson)

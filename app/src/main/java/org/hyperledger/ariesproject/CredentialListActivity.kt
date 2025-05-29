@@ -12,11 +12,13 @@ import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
 import org.hyperledger.ariesproject.databinding.CredentialListContentBinding
 
 class CredentialListActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCredentialListBinding
+    private lateinit var connectionId : String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,8 @@ class CredentialListActivity : AppCompatActivity() {
         binding.toolbar.title = title
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
+        println("connectionId: ${connectionId}")
     }
 
     override fun onResume() {
@@ -45,8 +49,27 @@ class CredentialListActivity : AppCompatActivity() {
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
-        val credentials = runBlocking { app.agent.credentialRepository.getAll() }
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentials)
+        var credentialsRecords : List<CredentialRecord> = mutableListOf()
+        var credentialsRecordsConn: MutableList<CredentialRecord> = mutableListOf()
+        var credentialsExchange: List<CredentialExchangeRecord> = mutableListOf()
+
+        //find all in the same connection if connection was send
+        if(connectionId != ""){
+            credentialsExchange = runBlocking { app.agent.credentialExchangeRepository.getByConnectionId(connectionId)};
+            credentialsExchange.forEach { credential ->
+                val allCredentials = credential.credentials
+                allCredentials.forEach { cred ->
+                    val credential = runBlocking { app.agent.credentialRepository.getByCredentialId(cred.credentialRecordId)}
+                    credentialsRecordsConn.add(credential);
+                }
+                recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecordsConn)
+            }
+        }else {
+            //find all credentials
+            credentialsRecords = runBlocking { app.agent.credentialRepository.getAll()};
+            recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecords)
+        }
+
     }
 
     class SimpleItemRecyclerViewAdapter(
