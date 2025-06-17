@@ -29,7 +29,7 @@ data class CredentialExchangeRecord(
     override val createdAt: Instant = Clock.System.now(),
     override var updatedAt: Instant? = null,
 
-    var connectionId: String,
+    var connectionId: String?,
     var threadId: String,
     var parentThreadId: String? = null,
     var state: CredentialState,
@@ -46,7 +46,9 @@ data class CredentialExchangeRecord(
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
-        tags["connectionId"] = connectionId
+        if (connectionId != null) {
+            tags["connectionId"] = connectionId!!
+        }
         tags["threadId"] = threadId
         tags["state"] = state.name
 

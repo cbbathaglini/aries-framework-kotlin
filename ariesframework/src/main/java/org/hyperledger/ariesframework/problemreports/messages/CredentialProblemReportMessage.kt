@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.problemreports.messages
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 
 @Serializable
@@ -19,3 +20,6 @@ class CredentialProblemReportMessage private constructor() : BaseProblemReportMe
         const val type = "https://didcomm.org/issue-credential/1.0/problem-report"
     }
 }
+
+
+

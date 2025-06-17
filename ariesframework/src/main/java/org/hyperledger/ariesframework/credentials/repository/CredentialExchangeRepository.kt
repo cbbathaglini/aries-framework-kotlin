@@ -24,6 +24,11 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
         }
     }
 
+    suspend fun getByThreadAndRole(threadId: String, role: CredentialRole?): CredentialExchangeRecord? {
+        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role.toString()}\"}")
+
+    }
+
     suspend fun findByThreadRoleAndConnectionId(
         threadId: String,
         role: CredentialRole?,

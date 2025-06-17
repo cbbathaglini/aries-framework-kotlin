@@ -293,34 +293,34 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-    private fun getCredentialV2(id: String) {
-        val app = application as WalletApp
-        val progress = ProgressDialog(this)
-        progress.setTitle("Loading")
-        progress.setCancelable(true)
+   private fun getCredentialV2(id: String) {
+            val app = application as WalletApp
+            val progress = ProgressDialog(this)
+            progress.setTitle("Loading")
+            progress.setCancelable(true)
 
 
-        val job = lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                app.agent.credentialsV2.acceptOffer(
-                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
-                )
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    progress.dismiss()
-                    showAlert("Failed to receive a credential.")
+            val job = lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    app.agent.credentialsV2.acceptOffer(
+                        AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    )
+                } catch (e: Exception) {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        Log.d("demo", e.localizedMessage)
+                        progress.dismiss()
+                        showAlert("Failed to receive a credential.")
+                    }
                 }
             }
-        }
 
-        progress.setOnCancelListener {
-            job.cancel()
-        }
-        progress.show()
+            progress.setOnCancelListener {
+                job.cancel()
+            }
+            progress.show()
 
 
-        credentialProgress = progress
+            credentialProgress = progress
     }
 
     private fun sendProof(id: String) {

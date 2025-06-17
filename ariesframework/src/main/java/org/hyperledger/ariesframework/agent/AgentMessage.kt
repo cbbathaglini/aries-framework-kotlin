@@ -29,8 +29,16 @@ open class AgentMessage(
     @SerialName("~transport")
     var transport: TransportDecorator? = null,
 ) {
+
     val threadId: String
         get() = thread?.threadId ?: id
+
+    fun setThread(threadId: String, parentThreadId: String?) {
+        this.thread = ThreadDecorator(
+            threadId = threadId,
+            parentThreadId = parentThreadId
+        )
+    }
 
     open fun requestResponse(): Boolean {
         return true

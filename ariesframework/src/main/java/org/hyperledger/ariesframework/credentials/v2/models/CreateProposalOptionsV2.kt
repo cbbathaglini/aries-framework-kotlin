@@ -1,6 +1,8 @@
 package org.hyperledger.ariesframework.credentials.v2.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
@@ -12,7 +14,7 @@ data class CreateProposalOptionsV2(
     val connection: ConnectionRecord,
     val autoAcceptCredential: AutoAcceptCredential? = null,
     val credentialRecord: CredentialExchangeRecord,
-    val formats: List<Format>,
+    val credentialFormats: Map<String, JsonElement>,
     val proposalAttachments: List<Attachment>,
     val comment: String? = null,
     val goal: String? = null,
@@ -35,7 +37,7 @@ data class CreateProposalOptionsV2(
         private var issuerDid: String? = null
         private lateinit var threadId: String
         private var parentThreadId: String? = null
-        private lateinit var formats: List<Format>
+        private lateinit var credentialFormats: Map<String, JsonElement>
         private lateinit var proposalAttachments: List<Attachment>
 
         fun autoAcceptCredential(autoAcceptCredential: AutoAcceptCredential?) = apply {
@@ -46,8 +48,8 @@ data class CreateProposalOptionsV2(
             this.comment = comment
         }
 
-        fun formats(formats: List<Format>) = apply {
-            this.formats = formats
+        fun formats(formats: Map<String, JsonElement>) = apply {
+            this.credentialFormats = formats
         }
 
         fun proposalAttachments(proposalAttachments: List<Attachment>) = apply {
@@ -97,7 +99,7 @@ data class CreateProposalOptionsV2(
                 parentThreadId = parentThreadId,
                 protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
                 proposalAttachments = proposalAttachments,
-                formats = formats,
+                credentialFormats = credentialFormats,
             )
         }
     }

@@ -7,6 +7,8 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.Format
+import org.hyperledger.ariesframework.decorators.AckDecorator
+import org.hyperledger.ariesframework.decorators.AckValues
 
 @Serializable
 class IssueCredentialMessageV2(
@@ -19,6 +21,7 @@ class IssueCredentialMessageV2(
     val goal: String? = null,
 
     val comment: String? = null,
+    var pleaseAck: AckDecorator? = null,
 ) : AgentMessage(generateId(), type) {
 
     companion object {
@@ -36,5 +39,9 @@ class IssueCredentialMessageV2(
             "Indy attachment with id $INDY_CREDENTIAL_ATTACHMENT_ID not found in issue message"
         }
         return issueAttachment
+    }
+
+    fun setPleaseAck(on: List<AckValues> = listOf(AckValues.Receipt)) {
+        this.pleaseAck = AckDecorator(on)
     }
 }

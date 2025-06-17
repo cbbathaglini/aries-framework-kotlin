@@ -14,12 +14,15 @@ class RequestCredentialMessageV2(
     @SerialName("requests~attach")
     val requestAttachments: List<Attachment>,
 
+    val appendAttachments: Attachment?,
+
     @SerialName("goal_code")
     val goalCode: String? = null,
 
     val goal: String? = null,
 
     val comment: String? = null,
+
 ) : AgentMessage(generateId(), type) {
 
     companion object {
