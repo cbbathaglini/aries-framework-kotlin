@@ -8,9 +8,9 @@ import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 @Serializable
 data class CreateCredentialRequestOptions (
     val credentialFormats : Map<String, JsonElement>,
-    val autoAcceptCredential: AutoAcceptCredential?,
-    val comment: String?,
-    val goal: String?,
-    val goalCode: String?,
+    val autoAcceptCredential: AutoAcceptCredential? = null,
+    val comment: String? = null,
+    val goal: String? = null,
+    val goalCode: String? = null,
     val connectionRecord: ConnectionRecord
 )

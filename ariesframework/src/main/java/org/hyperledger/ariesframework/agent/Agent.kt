@@ -5,7 +5,18 @@ import RevocationNotificationServiceV2
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
-import org.hyperledger.ariesframework.anoncreds.AnoncredsService
+import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectnessProofRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsHolderService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRegistryService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsIssuerService
+import org.hyperledger.ariesframework.anoncreds.service.AnoncredsService
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRepository
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRepository
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRepository
@@ -33,6 +44,8 @@ import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
+import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
+import org.hyperledger.ariesframework.vc.service.W3cCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
@@ -69,10 +82,24 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
 
-    // val proofServiceV2 = ProofServiceV2(this)
-    val proofs = ProofCommand(this, dispatcher)
+    val anoncredsCredentialDefinitionRepository = AnonCredsCredentialDefinitionRepository(this)
+    val anonCredsHolderService = AnonCredsRsHolderService(this)
+    val anonCredsIssuerService = AnonCredsRsIssuerService(this)
+    val anonCredsRegistryService = AnonCredsRegistryService(this)
+    val anonCredsRevocationRegistryDefinitionPrivateRepository = AnonCredsRevocationRegistryDefinitionPrivateRepository(this)
+    val anonCredsKeyCorrectnessProofRepository = AnonCredsKeyCorrectnessProofRepository(this)
+    val anonCredsCredentialDefinitionPrivateRepository = AnonCredsCredentialDefinitionPrivateRepository(this)
+    val anonCredsRevocationRegistryDefinitionRepository = AnonCredsRevocationRegistryDefinitionRepository(this)
+    val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
+    val anoncredsmodulesconfig = AnonCredsModuleConfig(
+        agent = this,
+        options = TODO(),
+    )
 
-    // val proofsV2 = ProofCommandV2(this, dispatcher)
+    val w3cCredentialRepository = W3cCredentialRepository(this)
+    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository)
+
+    val proofs = ProofCommand(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
 
     val problemReports = ProblemReportsCommand(this, dispatcher)

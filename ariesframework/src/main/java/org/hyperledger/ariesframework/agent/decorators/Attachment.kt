@@ -10,6 +10,7 @@ import org.hyperledger.ariesframework.decodeBase64
 import org.hyperledger.ariesframework.encodeBase64
 import org.hyperledger.ariesframework.error.CredoError
 import android.util.Base64
+import kotlinx.serialization.DeserializationStrategy
 import java.math.BigInteger
 import java.util.UUID
 
@@ -46,6 +47,15 @@ data class Attachment(
             data.json != null -> Json.encodeToString(data.json)
             else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
         }
+    }
+
+    fun getDataAsJson(): String {
+        return Json.encodeToString(data.json)
+    }
+
+    fun <T> Attachment.getDataAsJsonByType(deserializer: DeserializationStrategy<T>): T {
+        val jsonString = this.getDataAsJson()
+        return Json.decodeFromString(deserializer, jsonString)
     }
 
     fun addJws(jws: JwsGeneralFormat) {

@@ -1,5 +1,6 @@
 package org.hyperledger.ariesproject
 
+import android.R
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
@@ -17,9 +18,13 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.AgentEvents
+import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
@@ -158,17 +163,17 @@ class WalletMainActivity : AppCompatActivity() {
     private fun showAlert(message: String) {
         val builder = AlertDialog.Builder(this@WalletMainActivity)
         builder.setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ -> }
+            .setPositiveButton(R.string.ok) { _, _ -> }
         builder.create().show()
     }
 
     private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
         val builder = AlertDialog.Builder(this@WalletMainActivity)
         builder.setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
+            .setPositiveButton(R.string.ok) { _, _ ->
                 action()
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
+            .setNegativeButton(R.string.cancel) { _, _ ->
                 negAction()
             }
         builder.create().show()
@@ -229,18 +234,18 @@ class WalletMainActivity : AppCompatActivity() {
         }
     }
 
-
     /* v2.0 */
     private fun declineCredentialV2(id: String) {
         val app = application as WalletApp
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val decline = DeclineCredentialOfferOptions(
+                    sendProblemReport = true
+                )
                 app.agent.credentialsV2.declineOffer(
-                    AcceptOfferOptions(
-                        credentialRecordId = id,
-                        autoAcceptCredential = AutoAcceptCredential.Never,
-                    ),
+                    credentialRecordId= id,
+                    options = decline,
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -302,8 +307,14 @@ class WalletMainActivity : AppCompatActivity() {
 
             val job = lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    val connectionRecord = app.agent.connectionRepository.getById(id)
                     app.agent.credentialsV2.acceptOffer(
-                        AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                        //AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                        CreateCredentialRequestOptions(
+                            credentialFormats = emptyMap(), // [TODO]
+                            autoAcceptCredential = AutoAcceptCredential.Always,
+                            connectionRecord = connectionRecord
+                        )
                     )
                 } catch (e: Exception) {
                     lifecycleScope.launch(Dispatchers.Main) {
@@ -360,7 +371,7 @@ class WalletMainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val app = application as WalletApp
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
+        if (resultCode == RESULT_OK) {
             lifecycleScope.launch(Dispatchers.Main) {
                 try {
                     val qrcodeData = data!!.getStringExtra("qrcode")

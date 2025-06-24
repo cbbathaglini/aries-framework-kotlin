@@ -1,5 +1,8 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import java.util.regex.Pattern
 
 object Indyidentifiers {
@@ -82,33 +85,50 @@ object Indyidentifiers {
         return identifier.startsWith("did:indy:")
     }
 
-//    fun getQualifiedDidIndyDid(identifier: String, namespace: String): String {
-//        if (isIndyDid(identifier)) return identifier
-//
-//        if (namespace.isBlank()) {
-//            throw IllegalArgumentException("Missing required indy namespace")
-//        }
-//
-//        return when {
-//            isUnqualifiedSchemaId(identifier) -> {
-//                val (namespaceIdentifier, schemaName, schemaVersion) = parseIndySchemaId(identifier)
-//                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/SCHEMA/$schemaName/$schemaVersion"
-//            }
-//            isUnqualifiedCredentialDefinitionId(identifier) -> {
-//                val (namespaceIdentifier, schemaSeqNo, tag) = parseIndyCredentialDefinitionId(identifier)
-//                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/CLAIM_DEF/$schemaSeqNo/$tag"
-//            }
-//            isUnqualifiedRevocationRegistryId(identifier) -> {
-//                val (namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag) =
-//                    parseIndyRevocationRegistryId(identifier)
-//                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag"
-//            }
-//            isUnqualifiedIndyDid(identifier) -> {
-//                "did:indy:$namespace:$identifier"
-//            }
-//            else -> throw IllegalArgumentException("Cannot create qualified indy identifier for '$identifier' with namespace '$namespace'")
-//        }
-//    }
+    fun isUnqualifiedSchemaId(schemaId: String): Boolean {
+        return unqualifiedSchemaIdRegex.matcher(schemaId).matches()
+    }
+
+    fun isUnqualifiedDidIndyRevocationRegistryDefinition(
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
+    ): Boolean {
+        return isUnqualifiedIndyDid(revocationRegistryDefinition.issuerId) &&
+                isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
+    }
+
+
+    fun isUnqualifiedDidIndyCredentialDefinition(credentialDefinition: AnonCredsCredentialDefinition): Boolean {
+        return isUnqualifiedIndyDid(credentialDefinition.issuerId) &&
+                isUnqualifiedSchemaId(credentialDefinition.schemaId)
+    }
+
+    fun getQualifiedDidIndyDid(identifier: String, namespace: String): String {
+        if (isIndyDid(identifier)) return identifier
+
+        if (namespace.isBlank()) {
+            throw IllegalArgumentException("Missing required indy namespace")
+        }
+
+        return when {
+            isUnqualifiedSchemaId(identifier) -> {
+                val (namespaceIdentifier, schemaName, schemaVersion) = parseIndySchemaId(identifier)
+                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/SCHEMA/$schemaName/$schemaVersion"
+            }
+            isUnqualifiedCredentialDefinitionId(identifier) -> {
+                val (namespaceIdentifier, schemaSeqNo, tag) = parseIndyCredentialDefinitionId(identifier)
+                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/CLAIM_DEF/$schemaSeqNo/$tag"
+            }
+            isUnqualifiedRevocationRegistryId(identifier) -> {
+                val (namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag) =
+                    parseIndyRevocationRegistryId(identifier)
+                "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag"
+            }
+            isUnqualifiedIndyDid(identifier) -> {
+                "did:indy:$namespace:$identifier"
+            }
+            else -> throw IllegalArgumentException("Cannot create qualified indy identifier for '$identifier' with namespace '$namespace'")
+        }
+    }
 
     fun parseIndySchemaId(schemaId: String): Triple<String, String, String> {
         val didIndyMatch = didIndySchemaIdRegex.matcher(schemaId)
@@ -138,27 +158,136 @@ object Indyidentifiers {
         throw IllegalArgumentException("Invalid credential definition id: $credentialDefinitionId")
     }
 
-//    fun parseIndyRevocationRegistryId(revocationRegistryId: String): Quadruple<String, String, String, String> {
-//        val didIndyMatch = didIndyRevocationRegistryIdRegex.matcher(revocationRegistryId)
-//        if (didIndyMatch.matches()) {
-//            return Quadruple(
-//                didIndyMatch.group(2) ?: "",
-//                didIndyMatch.group(3) ?: "",
-//                didIndyMatch.group(4) ?: "",
-//                didIndyMatch.group(5) ?: ""
-//            )
-//        }
-//
-//        val legacyMatch = unqualifiedRevocationRegistryIdRegex.matcher(revocationRegistryId)
-//        if (legacyMatch.matches()) {
-//            return Quadruple(
-//                legacyMatch.group(1) ?: "",
-//                legacyMatch.group(2) ?: "",
-//                legacyMatch.group(3) ?: "",
-//                legacyMatch.group(4) ?: ""
-//            )
-//        }
-//
-//        throw IllegalArgumentException("Invalid revocation registry id: $revocationRegistryId")
-//    }
+    fun isQualifiedDidIndyCredentialDefinition(
+        credentialDefinition: AnonCredsCredentialDefinition
+    ): Boolean {
+        return !isUnqualifiedIndyDid(credentialDefinition.issuerId) &&
+                !isUnqualifiedSchemaId(credentialDefinition.schemaId)
+    }
+
+    fun isUnqualifiedDidIndySchema(schema: AnonCredsSchema): Boolean {
+        return isUnqualifiedIndyDid(schema.issuerId)
+    }
+
+    fun getQualifiedDidIndyCredentialDefinition(
+        credentialDefinition: AnonCredsCredentialDefinition,
+        namespace: String
+    ): AnonCredsCredentialDefinition {
+        if (isQualifiedDidIndyCredentialDefinition(credentialDefinition)) {
+            return credentialDefinition.copy()
+        }
+
+        return credentialDefinition.copy(
+            issuerId = getQualifiedDidIndyDid(credentialDefinition.issuerId, namespace),
+            schemaId = getQualifiedDidIndyDid(credentialDefinition.schemaId, namespace)
+        )
+    }
+
+    fun getQualifiedDidIndyRevocationRegistryDefinition(
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
+        namespace: String
+    ): AnonCredsRevocationRegistryDefinition {
+        return if (isQualifiedRevocationRegistryDefinition(revocationRegistryDefinition)) {
+            revocationRegistryDefinition
+        } else {
+            revocationRegistryDefinition.copy(
+                issuerId = getQualifiedDidIndyDid(revocationRegistryDefinition.issuerId, namespace),
+                credDefId = getQualifiedDidIndyDid(revocationRegistryDefinition.credDefId, namespace)
+            )
+        }
+    }
+
+    fun isQualifiedRevocationRegistryDefinition(
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
+    ): Boolean {
+        return !isUnqualifiedIndyDid(revocationRegistryDefinition.issuerId) &&
+                !isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
+    }
+
+    fun isQualifiedDidIndySchema(schema: AnonCredsSchema): Boolean {
+        return !isUnqualifiedIndyDid(schema.issuerId)
+    }
+
+    fun getQualifiedDidIndySchema(schema: AnonCredsSchema, namespace: String): AnonCredsSchema {
+        return if (isQualifiedDidIndySchema(schema)) {
+            schema
+        } else {
+            schema.copy(
+                issuerId = getQualifiedDidIndyDid(schema.issuerId, namespace)
+            )
+        }
+    }
+
+    fun parseIndyRevocationRegistryId(revocationRegistryId: String): ParsedIndyRevocationRegistryId {
+        val didIndyMatch = didIndyRevocationRegistryIdRegex.matcher(revocationRegistryId)
+        if (didIndyMatch != null) {
+
+            val did = didIndyMatch.group(1)
+            val namespace = didIndyMatch.group(2)
+            val namespaceIdentifier = didIndyMatch.group(3)
+            val schemaSeqNo = didIndyMatch.group(4)
+            val credentialDefinitionTag = didIndyMatch.group(5)
+            val revocationRegistryTag = didIndyMatch.group(6)
+
+            return ParsedIndyRevocationRegistryId(
+                did = did,
+                namespaceIdentifier = namespaceIdentifier,
+                schemaSeqNo = schemaSeqNo,
+                credentialDefinitionTag = credentialDefinitionTag,
+                revocationRegistryTag = revocationRegistryTag,
+                namespace = namespace
+            )
+        }
+
+        val legacyMatch = unqualifiedRevocationRegistryIdRegex.matcher(revocationRegistryId)
+        if (legacyMatch != null) {
+
+            val did = legacyMatch.group(1)
+            val schemaSeqNo = legacyMatch.group(4)
+            val credentialDefinitionTag = legacyMatch.group(5)
+            val revocationRegistryTag = legacyMatch.group(6)
+
+            return ParsedIndyRevocationRegistryId(
+                did = did,
+                namespaceIdentifier = did,
+                schemaSeqNo = schemaSeqNo,
+                credentialDefinitionTag = credentialDefinitionTag,
+                revocationRegistryTag = revocationRegistryTag
+            )
+        }
+
+        throw IllegalArgumentException("Invalid revocation registry id: $revocationRegistryId")
+    }
+
+    fun getUnqualifiedDidIndyDid(identifier: String): String {
+        return when {
+            isUnqualifiedIndyDid(identifier) -> identifier
+
+            isDidIndySchemaId(identifier) -> {
+                val (namespaceIdentifier, schemaName, schemaVersion) = parseIndySchemaId(identifier)
+                getUnqualifiedSchemaId(namespaceIdentifier, schemaName, schemaVersion)
+            }
+
+            isDidIndyCredentialDefinitionId(identifier) -> {
+                val (namespaceIdentifier, schemaSeqNo, tag) = parseIndyCredentialDefinitionId(identifier)
+                getUnqualifiedCredentialDefinitionId(namespaceIdentifier, schemaSeqNo, tag)
+            }
+
+            isDidIndyRevocationRegistryId(identifier) -> {
+                val (namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag) =
+                    parseIndyRevocationRegistryId(identifier)
+                getUnqualifiedRevocationRegistryDefinitionId(
+                    namespaceIdentifier,
+                    schemaSeqNo,
+                    credentialDefinitionTag,
+                    revocationRegistryTag
+                )
+            }
+
+            else -> {
+                val (namespaceIdentifier, _) = parseIndyDid(identifier)
+                namespaceIdentifier
+            }
+        }
+    }
 }

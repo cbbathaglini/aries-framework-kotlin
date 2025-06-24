@@ -3,19 +3,19 @@ package org.hyperledger.ariesframework.credentials.formats
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.models.CredentialFormatCreateOfferReturn
-import org.hyperledger.ariesframework.credentials.modelv2.CredentialFormatCreateReturn
+import org.hyperledger.ariesframework.credentials.modelv2.returns.CredentialFormatCreateProposalReturn
+import org.hyperledger.ariesframework.credentials.modelv2.returns.CredentialFormatCreateReturn
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 interface CredentialFormatService<CF : CredentialFormat>
 {
-
     val formatKey: String
     val credentialRecordType: String
 
     // Proposal methods
     suspend fun createProposal(
-        agentContext: AgentContext,
-        options: CredentialFormatCreateProposalOptions<CF>
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        credentialExchangeRecord: CredentialExchangeRecord
     ): CredentialFormatCreateProposalReturn
 
     suspend fun processProposal(
@@ -24,15 +24,17 @@ interface CredentialFormatService<CF : CredentialFormat>
     )
 
     suspend fun acceptProposal(
-        credentialFormats: Map<String, JsonElement?>,
+        attachmentId: String? = null,
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
         credentialRecord: CredentialExchangeRecord,
         proposalAttachments: Attachment
     ): CredentialFormatCreateOfferReturn
 
     // Offer methods
     suspend fun createOffer(
-        credentialFormats: Map<String, JsonElement?>,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        credentialExchangeRecord: CredentialExchangeRecord,
+        attachmentId: String? = null
     ): CredentialFormatCreateOfferReturn
 
     suspend fun processOffer(
@@ -43,12 +45,12 @@ interface CredentialFormatService<CF : CredentialFormat>
     suspend fun acceptOffer(
         attachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        credentialFormats: Map<String, JsonElement>?
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        attachmentId: String? = null
     ): CredentialFormatCreateReturn
 
-    // Request methods
     suspend fun createRequest(
-        credentialFormats: Map<String, JsonElement>?,
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
         credentialExchangeRecord: CredentialExchangeRecord
     ): CredentialFormatCreateReturn
 
@@ -59,19 +61,19 @@ interface CredentialFormatService<CF : CredentialFormat>
 
     suspend fun acceptRequest(
         requestAttachment: Attachment,
-        offerAttachment: Attachment,
+        offerAttachment: Attachment? = null,
         credentialExchangeRecord: CredentialExchangeRecord,
-        credentialFormats: Map<String, JsonElement>?,
-        requestAppendAttachments: Attachment
+        credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        requestAppendAttachments: List<Attachment>? = emptyList(),
+        attachmentId: String? = null
     ): CredentialFormatCreateReturn
 
-    // Credential methods
     suspend fun processCredential(
         attachment: Attachment,
         offerAttachment: Attachment,
         requestAttachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        requestAppendAttachments: Attachment
+        requestAppendAttachments: List<Attachment>? = emptyList()
     )
 
     // Auto accept methods
@@ -103,7 +105,6 @@ interface CredentialFormatService<CF : CredentialFormat>
     ): Boolean
 
     suspend fun deleteCredentialById(
-        agentContext: AgentContext,
         credentialId: String
     )
 

@@ -14,7 +14,7 @@ class RequestCredentialMessageV2(
     @SerialName("requests~attach")
     val requestAttachments: List<Attachment>,
 
-    val appendAttachments: Attachment?,
+    val appendAttachments: List<Attachment>? = emptyList(),
 
     @SerialName("goal_code")
     val goalCode: String? = null,
@@ -23,7 +23,7 @@ class RequestCredentialMessageV2(
 
     val comment: String? = null,
 
-) : AgentMessage(generateId(), type) {
+    ) : AgentMessage(generateId(), type) {
 
     companion object {
         const val INDY_CREDENTIAL_REQUEST_ATTACHMENT_ID = "indy"

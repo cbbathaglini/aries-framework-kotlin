@@ -3,17 +3,16 @@ package org.hyperledger.ariesframework.credentials.v2
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.InboundMessageContext
+import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatCoordinator
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
-import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
-import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
-import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
@@ -21,8 +20,9 @@ import org.hyperledger.ariesframework.credentials.modelv2.AcceptCredentialOfferO
 import org.hyperledger.ariesframework.credentials.modelv2.AcceptOfferParams
 import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestParams
+import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialParams
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialProblemReportOptions
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.CreateCredentialProblemReportOptions
 import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialProposalOptions
@@ -41,7 +41,9 @@ import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.v2.models.Format
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.SendCredentialProblemReportOptions
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.problemreports.messages.DescriptionOptions
 import org.hyperledger.ariesframework.storage.BaseRecord
@@ -95,7 +97,8 @@ class CredentialServiceV2(val agent: Agent) {
             options.goalCode,
             options.goal
         )
-        var proposalCredentialMessageV2 = this.credentialFormatCoordinator.createProposal(createProposalParams)
+
+        val proposalCredentialMessageV2 = this.credentialFormatCoordinator.createProposal(createProposalParams)
 
         logger.debug("Save record and emit state change event")
         credentialExchangeRepository.save(credentialExchangeRecord)
@@ -312,7 +315,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns Object containing offer message and associated credential record
      *
      */
-    suspend fun createOffer(options: org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, OfferCredentialMessageV2>{
+    suspend fun createOffer(options: CreateCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, OfferCredentialMessageV2>{
         val connectionRecord = options.connectionRecord
         val credentialFormats = options.credentialFormat
         val autoAcceptCredential = options.autoAcceptCredential
@@ -852,7 +855,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns a {@link CredentialProblemReportMessageV2}
      *
      */
-    suspend fun processAck(options: CreateCredentialProblemReportOptions): Pair<CredentialExchangeRecord, CredentialProblemReportMessageV2>{
+    suspend fun createProblemReport(options: CreateCredentialProblemReportOptions): Pair<CredentialExchangeRecord, CredentialProblemReportMessageV2>{
         val credentialExchangeRecord = options.credentialExchangeRecord
         val message = CredentialProblemReportMessageV2(
             description = DescriptionOptions(
@@ -904,6 +907,66 @@ class CredentialServiceV2(val agent: Agent) {
      */
     private fun getFormatServicesFromMessage(messageFormats: List<Format>): List<CredentialFormatService<*>> {
         return messageFormats.mapNotNull { getFormatServiceForFormat(it.format) }.distinct()
+    }
+
+    /**
+     * Create an ``CredentialProblemReportMessagev2`` as response to a received offer.
+     *
+     * @param options options for the problem report message.
+     * @return credential problem report message.
+     */
+    suspend fun declineOffer(credentialRecord: CredentialExchangeRecord, options: DeclineCredentialOfferOptions): CredentialExchangeRecord {
+        logger.info("[2.0] createOfferDeclinedProblemReport init")
+        credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
+        credentialRecord.assertState(CredentialState.OfferReceived)
+
+        if (options.sendProblemReport != null && options.sendProblemReport){
+            val sendCredentialProblemReportOptions = SendCredentialProblemReportOptions(
+                credentialRecordId = credentialRecord.id,
+                description = options.problemReportDescription ?: "offer declined"
+            )
+            sendProblemReport(sendCredentialProblemReportOptions)
+        }
+
+        updateState(credentialRecord, CredentialState.Declined)
+
+        return credentialRecord
+    }
+
+    /**
+     * Send problem report message for a credential record
+     * @param credentialRecordId The id of the credential record for which to send problem report
+     * @returns credential record associated with the credential problem report message
+     */
+    suspend fun sendProblemReport(options: SendCredentialProblemReportOptions) : CredentialExchangeRecord {
+        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+        val offerMessage = agent.credentialServiceV2.findOfferMessage(credentialRecord.id)
+
+        val createCredentialProblemReportOptions = CreateCredentialProblemReportOptions(
+            credentialExchangeRecord = credentialRecord,
+            description = options.description
+        )
+        val (credentialExchangeRecord, credentialProblemReportMessageV2) = createProblemReport(createCredentialProblemReportOptions)
+
+        var connectionRecord : ConnectionRecord? = null
+        if (credentialRecord.connectionId != null) {
+            connectionRecord = agent.connectionService.getById(credentialRecord.connectionId!!)
+        }
+        connectionRecord?.assertReady()
+
+        // If there's no connection (so connection-less, we require the state to be offer received)
+        if (connectionRecord == null) {
+            credentialRecord.assertState(CredentialState.OfferReceived)
+
+            if (offerMessage == null) {
+                throw CredoError("No offer message found for credential record with id '${credentialRecord.id}'")
+            }
+        }
+
+        //[TODO]como faz para colocar o connection se for connectiion-less???? mudei no Outboundmessage
+        agent.messageSender.send(OutboundMessage(credentialProblemReportMessageV2, connectionRecord))
+
+        return credentialRecord
     }
 
 
@@ -1570,23 +1633,7 @@ class CredentialServiceV2(val agent: Agent) {
 //
 //        return issueMessage
 //    }
-//
-//    /**
-//     * Create an ``CredentialProblemReportMessagev2`` as response to a received offer.
-//     *
-//     * @param options options for the problem report message.
-//     * @return credential problem report message.
-//     */
-//    override suspend fun createOfferDeclinedProblemReport(options: AcceptOfferOptions): CredentialProblemReportNotificationMessage {
-//        logger.info("[2.0] createOfferDeclinedProblemReport init")
-//        var credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
-//        credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
-//        credentialRecord.assertState(CredentialState.OfferReceived)
-//
-//        updateState(credentialRecord, CredentialState.Declined)
-//
-//        return CredentialProblemReportNotificationMessage()
-//    }
+
 //
 //    private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
 //        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)

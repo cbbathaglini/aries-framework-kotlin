@@ -3,10 +3,13 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
+import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.modelv2.OfferCredentialOptions
@@ -16,6 +19,7 @@ import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
+import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
@@ -125,6 +129,54 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return agent.credentialExchangeRepository.getById(credentialRecordId)
     }
 
+    suspend fun acceptOffer(options: CreateCredentialRequestOptions): CredentialExchangeRecord {
+        logger.info("acceptOffer init")
+
+        val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
+
+        agent.messageSender.send(OutboundMessage(message, options.connectionRecord))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferAccepted,
+                connectionId = options.connectionRecord.id,
+                theirLabel = options.connectionRecord.theirLabel,
+                associatedRecordId = credentialExchange.id,
+                credentialPreviewAttr = credentialExchange.credentialAttributes,
+                credentials = credentialExchange.credentials,
+            ),
+        )
+
+        return credentialExchange
+    }
+
+    /**
+     * Declines a credential offer as holder (by sending a problem report message) to the connection
+     *
+     * @param options options to decline the offer.
+     * @return credential record associated with the declined credential.
+     */
+    suspend fun declineOffer(credentialRecordId: String, options: DeclineCredentialOfferOptions): CredentialExchangeRecord {
+        val credentialRecord = agent.credentialExchangeRepository.getById(credentialRecordId)
+
+        agent.credentialServiceV2.declineOffer(credentialRecord, options)
+
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId ?: "")
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferDeclined,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = credentialRecord.id,
+                credentialPreviewAttr = credentialRecord.credentialAttributes,
+            ),
+        )
+
+        return credentialRecord
+    }
+
+
 
 //    suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
 //        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessage(options)
@@ -133,31 +185,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 //        return credentialRecord
 //    }
 //
-//    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
-//        logger.info("acceptOffer init")
-//
-//        val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
-//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-//
-//        // printAttributesOfCredential(credentialRecord.credentialAttributes);
-//
-//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-//
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        agent.historyRepository.save(
-//            HistoryRecord(
-//                historyType = HistoryType.CredentialOfferAccepted,
-//                connectionId = connection.id,
-//                theirLabel = connection.theirLabel,
-//                associatedRecordId = options.credentialRecordId,
-//                credentialPreviewAttr = credentialRecord.credentialAttributes,
-//                credentials = credentialRecord.credentials,
-//            ),
-//        )
-//
-//        return credentialRecord
-//    }
+
 //
 //    /*
 //     * helper method to show the attributes
@@ -170,30 +198,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 //        }
 //    }
 //
-//    /**
-//     * Declines a credential offer as holder (by sending a problem report message) to the connection
-//     *
-//     * @param options options to decline the offer.
-//     * @return credential record associated with the declined credential.
-//     */
-//    suspend fun declineOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
-//        val message = agent.credentialServiceV2.createOfferDeclinedProblemReport(options)
-//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        agent.historyRepository.save(
-//            HistoryRecord(
-//                historyType = HistoryType.CredentialOfferDeclined,
-//                connectionId = connection.id,
-//                theirLabel = connection.theirLabel,
-//                associatedRecordId = options.credentialRecordId,
-//                credentialPreviewAttr = credentialRecord.credentialAttributes,
-//            ),
-//        )
-//
-//        return credentialRecord
-//    }
+
 //
 //    /**
 //     * Accept a credential request as issuer (by sending a credential message) to the connection
@@ -273,3 +278,30 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 //        }
 //    }
 }
+
+
+//    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
+//        logger.info("acceptOffer init")
+//
+//        val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
+//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
+//
+//        // printAttributesOfCredential(credentialRecord.credentialAttributes);
+//
+//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+//
+//        agent.messageSender.send(OutboundMessage(message, connection))
+//
+//        agent.historyRepository.save(
+//            HistoryRecord(
+//                historyType = HistoryType.CredentialOfferAccepted,
+//                connectionId = connection.id,
+//                theirLabel = connection.theirLabel,
+//                associatedRecordId = options.credentialRecordId,
+//                credentialPreviewAttr = credentialRecord.credentialAttributes,
+//                credentials = credentialRecord.credentials,
+//            ),
+//        )
+//
+//        return credentialRecord
+//    }

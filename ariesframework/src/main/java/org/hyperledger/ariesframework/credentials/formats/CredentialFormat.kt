@@ -6,19 +6,3 @@ interface CredentialFormat {
     val credentialFormats: CredentialFormatOperations
     val formatData: FormatData
 }
-
-data class CredentialFormatOperations(
-    val createProposal: Any?,
-    val acceptProposal: Any?,
-    val createOffer: Any?,
-    val acceptOffer: Any?,
-    val createRequest: Any?,
-    val acceptRequest: Any?
-)
-
-data class FormatData(
-    val proposal: Any?,
-    val offer: Any?,
-    val request: Any?,
-    val credential: Any?
-)

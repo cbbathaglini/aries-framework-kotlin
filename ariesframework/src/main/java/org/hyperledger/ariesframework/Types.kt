@@ -47,7 +47,7 @@ data class OutboundPackage(
 
 data class OutboundMessage(
     val payload: AgentMessage,
-    val connection: ConnectionRecord,
+    val connection: ConnectionRecord? = null,
 )
 
 @Serializable

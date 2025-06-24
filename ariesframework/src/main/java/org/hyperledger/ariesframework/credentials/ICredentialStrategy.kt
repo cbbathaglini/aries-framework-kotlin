@@ -33,5 +33,4 @@ interface ICredentialStrategy<O1, O2, O3, O4, O5, R1, R2, R3, R4, R5, P> {
     suspend fun createIssueCredentialMessage(options: O5): R5
 
     suspend fun createOfferDeclinedProblemReport(options: O3): P
-    suspend fun processProposal(messageContext: InboundMessageContext): CredentialExchangeRecord
 }

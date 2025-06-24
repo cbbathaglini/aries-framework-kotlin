@@ -12,5 +12,5 @@ data class CreateCredentialParams (
     val comment: String? = null,
     val goal: String? = null,
     val goalCode: String? = null,
-    val credentialFormats: Map<String, JsonElement?> = emptyMap()
+    val credentialFormats: Map<String, JsonElement>? = emptyMap()
 )

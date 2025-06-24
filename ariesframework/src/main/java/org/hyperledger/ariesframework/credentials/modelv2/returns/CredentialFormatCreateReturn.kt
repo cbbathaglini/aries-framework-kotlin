@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials.modelv2
+package org.hyperledger.ariesframework.credentials.modelv2.returns
 
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.decorators.Attachment
@@ -8,5 +8,5 @@ import org.hyperledger.ariesframework.credentials.v2.models.Format
 data class CredentialFormatCreateReturn (
     val attachment: Attachment,
     val format: Format,
-    val appendAttachment: List<Attachment>
+    val appendAttachment: List<Attachment>? = emptyList()
 )
