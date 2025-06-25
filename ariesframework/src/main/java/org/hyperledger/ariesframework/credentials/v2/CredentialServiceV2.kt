@@ -30,7 +30,7 @@ import org.hyperledger.ariesframework.credentials.modelv2.ProcessCredentialParam
 import org.hyperledger.ariesframework.credentials.modelv2.ProcessOfferParams
 import org.hyperledger.ariesframework.credentials.modelv2.ProcessRequestParams
 import org.hyperledger.ariesframework.credentials.modelv2.RequestCredentialParams
-import org.hyperledger.ariesframework.credentials.modelv2.problemreport.CredentialProblemReportReason
+import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
 import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential

@@ -1,9 +1,13 @@
 package org.hyperledger.ariesframework.anoncreds.service
 
-import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsCredentialInfo
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.model.CreateCredentialRequestOptions
+import org.hyperledger.ariesframework.anoncreds.model.LegacyToW3cCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateCredentialRequestReturn
+import org.hyperledger.ariesframework.anoncreds.model.holder.CreateLinkSecretOptions
+import org.hyperledger.ariesframework.anoncreds.model.holder.CreateLinkSecretReturn
+import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 
 interface AnonCredsHolderService {
 
@@ -24,9 +28,14 @@ interface AnonCredsHolderService {
         credentialId: String
     )
 
-//    suspend fun createLinkSecret(
-//        options: CreateLinkSecretOptions
-//    ): CreateLinkSecretReturn
+    suspend fun createLinkSecret(
+        options: CreateLinkSecretOptions
+    ): CreateLinkSecretReturn
+
+    suspend fun legacyToW3cCredential(
+        options: LegacyToW3cCredentialOptions
+    ): W3cJsonLdVerifiableCredential
+
 //
 //    suspend fun createProof(
 //        options: CreateProofOptions
@@ -49,7 +58,5 @@ interface AnonCredsHolderService {
 //        options: W3cToLegacyCredentialOptions
 //    ): AnonCredsCredential
 //
-//    suspend fun legacyToW3cCredential(
-//        options: LegacyToW3cCredentialOptions
-//    ): W3cJsonLdVerifiableCredential
+
 }

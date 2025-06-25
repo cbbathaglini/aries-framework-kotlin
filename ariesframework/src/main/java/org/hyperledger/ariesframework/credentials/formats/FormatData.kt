@@ -1,8 +1,8 @@
 package org.hyperledger.ariesframework.credentials.formats
 
-data class FormatData(
-    val proposal: Any?,
-    val offer: Any?,
-    val request: Any?,
-    val credential: Any?
+open class FormatData(
+    open val proposal: Any?,
+    open val offer: Any?,
+    open val request: Any?,
+    open val credential: Any?
 )

@@ -33,6 +33,6 @@ data class AnonCredsProofRequestRestriction(
     @SerialName("issuer_did")
     val issuerDid: String? = null,
 
-    // Catch-all for attr::<name>::marker or attr::<name>::value fields
+    // ctch-all for attr::<name>::marker or attr::<name>::value fields
     val dynamicAttributes: Map<String, String> = emptyMap()
 )

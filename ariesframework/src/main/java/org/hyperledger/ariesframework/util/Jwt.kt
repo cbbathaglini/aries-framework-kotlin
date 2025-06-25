@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.util
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.error.CredoError
 

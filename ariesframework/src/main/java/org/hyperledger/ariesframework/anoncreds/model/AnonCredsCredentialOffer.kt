@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.anoncreds.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
@@ -13,4 +14,6 @@ data class AnonCredsCredentialOffer(
     val nonce: String,
     @SerialName("key_correctness_proof")
     val keyCorrectnessProof: JsonObject
-)
+){
+    fun toJsonString(): String = Json.encodeToString(AnonCredsCredentialOffer.serializer(),this)
+}

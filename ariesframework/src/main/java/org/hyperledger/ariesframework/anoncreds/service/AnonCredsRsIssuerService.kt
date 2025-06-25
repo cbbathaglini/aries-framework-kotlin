@@ -27,12 +27,11 @@ import org.hyperledger.ariesframework.anoncreds.model.CredentialOfferJson
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryState
 import org.hyperledger.ariesframework.util.ConvertMapAnySerializer
 
-
 class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
     override suspend fun createCredentialOffer(credentialDefinitionId: String): AnonCredsCredentialOffer {
         var credentialOffer: CredentialOffer? = null
 
-        try {
+        //try {
 
             val credentialDefinitionRecord = agent.anoncredsCredentialDefinitionRepository
                 .getByCredentialDefinitionId(credentialDefinitionId)
@@ -63,9 +62,9 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
             credentialOffer = CredentialOffer(json)
             return credentialOffer.toJson() as AnonCredsCredentialOffer
 
-        } finally {
-            //credentialOffer?.handle?.clear()
-        }
+//        } finally {
+//            //credentialOffer?.handle?.clear()
+//        }
     }
 
     override suspend fun createCredential(options: CreateCredentialOptions): CreateCredentialReturn {

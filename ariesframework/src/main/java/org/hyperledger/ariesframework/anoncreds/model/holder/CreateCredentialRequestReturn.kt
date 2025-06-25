@@ -6,6 +6,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 
 @Serializable
 data class CreateCredentialRequestReturn(
-    val credentialRequest: AnonCredsCredentialRequest,
+    var credentialRequest: AnonCredsCredentialRequest,
     val credentialRequestMetadata: AnonCredsCredentialRequestMetadata
 )

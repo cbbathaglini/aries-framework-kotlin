@@ -14,4 +14,8 @@ class AnonCredsLinkSecretRepository(agent: Agent) : Repository<AnonCredsLinkSecr
     suspend fun findByLinkSecretId(linkSecretId: String): AnonCredsLinkSecretRecord?{
         return findSingleByQuery("{\"linkSecretId\": \"$linkSecretId\"}")
     }
+
+    suspend fun  findDefault() : AnonCredsLinkSecretRecord?{
+        return findSingleByQuery("{\"isDefault\": \"true\"}")
+    }
 }

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class FetchRevocationRegistryDefinitionResult (
-    val revocationRegistryDefinition = result.revocationRegistryDefinition,
-    val revocationRegistryDefinitionId = revocationRegistryDefinitionId,
+    val revocationRegistryDefinition : AnonCredsRevocationRegistryDefinition? = null,
+    val revocationRegistryDefinitionId : String,
     val indyNamespace : String?
 )

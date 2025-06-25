@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.vc.service
 
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
+import org.hyperledger.ariesframework.vc.model.W3cCredential
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.model.W3cVerifiableCredential
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
@@ -18,17 +19,12 @@ class W3cCredentialService(
      * @param record the credential to be stored
      * @returns the credential record that was written to storage
      */
-    suspend fun storeCredential(verifiableCredential: W3cVerifiableCredential): W3cCredentialRecord {
-        val expandedTypes: List<String> = when (verifiableCredential) {
-            is W3cJsonLdVerifiableCredential -> {
-                w3cJsonLdCredentialService.getExpandedTypesForCredential(verifiableCredential)
-            }
-            else -> emptyList()
-        }
+    suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
+        val expandedTypes: List<String> =  w3cJsonLdCredentialService.getExpandedTypesForCredential(verifiableCredential)
 
         val w3cCredentialRecord = W3cCredentialRecord(
             tags = expandedTypes,
-            credential = verifiableCredential
+            credential = jsonLdVerifiableCredential
         )
 
         w3cCredentialRepository.save(w3cCredentialRecord)

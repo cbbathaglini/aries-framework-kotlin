@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsCredentialInfo
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 
 @Serializable
 data class AnonCredsSelectedCredentials(

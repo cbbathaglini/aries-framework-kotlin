@@ -37,6 +37,15 @@ class AnonCredsLinkSecretRecord (
         _tags = tagMap
     }
 
+    fun setTag(key: String, value: String?) {
+        val tags = (_tags ?: mutableMapOf()).toMutableMap()
+        if (value == null) {
+            tags.remove(key)
+        } else {
+            tags[key] = value
+        }
+        _tags = tags
+    }
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

@@ -12,9 +12,8 @@ import org.hyperledger.ariesframework.anoncreds.exception.AnonCredsError
 class AnonCredsRegistryService(val agent: Agent) {
 
     fun getRegistryForIdentifier(identifier: String): AnonCredsRegistry {
-
-        val registry = agent.anoncredsmodulesconfig.find { it.supportedIdentifier.matches(identifier) }
-
+        val registries = agent.anoncredsmodulesconfig.registries
+        val registry = registries.find { it.supportedIdentifier.matches(identifier) }
         return registry ?: throw AnonCredsError("No AnonCredsRegistry registered for identifier '$identifier'")
     }
 }

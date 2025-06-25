@@ -8,6 +8,7 @@ import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectnessProofRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionPrivateRepository
@@ -46,6 +47,8 @@ import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.hyperledger.ariesframework.vc.service.W3cCredentialService
+import org.hyperledger.ariesframework.vc.service.W3cJsonLdCredentialService
+import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
@@ -91,13 +94,16 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anonCredsCredentialDefinitionPrivateRepository = AnonCredsCredentialDefinitionPrivateRepository(this)
     val anonCredsRevocationRegistryDefinitionRepository = AnonCredsRevocationRegistryDefinitionRepository(this)
     val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
+    val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
         agent = this,
         options = TODO(),
     )
 
+    val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this)
+    val w3cJwtCredentialService = W3cJwtCredentialService(this)
     val w3cCredentialRepository = W3cCredentialRepository(this)
-    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository)
+    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository,w3cJsonLdCredentialService, w3cJwtCredentialService)
 
     val proofs = ProofCommand(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)

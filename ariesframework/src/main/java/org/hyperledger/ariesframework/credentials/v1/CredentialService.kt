@@ -38,6 +38,7 @@ import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
+import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
@@ -517,7 +518,10 @@ class CredentialService(val agent: Agent) {
     }
 
     private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        if (credentialRecord.connectionId == null){
+            throw CredoError("Connection id not found")
+        }
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
         return connection.did
     }
 

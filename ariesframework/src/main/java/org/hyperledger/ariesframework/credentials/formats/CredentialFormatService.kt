@@ -2,9 +2,9 @@ package org.hyperledger.ariesframework.credentials.formats
 
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.credentials.models.CredentialFormatCreateOfferReturn
-import org.hyperledger.ariesframework.credentials.modelv2.returns.CredentialFormatCreateProposalReturn
-import org.hyperledger.ariesframework.credentials.modelv2.returns.CredentialFormatCreateReturn
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateProposalReturn
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateReturn
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 interface CredentialFormatService<CF : CredentialFormat>

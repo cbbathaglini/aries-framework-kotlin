@@ -17,6 +17,15 @@ fun Tags.toJsonString(): String {
     return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), this)
 }
 
+//typealias Tags = Map<String, Any?>
+//fun Tags.toJsonString(): String {
+//    val stringMap = this.mapNotNull { (key, value) ->
+//        value?.toString()?.let { key to it }
+//    }.toMap()
+//
+//    return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), stringMap)
+//}
+
 fun List<String>.toJsonString(): String {
     return Json.encodeToString(ListSerializer(String.serializer()), this)
 }

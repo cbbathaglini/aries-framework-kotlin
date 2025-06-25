@@ -5,16 +5,18 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsModuleConfigOptio
 import org.hyperledger.ariesframework.anoncreds.service.tails.BasicTailsFileService
 import org.hyperledger.ariesframework.anoncreds.service.tails.TailsFileService
 
-
-class AnonCredsModuleConfig(val agent: Agent, var options: AnonCredsModuleConfigOptions?) {
+class AnonCredsModuleConfig(
+    val agent: Agent,
+    private val options: AnonCredsModuleConfigOptions
+) {
 
     val registries: List<AnonCredsRegistry>
         get() = options.registries
 
     val tailsFileService: TailsFileService
-        get() = options.tailsFileService ?: BasicTailsFileService(agent = agent)
+        get() = options.tailsFileService ?: BasicTailsFileService(agent)
 
-    val anoncreds: Any // [todo]AnonCreds
+    val anoncreds: Any //AnonCredsLibrary
         get() = options.anoncreds
 
     val autoCreateLinkSecret: Boolean

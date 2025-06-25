@@ -4,22 +4,27 @@ import W3cCredentialSubject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
 @Serializable
 data class W3cJsonLdVerifiableCredential(
-    val context: List<String>,
-    val id: String? = null,
-    val type: List<String>,
-    val issuer: String,
-    val issuanceDate: String,
-    val credentialSubject: List<W3cCredentialSubject>,
+    override val context: List<JsonElement>,
+    override val id: String? = null,
+    override val type: List<String>,
+    override val issuer: JsonElement,
+    override val issuanceDate: String,
+    override val credentialSubject: List<W3cCredentialSubject>,
+    override val expirationDate: String? = null,
+    override val credentialSchema: List<W3cCredentialSchema>? = null,
+    override val credentialStatus: W3cCredentialStatus? = null,
 
     @SerialName("proof")
     val proofs: List<LinkedDataProofBase> // polymorphic base type
-) : W3cVerifiableCredential(){
+
+) : W3cCredential() {
     val proofTypes: List<String>
         get() = proofs.map { it.type }
 

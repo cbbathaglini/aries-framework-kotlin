@@ -1,4 +1,8 @@
 package org.hyperledger.ariesframework.vc.service
 
-class W3cJwtCredentialService {
+import org.hyperledger.ariesframework.agent.Agent
+
+data class W3cJwtCredentialService (
+    private  val agent: Agent,
+){
 }

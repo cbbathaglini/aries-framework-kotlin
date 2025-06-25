@@ -12,7 +12,7 @@ class W3cJsonLdCredentialService(
         credential: W3cJsonLdVerifiableCredential
     ): List<String> {
         val credentialJson = credential.toJsonString()
-        val documentLoader = w3cCredentialsModuleConfig.documentLoader(agentcontext)
+        val documentLoader = w3cCredentialsModuleConfig.documentLoader
 
         val expanded = jsonLd.expand(
             credentialJson,

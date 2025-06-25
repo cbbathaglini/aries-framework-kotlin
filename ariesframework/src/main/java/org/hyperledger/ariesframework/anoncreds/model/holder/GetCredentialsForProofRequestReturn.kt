@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.model.holder
 
 import kotlinx.serialization.Serializable
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 
 @Serializable
 data class GetCredentialsForProofRequestReturn(
