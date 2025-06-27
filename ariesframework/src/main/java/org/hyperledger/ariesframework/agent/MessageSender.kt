@@ -63,7 +63,7 @@ class MessageSender(val agent: Agent) {
         // We should not override the parent thread id if it is already set, because it may be
         // a response to a different invitation. For example, a handshake-reuse message sent
         // over an existing connection created from a different out-of-band invitation.
-        message.connection.outOfBandInvitation?.let {
+        message.connection?.outOfBandInvitation?.let {
             val thread = agentMessage.thread ?: ThreadDecorator()
             if (thread.parentThreadId == null) {
                 thread.parentThreadId = it.id
@@ -77,7 +77,7 @@ class MessageSender(val agent: Agent) {
     suspend fun send(message: OutboundMessage, endpointPrefix: String? = null) {
         val agentMessage = decorateMessage(message)
 
-        val services = findDidCommServices(message.connection)
+        val services = findDidCommServices(message.connection!!)
         if (services.isEmpty()) {
             logger.error("Cannot find services for message of type ${agentMessage.type}")
         }

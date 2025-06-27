@@ -104,27 +104,28 @@ class OutOfBandService(val agent: Agent) {
         outOfBandRepository.deleteById(outOfBandId)
     }
 
+    // [todo] liberar depois q liberar o ourservice, theirservice
     /**
      * Extract a resolved didcomm service from an out of band invitation.
      *
      * Currently the first service that can be resolved is returned.
      */
-    suspend fun getResolvedServiceForOutOfBandServices(
-        services: List<Any> // can be String or OutOfBandDidCommService
-    ): ResolvedDidCommService {
-        for (service in services) {
-            when (service) {
-                is String -> {
-                    val didServices = agent.didCommDocumentService.resolveServicesFromDid(agentContext, service)
-                    val didService = didServices.firstOrNull()
-                    if (didService != null) return didService
-                }
-                is OutOfBandDidCommService -> {
-                    return service.resolvedDidCommService
-                }
-            }
-        }
-
-        throw CredoError("Could not extract a service from the out of band invitation.")
-    }
+//    suspend fun getResolvedServiceForOutOfBandServices(
+//        services: List<Any> // can be String or OutOfBandDidCommService
+//    ): ResolvedDidCommService {
+//        for (service in services) {
+//            when (service) {
+//                is String -> {
+//                    val didServices = agent.didCommDocumentService.resolveServicesFromDid(agentContext, service)
+//                    val didService = didServices.firstOrNull()
+//                    if (didService != null) return didService
+//                }
+//                is OutOfBandDidCommService -> {
+//                    return service.resolvedDidCommService
+//                }
+//            }
+//        }
+//
+//        throw CredoError("Could not extract a service from the out of band invitation.")
+//    }
 }

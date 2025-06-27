@@ -12,7 +12,7 @@ data class AnonCredsCredentialDefinition(
     val tag: String,
     val value: CredentialDefinitionValue
 ){
-    fun toJsonString(): String = Json.encodeToString(AnonCredsCredentialDefinition.serializer(),this)
+    fun toJson(): String = Json.encodeToString(AnonCredsCredentialDefinition.serializer(),this)
 }
 
 @Serializable

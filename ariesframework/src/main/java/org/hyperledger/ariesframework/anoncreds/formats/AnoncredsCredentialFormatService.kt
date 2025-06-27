@@ -33,6 +33,7 @@ import org.hyperledger.ariesframework.credentials.formats.anoncreds.CreateAnoncr
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MessageValidator
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
+import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
@@ -406,6 +407,15 @@ class AnoncredsCredentialFormatService(
 
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
+        var revocationRegistryInfo : RevocationRegistryInfo? = null
+
+        if(revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinition != null) {
+            revocationRegistryInfo = RevocationRegistryInfo(
+                id = revocationRegistryResult.revocationRegistryDefinitionId,
+                definition = revocationRegistryResult.revocationRegistryDefinition
+            )
+        }
+
         val storeCredential = StoreCredentialOptions(
             credential = anonCredsCredential,
             credentialRequestMetadata = ConvertFromAny.convertAnyToSerializable<AnonCredsCredentialRequestMetadata>(credentialRequestMetadata),
@@ -413,7 +423,7 @@ class AnoncredsCredentialFormatService(
             schema = fetchSchemaReturn.schema,
             credentialDefinitionId = credentialDefinitionResult.credentialDefinitionId,
             credentialId = BaseRecord.generateId(),
-            revocationRegistry = revocationRegistryResult?.revocationRegistryDefinition
+            revocationRegistry = revocationRegistryInfo
         )
         val storeCredentialOptions = StoreCredential.getStoreCredentialOptions(
             options =  storeCredential,

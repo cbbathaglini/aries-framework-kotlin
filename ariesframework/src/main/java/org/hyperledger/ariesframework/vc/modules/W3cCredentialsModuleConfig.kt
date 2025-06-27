@@ -11,8 +11,8 @@ data class W3cCredentialsModuleConfigOptions(
     val documentLoader: DocumentLoader? = null
 )
 
-typealias DocumentLoader = (url: String) -> Any // ou tipo correto que você estiver usando
+typealias DocumentLoader = (url: String) -> Any
 
 val defaultDocumentLoader: DocumentLoader = { url ->
-    println("Usando defaultDocumentLoader para $url")
+    println("defaultDocumentLoader to $url")
 }

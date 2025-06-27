@@ -29,7 +29,7 @@ interface AnonCredsHolderService {
     )
 
     suspend fun createLinkSecret(
-        options: CreateLinkSecretOptions
+        options: CreateLinkSecretOptions? = null
     ): CreateLinkSecretReturn
 
     suspend fun legacyToW3cCredential(

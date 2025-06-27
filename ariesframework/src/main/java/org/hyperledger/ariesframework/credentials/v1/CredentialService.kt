@@ -189,10 +189,14 @@ class CredentialService(val agent: Agent) {
             )
             credentialExchangeRepository.save(credentialRecord)
 
+            if (credentialRecord.connectionId == null){
+                throw CredoError("Connection id not found")
+            }
+
             agent.historyRepository.save(
                 HistoryRecord(
                     historyType = HistoryType.CredentialOfferReceived,
-                    connectionId = credentialRecord.connectionId,
+                    connectionId = credentialRecord.connectionId!!,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = credentialRecord.id,
                 ),

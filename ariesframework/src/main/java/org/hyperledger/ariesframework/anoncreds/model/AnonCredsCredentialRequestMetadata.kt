@@ -9,7 +9,7 @@ data class AnonCredsCredentialRequestMetadata(
     val link_secret_name: String,
     val nonce: String
 ) {
-        fun toJsonString(): String = Json.encodeToString(AnonCredsCredentialRequestMetadata.serializer(), this)
+        fun toJson(): String = Json.encodeToString(AnonCredsCredentialRequestMetadata.serializer(), this)
 
         companion object {
         fun fromJsonString(json: String): AnonCredsCredentialRequestMetadata =

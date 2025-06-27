@@ -62,7 +62,14 @@ class W3cAnonCredsUtils {
                 tags["anonCredsAttr::$key::marker"] = true
             }
 
-            return tags
+            return convertToTags(tags)
+        }
+
+
+        private fun convertToTags(map: MutableMap<String, Any?>): Tags {
+            return map.mapNotNull { (key, value) ->
+                (value as? String)?.let { key to it }
+            }.toMap()
         }
 
         fun anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord: W3cCredentialRecord, useUnqualifiedIdentifiers: Boolean?): AnonCredsCredentialInfo {

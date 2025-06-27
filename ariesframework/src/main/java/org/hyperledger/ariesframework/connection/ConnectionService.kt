@@ -490,7 +490,7 @@ class ConnectionService(val agent: Agent) {
         expectedConnectionId: String? = null
     ) {
         val connection = messageContext.connection
-        val message = messageContext.message
+        val message : AgentMessage = messageContext.message
         val senderVerkey = messageContext.senderVerkey
         val recipientVerkey = messageContext.recipientVerkey
 
@@ -508,56 +508,56 @@ class ConnectionService(val agent: Agent) {
         } else {
             logger.debug("Processing connection-less message with id ${message.id}", mapOf("type" to message.type))
 
-            val recipientKey = recipientVerkey ?: recipientVerkey?.publicKeyBase58
-            val senderKey = senderVerkey ?: senderVerkey?.publicKeyBase58
+            val recipientKey = recipientVerkey
+            val senderKey = senderVerkey
 
+            //[TODO] verificar de onde veio o service
             // set theirService to the value of lastReceivedMessage.service
-            var theirService = message.service?.resolvedDidCommService ?: lastReceivedMessage?.service?.resolvedDidCommService
-            var ourService = lastSentMessage?.service?.resolvedDidCommService
-
-
-            val query = """{"invitationRequestsThreadIds": ["${message.threadId}"]}""".trimIndent()
-            val outOfBandRecord = agent.outOfBandRepository.findSingleByQuery(query)
-
-            when (outOfBandRecord?.role) {
-                OutOfBandRole.Sender -> {
-                    ourService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
-                        outOfBandRecord.outOfBandInvitation.services
-                    )
-                }
-                OutOfBandRole.Receiver -> {
-                    theirService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
-                        outOfBandRecord.outOfBandInvitation.services
-                    )
-                }
-                else -> {}
-            }
-
-            if (theirService == null && outOfBandRecord == null) {
-                throw CredoError("No service for incoming connection-less message and no associated out of band record found.")
-            }
-
-            if (ourService == null && (lastReceivedMessage != null || lastSentMessage != null)) {
-                throw CredoError("No keys on our side to use for encrypting messages, and previous messages found (in which case our keys MUST also be present).")
-            }
-
-            if ((senderKey == null || recipientKey == null) && (lastReceivedMessage != null || lastSentMessage != null)) {
-                throw CredoError("Incoming message must have recipientKey and senderKey if there are lastSentMessage or lastReceivedMessage.")
-            }
-
-            if (recipientKey != null && ourService != null) {
-                val recipientKeyFound = ourService.recipientKeys.any { key -> key.publicKeyBase58 == recipientKey }
-                if (!recipientKeyFound) {
-                    throw CredoError("Recipient key $recipientKey not found in our service")
-                }
-            }
-
-            if (senderKey != null && theirService != null) {
-                val senderKeyFound = theirService.recipientKeys.any { key -> key.publicKeyBase58 == senderKey }
-                if (!senderKeyFound) {
-                    throw CredoError("Sender key $senderKey not found in their service.")
-                }
-            }
+//            var theirService = message.service?.resolvedDidCommService ?: lastReceivedMessage?.service?.resolvedDidCommService
+//            var ourService = lastSentMessage?.service?.resolvedDidCommService
+//
+//            val query = """{"invitationRequestsThreadIds": ["${message.threadId}"]}""".trimIndent()
+//            val outOfBandRecord = agent.outOfBandRepository.findSingleByQuery(query)
+//
+//            when (outOfBandRecord?.role) {
+//                OutOfBandRole.Sender -> {
+//                    ourService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
+//                        outOfBandRecord.outOfBandInvitation.services
+//                    )
+//                }
+//                OutOfBandRole.Receiver -> {
+//                    theirService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
+//                        outOfBandRecord.outOfBandInvitation.services
+//                    )
+//                }
+//                else -> {}
+//            }
+//
+//            if (theirService == null && outOfBandRecord == null) {
+//                throw CredoError("No service for incoming connection-less message and no associated out of band record found.")
+//            }
+//
+//            if (ourService == null && (lastReceivedMessage != null || lastSentMessage != null)) {
+//                throw CredoError("No keys on our side to use for encrypting messages, and previous messages found (in which case our keys MUST also be present).")
+//            }
+//
+//            if ((senderKey == null || recipientKey == null) && (lastReceivedMessage != null || lastSentMessage != null)) {
+//                throw CredoError("Incoming message must have recipientKey and senderKey if there are lastSentMessage or lastReceivedMessage.")
+//            }
+//
+//            if (recipientKey != null && ourService != null) {
+//                val recipientKeyFound = ourService.recipientKeys.any { key -> key.publicKeyBase58 == recipientKey }
+//                if (!recipientKeyFound) {
+//                    throw CredoError("Recipient key $recipientKey not found in our service")
+//                }
+//            }
+//
+//            if (senderKey != null && theirService != null) {
+//                val senderKeyFound = theirService.recipientKeys.any { key -> key.publicKeyBase58 == senderKey }
+//                if (!senderKeyFound) {
+//                    throw CredoError("Sender key $senderKey not found in their service.")
+//                }
+//            }
         }
 
     }

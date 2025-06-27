@@ -48,7 +48,7 @@ class AnonCredsObjects {
             val resolutionMetadata = result.resolutionMetadata
 
             return  result.revocationStatusList ?: throw CredoError(
-                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata["message"]}"
+                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata.message}"
             )
         }
 

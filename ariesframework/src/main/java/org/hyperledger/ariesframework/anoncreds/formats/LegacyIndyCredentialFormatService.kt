@@ -346,11 +346,14 @@ class LegacyIndyCredentialFormatService(
 
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
-        val revocationRegistry = revocationRegistryResult?.revocationRegistryDefinition ?:
-        RevocationRegistryInfo(
-            id = revocationRegistryResult?.revocationRegistryDefinitionId,
-            definition = revocationRegistryResult?.revocationRegistryDefinition
-        )
+        var revocationRegistryInfo : RevocationRegistryInfo? = null
+
+        if(revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinition != null) {
+            revocationRegistryInfo = RevocationRegistryInfo(
+                id = revocationRegistryResult.revocationRegistryDefinitionId,
+                definition = revocationRegistryResult.revocationRegistryDefinition
+            )
+        }
 
         val storeCredentialOptions = StoreCredentialOptions(
             credential = anonCredsCredential,
@@ -359,7 +362,7 @@ class LegacyIndyCredentialFormatService(
             schema = fetchSchemaReturn.schema,
             credentialDefinitionId = credentialDefinitionResult.credentialDefinitionId,
             credentialId = BaseRecord.generateId(),
-            revocationRegistry = revocationRegistry
+            revocationRegistry = revocationRegistryInfo
         )
 
         val credentialId = agent.anonCredsHolderService.storeCredential(storeCredentialOptions)

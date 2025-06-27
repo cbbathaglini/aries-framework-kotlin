@@ -1,12 +1,11 @@
 package org.hyperledger.ariesframework.credentials.v2.messages
 
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.credentials.modelv2.ImpactStatus
-import org.hyperledger.ariesframework.credentials.modelv2.WhereStatus
-import org.hyperledger.ariesframework.credentials.modelv2.WhoRetriesStatus
 import org.hyperledger.ariesframework.credentials.models.problemreport.FixHintOptions
 import org.hyperledger.ariesframework.credentials.models.problemreport.ProblemReportMessage
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.ImpactStatus
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.WhereStatus
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.WhoRetriesStatus
 import org.hyperledger.ariesframework.problemreports.messages.DescriptionOptions
 
 @SerialName(CredentialProblemReportMessageV2.TYPE)
