@@ -17,8 +17,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.hyperledger.ariesframework.InboundMessageContext
+import org.hyperledger.ariesframework.OutboundMessage
+import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
-import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
@@ -28,11 +34,15 @@ import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOff
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
+import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
+import org.json.JSONObject
 
 class WalletMainActivity : AppCompatActivity() {
 
@@ -118,6 +128,8 @@ class WalletMainActivity : AppCompatActivity() {
                 } else if (it.record.state == ProofState.Done) {
                     proofProgress?.dismiss()
                     showAlert("Proof done")
+                } else if (it.record.state == ProofState.PresentationReceived){
+                    receivePresentationProof(app, it)
                 }
             }
         }
@@ -158,6 +170,92 @@ class WalletMainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private suspend fun receivePresentationProof(
+        app: WalletApp,
+        it: AgentEvents.ProofEvent
+    ) {
+        val (message, proofRecord) = app.agent.proofService.createAck(it.record)
+        val connection = app.agent.connectionRepository.getById(it.record.connectionId)
+        app.agent.messageSender.send(OutboundMessage(message, connection))
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(proofRecord.id, PresentationMessageV2.type)
+        val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
+
+        // Primeiro, parseia como JsonElement
+        val element = json.decodeFromString<JsonElement>(presentationMessageJson)
+
+        // Pega o campo "type"
+        val type = element.jsonObject["type"]?.jsonPrimitive?.content
+        //app.agent.didCommMessageRepository.getAgentMessage
+        /*val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            PresentationMessage.type
+        )*/
+
+//        if (type == "https://didcomm.org/present-proof/1.0/presentation") {
+//            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessage
+//            showProofInfo(presentationMessage.indyProof())
+//        } else {
+//            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessageV2
+//            showProofInfo(presentationMessage.indyProof())
+//        }
+
+    }
+
+
+    private fun extractRevealedAttributes(json: JSONObject): List<String> {
+        val attrList = mutableListOf<String>()
+        val requestedProof = json.optJSONObject("requested_proof") ?: return attrList
+        val revealedAttrs = requestedProof.optJSONObject("revealed_attrs") ?: return attrList
+
+        val keys = revealedAttrs.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val attrObj = revealedAttrs.optJSONObject(key) ?: continue
+            val rawValue = attrObj.optString("raw", "N/A")
+            attrList.add("$key: $rawValue")
+        }
+        return attrList
+    }
+
+    private fun extractCredentialIdentifiers(json: JSONObject): List<String> {
+        val idList = mutableListOf<String>()
+        val identifiers = json.optJSONArray("identifiers") ?: return idList
+
+        for (i in 0 until identifiers.length()) {
+            val identifierObj = identifiers.optJSONObject(i) ?: continue
+            val schemaId = identifierObj.optString("schema_id", "N/A")
+            val credDefId = identifierObj.optString("cred_def_id", "N/A")
+            val revRegId = identifierObj.optString("rev_reg_id", "N/A")
+            val timestamp = identifierObj.optLong("timestamp", -1)
+
+            idList.add(
+                """
+            Schema ID: $schemaId
+            CredDef ID: $credDefId
+            RevReg ID: $revRegId
+            Timestamp: $timestamp
+            """.trimIndent()
+            )
+        }
+        return idList
+    }
+
+    private fun showProofInfo(presentationMessage: String) {
+        val json = JSONObject(presentationMessage)
+
+        val attrList = extractRevealedAttributes(json)
+        val idList = extractCredentialIdentifiers(json)
+
+        val messageToShow = buildString {
+            append("Atributos apresentados:\n")
+            append(attrList.joinToString("\n"))
+            append("\n\nCredenciais usadas:\n")
+            append(idList.joinToString("\n\n"))
+        }
+
+        showAlert(messageToShow)
     }
 
     private fun showAlert(message: String) {
@@ -233,6 +331,7 @@ class WalletMainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     /* v2.0 */
     private fun declineCredentialV2(id: String) {
@@ -387,7 +486,7 @@ class WalletMainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST))
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION))
     }
 
     class SimpleItemRecyclerViewAdapter(
@@ -408,6 +507,15 @@ class WalletMainActivity : AppCompatActivity() {
                     v.context.startActivity(intent)
                 }
 
+                MainMenu.HISTORICAL -> {
+                    val intent = Intent(v.context, HistoricalListActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.CONNECTION -> {
+                    val intent = Intent(v.context, InvitationActivity::class.java)
+                    v.context.startActivity(intent)
+                }
             }
         }
 
@@ -430,6 +538,10 @@ class WalletMainActivity : AppCompatActivity() {
 
         inner class MenuItemHolder(val binding: MenuItemListContentBinding) : RecyclerView.ViewHolder(binding.root) {
             val contentView: TextView = binding.content
+        }
+
+        suspend fun getProofRecord(agent: Agent, threadId: String): ProofExchangeRecord {
+            return agent.proofRepository.getByThreadAndConnectionId(threadId, null)
         }
     }
 }

@@ -98,13 +98,12 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
     val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
-        agent = this,
-        options = TODO(),
+        agent = this
     )
 
-    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
-        documentLoader = TODO()
-    )
+//    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
+//        documentLoader = TODO()
+//    )
     val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
     val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig)
     val w3cJwtCredentialService = W3cJwtCredentialService(this)

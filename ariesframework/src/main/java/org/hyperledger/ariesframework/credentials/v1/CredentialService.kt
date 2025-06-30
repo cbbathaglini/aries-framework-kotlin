@@ -216,6 +216,7 @@ class CredentialService(val agent: Agent) {
      */
     suspend fun createRequest(options: AcceptOfferOptions): RequestCredentialMessage {
         val credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
+        logger.info("[IDD]credentialRecord create request: $credentialRecord")
         credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V1)
         credentialRecord.assertState(CredentialState.OfferReceived)
 
@@ -223,14 +224,15 @@ class CredentialService(val agent: Agent) {
             credentialRecord.id,
             OfferCredentialMessage.type,
         )
+        logger.info("[IDD]offerMessageJson: $offerMessageJson")
         val offerMessage =
             MessageSerializer.decodeFromString(offerMessageJson) as OfferCredentialMessage
         val offerAttachment =
             offerMessage.getOfferAttachmentById(OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID)
+
         checkNotNull(offerAttachment) {
             "Indy attachment with id ${OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
         }
-
         val holderDid = options.holderDid ?: getHolderDid(credentialRecord)
 
         val credentialOfferJson = offerMessage.getCredentialOffer()

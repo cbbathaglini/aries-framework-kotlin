@@ -193,8 +193,8 @@ object TestHelper {
 
         delay(waitFor)
 
-        agentAConnection = agentA.connectionRepository.getById(agentAConnection.id)
-        agentBConnection = agentB.connectionRepository.getById(agentBConnection.id)
+        agentAConnection = agentA.connectionRepository.getById(agentAConnection!!.id)
+        agentBConnection = agentB.connectionRepository.getById(agentBConnection!!.id)
         check(agentAConnection.state == ConnectionState.Complete && agentBConnection.state == ConnectionState.Complete) {
             "Connection is not complete yet."
         }

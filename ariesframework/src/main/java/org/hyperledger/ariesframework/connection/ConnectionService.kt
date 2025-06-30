@@ -98,14 +98,14 @@ class ConnectionService(val agent: Agent) {
         )
 
         runBlocking {
-                agent.historyRepository.save(
-                    HistoryRecord(
-                        historyType = HistoryType.ConnectionCreated,
-                        connectionId = connectionRecord.id,
-                        theirLabel = theirLabel,
-                        associatedRecordId = connectionRecord.id,
-                        content = invitation.toString(),
-                    ),
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ConnectionCreated,
+                    connectionId = connectionRecord.id,
+                    theirLabel = theirLabel,
+                    associatedRecordId = connectionRecord.id,
+                    content = invitation.toString(),
+                ),
             )
         }
 

@@ -19,23 +19,26 @@ class W3cJsonLdCredentialService(
     suspend fun getExpandedTypesForCredential(
         credential: W3cJsonLdVerifiableCredential
     ): Map<String, String> {
-        val credentialJson = credential.toJsonString()
-        val documentLoader = w3cCredentialsModuleConfig.documentLoader
 
-        val jsonElementCredential = Json.parseToJsonElement(credentialJson)
-        val expanded = expandJsonLd(
-            jsonElementCredential,
-            mapOf("documentLoader" to documentLoader)
-        )
+        return emptyMap()
 
-        val firstExpanded = (expanded as? List<Map<String, Any?>>)?.firstOrNull()
-        val types = firstExpanded?.get("@type")
-
-        return when (types) {
-            is String -> listOf(types)
-            is List<*> -> types.filterIsInstance<String>()
-            else -> emptyList()
-        }
+//        val credentialJson = credential.toJsonString()
+//        val documentLoader = w3cCredentialsModuleConfig.documentLoader
+//
+//        val jsonElementCredential = Json.parseToJsonElement(credentialJson)
+//        val expanded = expandJsonLd(
+//            jsonElementCredential,
+//            mapOf("documentLoader" to documentLoader)
+//        )
+//
+//        val firstExpanded = (expanded as? List<Map<String, Any?>>)?.firstOrNull()
+//        val types = firstExpanded?.get("@type")
+//
+//        return when (types) {
+//            is String -> listOf(types)
+//            is List<*> -> types.filterIsInstance<String>()
+//            else -> emptyList()
+//        }
     }
 
 
