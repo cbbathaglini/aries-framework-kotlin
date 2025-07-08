@@ -230,7 +230,7 @@ class AnonCredsRsHolderService (val agent: Agent): AnonCredsHolderService{
         val linkSecretId = options.linkSecretId
 
 
-        var linkSecretRecord : AnonCredsLinkSecretRecord? = agent.anonCredsLinkSecretRepository.findDefault()
+        /*var linkSecretRecord : AnonCredsLinkSecretRecord? = agent.anonCredsLinkSecretRepository.findDefault()
         if (linkSecretId != null) {
             linkSecretRecord =
                 agent.anonCredsLinkSecretRepository.getByLinkSecretId(linkSecretId)
@@ -252,7 +252,7 @@ class AnonCredsRsHolderService (val agent: Agent): AnonCredsHolderService{
 
         if (linkSecretRecord.value == null) {
             throw AnonCredsRsError("Link Secret value not stored")
-        }
+        }*/
 
         val isLegacyIdentifier = Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId)
 
@@ -269,7 +269,7 @@ class AnonCredsRsHolderService (val agent: Agent): AnonCredsHolderService{
         val createReturnObj: CredentialRequestTuple = Prover().createCredentialRequest(
             entropy = entropy,
             proverDid= proverDid,
-            credDef = CredentialDefinition(credentialDefinition.toJson()),
+            credDef = CredentialDefinition(credentialDefinition),
             linkSecret = linkSecret,
             linkSecretId = linkSecretId,
             credOffer= CredentialOffer(credentialOffer.toJsonString()),

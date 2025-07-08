@@ -155,8 +155,11 @@ class LedgerService(val agent: Agent) {
     suspend fun getCredentialDefinition(id: String): String {
         logger.debug("Get CredentialDefinition with id: $id")
         val request = ledger.buildGetCredDefRequest(null, id)
+        logger.info("Request to get cred_def: ${request.body().toString()}")
 
         val response = submitReadRequest(request)
+        logger.info("Response of get cred_def: ${response.toString()}")
+
         val json = Json.decodeFromString<JsonObject>(response)
         val result = json.get("result") as JsonObject?
         val data = result?.get("data")

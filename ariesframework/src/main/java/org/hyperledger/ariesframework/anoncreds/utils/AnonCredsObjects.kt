@@ -1,13 +1,18 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialDefinitionResult
 import org.hyperledger.ariesframework.error.CredoError
+import org.slf4j.LoggerFactory
 
 class AnonCredsObjects {
+
     companion object{
+        private val logger = LoggerFactory.getLogger(AnonCredsObjects::class.java)
+
         suspend fun fetchCredentialDefinition(
             agent: Agent,
             credentialDefinitionId: String

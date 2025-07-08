@@ -9,3 +9,8 @@ data class CreateCredentialRequestReturn(
     var credentialRequest: AnonCredsCredentialRequest,
     val credentialRequestMetadata: AnonCredsCredentialRequestMetadata
 )
+{
+    override fun toString(): String {
+        return "CreateCredentialRequestReturn(credentialRequest=$credentialRequest, credentialRequestMetadata=$credentialRequestMetadata)"
+    }
+}

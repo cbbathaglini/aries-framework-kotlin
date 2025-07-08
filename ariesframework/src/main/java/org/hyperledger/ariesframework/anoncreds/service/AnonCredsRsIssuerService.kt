@@ -147,7 +147,7 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
         val credentialDefinitionJson = Json.encodeToString(AnonCredsCredentialDefinition.serializer(), credentialDefinition)
         val credentialDefinitionUniffi = CredentialDefinition(credentialDefinitionJson)
 
-        val credentialOfferJson = Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
+        val credentialOfferJson = credentialOffer.toJsonString()  //Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
         val credentialOfferUniffi = CredentialOffer(credentialOfferJson)
 
         val credentialRequestJson = Json.encodeToString(AnonCredsCredentialRequest.serializer(), credentialRequest)

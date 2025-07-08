@@ -27,9 +27,14 @@ data class AnonCredsCredentialRequest(
     val nonce: String
 ){
     fun toJsonString(): String = Json.encodeToString(AnonCredsCredentialRequest.serializer(), this)
+    override fun toString(): String {
+        return "AnonCredsCredentialRequest(proverDid=$proverDid, entropy=$entropy, credDefId='$credDefId', blindedMs=$blindedMs, blindedMsCorrectnessProof=$blindedMsCorrectnessProof, nonce='$nonce')"
+    }
 
     companion object {
         fun fromJsonString(json: String): AnonCredsCredentialRequest =
             Json.decodeFromString(json)
     }
+
+
 }

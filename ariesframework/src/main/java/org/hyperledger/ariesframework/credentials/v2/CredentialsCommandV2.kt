@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.modelv2.AcceptCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialProposalOptions
@@ -129,18 +130,19 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return agent.credentialExchangeRepository.getById(credentialRecordId)
     }
 
-    suspend fun acceptOffer(options: CreateCredentialRequestOptions): CredentialExchangeRecord {
+    suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): CredentialExchangeRecord {
         logger.info("acceptOffer init")
+        //val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
+        val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
 
-        val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
-
-        agent.messageSender.send(OutboundMessage(message, options.connectionRecord))
+        val connectionRecord = agent.connectionRepository.getById(credentialExchange.connectionId!!)
+        agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.CredentialOfferAccepted,
-                connectionId = options.connectionRecord.id,
-                theirLabel = options.connectionRecord.theirLabel,
+                connectionId = connectionRecord.id,
+                theirLabel = connectionRecord.theirLabel,
                 associatedRecordId = credentialExchange.id,
                 credentialPreviewAttr = credentialExchange.credentialAttributes,
                 credentials = credentialExchange.credentials,

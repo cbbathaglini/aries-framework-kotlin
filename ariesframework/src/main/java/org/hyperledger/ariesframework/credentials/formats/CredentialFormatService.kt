@@ -6,6 +6,8 @@ import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCr
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateProposalReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateReturn
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 interface CredentialFormatService<CF : CredentialFormat>
 {
@@ -45,12 +47,14 @@ interface CredentialFormatService<CF : CredentialFormat>
     suspend fun acceptOffer(
         attachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        credentialFormats: Map<String, JsonElement>? = emptyMap(),
-        attachmentId: String? = null
+        //credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        credentialFormats: List<Format>? = emptyList(),
+        attachmentId: String? = null,
+        offerCredentialMessageV2: OfferCredentialMessageV2
     ): CredentialFormatCreateReturn
 
     suspend fun createRequest(
-        credentialFormats: Map<String, JsonElement>? = emptyMap(),
+        credentialFormats: List<Format>? = emptyList(),
         credentialExchangeRecord: CredentialExchangeRecord
     ): CredentialFormatCreateReturn
 

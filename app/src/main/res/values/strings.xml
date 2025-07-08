@@ -14,4 +14,5 @@
     <string name="cancel">Cancel</string>
     <string name="send_message">Send message</string>
     <string name="request_proof">Request Proof</string>
+    <string name="delete_connection">Delete connection</string>
 </resources>

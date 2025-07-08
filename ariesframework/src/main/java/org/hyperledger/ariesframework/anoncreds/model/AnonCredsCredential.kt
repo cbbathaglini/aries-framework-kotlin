@@ -36,4 +36,8 @@ data class AnonCredsCredential(
     @SerialName("witness")
     @Contextual
     val witness: Any? = null
-)
+){
+    override fun toString(): String {
+        return "AnonCredsCredential(schemaId='$schemaId', credDefId='$credDefId', revRegId=$revRegId, values=$values, signature=$signature, signatureCorrectnessProof=$signatureCorrectnessProof, revReg=$revReg, witness=$witness)"
+    }
+}

@@ -28,6 +28,7 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.modelv2.AcceptCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
@@ -106,7 +107,8 @@ class WalletMainActivity : AppCompatActivity() {
                 if (it.record.state == CredentialState.OfferReceived) {
                     Log.e("[IDD] state", it.record.toString())
                     runOnConfirm("(2.0) Accept credential?", action = {
-                        getCredentialV2(it.record.id)
+                        Log.e("[IDD] CONFIRM", it.record.id)
+                        getCredentialV2(it.record)
                     }, negAction = {
                         declineCredentialV2(it.record.id)
                     })
@@ -397,22 +399,26 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-   private fun getCredentialV2(id: String) {
+   private fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
+            Log.i("CV2", "HERE")
             val app = application as WalletApp
             val progress = ProgressDialog(this)
             progress.setTitle("Loading")
             progress.setCancelable(true)
 
-
             val job = lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    val connectionRecord = app.agent.connectionRepository.getById(id)
+                    val connectionRecordList = app.agent.connectionRepository.getAll()
+                    Log.i("connectionRecordList", connectionRecordList.toString())
+
+                    val connectionRecord = app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
+                    Log.i("IDD", connectionRecord.toString())
                     app.agent.credentialsV2.acceptOffer(
                         //AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
-                        CreateCredentialRequestOptions(
-                            credentialFormats = emptyMap(), // [TODO]
+                        AcceptCredentialOfferOptionsV2(
+                            credentialExchangeRecord = credentialExchangeRecord,
+                            credentialFormats = credentialExchangeRecord.formats,
                             autoAcceptCredential = AutoAcceptCredential.Always,
-                            connectionRecord = connectionRecord
                         )
                     )
                 } catch (e: Exception) {

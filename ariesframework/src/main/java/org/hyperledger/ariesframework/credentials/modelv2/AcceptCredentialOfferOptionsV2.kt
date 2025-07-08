@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 data class AcceptCredentialOfferOptionsV2(
@@ -12,5 +13,6 @@ data class AcceptCredentialOfferOptionsV2(
     val comment: String? = null,
     val goal: String? = null,
     val goalCode: String? = null,
-    val credentialFormats:Map<String,JsonElement>? = emptyMap(),
+    //val credentialFormats:Map<String,JsonElement>? = emptyMap(),
+    val credentialFormats: List<Format>? = emptyList(),
 )

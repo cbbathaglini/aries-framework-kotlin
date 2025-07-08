@@ -4,6 +4,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
@@ -11,6 +12,7 @@ import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.IndyCredentialView
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
@@ -42,6 +44,7 @@ data class CredentialExchangeRecord(
     var credentialDefinitionId: String? = null,
     var role: CredentialRole? = null,
     var revocationNotification: RevocationNotification? = null,
+    var formats: List<Format>? = emptyList()
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

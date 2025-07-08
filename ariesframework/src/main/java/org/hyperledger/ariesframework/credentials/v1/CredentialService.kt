@@ -46,6 +46,7 @@ import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
 import java.util.UUID
+import kotlin.math.log
 
 class CredentialService(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(CredentialService::class.java)
@@ -223,6 +224,7 @@ class CredentialService(val agent: Agent) {
         val offerMessageJson = agent.didCommMessageRepository.getAgentMessage(
             credentialRecord.id,
             OfferCredentialMessage.type,
+            //faltou passar o role receiver
         )
         logger.info("[IDD]offerMessageJson: $offerMessageJson")
         val offerMessage =
@@ -240,6 +242,7 @@ class CredentialService(val agent: Agent) {
 
         val credentialDefinition =
             ledgerService.getCredentialDefinition(credentialOffer.credDefId())
+        logger.info("cred def: ${credentialDefinition.toString()}")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val credReqTuple = Prover().createCredentialRequest(
