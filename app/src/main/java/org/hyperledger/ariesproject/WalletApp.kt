@@ -15,7 +15,7 @@ import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import java.io.File
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
-const val genesisPath = "genesiscpqd.txn"
+const val genesisPath = "von.txn"
 
 class WalletApp : Application() {
     lateinit var agent: Agent
