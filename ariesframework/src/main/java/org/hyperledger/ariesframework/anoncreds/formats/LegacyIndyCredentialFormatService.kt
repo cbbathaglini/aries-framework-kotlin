@@ -3,6 +3,7 @@ package org.hyperledger.ariesframework.anoncreds.formats
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
@@ -97,10 +98,10 @@ class LegacyIndyCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            AnonCredsCredentialMetadata(
+            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
                 schemaId = indyCredentialProposal.schemaId,
                 credentialDefinitionId = indyCredentialProposal.credentialDefinitionId,
-            )
+            ))
         )
 
         return CredentialFormatCreateProposalReturn(
@@ -240,15 +241,15 @@ class LegacyIndyCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialRequestMetadataKey,
-            anoncredsCredentialRequestMetadata
+            Json.encodeToJsonElement(anoncredsCredentialRequestMetadata)
         )
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            AnonCredsCredentialMetadata(
+            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
                 schemaId = credentialOffer.schemaId,
                 credentialDefinitionId = credentialOffer.credDefId
-            )
+            ))
         )
 
         val format = Format(
@@ -308,10 +309,10 @@ class LegacyIndyCredentialFormatService(
 
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                AnonCredsCredentialMetadata(
+                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
                     revocationRegistryId = credential.revRegId,
                     credentialRevocationId = createCredentialReturn.credentialRevocationId
-                )
+                ))
             )
 
             if (credentialRevocationId != null) {
@@ -393,10 +394,10 @@ class LegacyIndyCredentialFormatService(
 
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                AnonCredsCredentialMetadata(
+                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
                     credentialRevocationId = credentialRevocationId,
                     revocationRegistryId = revocationRegistryId
-                )
+                ))
             )
 
             if (revocationRegistryId != null && credentialRevocationId != null) {
@@ -502,10 +503,10 @@ class LegacyIndyCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            AnonCredsCredentialMetadata(
+            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
                 schemaId = offer.schemaId,
                 credentialDefinitionId = offer.credDefId,
-            )
+            ))
         )
 
         val attachment = FormatDataUtil.getFormatData(offer, format.attachId)

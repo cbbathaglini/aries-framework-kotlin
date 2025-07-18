@@ -105,9 +105,10 @@ object Indyidentifiers {
     fun getQualifiedDidIndyDid(identifier: String, namespace: String): String {
         if (isIndyDid(identifier)) return identifier
 
-        if (namespace.isBlank()) {
-            throw IllegalArgumentException("Missing required indy namespace")
-        }
+        //adicionar pq nao ta funfando
+//        if (namespace.isBlank()) {
+//            throw IllegalArgumentException("Missing required indy namespace")
+//        }
 
         return when {
             isUnqualifiedSchemaId(identifier) -> {

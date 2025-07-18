@@ -1,6 +1,8 @@
 package org.hyperledger.ariesframework.vc.model
 
 import W3cCredentialSubject
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.Gson
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
@@ -11,20 +13,22 @@ import kotlinx.serialization.modules.subclass
 
 @Serializable
 data class W3cJsonLdVerifiableCredential(
-    override val context: List<JsonElement>,
-    override val id: String? = null,
-    override val type: List<String>,
-    override val issuer: JsonElement,
-    override val issuanceDate: String,
-    override val credentialSubject: List<W3cCredentialSubject>,
-    override val expirationDate: String? = null,
-    override val credentialSchema: List<W3cCredentialSchema>? = null,
-    override val credentialStatus: W3cCredentialStatus? = null,
+    @JsonProperty("@context") @SerialName("@context")
+    var context: List<JsonElement>,
+    var id: String? = null,
+    var type: List<String>,
+    var issuer: JsonElement,
+    var issuanceDate: String,
+    var credentialSubject: List<W3cCredentialSubject>,
+    var expirationDate: String? = null,
+    var credentialSchema: List<W3cCredentialSchema>? = null,
+    var credentialStatus: W3cCredentialStatus? = null,
 
     @SerialName("proof")
     val proofs: List<LinkedDataProofBase> // polymorphic base type
 
-) : W3cCredential() {
+) { //: W3cCredential {
+
     val proofTypes: List<String>
         get() = proofs.map { it.type }
 
@@ -44,25 +48,9 @@ data class W3cJsonLdVerifiableCredential(
     val claimFormat: String
         get() = "ldp_vc"
 
-    fun toJsonString(): String {
-        val linkedDataProofModule = SerializersModule {
-            polymorphic(LinkedDataProofBase::class) {
-                subclass(LinkedDataProof::class, LinkedDataProof.serializer())
-                subclass(DataIntegrityProof::class, DataIntegrityProof.serializer())
-            }
-        }
-
-        val json = Json {
-            prettyPrint = true
-            encodeDefaults = true
-            serializersModule = linkedDataProofModule
-            classDiscriminator = "type"
-        }
-
-        return json.encodeToString(W3cJsonLdVerifiableCredential.serializer(), this)
-    }
 
     companion object {
+
         fun fromJson(json: String): W3cJsonLdVerifiableCredential {
             val module = SerializersModule {
                 polymorphic(LinkedDataProofBase::class) {
@@ -75,6 +63,8 @@ data class W3cJsonLdVerifiableCredential(
                 serializersModule = module
                 ignoreUnknownKeys = true
                 prettyPrint = true
+                isLenient = true
+
             }
 
             return jsonParser.decodeFromString(W3cJsonLdVerifiableCredential.serializer(), json)
@@ -91,20 +81,24 @@ sealed class LinkedDataProofBase {
 @Serializable
 @SerialName("LinkedDataProof")
 data class LinkedDataProof(
-    override val type: String,
     val created: String,
     val proofPurpose: String,
     val verificationMethod: String,
-    val jws: String
-) : LinkedDataProofBase()
+    val jws: String? = null
+) : LinkedDataProofBase(){
+    override val type: String
+        get() = "LinkedDataProof"
+}
 
 @Serializable
 @SerialName("DataIntegrityProof")
 data class DataIntegrityProof(
-    override val type: String,
     val cryptosuite: String,
-    val created: String,
+    val created: String? = null,
     val proofPurpose: String,
     val verificationMethod: String,
-    val proofValue: String
-) : LinkedDataProofBase()
+    val proofValue: String? = null
+) : LinkedDataProofBase(){
+    override val type: String
+        get() = "DataIntegrityProof"
+}

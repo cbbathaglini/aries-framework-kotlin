@@ -28,6 +28,7 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         if (shouldAutoRespond){
             val message = this.acceptOffer(credentialRecord)
+            logger.info("accept offer message =>> $message")
             return OutboundMessage(message, messageContext.connection!!)
         }
 
@@ -41,6 +42,7 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
             credentialExchangeRecord = credentialRecord
         )
         val ( credentialExchange, requestCredentialMessageV2 ) = agent.credentialServiceV2.acceptOffer( acceptCredentialOfferOptions )
+        logger.info("requestCredentialMessageV2 =>> ${requestCredentialMessageV2.toString()}")
 
         return requestCredentialMessageV2
     }

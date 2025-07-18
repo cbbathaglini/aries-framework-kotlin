@@ -5,7 +5,10 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.LegacyIndyCredentialFormatService
+import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
+import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.modelv2.AcceptOfferParams
 import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestParams
 import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialParams
@@ -15,6 +18,7 @@ import org.hyperledger.ariesframework.credentials.modelv2.ProcessRequestParams
 import org.hyperledger.ariesframework.credentials.modelv2.RequestCredentialParams
 import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
 import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
@@ -275,25 +279,24 @@ class CredentialFormatCoordinator(
         var service : CredentialFormatService<*>? = null
         for (format in offerMessage.formats) {
             service = findFormatService(format.attachId)
-
             if (service != null) {
-
                 val attachment = getAttachmentForService(
                     service,
                     offerMessage.formats,
                     offerMessage.offerAttachments
                 )
-                logger.info("attachment: ${attachment.toString()}")
+
                 val acceptedOffer = service.acceptOffer(
                     attachment = attachment,
                     credentialExchangeRecord = credentialExchangeRecord,
                     credentialFormats = params.credentialFormats,
                     offerCredentialMessageV2 = offerMessage
                 )
-
                 requestAttachment.add(acceptedOffer.attachment)
                 formats.add(acceptedOffer.format)
                 requestAppendAttachments.addAll(acceptedOffer.appendAttachment ?: emptyList())
+
+                logger.info("credentialExchangeRecord ====>> ${credentialExchangeRecord.toString()}")
             }
         }
 
@@ -301,15 +304,17 @@ class CredentialFormatCoordinator(
 
         val requestMessage = RequestCredentialMessageV2(
             formats = formats,
-            requestAttachments = requestAppendAttachments,
+            attachments = requestAppendAttachments,
+            requestAttachments = requestAttachment,
             goalCode = params.goalCode,
             goal = params.goal,
-            comment = params.comment,
-            appendAttachments = null
+            comment = params.comment
         )
         logger.info("requestMessage created: $requestMessage")
+        logger.info("credentialExchangeRecord.credentialAttributes: ${credentialExchangeRecord.credentialAttributes.toString()}")
+
         requestMessage.setThread(
-            threadId = credentialExchangeRecord.id,
+            threadId = credentialExchangeRecord.threadId,
             parentThreadId = credentialExchangeRecord.parentThreadId
         )
 
@@ -357,8 +362,7 @@ class CredentialFormatCoordinator(
             requestAttachments = requestAttachment,
             goalCode = params.goalCode,
             goal = params.goal,
-            comment = params.comment,
-            appendAttachments = null
+            comment = params.comment
         )
 
         requestCredentialMessageV2.setThread(
@@ -435,7 +439,7 @@ class CredentialFormatCoordinator(
                 offerAttachment = offerAttachment,
                 credentialExchangeRecord = credentialExchangeRecord,
                 credentialFormats = credentialFormats,
-                requestAppendAttachments = requestMessage.appendAttachments
+                requestAppendAttachments = requestMessage.attachments
             )
 
             credentialAttachments.add(acceptedRequest.attachment)
@@ -485,6 +489,8 @@ class CredentialFormatCoordinator(
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
 
+        logger.info("credentialExchange AnonCredsCredentialRequestMetadataKey => ${credentialExchangeRecord.metadata.get( MetadataKeys.AnonCredsCredentialRequestMetadataKey)}")
+
         val offerMessage = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = OfferCredentialMessageV2.type,
@@ -498,27 +504,50 @@ class CredentialFormatCoordinator(
                 formats = offerMessage.formats,
                 attachments = offerMessage.offerAttachments
             )
+            logger.info("offerAttachment: ${offerAttachment.toString()}")
 
             val issueAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = issueMessage.formats,
                 attachments = issueMessage.credentialAttachments
             )
+            logger.info("issueAttachment: ${issueAttachment.toString()}")
 
             val requestAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = requestMessage.formats,
                 attachments = requestMessage.requestAttachments
             )
+            logger.info("requestAttachment: ${requestAttachment.toString()}")
 
             formatService.processCredential(
                 attachment = issueAttachment,
                 offerAttachment = offerAttachment,
                 requestAttachment = requestAttachment,
                 credentialExchangeRecord = credentialExchangeRecord,
-                requestAppendAttachments = requestMessage.appendAttachments
+                requestAppendAttachments = requestMessage.attachments
             )
         }
+
+//        agent.credentialRepository.save(
+//            CredentialRecord(
+//                credentialId = credentialId,
+//                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
+//                revocationRegistryId = processedCredential.revRegId(),
+//                linkSecretId = agent.wallet.linkSecretId!!,
+//                credentialObject = processedCredential,
+//                schemaId = processedCredential.schemaId(),
+//                schemaName = schema.name(),
+//                schemaVersion = schema.version(),
+//                schemaIssuerId = schema.issuerId(),
+//                issuerId = credentialDefinition.issuerId(),
+//                credentialDefinitionId = processedCredential.credDefId(),
+//                revocationNotification = null,
+//            ),
+//        )
+//
+//        credentialRecord.credentials.add(CredentialRecordBinding("indy", credentialId))
+
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Receiver,

@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -8,11 +9,15 @@ import kotlinx.serialization.json.JsonElement
 data class AnonCredsCredentialDefinition(
     val issuerId: String,
     val schemaId: String,
+    @SerialName("type")
     val type: String = "CL", // pode-se usar enum se quiser restringir a valores válidos
     val tag: String,
     val value: CredentialDefinitionValue
 ){
-    fun toJson(): String = Json.encodeToString(AnonCredsCredentialDefinition.serializer(),this)
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(AnonCredsCredentialDefinition.serializer(), this)
 }
 
 @Serializable

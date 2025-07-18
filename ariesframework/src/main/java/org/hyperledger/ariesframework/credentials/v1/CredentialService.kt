@@ -421,8 +421,10 @@ class CredentialService(val agent: Agent) {
             issueMessage.threadId,
             messageContext.connection?.id,
         )
+
         val credential = Credential(issueAttachment.getDataAsString())
         logger.debug("Storing credential: ${credential.values()}")
+
         val (schemaJson, _) = ledgerService.getSchema(credential.schemaId())
         val schema = Schema(schemaJson)
         val credentialDefinition =

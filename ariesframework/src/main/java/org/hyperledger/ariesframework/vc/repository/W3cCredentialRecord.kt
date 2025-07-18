@@ -2,6 +2,8 @@ package org.hyperledger.ariesframework.vc.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
@@ -38,22 +40,38 @@ class W3cCredentialRecord (
         _tags = tagMap
     }
 
+     fun getTagsW3cJsonLd(): Tags {
+         val tags = (_tags ?: mutableMapOf()).toMutableMap()
+         tags.putAll(this._tags ?: emptyMap())
+        tags["issuerId"] = credential.issuer.toString()
+        tags["subjectIds"] = credential.credentialSubject.toString()
+        //fazer funcionar
+//            tags["schemaIds"] = credential.credentialSchemaIds.toString()
+//            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
+        tags["givenId"] = credential.id.toString()
+       // tags["claimFormat"] = credential.claimFormat
+        tags["types"] = credential.type.toString()
+        //tags["proofTypes"] = credential.proofTypes.toString()
+        //tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
+         return tags
+    }
+
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
         //val stringContexts = this.credential.contexts.filter((ctx): ctx is string => typeof ctx === 'string')
 
         tags.putAll(this._tags ?: emptyMap())
-        if(credential is W3cJsonLdVerifiableCredential){
-            tags["issuerId"] = credential.issuer.toString()
-            tags["subjectIds"] = credential.credentialSubject.toString()
-            tags["schemaIds"] = credential.credentialSchemaIds.toString()
-            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
-            tags["givenId"] = credential.id.toString()
-            tags["claimFormat"] = credential.claimFormat
-            tags["types"] = credential.type.toString()
-            tags["proofTypes"] = credential.proofTypes.toString()
-            tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
-        }
+//        if(credential is W3cJsonLdVerifiableCredential){
+//            tags["issuerId"] = credential.issuer.toString()
+//            tags["subjectIds"] = credential.credentialSubject.toString()
+//            tags["schemaIds"] = credential.credentialSchemaIds.toString()
+//            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
+//            tags["givenId"] = credential.id.toString()
+//            tags["claimFormat"] = credential.claimFormat
+//            tags["types"] = credential.type.toString()
+//            tags["proofTypes"] = credential.proofTypes.toString()
+//            tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
+//        }
 
 //            is W3cJwtVerifiableCredential -> {
 //                tags["issuerId"] = credential.issuerId
@@ -79,4 +97,10 @@ class W3cCredentialRecord (
 
         return tags
     }
+
+    override fun toString(): String {
+        return "W3cCredentialRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, credential=$credential)"
+    }
+
+
 }

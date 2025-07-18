@@ -37,6 +37,16 @@
         </activity>
 
         <activity
+            android:name=".CredentialW3cDetailActivity"
+            android:label="@string/title_credential_detail"
+            android:parentActivityName=".CredentialListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".CredentialListActivity" />
+        </activity>
+
+        <activity
             android:name=".HistoricalListActivity"
             android:label="@string/title_historical_list"
             android:parentActivityName=".WalletMainActivity"

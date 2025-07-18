@@ -15,10 +15,11 @@ class Dispatcher(val agent: Agent) {
     suspend fun dispatch(messageContext: InboundMessageContext) {
         logger.debug("Dispatching message of type: ${messageContext.message.type}")
 
-        // printDispatcherMessages(messageContext)
+        //printDispatcherMessages(messageContext)
 
+        logger.info("message: ${messageContext.message}")
         val handler = handlers[messageContext.message.type]
-            ?: throw Exception("No handler for message type: ${messageContext.message.type}")
+            ?: throw Exception("No handler for message type: ${messageContext.message.type} - ${messageContext.plaintextMessage}")
 
         try {
             val outboundMessage = handler.handle(messageContext)

@@ -1,5 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.service
 
+import anoncreds_uniffi.CredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.model.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.anoncreds.model.LegacyToW3cCredentialOptions

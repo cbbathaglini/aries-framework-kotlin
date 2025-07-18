@@ -15,6 +15,7 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatCoordinator
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
+import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
@@ -442,7 +443,6 @@ class CredentialServiceV2(val agent: Agent) {
             formats = offerMessage.formats
         )
 
-        logger.info("creating new credential exchange: ${credentialExchangeRecord.toString()}")
         val processOfferParams = ProcessOfferParams(
             credentialExchangeRecord = credentialExchangeRecord,
             message = offerMessage,
@@ -452,8 +452,10 @@ class CredentialServiceV2(val agent: Agent) {
 
         logger.info("Saving credential record and emit offer-received event")
         agent.credentialExchangeRepository.save(credentialExchangeRecord)
+        logger.info(" ===== credential exchange: ${credentialExchangeRecord.toString()}")
+
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy()))
-        logger.info("event sended in process offer")
+
         return credentialExchangeRecord
     }
 
@@ -465,8 +467,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialExchangeRecord.assertState(CredentialState.OfferReceived)
-
-        //var formatServices = getFormatServices(credentialFormats ?: emptyList<>())
+        logger.info("credentialExchangeRecord str: ${credentialExchangeRecord.toString()}")
 
         var formatServices = getFormatServicesByList(credentialFormats!!)
         if (formatServices.isEmpty()){
@@ -479,7 +480,6 @@ class CredentialServiceV2(val agent: Agent) {
             formatServices = if (offerMessage != null) getFormatServicesFromMessage(offerMessage.formats) else emptyList()
         }
 
-        logger.info("formatServices ===> ${formatServices}")
         if (formatServices.isEmpty()){
             throw CredoError("Unable to accept offer. No supported formats provided as input or in offer message")
         }
@@ -498,7 +498,9 @@ class CredentialServiceV2(val agent: Agent) {
         credentialExchangeRecord.autoAcceptCredential = options.autoAcceptCredential ?: credentialExchangeRecord.autoAcceptCredential
 
         updateState(credentialExchangeRecord, CredentialState.RequestSent)
-        logger.info("credential updated status to request sent")
+        logger.debug("credential updated status to request sent")
+
+        logger.info("credentialExchangeRecord metadata ==> ${credentialExchangeRecord.metadata.toString()}")
 
         return Pair(credentialExchangeRecord, requestCredentialMessageV2)
     }
@@ -748,26 +750,31 @@ class CredentialServiceV2(val agent: Agent) {
      */
     suspend fun processCredential(messageContext: InboundMessageContext): CredentialExchangeRecord{
         val connection = messageContext.connection
-        val message = messageContext.message
+        val message = messageContext.plaintextMessage
 
-        val issueCredential = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as IssueCredentialMessageV2
-        logger.debug("Processing credential with id ${issueCredential.id}")
+        val issueCredential = MessageSerializer.decodeFromString(message) as IssueCredentialMessageV2
+        logger.info("Processing credential with id ${issueCredential.id}")
 
-        var credentialExchangeRecord = agent.credentialExchangeRepository.getSingleByQuery(
-            "{\"threadId\": \"${issueCredential.threadId}\", \"role\": \"${CredentialRole.Issuer}\", \"connectionId\": \"${connection?.id}\"}"
-        )
+        val credentialExchangeRecord = agent.credentialExchangeRepository.getByThreadAndRoleAndConnectionId(
+            threadId = issueCredential.threadId,
+            connectionId = connection?.id,
+            role = CredentialRole.Holder.name)
+
+        logger.info("credentialExchangeRecord ========> ${credentialExchangeRecord.toString()}")
+        logger.info("credentialExchange AnonCredsCredentialRequestMetadataKey process => ${credentialExchangeRecord.metadata.toString()}")
 
         val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = RequestCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
+            role = DidCommMessageRole.Sender
         ) ?: throw CredoError("Request message not found")
 
         val offerMessage = didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = OfferCredentialMessageV2.type,
-            role = DidCommMessageRole.Sender
+            role = DidCommMessageRole.Receiver
         )
+        logger.info("request message ${requestMessage.toJsonString()} || \n offer message: ${offerMessage?.toJsonString()}")
 
         // assert
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
@@ -791,10 +798,29 @@ class CredentialServiceV2(val agent: Agent) {
             requestCredentialMessageV2 = requestMessage,
             message = issueCredential
         )
+        logger.info("processCredentialParams ==> ${processCredentialParams.toString()}")
+
         credentialFormatCoordinator.processCredential(processCredentialParams)
         updateState(credentialExchangeRecord, CredentialState.CredentialReceived)
+
+        logger.info("processCredentialParams ==> ${processCredentialParams.toString()}")
         return credentialExchangeRecord
 
+    }
+
+    private suspend fun printAllDidCommMessages() {
+        val msg = agent.didCommMessageRepository.getAll()
+        msg.forEach { cred ->
+            logger.info("msgs: $cred")
+        }
+    }
+
+    private suspend fun printAllCredentials() {
+        val msg = agent.credentialExchangeRepository.getAll()
+        logger.info("All credentials ===> ")
+        msg.forEach { cred ->
+            logger.info("$cred")
+        }
     }
 
     /**
@@ -807,6 +833,8 @@ class CredentialServiceV2(val agent: Agent) {
     suspend fun acceptCredential(
         credentialExchangeRecord: CredentialExchangeRecord
     ): Pair<CredentialExchangeRecord, CredentialAckMessageV2> {
+
+        logger.info("accept <<<<<<<<<")
         // Ensure the protocol and state are valid before proceeding
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialExchangeRecord.assertState(CredentialState.CredentialReceived)
@@ -821,10 +849,14 @@ class CredentialServiceV2(val agent: Agent) {
             )
         }
 
+        logger.info("ack ${ackMessage.toString()}")
+
         updateState(
             credentialRecord = credentialExchangeRecord,
             newState = CredentialState.Done
         )
+
+        logger.info("credentialExchangeRecord ack ${credentialExchangeRecord.toString()}")
 
         return credentialExchangeRecord to ackMessage
     }
@@ -907,10 +939,6 @@ class CredentialServiceV2(val agent: Agent) {
     private fun getFormatServices(
         credentialFormats: Map<String, JsonElement>
     ): List<CredentialFormatService<*>> {
-        logger.info("credentialFormats:")
-        for ((key, value) in credentialFormats) {
-            logger.info("  $key: $value")
-        }
         return credentialFormats.keys.mapNotNull { getFormatServiceForFormatKey(it) }
             .distinct()
     }
@@ -918,19 +946,15 @@ class CredentialServiceV2(val agent: Agent) {
     private fun getFormatServicesByList(
         credentialFormats: List<Format>
     ): List<CredentialFormatService<*>> {
-        logger.info("credentialFormats:")
-
         return credentialFormats.mapNotNull { getFormatServiceForFormat(it.attachId) }
             .distinct()
     }
 
     private fun getFormatServiceForFormatKey(formatKey: String): CredentialFormatService<*>? {
-        logger.info("format key: $formatKey")
         return credentialFormats.find {  formatService -> formatService.formatKey == formatKey }
     }
 
     private fun getFormatServiceForFormat(format: String): CredentialFormatService<*>? {
-        logger.info("format: $format")
         return credentialFormats.find { it.supportsFormat(format) }
     }
 
@@ -947,7 +971,6 @@ class CredentialServiceV2(val agent: Agent) {
      * @return the credential format service objects in an array - derived from format object keys
      */
     private fun getFormatServicesFromMessage(messageFormats: List<Format>): List<CredentialFormatService<*>> {
-        logger.info("messageformats: ${messageFormats.toString()}")
         return messageFormats.mapNotNull { getFormatServiceForFormat(it.format) }.distinct()
     }
 
@@ -1302,6 +1325,7 @@ class CredentialServiceV2(val agent: Agent) {
             messageType = messageType
         ) ?: return null
 
+        logger.info("messageStr: ${messageStr.toString()}")
         return runCatching {
             MessageSerializer.decodeFromString(messageStr) as T
         }.getOrElse {

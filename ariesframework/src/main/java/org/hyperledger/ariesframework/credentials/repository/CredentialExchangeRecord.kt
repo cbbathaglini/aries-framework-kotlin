@@ -42,6 +42,7 @@ data class CredentialExchangeRecord(
     var credentialAttributes: List<CredentialPreviewAttribute>? = null,
     var indyRequestMetadata: String? = null,
     var credentialDefinitionId: String? = null,
+
     var role: CredentialRole? = null,
     var revocationNotification: RevocationNotification? = null,
     var formats: List<Format>? = emptyList()
@@ -54,6 +55,11 @@ data class CredentialExchangeRecord(
         }
         tags["threadId"] = threadId
         tags["state"] = state.name
+
+
+        if (role != null) {
+            tags["role"] = role!!.name
+        }
 
         return tags
     }

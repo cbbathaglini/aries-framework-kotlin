@@ -3562,8 +3562,12 @@ data class CredentialRequestTuple (
             this.`metadata`
         )
     }
-    
-    companion object
+
+    override fun toString(): String {
+        return "CredentialRequestTuple(`request`=${request.toJson()}, `metadata`=${metadata.toJson()})"
+    }
+
+
 }
 
 public object FfiConverterTypeCredentialRequestTuple:

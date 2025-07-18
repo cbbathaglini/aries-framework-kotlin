@@ -10,7 +10,13 @@ data class AnonCredsCredentialRequestMetadata(
     val nonce: String
 ) {
 
-    fun toJson(): String = Json.encodeToString(AnonCredsCredentialRequestMetadata.serializer(), this)
+    fun toJson(): String {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        return json.encodeToString(AnonCredsCredentialRequestMetadata.serializer(), this)
+    }
     override fun toString(): String {
         return "AnonCredsCredentialRequestMetadata(link_secret_blinding_data=$link_secret_blinding_data, link_secret_name='$link_secret_name', nonce='$nonce')"
     }

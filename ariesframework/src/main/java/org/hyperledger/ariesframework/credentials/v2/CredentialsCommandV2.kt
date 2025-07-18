@@ -135,9 +135,13 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         //val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
         val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
 
+        logger.info("acceptOffer : $message")
+
         val connectionRecord = agent.connectionRepository.getById(credentialExchange.connectionId!!)
+        logger.info("connectionRecord : ${connectionRecord.toString()}")
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
+        logger.info("after send message")
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.CredentialOfferAccepted,
@@ -148,7 +152,9 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
                 credentials = credentialExchange.credentials,
             ),
         )
-
+        for (historyRecord in agent.historyRepository.getAll()) {
+            logger.info(" ----> ${historyRecord.toString()}")
+        }
         return credentialExchange
     }
 

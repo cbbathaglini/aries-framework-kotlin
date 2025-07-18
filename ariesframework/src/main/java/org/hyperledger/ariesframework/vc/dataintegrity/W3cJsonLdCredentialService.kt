@@ -9,21 +9,29 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
+import org.hyperledger.ariesframework.vc.service.W3cCredentialService
+import org.slf4j.LoggerFactory
 
 class W3cJsonLdCredentialService(
     private val agent: Agent,
     private val w3cCredentialsModuleConfig: W3cCredentialsModuleConfig
 ) {
+    private val logger = LoggerFactory.getLogger(W3cJsonLdCredentialService::class.java)
 
     // [TODO] revisar a implementacao
     suspend fun getExpandedTypesForCredential(
         credential: W3cJsonLdVerifiableCredential
     ): Map<String, String> {
 
-        return emptyMap()
-
+//        logger.info("credential => $credential")
+//
+//        val localContexts = mapOf(
+//            "https://www.w3.org/2018/credentials/v1" to loadContextFromAssets("contexts/credentials-v1.json"),
+//            "https://w3id.org/security/data-integrity/v2" to loadContextFromAssets("contexts/security-data-integrity-v2.json")
+//        )
+//
 //        val credentialJson = credential.toJsonString()
-//        val documentLoader = w3cCredentialsModuleConfig.documentLoader
+//        //val documentLoader = w3cCredentialsModuleConfig.documentLoader
 //
 //        val jsonElementCredential = Json.parseToJsonElement(credentialJson)
 //        val expanded = expandJsonLd(
@@ -39,8 +47,14 @@ class W3cJsonLdCredentialService(
 //            is List<*> -> types.filterIsInstance<String>()
 //            else -> emptyList()
 //        }
+
+        return  emptyMap()
     }
 
+//    fun loadContextFromAssets(path: String): String {
+//        val context = MyApplication.instance.applicationContext
+//        return context.assets.open(path).bufferedReader().use { it.readText() }
+//    }
 
     suspend fun expandJsonLd(
         input: JsonElement,

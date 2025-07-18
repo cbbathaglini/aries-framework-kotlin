@@ -414,7 +414,6 @@ class WalletMainActivity : AppCompatActivity() {
                     val connectionRecord = app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
                     Log.i("IDD", connectionRecord.toString())
                     app.agent.credentialsV2.acceptOffer(
-                        //AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
                         AcceptCredentialOfferOptionsV2(
                             credentialExchangeRecord = credentialExchangeRecord,
                             credentialFormats = credentialExchangeRecord.formats,

@@ -78,7 +78,8 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
 
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
-        logger.debug(type)
+        logger.info("serializers: ${serializers.toString()}")
+        logger.info("type: $type")
         return if (serializers.containsKey(type)) {
             serializers[type]!!
         } else {

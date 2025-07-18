@@ -5,6 +5,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
@@ -18,6 +19,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.info("IssueCredentialHandlerV2 init")
+
         val credentialRecord = agent.credentialServiceV2.processCredential(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToCredential(
@@ -27,13 +29,14 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         if (shouldAutoRespond) {
             val message = acceptCredential(credentialRecord)
+            logger.info("message accepted: ${message.toString()}")
             return OutboundMessage(message, messageContext.connection!!)
         }
 
         return null
     }
 
-    private suspend fun acceptCredential(credentialRecord: CredentialExchangeRecord): RequestCredentialMessageV2 {
+    private suspend fun acceptCredential(credentialRecord: CredentialExchangeRecord): CredentialAckMessageV2 {
         logger.info("Automatically sending acknowledgement with autoAccept")
 
         val (_, ackMessage) = agent.credentialServiceV2.acceptCredential(credentialRecord)
@@ -43,8 +46,12 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
             throw CredoError("No acknowledgement message found for credential record ID ${credentialRecord.id}")
         }
 
-        return agent.credentialServiceV2.findRequestMessage(credentialRecord.id)
+        logger.info("Searching for request message")
+        val request =  agent.credentialServiceV2.findRequestMessage(credentialRecord.id)
             ?: throw CredoError("No request message found for credential record ID ${credentialRecord.id}")
+        logger.info("request: ${request.toString()}")
+
+        return ackMessage
     }
 
 }

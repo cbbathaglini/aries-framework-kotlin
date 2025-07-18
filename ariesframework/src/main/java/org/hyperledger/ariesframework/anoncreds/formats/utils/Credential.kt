@@ -1,12 +1,17 @@
 package org.hyperledger.ariesframework.anoncreds.formats.utils
 
+import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredentialValue
 import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredentialValues
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.slf4j.LoggerFactory
 
 class Credential {
+
     companion object{
+        private val logger = LoggerFactory.getLogger(Credential::class.java)
+
         fun convertAttributesToCredentialValues(
             attributes: List<CredentialPreviewAttribute>
         ): AnonCredsCredentialValues{
@@ -24,6 +29,10 @@ class Credential {
         ) {
             val firstKeys = firstValues.keys
             val secondKeys = secondValues.keys
+
+            logger.info("firstValues: ${firstValues.toString()}")
+            logger.info("secondValues: ${secondValues.toString()}")
+
 
             if (firstKeys.size != secondKeys.size) {
                 throw IllegalArgumentException(
