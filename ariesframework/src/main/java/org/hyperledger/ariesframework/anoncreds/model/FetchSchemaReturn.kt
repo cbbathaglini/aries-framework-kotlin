@@ -21,7 +21,7 @@ data class FetchSchemaReturn (
         fun fromJson(jsonElementSchema: JsonElement, schemaId: String): FetchSchemaReturn {
             val objectSchema = jsonElementSchema.jsonObject
 
-            logger.info("objectSchema.get(\"attrNames\"): ${objectSchema.get("attrNames")}")
+            logger.info("objectSchema ${objectSchema.toString()}")
 
             val attrNamesList: List<String> = objectSchema["attrNames"]
                 ?.jsonArray                 // Ensure it's a JsonArray

@@ -494,7 +494,7 @@ class CredentialServiceV2(val agent: Agent) {
         )
 
         val requestCredentialMessageV2 = credentialFormatCoordinator.acceptOffer(acceptOfferParams)
-        logger.info("requestCredentialMessageV2: ${requestCredentialMessageV2.toJsonString()}")
+        logger.info("requestCredentialMessageV2 --------- ${requestCredentialMessageV2.toJsonString()}")
         credentialExchangeRecord.autoAcceptCredential = options.autoAcceptCredential ?: credentialExchangeRecord.autoAcceptCredential
 
         updateState(credentialExchangeRecord, CredentialState.RequestSent)

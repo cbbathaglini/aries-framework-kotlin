@@ -240,7 +240,6 @@ class AnoncredsCredentialFormatService(
     override suspend fun acceptOffer(
         attachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        //credentialFormats: Map<String, JsonElement>?,
         credentialFormats: List<Format>?,
         attachmentId: String?,
         offerCredentialMessageV2: OfferCredentialMessageV2
@@ -253,22 +252,18 @@ class AnoncredsCredentialFormatService(
 
         val credentialDefinition =
             agent.ledgerService.getCredentialDefinition(offer.credDefId)
+        logger.info("credential definition: ${credentialDefinition}")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val holderDid = getHolderDid(credentialExchangeRecord)
 
-        var credentialDefinitionUniffi : CredentialDefinition? = null
-        try {
-            credentialDefinitionUniffi = CredentialDefinition(credentialDefinition)
-            logger.info("credentialDefinitionUniffi: ${credentialDefinitionUniffi.toJson()}")
-        }catch (e: Exception){
-            logger.error("error: ${e.message}, ${e.cause}")
-        }
+        val credentialDefinitionUniffi : CredentialDefinition = CredentialDefinition(credentialDefinition)
+        logger.info("credentialDefinitionUniffi: ${credentialDefinitionUniffi.toJson()}")
 
         val credReqTuple = Prover().createCredentialRequest(
             null,
             holderDid,
-            credentialDefinitionUniffi!!,
+            credentialDefinitionUniffi,
             linkSecret,
             agent.wallet.linkSecretId!!,
             credentialOffer,
@@ -476,7 +471,9 @@ class AnoncredsCredentialFormatService(
         //result
         var revocationRegistryResult : FetchRevocationRegistryDefinitionResult? = null
         if (anonCredsCredential.revRegId != null){
+            logger.info("anonCredsCredential: ${anonCredsCredential.toString()}")
            val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)
+            logger.info("revocation: ${revocation.toString()}")
            revocationRegistryResult = Json.decodeFromString<FetchRevocationRegistryDefinitionResult>(revocation)
         }
         logger.info("revocationRegistryResult: ${revocationRegistryResult.toString()}")

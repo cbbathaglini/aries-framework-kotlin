@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRecord
@@ -252,9 +253,17 @@ class LedgerService(val agent: Agent) {
         logger.debug("Get RevocationRegistryDefinition with id: $id")
         val request = ledger.buildGetRevocRegDefRequest(null, id)
         val response = submitReadRequest(request)
-        val json = Json.decodeFromString<JsonObject>(response)
-        val result = json["result"] as JsonObject?
+
+        val json = Json {
+            ignoreUnknownKeys = true
+        }
+
+        val jsonObject = json.decodeFromString<JsonObject>(response)
+        val result = jsonObject["result"]?.jsonObject
             ?: throw Exception("Invalid rev reg def response")
+
+
+        logger.info("result: ${result.toString()}")
         val indyData = result["data"] as JsonObject?
             ?: throw Exception("Invalid rev reg def response")
         val issuerId = id.split(":")[0]
@@ -264,7 +273,10 @@ class LedgerService(val agent: Agent) {
             },
         )
 
-        return Json.encodeToString(data)
+        val dataresponse= Json.encodeToString(data)
+        logger.info("dataresponse: ${dataresponse.toString()}")
+        return dataresponse
+
     }
 
     suspend fun getRevocationRegistryDelta(
