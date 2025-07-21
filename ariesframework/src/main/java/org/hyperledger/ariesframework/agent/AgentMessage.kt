@@ -29,8 +29,16 @@ open class AgentMessage(
     @SerialName("~transport")
     var transport: TransportDecorator? = null,
 ) {
+
     val threadId: String
         get() = thread?.threadId ?: id
+
+    fun setThread(threadId: String, parentThreadId: String?) {
+        this.thread = ThreadDecorator(
+            threadId = threadId,
+            parentThreadId = parentThreadId
+        )
+    }
 
     open fun requestResponse(): Boolean {
         return true
@@ -42,6 +50,10 @@ open class AgentMessage(
 
     fun replaceNewDidCommPrefixWithLegacyDidSov() {
         type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)
+    }
+
+    override fun toString(): String {
+        return "AgentMessage(id='$id', type='$type', thread=$thread, transport=$transport)"
     }
 
     companion object {
@@ -60,11 +72,14 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     @OptIn(InternalSerializationApi::class)
     fun <T : AgentMessage> registerMessage(type: String, clazz: KClass<T>) {
         serializers[type] = clazz.serializer() as KSerializer<AgentMessage>
+        logger.debug(type)
         serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = clazz.serializer() as KSerializer<AgentMessage>
     }
 
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
+        logger.info(" ==>>>> serializers: ${serializers.toString()}")
+        logger.info("type: $type")
         return if (serializers.containsKey(type)) {
             serializers[type]!!
         } else {

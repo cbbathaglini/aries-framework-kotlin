@@ -6,6 +6,13 @@
     <string name="delete">Delete</string>
     <string name="title_delete_cred">Delete Credential</string>
     <string name="title_delete_cred_detail">Delete the selected credential?</string>
+    <string name="title_historical_list">Connections Historical</string>
+    <string name="title_historical_detail">Historical detail</string>
+    <string name="get_all_credentials_button">get_all_credentials</string>
+    <string name="get_all_credentials">Get all credentials in this connection</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
+    <string name="send_message">Send message</string>
+    <string name="request_proof">Request Proof</string>
+    <string name="delete_connection">Delete connection</string>
 </resources>

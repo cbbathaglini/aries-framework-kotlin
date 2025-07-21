@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.connection
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.InboundMessageContext
@@ -7,6 +8,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
+import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.SignatureDecorator
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
@@ -23,7 +25,11 @@ import org.hyperledger.ariesframework.connection.models.didauth.ReferencedAuthen
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.connection.models.didauth.publicKey.Ed25119Sig2018
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
+import org.hyperledger.ariesframework.oob.models.OutOfBandRole
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.routing.Routing
 import org.slf4j.LoggerFactory
@@ -74,7 +80,7 @@ class ConnectionService(val agent: Agent) {
             authentication = listOf(auth),
         )
 
-        return ConnectionRecord(
+        val connectionRecord = ConnectionRecord(
             _tags = tags,
             state = state,
             role = role,
@@ -90,6 +96,20 @@ class ConnectionService(val agent: Agent) {
             multiUseInvitation = multiUseInvitation,
             mediatorId = routing.mediatorId,
         )
+
+        runBlocking {
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ConnectionCreated,
+                    connectionId = connectionRecord.id,
+                    theirLabel = theirLabel,
+                    associatedRecordId = connectionRecord.id,
+                    content = invitation.toString(),
+                ),
+            )
+        }
+
+        return connectionRecord
     }
 
     /**
@@ -431,6 +451,16 @@ class ConnectionService(val agent: Agent) {
     }
 
     /**
+     * Retrieve a connection record by id.
+     *
+     * @param id
+     * @return the connection record.
+     */
+    suspend fun getById(id: String): ConnectionRecord {
+        return connectionRepository.getById(id)
+    }
+
+    /**
      * Find connection by sender key and recipient key.
      *
      * @param senderKey the sender key of the received message.
@@ -444,4 +474,112 @@ class ConnectionService(val agent: Agent) {
             """,
         )
     }
+
+
+
+    /**
+     * Assert that an inbound message either has a connection associated with it,
+     * or has everything correctly set up for connection-less exchange (optionally with out of band)
+     *
+     * @param messageContext - the inbound message context
+     */
+    suspend fun assertConnectionOrOutOfBandExchange(
+        messageContext: InboundMessageContext,
+        lastReceivedMessage: AgentMessage? = null,
+        lastSentMessage: AgentMessage? = null,
+        expectedConnectionId: String? = null
+    ) {
+        val connection = messageContext.connection
+        val message : AgentMessage = messageContext.message
+        val senderVerkey = messageContext.senderVerkey
+        val recipientVerkey = messageContext.recipientVerkey
+
+        if (expectedConnectionId != null && connection == null) {
+            throw CredoError("Expected incoming message to be from connection $expectedConnectionId but no connection found.")
+        }
+
+        if (expectedConnectionId != null && connection?.id != expectedConnectionId) {
+            throw CredoError("Expected incoming message to be from connection $expectedConnectionId but connection is ${connection?.id}.")
+        }
+
+        if (connection != null) {
+            connection.assertReady()
+            logger.debug("Processing message with id ${message.id} and connection id ${connection.id}", mapOf("type" to message.type))
+        } else {
+            logger.debug("Processing connection-less message with id ${message.id}", mapOf("type" to message.type))
+
+            val recipientKey = recipientVerkey
+            val senderKey = senderVerkey
+
+            //[TODO] verificar de onde veio o service
+            // set theirService to the value of lastReceivedMessage.service
+//            var theirService = message.service?.resolvedDidCommService ?: lastReceivedMessage?.service?.resolvedDidCommService
+//            var ourService = lastSentMessage?.service?.resolvedDidCommService
+//
+//            val query = """{"invitationRequestsThreadIds": ["${message.threadId}"]}""".trimIndent()
+//            val outOfBandRecord = agent.outOfBandRepository.findSingleByQuery(query)
+//
+//            when (outOfBandRecord?.role) {
+//                OutOfBandRole.Sender -> {
+//                    ourService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
+//                        outOfBandRecord.outOfBandInvitation.services
+//                    )
+//                }
+//                OutOfBandRole.Receiver -> {
+//                    theirService = agent.outOfBandService.getResolvedServiceForOutOfBandServices(
+//                        outOfBandRecord.outOfBandInvitation.services
+//                    )
+//                }
+//                else -> {}
+//            }
+//
+//            if (theirService == null && outOfBandRecord == null) {
+//                throw CredoError("No service for incoming connection-less message and no associated out of band record found.")
+//            }
+//
+//            if (ourService == null && (lastReceivedMessage != null || lastSentMessage != null)) {
+//                throw CredoError("No keys on our side to use for encrypting messages, and previous messages found (in which case our keys MUST also be present).")
+//            }
+//
+//            if ((senderKey == null || recipientKey == null) && (lastReceivedMessage != null || lastSentMessage != null)) {
+//                throw CredoError("Incoming message must have recipientKey and senderKey if there are lastSentMessage or lastReceivedMessage.")
+//            }
+//
+//            if (recipientKey != null && ourService != null) {
+//                val recipientKeyFound = ourService.recipientKeys.any { key -> key.publicKeyBase58 == recipientKey }
+//                if (!recipientKeyFound) {
+//                    throw CredoError("Recipient key $recipientKey not found in our service")
+//                }
+//            }
+//
+//            if (senderKey != null && theirService != null) {
+//                val senderKeyFound = theirService.recipientKeys.any { key -> key.publicKeyBase58 == senderKey }
+//                if (!senderKeyFound) {
+//                    throw CredoError("Sender key $senderKey not found in their service.")
+//                }
+//            }
+        }
+
+    }
+
+    /**
+     * If knownConnectionId is passed, it will compare the incoming connection id with the knownConnectionId, and skip the other validation.
+     *
+     * If no known connection id is passed, it asserts that the incoming message is in response to an attached request message to an out of band invitation.
+     * If is the case, and the state of the out of band record is still await response, the state will be updated to done
+     *
+     */
+    suspend fun matchIncomingMessageToRequestMessageInOutOfBandExchange(
+        messageContext: InboundMessageContext,
+        expectedConnectionId: String? = null
+    ) {
+        val actualConnectionId = messageContext.connection?.id
+
+        if (expectedConnectionId != null && actualConnectionId != expectedConnectionId) {
+            throw CredoError(
+                "Expecting incoming message to have connection $expectedConnectionId, but incoming connection is ${actualConnectionId ?: "undefined"}"
+            )
+        }
+    }
+
 }

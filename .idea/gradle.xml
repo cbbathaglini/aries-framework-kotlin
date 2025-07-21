@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/ariesframework" />
             <option value="$PROJECT_DIR$/ledger-besu-wrapper" />
+            <option value="$PROJECT_DIR$/libraryanoncredsuniffi" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

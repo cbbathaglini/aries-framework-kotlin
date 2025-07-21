@@ -8,6 +8,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.decodeBase64
 import org.hyperledger.ariesframework.encodeBase64
+import org.hyperledger.ariesframework.error.CredoError
+import android.util.Base64
+import kotlinx.serialization.DeserializationStrategy
+import java.math.BigInteger
 import java.util.UUID
 
 @Serializable
@@ -17,10 +21,14 @@ class AttachmentData(
     val links: List<String>? = null,
     var jws: Jws? = null,
     val sha256: String? = null,
-)
+) {
+    override fun toString(): String {
+        return "AttachmentData(base64=$base64, json=$json, links=$links, jws=$jws, sha256=$sha256)"
+    }
+}
 
 @Serializable
-class Attachment(
+data class Attachment(
     @SerialName("@id")
     val id: String,
     val description: String? = null,
@@ -39,6 +47,15 @@ class Attachment(
             data.json != null -> Json.encodeToString(data.json)
             else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
         }
+    }
+
+    fun getDataAsJson(): String {
+        return Json.encodeToString(data.json)
+    }
+
+    fun <T> Attachment.getDataAsJsonByType(deserializer: DeserializationStrategy<T>): T {
+        val jsonString = this.getDataAsJson()
+        return Json.decodeFromString(deserializer, jsonString)
     }
 
     fun addJws(jws: JwsGeneralFormat) {
@@ -62,5 +79,9 @@ class Attachment(
                 data = AttachmentData(base64 = data.encodeBase64()),
             )
         }
+    }
+
+    override fun toString(): String {
+        return "Attachment(id='$id', description=$description, filename=$filename, mimetype=$mimetype, lastModified=$lastModified, byteCount=$byteCount, data=$data)"
     }
 }

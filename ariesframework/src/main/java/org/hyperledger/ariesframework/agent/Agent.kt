@@ -1,10 +1,24 @@
 package org.hyperledger.ariesframework.agent
 
 import ILedgerService
+import RevocationNotificationService
+import RevocationNotificationServiceV2
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
-import org.hyperledger.ariesframework.anoncreds.AnoncredsService
+import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectnessProofRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsHolderService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRegistryService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsIssuerService
+import org.hyperledger.ariesframework.anoncreds.service.AnoncredsService
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRepository
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRepository
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRepository
@@ -15,11 +29,14 @@ import org.hyperledger.ariesframework.connection.DidExchangeService
 import org.hyperledger.ariesframework.connection.JwsService
 import org.hyperledger.ariesframework.connection.PeerDIDService
 import org.hyperledger.ariesframework.connection.repository.ConnectionRepository
-import org.hyperledger.ariesframework.credentials.CredentialService
-import org.hyperledger.ariesframework.credentials.CredentialsCommand
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
 import org.hyperledger.ariesframework.ledger.ledgerBesu.LedgerBesuService
 import org.hyperledger.ariesframework.ledger.ledgerIndy.LedgerIndyService
+import org.hyperledger.ariesframework.credentials.v1.CredentialService
+import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
+import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
+import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
+import org.hyperledger.ariesframework.history.repository.HistoryRepository
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
@@ -30,6 +47,12 @@ import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
+import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
+import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
+import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfigOptions
+import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
+import org.hyperledger.ariesframework.vc.service.W3cCredentialService
+import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
 import org.slf4j.LoggerFactory
 
@@ -59,13 +82,43 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationRegistryRepository = RevocationRegistryRepository(this)
     val anoncredsService = AnoncredsService(this)
     val credentialService = CredentialService(this)
+    val credentialServiceV2 = CredentialServiceV2(this)
     val credentials = CredentialsCommand(this, dispatcher)
+    val credentialsV2 = CredentialsCommandV2(this, dispatcher)
     val credentialRepository = CredentialRepository(this)
+    val historyRepository = HistoryRepository(this)
     val revocationService = RevocationService(this)
+    val revocationNotificationService = RevocationNotificationService(this, dispatcher)
+    val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
+
+    val anoncredsCredentialDefinitionRepository = AnonCredsCredentialDefinitionRepository(this)
+    val anonCredsHolderService = AnonCredsRsHolderService(this)
+    val anonCredsIssuerService = AnonCredsRsIssuerService(this)
+    val anonCredsRegistryService = AnonCredsRegistryService(this)
+    val anonCredsRevocationRegistryDefinitionPrivateRepository = AnonCredsRevocationRegistryDefinitionPrivateRepository(this)
+    val anonCredsKeyCorrectnessProofRepository = AnonCredsKeyCorrectnessProofRepository(this)
+    val anonCredsCredentialDefinitionPrivateRepository = AnonCredsCredentialDefinitionPrivateRepository(this)
+    val anonCredsRevocationRegistryDefinitionRepository = AnonCredsRevocationRegistryDefinitionRepository(this)
+    val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
+    val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
+    val anoncredsmodulesconfig = AnonCredsModuleConfig(
+        agent = this
+    )
+
+//    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
+//        documentLoader = TODO()
+//    )
+    val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
+    val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig)
+    val w3cJwtCredentialService = W3cJwtCredentialService(this)
+    val w3cCredentialRepository = W3cCredentialRepository(this)
+    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository,w3cJsonLdCredentialService, w3cJwtCredentialService)
+
     val proofs = ProofCommand(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
+
     val problemReports = ProblemReportsCommand(this, dispatcher)
 
     private var _isInitialized = false
@@ -144,6 +197,10 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
      */
     fun setOutboundTransport(outboundTransport: OutboundTransport) {
         messageSender.setOutboundTransport(outboundTransport)
+    }
+
+    override fun toString(): String {
+        return "Agent(context=$context, agentConfig=$agentConfig, wallet=$wallet, eventBus=$eventBus, dispatcher=$dispatcher, messageReceiver=$messageReceiver, messageSender=$messageSender, connectionRepository=$connectionRepository, connectionService=$connectionService, didExchangeService=$didExchangeService, peerDIDService=$peerDIDService, jwsService=$jwsService, connections=$connections, mediationRecipient=$mediationRecipient, outOfBandRepository=$outOfBandRepository, outOfBandService=$outOfBandService, oob=$oob, didCommMessageRepository=$didCommMessageRepository, credentialExchangeRepository=$credentialExchangeRepository, ledgerService=$ledgerService, credentialDefinitionRepository=$credentialDefinitionRepository, revocationRegistryRepository=$revocationRegistryRepository, anoncredsService=$anoncredsService, credentialService=$credentialService, credentialServiceV2=$credentialServiceV2, credentials=$credentials, credentialsV2=$credentialsV2, credentialRepository=$credentialRepository, revocationService=$revocationService, revocationNotificationService=$revocationNotificationService, revocationNotificationServicev2=$revocationNotificationServicev2, proofRepository=$proofRepository, proofService=$proofService, proofs=$proofs, basicMessages=$basicMessages, problemReports=$problemReports, _isInitialized=$_isInitialized)"
     }
 
     companion object {

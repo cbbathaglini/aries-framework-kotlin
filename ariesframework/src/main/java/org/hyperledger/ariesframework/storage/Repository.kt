@@ -73,6 +73,7 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun deleteById(id: String) {
         wallet.session!!.update(AskarEntryOperation.REMOVE, type.simpleName!!, id, ByteArray(0), null, null)
+        logger.error("deleted $id")
     }
 
     @OptIn(InternalSerializationApi::class)

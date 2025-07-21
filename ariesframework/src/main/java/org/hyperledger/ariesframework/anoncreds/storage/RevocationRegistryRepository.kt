@@ -11,7 +11,6 @@ class RevocationRegistryRepository(agent: Agent) : Repository<RevocationRegistry
         return findSingleByQuery("{\"credDefId\": \"$credDefId\"}")
     }
 
-    // We don't need lock here because this is for testing only.
     suspend fun incrementRegistryIndex(credDefId: String): Int {
         val record = getSingleByQuery("{\"credDefId\": \"$credDefId\"}")
         record.registryIndex += 1

@@ -1,9 +1,15 @@
 package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.storage.Repository
+import org.json.JSONObject
 
-class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(CredentialExchangeRecord::class, agent) {
+class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(
+    CredentialExchangeRecord::class,
+    agent,
+) {
     suspend fun findByThreadAndConnectionId(threadId: String, connectionId: String?): CredentialExchangeRecord? {
         return if (connectionId != null) {
             findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")
@@ -19,4 +25,45 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
             getSingleByQuery("{\"threadId\": \"$threadId\"}")
         }
     }
+
+    suspend fun getByThreadAndRole(threadId: String, role: CredentialRole?): CredentialExchangeRecord? {
+        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role.toString()}\"}")
+
+    }
+
+    suspend fun getByThreadAndRoleAndConnectionId(threadId: String, role: String?, connectionId: String?): CredentialExchangeRecord {
+        return getSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\", \"role\": \"$role\"}")
+    }
+
+
+    suspend fun findByThreadRoleAndConnectionId(
+        threadId: String,
+        role: CredentialRole?,
+        connectionId: String?,
+    ): CredentialExchangeRecord? {
+        val queryMap = mutableMapOf("threadId" to threadId)
+
+        connectionId?.let { queryMap["connectionId"] = it }
+        role?.let { queryMap["role"] = it.toString() }
+
+        val query = queryMap.entries.joinToString(
+            separator = ", ",
+            prefix = "{",
+            postfix = "}",
+        ) { "\"${it.key}\": \"${it.value}\"" }
+
+        return findSingleByQuery(query)
+    }
+
+    suspend fun getByConnectionId(connectionId: String): List<CredentialExchangeRecord> {
+        return findByQuery("{\"connectionId\": \"$connectionId\"}")
+    }
+
+    suspend fun getCredentialRecordId(credentialRecordId: String?): CredentialExchangeRecord? {
+        val allRecords: List<CredentialExchangeRecord> = getAll()
+        return allRecords.find { record ->
+            record.credentials.any { it.credentialRecordId == credentialRecordId }
+        }
+    }
+
 }

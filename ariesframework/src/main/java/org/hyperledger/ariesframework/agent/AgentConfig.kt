@@ -2,7 +2,7 @@ package org.hyperledger.ariesframework.agent
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.oob.models.HandshakeProtocol
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.routing.Routing

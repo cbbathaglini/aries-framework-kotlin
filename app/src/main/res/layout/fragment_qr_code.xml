@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/qrCodeImageView"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:contentDescription="QR Code" />
+
+        <TextView
+            android:id="@+id/qrCodeTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Texto do QR Code"
+            android:layout_marginTop="24dp"
+            android:textAlignment="center"
+            android:textIsSelectable="true"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:background="@android:color/darker_gray"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:minHeight="48dp" />
+
+    </LinearLayout>
+</ScrollView>

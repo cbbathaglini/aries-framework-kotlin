@@ -5,8 +5,10 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.oob.messages.HandshakeReuseAcceptedMessage
 import org.hyperledger.ariesframework.oob.messages.HandshakeReuseMessage
+import org.hyperledger.ariesframework.oob.models.OutOfBandDidCommService
 import org.hyperledger.ariesframework.oob.models.OutOfBandRole
 import org.hyperledger.ariesframework.oob.models.OutOfBandState
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
@@ -101,4 +103,29 @@ class OutOfBandService(val agent: Agent) {
     suspend fun deleteById(outOfBandId: String) {
         outOfBandRepository.deleteById(outOfBandId)
     }
+
+    // [todo] liberar depois q liberar o ourservice, theirservice
+    /**
+     * Extract a resolved didcomm service from an out of band invitation.
+     *
+     * Currently the first service that can be resolved is returned.
+     */
+//    suspend fun getResolvedServiceForOutOfBandServices(
+//        services: List<Any> // can be String or OutOfBandDidCommService
+//    ): ResolvedDidCommService {
+//        for (service in services) {
+//            when (service) {
+//                is String -> {
+//                    val didServices = agent.didCommDocumentService.resolveServicesFromDid(agentContext, service)
+//                    val didService = didServices.firstOrNull()
+//                    if (didService != null) return didService
+//                }
+//                is OutOfBandDidCommService -> {
+//                    return service.resolvedDidCommService
+//                }
+//            }
+//        }
+//
+//        throw CredoError("Could not extract a service from the out of band invitation.")
+//    }
 }

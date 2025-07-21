@@ -2,6 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
@@ -33,6 +34,11 @@ class CredentialDetailActivity : AppCompatActivity() {
                         CredentialDetailFragment.ARG_CREDENTIAL,
                         intent.getStringExtra(CredentialDetailFragment.ARG_CREDENTIAL),
                     )
+                    putString(
+                        CredentialDetailFragment.ARG_CREDENTIAL_ID,
+                        intent.getStringExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID),
+                    )
+
                 }
             }
 

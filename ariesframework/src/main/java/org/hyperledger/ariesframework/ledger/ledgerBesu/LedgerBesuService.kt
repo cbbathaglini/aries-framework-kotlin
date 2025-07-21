@@ -6,9 +6,12 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import anoncreds_uniffi.Issuer
 import indy_vdr_uniffi.Pool
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
@@ -143,15 +146,29 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         if (this.ledgerBesu == null) {
             throw Exception("Ledger não foi inicializado")
         }
-        var credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+        val credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+        logger.info("credentialDefinition >>> ${credentialDefinition.toString()}")
+
+        val json = Json { ignoreUnknownKeys = true }
+        val innerJson = json.parseToJsonElement(credentialDefinition.value)
+        logger.info("innerJson >>> ${innerJson.toString()}")
         val credDef = mapOf(
             "issuerId" to JsonPrimitive(credentialDefinition.issuerId),
             "schemaId" to JsonPrimitive(credentialDefinition.schemaId),
             "type" to JsonPrimitive(credentialDefinition.credDefType),
             "tag" to JsonPrimitive(credentialDefinition.tag),
-            "value" to JsonPrimitive(credentialDefinition.value),
+            "value" to innerJson,
         )
-        return Json.encodeToString(credDef)
+        logger.info("credDef >>> ${credDef.toString()}")
+        var encode : String = "oi"
+        try{
+            encode = Json.encodeToString(credDef)
+        }catch (e: Throwable){
+            logger.error("encodeToString >>> ${e.message}")
+        }
+
+        logger.info("encode >>> ${encode}")
+        return encode
     }
 
     override suspend fun registerRevocationRegistryDefinition(

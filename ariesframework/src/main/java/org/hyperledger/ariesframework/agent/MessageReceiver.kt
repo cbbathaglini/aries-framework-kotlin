@@ -16,6 +16,7 @@ class MessageReceiver(val agent: Agent) {
         try {
             val decryptedMessage = agent.wallet.unpack(encryptedMessage)
             val message = MessageSerializer.decodeFromString(decryptedMessage.plaintextMessage)
+            logger.info("mensagem :: $message.to")
             val connection = findConnection(decryptedMessage, message)
             val messageContext = InboundMessageContext(
                 message,

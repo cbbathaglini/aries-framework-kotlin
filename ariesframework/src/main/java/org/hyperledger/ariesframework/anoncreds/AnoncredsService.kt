@@ -15,7 +15,14 @@ class AnoncredsService(val agent: Agent) {
     suspend fun createLinkSecret(): String {
         val linkSecretId = java.util.UUID.randomUUID().toString()
         val linkSecret = anoncreds_uniffi.createLinkSecret()
-        agent.wallet.session!!.update(AskarEntryOperation.INSERT, secretCategory, linkSecretId, linkSecret.toByteArray(), null, null)
+        agent.wallet.session!!.update(
+            AskarEntryOperation.INSERT,
+            secretCategory,
+            linkSecretId,
+            linkSecret.toByteArray(),
+            null,
+            null,
+        )
         return linkSecretId
     }
 
@@ -25,8 +32,12 @@ class AnoncredsService(val agent: Agent) {
         return String(linkSecret.value())
     }
 
-    suspend fun getCredentialsForProofRequest(proofRequest: ProofRequest, referent: String): List<IndyCredentialInfo> {
-        val requestedAttribute = proofRequest.requestedAttributes[referent] ?: proofRequest.requestedPredicates[referent]?.asProofAttributeInfo()
+    suspend fun getCredentialsForProofRequest(
+        proofRequest: ProofRequest,
+        referent: String,
+    ): List<IndyCredentialInfo> {
+        val requestedAttribute = proofRequest.requestedAttributes[referent]
+            ?: proofRequest.requestedPredicates[referent]?.asProofAttributeInfo()
             ?: throw Exception("Referent not found in proof request")
         val tags = mutableMapOf<String, String>()
         if (requestedAttribute.names == null && requestedAttribute.name == null) {
@@ -47,7 +58,7 @@ class AnoncredsService(val agent: Agent) {
         return credentials.map { credentialRecord ->
             IndyCredentialInfo(
                 credentialRecord.credentialId,
-                emptyMap(), // We don't use attrs.
+                credentialRecord.parseCredential(credentialRecord.credential),
                 credentialRecord.schemaId,
                 credentialRecord.credentialDefinitionId,
                 credentialRecord.revocationRegistryId,

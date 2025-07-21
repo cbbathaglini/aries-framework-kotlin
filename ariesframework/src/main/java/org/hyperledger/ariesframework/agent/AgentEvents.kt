@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.agent
 
+import org.hyperledger.ariesframework.basicmessage.repository.BasicMessageRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
@@ -13,6 +14,10 @@ sealed interface AgentEvents {
     class OutOfBandEvent(val record: OutOfBandRecord) : AgentEvents
     class CredentialEvent(val record: CredentialExchangeRecord) : AgentEvents
     class ProofEvent(val record: ProofExchangeRecord) : AgentEvents
-    class BasicMessageEvent(val message: String) : AgentEvents
+    class BasicMessageEvent(val record: BasicMessageRecord) : AgentEvents
     class ProblemReportEvent(val message: BaseProblemReportMessage) : AgentEvents
+    class ProblemReportNotificationEvent(val message: BaseProblemReportMessage) : AgentEvents
+    class RevocationNotificationReceivedEvent(val record: CredentialExchangeRecord) : AgentEvents
+    class RevocationNotificationReceivedEventV2(val record: CredentialExchangeRecord) : AgentEvents
+    class CredentialEventV2(val record: CredentialExchangeRecord) : AgentEvents
 }

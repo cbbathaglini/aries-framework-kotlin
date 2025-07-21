@@ -14,8 +14,12 @@ class Dispatcher(val agent: Agent) {
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
         logger.debug("Dispatching message of type: ${messageContext.message.type}")
+
+        //printDispatcherMessages(messageContext)
+
+        logger.info("message: ${messageContext.message}")
         val handler = handlers[messageContext.message.type]
-            ?: throw Exception("No handler for message type: ${messageContext.message.type}")
+            ?: throw Exception("No handler for message type: ${messageContext.message.type} - ${messageContext.plaintextMessage}")
 
         try {
             val outboundMessage = handler.handle(messageContext)
@@ -28,6 +32,17 @@ class Dispatcher(val agent: Agent) {
         } catch (e: Exception) {
             logger.error("Failed to dispatch message of type: ${messageContext.message.type}")
             throw e
+        }
+    }
+
+    private fun printDispatcherMessages(messageContext: InboundMessageContext) {
+        logger.info("message: ${messageContext.message}")
+        logger.info("plaintextMessage: ${messageContext.plaintextMessage}")
+        logger.info("type of message: ${messageContext.message.type}")
+
+        logger.info("all handlers available -->")
+        handlers.forEach { (key, value) ->
+            logger.info("Type = $key, Handler = $value")
         }
     }
 

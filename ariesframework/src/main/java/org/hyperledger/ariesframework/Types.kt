@@ -9,11 +9,22 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.storage.BaseRecord
 
 typealias Tags = Map<String, String>
 fun Tags.toJsonString(): String {
     return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), this)
 }
+
+//typealias Tags = Map<String, Any?>
+//fun Tags.toJsonString(): String {
+//    val stringMap = this.mapNotNull { (key, value) ->
+//        value?.toString()?.let { key to it }
+//    }.toMap()
+//
+//    return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), stringMap)
+//}
 
 fun List<String>.toJsonString(): String {
     return Json.encodeToString(ListSerializer(String.serializer()), this)
@@ -45,7 +56,7 @@ data class OutboundPackage(
 
 data class OutboundMessage(
     val payload: AgentMessage,
-    val connection: ConnectionRecord,
+    val connection: ConnectionRecord? = null,
 )
 
 @Serializable
@@ -87,6 +98,45 @@ data class InboundMessageContext(
         return connection
     }
 }
+
+data class OutboundMessageContext(
+    val message: AgentMessage,
+    val connection: ConnectionRecord? = null,
+    //val serviceParams: ServiceMessageParams? = null,
+//    val outOfBand: OutOfBandRecord? = null,
+    val associatedRecord: BaseRecord? = null,
+    val sessionId: String? = null,
+    val inboundMessageContext: InboundMessageContext? = null
+) {
+
+    fun assertReadyConnection(): ConnectionRecord {
+        return connection?.also { it.assertReady() }
+            ?: throw CredoError("No connection associated with outgoing message ${message.type}")
+    }
+
+
+    fun toJson(): Map<String, Any?> {
+        return mapOf(
+            "message" to message,
+            "associatedRecord" to associatedRecord,
+            "connection" to connection
+        )
+    }
+}
+
+//data class ServiceMessageParams(
+//    val senderKey: Key,
+//    val service: ResolvedDidCommService,
+//    val returnRoute: Boolean? = null
+//)
+//
+//@Serializable
+//data class ResolvedDidCommService(
+//    val id: String,
+//    val serviceEndpoint: String,
+//    val recipientKeys: List<Key>,
+//    val routingKeys: List<Key>
+//)
 
 enum class AckStatus {
     OK,

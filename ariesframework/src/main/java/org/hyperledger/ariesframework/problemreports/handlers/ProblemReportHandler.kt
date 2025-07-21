@@ -6,8 +6,11 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.problemreports.messages.BaseProblemReportMessage
+import org.slf4j.LoggerFactory
 
 class ProblemReportHandler(val agent: Agent, override val messageType: String) : MessageHandler {
+    private val logger = LoggerFactory.getLogger(ProblemReportHandler::class.java)
+
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         val message = messageContext.message as BaseProblemReportMessage
         agent.eventBus.publish(AgentEvents.ProblemReportEvent(message))
