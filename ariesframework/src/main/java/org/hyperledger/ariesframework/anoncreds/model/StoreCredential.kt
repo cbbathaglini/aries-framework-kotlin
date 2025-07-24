@@ -1,11 +1,15 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
+import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
+import org.slf4j.LoggerFactory
 import java.util.UUID
+import kotlin.math.log
 
 class StoreCredential {
 
     companion object{
+        private val logger = LoggerFactory.getLogger(StoreCredential::class.java)
         fun getStoreCredentialOptions(
             options: StoreCredentialOptions,
             indyNamespace: String? = null
@@ -15,42 +19,94 @@ class StoreCredential {
             val schema = options.schema
             val credential = options.credential
             val credentialDefinition = options.credentialDefinition
-            val revocationRegistry = options.revocationRegistry
+            var revocationRegistry : RevocationRegistryInfo? = options.revocationRegistry
 
-            return StoreCredentialOptions(
-                credentialId = UUID.randomUUID().toString(),
-                credentialRequestMetadata = credentialRequestMetadata,
-                credential = credential,
-                credentialDefinitionId = if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
-                    Indyidentifiers.getQualifiedDidIndyDid(credentialDefinitionId, indyNamespace ?: "")
+            logger.info("revocationRegistry>> ${revocationRegistry.toString()}")
+            logger.info("credentialDefinition>> ${credentialDefinition.toString()}")
+            logger.info("schema>> ${schema.toString()}")
+
+            val credDefId =
+                if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
+                    Indyidentifiers.getQualifiedDidIndyDid(
+                        credentialDefinitionId,
+                        indyNamespace ?: ""
+                    )
                 } else {
                     credentialDefinitionId
-                },
-                credentialDefinition = if (Indyidentifiers.isUnqualifiedDidIndyCredentialDefinition(credentialDefinition)) {
-                    Indyidentifiers.getQualifiedDidIndyCredentialDefinition(credentialDefinition, indyNamespace ?: "")
+                }
+
+
+            val credDef =
+                if (Indyidentifiers.isUnqualifiedDidIndyCredentialDefinition(credentialDefinition)) {
+                    Indyidentifiers.getQualifiedDidIndyCredentialDefinition(
+                        credentialDefinition,
+                        indyNamespace ?: ""
+                    )
                 } else {
                     credentialDefinition
-                },
-                schema = if (Indyidentifiers.isUnqualifiedDidIndySchema(schema)) {
-                    Indyidentifiers.getQualifiedDidIndySchema(schema, indyNamespace ?: "")
+                }
+            logger.info("credDef>> ${credDef.toString()}")
+            val schemaParam = if (Indyidentifiers.isUnqualifiedDidIndySchema(schema)) {
+                Indyidentifiers.getQualifiedDidIndySchema(schema, indyNamespace ?: "")
+            } else {
+                schema
+            }
+
+            logger.info("schemaParam>> ${schemaParam.toString()}")
+            //logger.info("revocationRegistry?.definition?: ${revocationRegistry?.definition?.toString()} ")
+            //logger.info("Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)>> ${Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(revocationRegistry?.definition!!)}")
+
+
+            if (revocationRegistry != null) {
+                logger.info("revocationRegistry>> ${revocationRegistry.toString()}")
+                val a  = revocationRegistry.definition
+
+                if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(a)) {
+                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(1) ${Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(a, indyNamespace ?: "")}")
                 } else {
-                    schema
-                },
-                revocationRegistry = revocationRegistry?.definition?.let {
+                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(2) ${a}")
+                }
+
+                if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
+                    logger.info("getQualifiedDidIndyDid(1) ${Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")}");
+                } else {
+                    logger.info("getQualifiedDidIndyDid(2) ${revocationRegistry.id}")
+                }
+                revocationRegistry.definition.let {
                     RevocationRegistryInfo(
                         definition = if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)) {
-                            Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(it, indyNamespace ?: "")
+                            Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(
+                                it,
+                                indyNamespace ?: ""
+                            )
                         } else {
                             it
                         },
                         id = if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
-                            Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")
+                            Indyidentifiers.getQualifiedDidIndyDid(
+                                revocationRegistry.id,
+                                indyNamespace ?: ""
+                            )
                         } else {
                             revocationRegistry.id
                         }
                     )
                 }
+            }
+
+
+            val options = StoreCredentialOptions(
+                credentialId = UUID.randomUUID().toString(),
+                credentialRequestMetadata = credentialRequestMetadata,
+                credential = credential,
+                credentialDefinitionId = credDefId,
+                credentialDefinition = credDef,
+                schema = schemaParam,
+                revocationRegistry = revocationRegistry
             )
+
+            logger.info("sotore: ${options.toString()}")
+            return options
         }
     }
 }

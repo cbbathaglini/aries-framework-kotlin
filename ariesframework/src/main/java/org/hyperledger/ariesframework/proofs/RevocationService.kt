@@ -19,6 +19,7 @@ import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
+import kotlin.math.log
 
 private enum class ReferentType {
     Attribute,
@@ -197,8 +198,9 @@ class RevocationService(val agent: Agent) {
     }
 
     suspend fun downloadTails(revocationRegistryDefinition: RevocationRegistryDefinition): File {
-        logger.debug("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}")
+        logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}")
         val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
+        logger.info("tailsfolder: ${tailsFolder.name}")
         if (!tailsFolder.exists()) {
             tailsFolder.mkdir()
         }
@@ -206,7 +208,7 @@ class RevocationService(val agent: Agent) {
         val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
         if (!tailsFile.exists()) {
             val tailsLocation = revocationRegistryDefinition.tailsLocation()
-            logger.debug("Downloading tails file from: $tailsLocation")
+            logger.info("Downloading tails file from: $tailsLocation")
             val url = if (tailsLocation.startsWith("http")) {
                 URL(tailsLocation)
             } else {

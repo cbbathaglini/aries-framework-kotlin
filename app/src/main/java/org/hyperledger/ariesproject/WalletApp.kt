@@ -50,7 +50,7 @@ class WalletApp : Application() {
 
         val besuLedgerContig = BesuLedgerConfig(
             chainId= 1337u,
-            nodeAddress= "http://10.139.76.166:8000",
+            nodeAddress= "http://10.139.76.166:8000", //"https://staging-id.cpqd.com.br/api/vdr-rpc-proxy"
         )
         val config = AgentConfig(
             walletKey = key,
@@ -60,8 +60,8 @@ class WalletApp : Application() {
             label = agentLabel,
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = false, // indy
-            useBesuLedger =  true, //besu
+            useLedgerService = true, // indy
+            useBesuLedger =  false, //besu
             besuLedgerConfig = besuLedgerContig,
         )
         agent = Agent(applicationContext, config)

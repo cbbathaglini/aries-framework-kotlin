@@ -23,7 +23,8 @@ data class RevocationRegistryValue(
     val publicKeys: PublicKeys,
     val maxCredNum: Int,
     val tailsLocation: String,
-    val tailsHash: String
+    val tailsHash: String,
+    val issuanceType: String? = null //indy
 )
 
 @Serializable

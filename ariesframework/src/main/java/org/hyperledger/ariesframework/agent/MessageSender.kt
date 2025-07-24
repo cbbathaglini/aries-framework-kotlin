@@ -128,7 +128,6 @@ class MessageSender(val agent: Agent) {
 
     private suspend fun sendMessageToService(message: AgentMessage, service: DidComm, senderKey: String, connectionId: String) {
         val keys = EnvelopeKeys(service.recipientKeys, service.routingKeys ?: emptyList(), senderKey)
-        logger.info("keys: ${keys.senderKey} || ${keys.recipientKeys.size}")
         val outboundPackage = packMessage(message, keys, service.serviceEndpoint, connectionId)
         val outboundTransport = outboundTransportForEndpoint(service.serviceEndpoint)
             ?: throw Exception("No outbound transport found for endpoint ${service.serviceEndpoint}")
@@ -137,7 +136,6 @@ class MessageSender(val agent: Agent) {
 
     private suspend fun packMessage(message: AgentMessage, keys: EnvelopeKeys, endpoint: String, connectionId: String): OutboundPackage {
         var encryptedMessage = agent.wallet.pack(message, keys.recipientKeys, keys.senderKey)
-        logger.info("encryptedMessage: ${encryptedMessage} ")
         var recipientKeys = keys.recipientKeys
         for (routingKey in keys.routingKeys) {
             val forwardMessage = ForwardMessage(recipientKeys[0], encryptedMessage)
@@ -147,7 +145,7 @@ class MessageSender(val agent: Agent) {
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }
-        logger.info("recipientKeys: ${recipientKeys} endpoint: ${endpoint} requestResponse: ${message.requestResponse()}")
+        logger.debug("recipientKeys: ${recipientKeys} endpoint: ${endpoint} requestResponse: ${message.requestResponse()}")
         return OutboundPackage(encryptedMessage, message.requestResponse(), endpoint, connectionId)
     }
 

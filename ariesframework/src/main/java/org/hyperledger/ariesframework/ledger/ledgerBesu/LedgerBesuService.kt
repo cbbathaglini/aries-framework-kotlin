@@ -110,7 +110,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             credentialDefinitionRegistryConfig,
             revocationRegistryConfig,
         )
-        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u, agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "", contratos, agent.agentConfig.besuLedgerConfig?.network, null)
+        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
+            agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "",
+            contratos, agent.agentConfig.besuLedgerConfig?.network,
+            null)
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -179,7 +182,9 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
+        logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
         val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
+        logger.info("revocarionrd: ${revocationRD.toString()}")
         val jsonObject = mapOf(
             "issuerId" to JsonPrimitive(revocationRD.issuerId),
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
@@ -187,6 +192,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "tag" to JsonPrimitive(revocationRD.tag),
             "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
         )
+
+        logger.info("revocarionrd: ${revocationRD.toString()}")
         return Json.encodeToString(JsonObject(jsonObject))
     }
 

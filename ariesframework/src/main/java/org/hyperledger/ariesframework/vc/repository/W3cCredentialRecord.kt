@@ -12,6 +12,8 @@ import org.hyperledger.ariesframework.vc.model.ClaimFormat
 import org.hyperledger.ariesframework.vc.model.W3cCredential
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.model.W3cVerifiableCredential
+import org.hyperledger.ariesframework.vc.util.W3cAnonCredsUtils
+import org.slf4j.LoggerFactory
 
 @Serializable
 class W3cCredentialRecord (
@@ -59,7 +61,6 @@ class W3cCredentialRecord (
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
         //val stringContexts = this.credential.contexts.filter((ctx): ctx is string => typeof ctx === 'string')
-
         tags.putAll(this._tags ?: emptyMap())
 //        if(credential is W3cJsonLdVerifiableCredential){
 //            tags["issuerId"] = credential.issuer.toString()
@@ -95,7 +96,12 @@ class W3cCredentialRecord (
 //        tags["algs"] = listOf((credential as? JwtVerifiableCredential)?.jwt?.header?.alg)
 
 
-        return tags
+        return this._tags!!
+    }
+
+    fun getTagsAux(): Tags {
+
+        return this._tags!!
     }
 
     override fun toString(): String {

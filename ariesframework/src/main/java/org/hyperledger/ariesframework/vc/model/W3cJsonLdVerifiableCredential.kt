@@ -25,17 +25,13 @@ data class W3cJsonLdVerifiableCredential(
     var credentialStatus: W3cCredentialStatus? = null,
 
     @SerialName("proof")
-    val proofs: List<LinkedDataProofBase> // polymorphic base type
+    val proofs: List<LinkedDataProofBase>?  = emptyList(),// polymorphic base type
 
 ) { //: W3cCredential {
 
-    val proofTypes: List<String>
-        get() = proofs.map { it.type }
 
-    val dataIntegrityCryptosuites: List<String>
-        get() = proofs.filterIsInstance<DataIntegrityProof>().map { it.cryptosuite }
 
-    val encoded: Map<String, Any>
+    val encoded: Map<String, Any?>
         get() = mapOf( // simulate JSON for now; use kotlinx.serialization to generate full JSON
             "@context" to context,
             "type" to type,

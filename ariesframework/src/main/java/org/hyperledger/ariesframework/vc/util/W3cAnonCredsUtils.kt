@@ -1,11 +1,13 @@
 package org.hyperledger.ariesframework.vc.util
 
 import W3cCredentialSubject
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsClaimRecord
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRecord
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.utils.Functions
@@ -14,10 +16,12 @@ import org.hyperledger.ariesframework.vc.model.AnonCredsCredentialTags
 import org.hyperledger.ariesframework.vc.model.W3cAnonCredsCredentialMetadata
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
+import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class W3cAnonCredsUtils {
     companion object{
-
+        private val logger = LoggerFactory.getLogger(W3cAnonCredsUtils::class.java)
         fun getW3cRecordAnonCredsTags(
             credentialSubject: W3cCredentialSubject,
             issuerId: String,
@@ -73,18 +77,34 @@ class W3cAnonCredsUtils {
         }
 
         fun anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord: W3cCredentialRecord, useUnqualifiedIdentifiers: Boolean?): AnonCredsCredentialInfo {
-            val w3cCredential = w3cCredentialRecord.credential as W3cJsonLdVerifiableCredential
+            val w3c = w3cCredentialRecord.credential
+
+            val w3cCredential :W3cJsonLdVerifiableCredential = W3cJsonLdVerifiableCredential(
+                context = w3c.context,
+                id = w3c.id,
+                type = w3c.type,
+                issuer = w3c.issuer,
+                issuanceDate = w3c.issuanceDate,
+                credentialSubject = w3c.credentialSubject,
+                expirationDate = w3c.expirationDate,
+                credentialSchema = w3c.credentialSchema,
+                credentialStatus = w3c.credentialStatus
+            )
             if (w3cCredential.credentialSubject.size > 1) {
                 throw CredoError("Credential subject must be an object, not an array.")
             }
 
             val anonCredsTags = getAnonCredsTagsFromRecord(w3cCredentialRecord)
+            logger.info("tags: ${anonCredsTags.toString()}")
             if (anonCredsTags == null) {
                 throw CredoError("AnonCreds tags not found on credential record.")
             }
 
-            val w3cAnonCredsCredentialMetadata = w3cCredentialRecord.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) as W3cAnonCredsCredentialMetadata
+            val w3cAnonCredsCredentialMetadataElement = w3cCredentialRecord.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey)
                 ?:  throw CredoError("AnonCreds metadata not found on credential record.")
+
+            val w3cAnonCredsCredentialMetadata = Json.decodeFromJsonElement<W3cAnonCredsCredentialMetadata>(W3cAnonCredsCredentialMetadata.serializer(), w3cAnonCredsCredentialMetadataElement)
+            logger.info("w3cAnonCredsCredentialMetadata: ${w3cAnonCredsCredentialMetadata.toString()}")
 
             val credentialDefinitionId = anonCredsTags.unqualifiedCredentialDefinitionId
                 ?.takeIf { useUnqualifiedIdentifiers == true }
@@ -99,7 +119,7 @@ class W3cAnonCredsUtils {
                 ?: anonCredsTags.revocationRegistryId
 
 
-            return AnonCredsCredentialInfo(
+            val acinfo = AnonCredsCredentialInfo(
                 credentialId = w3cCredentialRecord.id,
                 attributes = (w3cCredential.credentialSubject.first().claims as AnonCredsClaimRecord),
                 schemaId = schemaId,
@@ -111,14 +131,23 @@ class W3cAnonCredsUtils {
                 createdAt = w3cCredentialRecord.createdAt,
                 updatedAt = w3cCredentialRecord.updatedAt ?: w3cCredentialRecord.createdAt,
             )
+            logger.info("anoncredscredentialinfo::: ${acinfo.toString()}")
+
+
+            return acinfo
         }
 
         fun getAnonCredsTagsFromRecord(record: W3cCredentialRecord): AnonCredsCredentialTags? {
-            val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) as? W3cAnonCredsCredentialMetadata
+            logger.info("record: ${record.toString()}")
+
+
+            val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) //as? W3cAnonCredsCredentialMetadata
+            logger.info("metadata: ${metadata.toString()}")
             if (metadata == null) return null
 
             val tags = record.getTags() as? Map<String, String?> ?: return null
 
+            logger.info("taaaags: ${tags.toString()}")
             val requiredKeys = listOf(
                 "anonCredsLinkSecretId",
                 "anonCredsMethodName",

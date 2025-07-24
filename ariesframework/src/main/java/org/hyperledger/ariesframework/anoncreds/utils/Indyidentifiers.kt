@@ -3,9 +3,13 @@ package org.hyperledger.ariesframework.anoncreds.utils
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
+import org.hyperledger.ariesframework.anoncreds.model.StoreCredential
+import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import kotlin.math.log
 
 object Indyidentifiers {
+    private val logger = LoggerFactory.getLogger(Indyidentifiers::class.java)
 
     private val didIndyAnonCredsBase =
         Pattern.compile("(did:indy:((?:[a-z][_a-z0-9-]*)(?::[a-z][_a-z0-9-]*)?):([1-9A-HJ-NP-Za-km-z]{21,22}))/anoncreds/v0/")
@@ -106,25 +110,31 @@ object Indyidentifiers {
         if (isIndyDid(identifier)) return identifier
 
         //adicionar pq nao ta funfando
-//        if (namespace.isBlank()) {
-//            throw IllegalArgumentException("Missing required indy namespace")
-//        }
+        if (namespace.isBlank()) {
+            throw IllegalArgumentException("Missing required indy namespace")
+        }
 
         return when {
             isUnqualifiedSchemaId(identifier) -> {
+                logger.info("isUnqualifiedSchemaId")
                 val (namespaceIdentifier, schemaName, schemaVersion) = parseIndySchemaId(identifier)
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/SCHEMA/$schemaName/$schemaVersion"
             }
             isUnqualifiedCredentialDefinitionId(identifier) -> {
+                logger.info("isUnqualifiedCredentialDefinitionId")
                 val (namespaceIdentifier, schemaSeqNo, tag) = parseIndyCredentialDefinitionId(identifier)
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/CLAIM_DEF/$schemaSeqNo/$tag"
             }
             isUnqualifiedRevocationRegistryId(identifier) -> {
-                val (namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag) =
+                logger.info("isUnqualifiedRevocationRegistryId")
+
+                val (did, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag, namespace) =
                     parseIndyRevocationRegistryId(identifier)
+                logger.info("did:indy:------:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag")
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag"
             }
             isUnqualifiedIndyDid(identifier) -> {
+                logger.info("isUnqualifiedIndyDid")
                 "did:indy:$namespace:$identifier"
             }
             else -> throw IllegalArgumentException("Cannot create qualified indy identifier for '$identifier' with namespace '$namespace'")
@@ -220,7 +230,10 @@ object Indyidentifiers {
     }
 
     fun parseIndyRevocationRegistryId(revocationRegistryId: String): ParsedIndyRevocationRegistryId {
+        logger.info("parseIndyRevocationRegistryId:::: $revocationRegistryId")
         val didIndyMatch = didIndyRevocationRegistryIdRegex.matcher(revocationRegistryId)
+        logger.info("didIndyMatch1:::: ${didIndyMatch.toString()}")
+
         if (didIndyMatch != null) {
 
             val did = didIndyMatch.group(1)
@@ -230,18 +243,21 @@ object Indyidentifiers {
             val credentialDefinitionTag = didIndyMatch.group(5)
             val revocationRegistryTag = didIndyMatch.group(6)
 
+            logger.info("namespace: $namespace")
             return ParsedIndyRevocationRegistryId(
-                did = did,
-                namespaceIdentifier = namespaceIdentifier,
-                schemaSeqNo = schemaSeqNo,
-                credentialDefinitionTag = credentialDefinitionTag,
-                revocationRegistryTag = revocationRegistryTag,
+                did = did!!,
+                namespaceIdentifier = namespaceIdentifier!!,
+                schemaSeqNo = schemaSeqNo!!,
+                credentialDefinitionTag = credentialDefinitionTag!!,
+                revocationRegistryTag = revocationRegistryTag!!,
                 namespace = namespace
             )
         }
 
         val legacyMatch = unqualifiedRevocationRegistryIdRegex.matcher(revocationRegistryId)
+        logger.info("legacyMatch:::: ${legacyMatch.toString()}")
         if (legacyMatch != null) {
+            logger.info("legacyMatch gorup 1:::: ${legacyMatch.group(1)}")
 
             val did = legacyMatch.group(1)
             val schemaSeqNo = legacyMatch.group(4)
