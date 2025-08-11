@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessa
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
 
 class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
@@ -20,6 +21,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.info("IssueCredentialHandlerV2 init")
 
+        PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage.toString()}") //aq ja tem o encode
         val credentialRecord = agent.credentialServiceV2.processCredential(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToCredential(

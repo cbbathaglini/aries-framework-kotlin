@@ -4,7 +4,7 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2

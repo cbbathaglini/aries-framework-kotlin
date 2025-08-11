@@ -10,7 +10,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
 import org.hyperledger.ariesframework.credentials.formats.LinkedAttachment
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.modelv2.CredentialLinkedAttachmentsResult
+import org.hyperledger.ariesframework.credentials.models.CredentialLinkedAttachmentsResult
 import org.hyperledger.ariesframework.credentials.utils.Functions
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError

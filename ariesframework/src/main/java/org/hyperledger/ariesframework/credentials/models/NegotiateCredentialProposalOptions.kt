@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.credentials.modelv2
+package org.hyperledger.ariesframework.credentials.models
 
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord

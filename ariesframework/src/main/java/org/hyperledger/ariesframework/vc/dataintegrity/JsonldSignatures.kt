@@ -1,7 +1,5 @@
 package org.hyperledger.ariesframework.vc.dataintegrity
 
-import org.hyperledger.ariesframework.vc.model.LinkedDataProof
-
 typealias Constants = Any
 
 interface Suites {

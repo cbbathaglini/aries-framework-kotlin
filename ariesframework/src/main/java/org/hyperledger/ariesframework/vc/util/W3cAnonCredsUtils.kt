@@ -119,7 +119,7 @@ class W3cAnonCredsUtils {
                 ?: anonCredsTags.revocationRegistryId
 
 
-            val acinfo = AnonCredsCredentialInfo(
+            return AnonCredsCredentialInfo(
                 credentialId = w3cCredentialRecord.id,
                 attributes = (w3cCredential.credentialSubject.first().claims as AnonCredsClaimRecord),
                 schemaId = schemaId,
@@ -131,10 +131,7 @@ class W3cAnonCredsUtils {
                 createdAt = w3cCredentialRecord.createdAt,
                 updatedAt = w3cCredentialRecord.updatedAt ?: w3cCredentialRecord.createdAt,
             )
-            logger.info("anoncredscredentialinfo::: ${acinfo.toString()}")
 
-
-            return acinfo
         }
 
         fun getAnonCredsTagsFromRecord(record: W3cCredentialRecord): AnonCredsCredentialTags? {

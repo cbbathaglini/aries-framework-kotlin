@@ -1,24 +1,12 @@
 package org.hyperledger.ariesframework.credentials.v2
-import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
-import org.hyperledger.ariesframework.credentials.CredentialsConstants
-import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
-import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
-import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
-import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptCredentialOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
-import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialOfferOptions
-import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialProposalOptions
-import org.hyperledger.ariesframework.credentials.modelv2.OfferCredentialOptions
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialOfferOptions
+import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialProposalOptions
+import org.hyperledger.ariesframework.credentials.models.OfferCredentialOptions
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.error.CredoError
@@ -82,14 +70,15 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         val connectionRecord = agent.connectionService.getById(options.connectionId)
         logger.debug("Got a credentialProtocol object for version ${options.protocolVersion}")
 
-        val createOfferCredentialOptions = org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialOfferOptionsV2(
-            credentialFormat = options.credentialFormat,
-            autoAcceptCredential = options.autoAcceptCredential,
-            comment = options.comment,
-            goal = options.goal,
-            goalCode = options.goalCode,
-            connectionRecord = connectionRecord
-        )
+        val createOfferCredentialOptions =
+            org.hyperledger.ariesframework.credentials.models.CreateCredentialOfferOptionsV2(
+                credentialFormat = options.credentialFormat,
+                autoAcceptCredential = options.autoAcceptCredential,
+                comment = options.comment,
+                goal = options.goal,
+                goalCode = options.goalCode,
+                connectionRecord = connectionRecord
+            )
         val (credentialExchangeRecord, offerCredentialMessageV2) = agent.credentialServiceV2.createOffer(createOfferCredentialOptions)
         logger.debug("Offer Message successfully created; message= ${offerCredentialMessageV2}")
 

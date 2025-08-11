@@ -1,25 +1,20 @@
 package org.hyperledger.ariesframework.credentials.formats
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.LegacyIndyCredentialFormatService
-import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
-import org.hyperledger.ariesframework.credentials.models.CredentialRole
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptOfferParams
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestParams
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialParams
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessCredentialParams
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessOfferParams
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessRequestParams
-import org.hyperledger.ariesframework.credentials.modelv2.RequestCredentialParams
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferParams
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestParams
+import org.hyperledger.ariesframework.credentials.models.CreateCredentialParams
+import org.hyperledger.ariesframework.credentials.models.ProcessCredentialParams
+import org.hyperledger.ariesframework.credentials.models.ProcessOfferParams
+import org.hyperledger.ariesframework.credentials.models.ProcessRequestParams
+import org.hyperledger.ariesframework.credentials.models.RequestCredentialParams
 import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
@@ -485,6 +480,9 @@ class CredentialFormatCoordinator(
      */
     suspend fun processCredential(params: ProcessCredentialParams) {
         val issueMessage = params.message
+        logger.info("issue message >> ${issueMessage.toString()}")
+        logger.info("issue message >> ${issueMessage.formats.first().toString()}")
+        logger.info("issue message >> ${issueMessage.credentialAttachments.first().toString()}")
         val requestMessage = params.requestCredentialMessageV2
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
@@ -511,7 +509,7 @@ class CredentialFormatCoordinator(
                 formats = issueMessage.formats,
                 attachments = issueMessage.credentialAttachments
             )
-            logger.info("issueAttachment: ${issueAttachment.toString()}")
+            PrintLongLine.print("issueAttachment enco: ${issueAttachment.toString()}")
 
             val requestAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
@@ -528,26 +526,6 @@ class CredentialFormatCoordinator(
                 requestAppendAttachments = requestMessage.attachments
             )
         }
-
-//        agent.credentialRepository.save(
-//            CredentialRecord(
-//                credentialId = credentialId,
-//                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
-//                revocationRegistryId = processedCredential.revRegId(),
-//                linkSecretId = agent.wallet.linkSecretId!!,
-//                credentialObject = processedCredential,
-//                schemaId = processedCredential.schemaId(),
-//                schemaName = schema.name(),
-//                schemaVersion = schema.version(),
-//                schemaIssuerId = schema.issuerId(),
-//                issuerId = credentialDefinition.issuerId(),
-//                credentialDefinitionId = processedCredential.credDefId(),
-//                revocationNotification = null,
-//            ),
-//        )
-//
-//        credentialRecord.credentials.add(CredentialRecordBinding("indy", credentialId))
-
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Receiver,
@@ -568,8 +546,7 @@ class CredentialFormatCoordinator(
         val attachmentId = getAttachmentIdForService(credentialFormatService, formats)
         val attachment = attachments.find { it.id == attachmentId }
             ?: throw CredoError("Attachment with id $attachmentId not found in attachments.")
-
-        logger.info("getAttachmentForService => ${attachment.id}")
+        logger.info("attttt: ${attachment.data.toString()}")
         return attachment
     }
 
@@ -582,13 +559,10 @@ class CredentialFormatCoordinator(
         credentialFormatService: CredentialFormatService<*>,
         formats: List<Format>
     ): String {
-        logger.info("formats: ${formats.toString()}")
-        logger.info("credentialFormatService: ${credentialFormatService.formatKey}")
 
         val format = formats.find { credentialFormatService.supportsFormat(it.format) }
             ?: throw CredoError("No attachment found for service ${credentialFormatService.formatKey}")
 
-        logger.info("getAttachmentIdForService: ${format.toString()}")
         return format.attachId
     }
 

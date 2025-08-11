@@ -1,8 +1,7 @@
-package org.hyperledger.ariesframework.credentials.modelv2
+package org.hyperledger.ariesframework.credentials.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.credentials.formats.CredentialFormat
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 
 @Serializable

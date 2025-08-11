@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.credentials.v2
 
-import com.google.gson.Gson
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.InboundMessageContext
@@ -10,31 +9,29 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.LegacyIndyCredentialFormatService
-import org.hyperledger.ariesframework.anoncreds.formats.legacyindy.LegacyIndyCredentialFormat
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatCoordinator
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
-import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptCredentialOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptOfferParams
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestOptionsV2
-import org.hyperledger.ariesframework.credentials.modelv2.AcceptRequestParams
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialParams
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptOfferParams
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptRequestParams
+import org.hyperledger.ariesframework.credentials.models.CreateCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.models.CreateCredentialParams
 import org.hyperledger.ariesframework.credentials.v2.models.problemreport.CreateCredentialProblemReportOptions
-import org.hyperledger.ariesframework.credentials.modelv2.CreateCredentialRequestOptions
-import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialOfferOptions
-import org.hyperledger.ariesframework.credentials.modelv2.NegotiateCredentialProposalOptions
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessCredentialParams
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessOfferParams
-import org.hyperledger.ariesframework.credentials.modelv2.ProcessRequestParams
-import org.hyperledger.ariesframework.credentials.modelv2.RequestCredentialParams
+import org.hyperledger.ariesframework.credentials.models.CreateCredentialRequestOptions
+import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialOfferOptions
+import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialProposalOptions
+import org.hyperledger.ariesframework.credentials.models.ProcessCredentialParams
+import org.hyperledger.ariesframework.credentials.models.ProcessOfferParams
+import org.hyperledger.ariesframework.credentials.models.ProcessRequestParams
+import org.hyperledger.ariesframework.credentials.models.RequestCredentialParams
 import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
 import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
@@ -57,7 +54,6 @@ import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.composeAutoAccept
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import kotlin.math.log
 
 
 class CredentialServiceV2(val agent: Agent) {
@@ -369,12 +365,9 @@ class CredentialServiceV2(val agent: Agent) {
      */
     suspend fun processOffer(messageContext: InboundMessageContext): CredentialExchangeRecord{
 
-//        val json = Gson().toJson(messageContext.plaintextMessage)
-//        PrintLongLine.print(json)
-
         val connection = messageContext.connection
-        val message = messageContext.message
         val offerMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as OfferCredentialMessageV2
+        PrintLongLine.print("offer message long: ${offerMessage.toString()}")
 
         logger.info("Processing credential offer with id ${offerMessage.id}")
 
@@ -462,6 +455,7 @@ class CredentialServiceV2(val agent: Agent) {
 
 
     suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, RequestCredentialMessageV2>{
+
         val credentialExchangeRecord = options.credentialExchangeRecord
         val credentialFormats = options.credentialFormats
 
@@ -751,9 +745,11 @@ class CredentialServiceV2(val agent: Agent) {
     suspend fun processCredential(messageContext: InboundMessageContext): CredentialExchangeRecord{
         val connection = messageContext.connection
         val message = messageContext.plaintextMessage
+        logger.info("message in process ${message.toString()}")
 
         val issueCredential = MessageSerializer.decodeFromString(message) as IssueCredentialMessageV2
         logger.info("Processing credential with id ${issueCredential.id}")
+        logger.info("Processing credential ${issueCredential.credentialAttachments.first().toString()}")
 
         val credentialExchangeRecord = agent.credentialExchangeRepository.getByThreadAndRoleAndConnectionId(
             threadId = issueCredential.threadId,
@@ -798,7 +794,8 @@ class CredentialServiceV2(val agent: Agent) {
             requestCredentialMessageV2 = requestMessage,
             message = issueCredential
         )
-        logger.info("processCredentialParams ==> ${processCredentialParams.toString()}")
+        PrintLongLine.print("processCredentialParams ==> ${processCredentialParams.toString()}")
+        PrintLongLine.print("processCredentialParams message==> ${processCredentialParams.message.credentialAttachments.toString()}")
 
         credentialFormatCoordinator.processCredential(processCredentialParams)
         updateState(credentialExchangeRecord, CredentialState.CredentialReceived)

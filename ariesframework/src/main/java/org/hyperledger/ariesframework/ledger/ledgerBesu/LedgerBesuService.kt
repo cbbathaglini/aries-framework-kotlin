@@ -4,6 +4,7 @@ import ILedgerService
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
+import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
 import indy_vdr_uniffi.Pool
 import kotlinx.serialization.builtins.MapSerializer
@@ -149,27 +150,27 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         if (this.ledgerBesu == null) {
             throw Exception("Ledger não foi inicializado")
         }
-        val credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+
+        var credentialDefinition : uniffi.indy_besu_vdr.CredentialDefinition? = null
+        try {
+            credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+        }catch (e: Throwable){
+            logger.error("error cred def >>> ${e.message}")
+        }
         logger.info("credentialDefinition >>> ${credentialDefinition.toString()}")
 
         val json = Json { ignoreUnknownKeys = true }
-        val innerJson = json.parseToJsonElement(credentialDefinition.value)
+        val innerJson = json.parseToJsonElement(credentialDefinition!!.value)
         logger.info("innerJson >>> ${innerJson.toString()}")
         val credDef = mapOf(
-            "issuerId" to JsonPrimitive(credentialDefinition.issuerId),
-            "schemaId" to JsonPrimitive(credentialDefinition.schemaId),
-            "type" to JsonPrimitive(credentialDefinition.credDefType),
-            "tag" to JsonPrimitive(credentialDefinition.tag),
+            "issuerId" to JsonPrimitive(credentialDefinition!!.issuerId),
+            "schemaId" to JsonPrimitive(credentialDefinition!!.schemaId),
+            "type" to JsonPrimitive(credentialDefinition!!.credDefType),
+            "tag" to JsonPrimitive(credentialDefinition!!.tag),
             "value" to innerJson,
         )
         logger.info("credDef >>> ${credDef.toString()}")
-        var encode : String = "oi"
-        try{
-            encode = Json.encodeToString(credDef)
-        }catch (e: Throwable){
-            logger.error("encodeToString >>> ${e.message}")
-        }
-
+        var encode : String = Json.encodeToString(credDef)
         logger.info("encode >>> ${encode}")
         return encode
     }

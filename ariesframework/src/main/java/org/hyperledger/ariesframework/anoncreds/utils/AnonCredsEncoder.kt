@@ -1,11 +1,14 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
+import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
+import org.slf4j.LoggerFactory
 import java.math.BigInteger
 import java.security.MessageDigest
 
 class AnonCredsEncoder {
 
     companion object{
+        private val logger = LoggerFactory.getLogger(AnonCredsEncoder::class.java)
         fun encodeCredentialValue(value: Any?): String {
             val isEmptyString = value is String && value.isEmpty()
 
@@ -32,10 +35,11 @@ class AnonCredsEncoder {
                 else -> value.toString()
             }
 
+
             // Codifica como SHA-256, inverte os bytes e converte para BigInteger
             val digest = MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray())
-            val reversed = digest.reversedArray()
-            val bigint = BigInteger(1, reversed)
+            //val reversed = digest.reversedArray() // se usasse  little-endian
+            val bigint = BigInteger(1, digest)
 
             return bigint.toString()
         }

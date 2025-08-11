@@ -149,7 +149,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
     }
 
     override suspend fun getCredentialDefinition(id: String): String {
-        logger.debug("Get CredentialDefinition with id: $id")
+        logger.info("Get CredentialDefinition with id: $id")
         val request = ledger.buildGetCredDefRequest(null, id)
         logger.info("request: ${request.toString()}")
         val response = submitReadRequest(request)

@@ -254,7 +254,7 @@ class AnoncredsCredentialFormatService(
         val credentialOfferJson = offerCredentialMessageV2.getCredentialOfferAttach(attachment.id)
         val credentialOffer = CredentialOffer(credentialOfferJson)
         logger.info("credentialOffer: ${credentialOffer.toJson()}")
-        PrintLongLine.print(">>>> offer: ${offer.toString()}")
+        //PrintLongLine.print(">>>> offer: ${offer.toString()}")
 
 
         val cd = agent.ledgerService.getCredentialDefinition(offer.credDefId)
@@ -460,7 +460,6 @@ class AnoncredsCredentialFormatService(
         requestAppendAttachments: List<Attachment>?
     ) {
 
-        logger.info("---------------------------")
         val credentialRequestMetadata : JsonElement? = credentialExchangeRecord.metadata.get(MetadataKeys.AnonCredsCredentialRequestMetadataKey)
         logger.info("credentialRequestMetadata: ${credentialRequestMetadata}")
 
@@ -468,17 +467,13 @@ class AnoncredsCredentialFormatService(
             throw CredoError("Missing required request metadata for credential exchange with thread id with id ${credentialExchangeRecord.id}")
         }
 
-        if (credentialExchangeRecord.credentialAttributes == null) {
+        if (credentialExchangeRecord.credentialAttributes == null ||
+            (credentialExchangeRecord.credentialAttributes != null && credentialExchangeRecord.credentialAttributes!!.isEmpty())) {
             throw CredoError("Missing credential attributes on credential record. Unable to check credential attributes")
         }
 
-        val base64String = attachment.data.base64
-        val decodedString = Base64Operations.fromBase64ToStr(base64String)
-        logger.info("decodedString: ${decodedString.toString()}")
-
-//        val jsonElement: JsonElement = Json.parseToJsonElement(decodedString)
-//        logger.info("jsonElement: ${jsonElement.jsonObject.keys}--${jsonElement.jsonObject.values}")
-        //val anonCredsCredential = Gson().fromJson(decodedString, AnonCredsCredential::class.java)
+        logger.info("attachment.data.base64: ${attachment.data.base64}")
+        val decodedString = Base64Operations.fromBase64ToStr(attachment.data.base64)
         val anonCredsCredential: AnonCredsCredential = Json.decodeFromString(decodedString)
         logger.info("anonCredsCredential_gson: ${anonCredsCredential.toString()}")
 
@@ -489,36 +484,22 @@ class AnoncredsCredentialFormatService(
 
         val anoncredscredentialDefinition = Json.decodeFromString<AnonCredsCredentialDefinition>(credentialDefinitionResult)
 
-//        val (schemaJson, _) = agent.ledgerService.getSchema(anonCredsCredential.schemaId)
-//        val schema = Schema(schemaJson)
-//
-
-        val (fetchSchemaReturn_aux2,indynamespace) = agent.ledgerService.getSchema(anonCredsCredential.schemaId)
-        logger.info("fetch: ${fetchSchemaReturn_aux2.toString()} || indy: $indynamespace")
-
-        //old
         val fetchSchemaReturn_aux = agent.ledgerService.getSchema(anonCredsCredential.schemaId)
         val jsonElementSchema: JsonElement = Json.parseToJsonElement(fetchSchemaReturn_aux.first)
         logger.info("jsonElementSchema: ${jsonElementSchema.toString()}")
         val fetchSchemaReturn : FetchSchemaReturn = FetchSchemaReturn.fromJson(jsonElementSchema, anonCredsCredential.schemaId)
 
-
         var revocationRegistryResult : FetchIntermediateRevocationRegistryDefinitionResult? = null
         if (anonCredsCredential.revRegId != null){
-            logger.info("anonCredsCredential: ${anonCredsCredential.toString()}")
             val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)
-            logger.info("revocation: ${revocation.toString()}")
             revocationRegistryResult = Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocation)
-            logger.info("revocationRegistryResult: ${revocationRegistryResult.toString()}")
-//            revocationRegistryResult = Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocation)
             revocationRegistryResult.revocationRegistryDefinitionId = anonCredsCredential.revRegId
-//            logger.info("revocationRegistryResult: ${revocationRegistryResult.toString()}")
         }
-//        logger.info("revocationRegistryResult: ${revocationRegistryResult.toString()}")
 
         val revocationRegistryJson =
             anonCredsCredential.revRegId?.let { agent.ledgerService.getRevocationRegistryDefinition(it) }
         logger.info("revocationRegistryJson: ${revocationRegistryJson.toString()}")
+
         val revocationRegistry = revocationRegistryJson?.let { RevocationRegistryDefinition(it) }
         if (revocationRegistry != null) {
             GlobalScope.launch {
@@ -548,11 +529,10 @@ class AnoncredsCredentialFormatService(
             )
         }
 
-        //logger.info("revocationRegistryInfo: ${revocationRegistryInfo.toString()}")
         logger.info("credentialRequestMetadata: ${credentialRequestMetadata.toString()}")
 
         //adicionar pq nao ta funfando
-        //Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
+        Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
         val escaped = credentialRequestMetadata.toString()
         val jsonLiteral = Json.parseToJsonElement(escaped).jsonPrimitive

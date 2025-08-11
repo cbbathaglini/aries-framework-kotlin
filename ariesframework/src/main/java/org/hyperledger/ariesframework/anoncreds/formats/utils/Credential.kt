@@ -44,6 +44,9 @@ class Credential {
                 val firstValue = firstValues[key]
                 val secondValue = secondValues[key]
 
+                logger.info("firstValue: ${firstValue}")
+                logger.info("secondValue: ${secondValue}")
+
                 if (secondValue == null) {
                     throw IllegalArgumentException("Second cred values object has no value for key '$key'")
                 }
