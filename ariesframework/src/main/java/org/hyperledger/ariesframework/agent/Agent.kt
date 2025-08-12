@@ -111,7 +111,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
 //        documentLoader = TODO()
 //    )
     val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
-    val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig)
+    val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig, context)
     val w3cJwtCredentialService = W3cJwtCredentialService(this)
     val w3cCredentialRepository = W3cCredentialRepository(this)
     val w3cCredentialService = W3cCredentialService(w3cCredentialRepository,w3cJsonLdCredentialService, w3cJwtCredentialService)

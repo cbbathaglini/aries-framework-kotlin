@@ -12,6 +12,7 @@ import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.slf4j.LoggerFactory
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import org.hyperledger.ariesframework.util.PrintLongLine
 
 
 class W3cCredentialService(
@@ -28,10 +29,10 @@ class W3cCredentialService(
      * @returns the credential record that was written to storage
      */
     suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
-        //val expandedTypes: Map<String, String> =  w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
+        val expandedTypes2: Map<String, String> =  w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
+        PrintLongLine.print("verifiable: ${jsonLdVerifiableCredential.toString()}")
         val expandedTypes: Map<String, String> = mapOf("type" to "https://www.w3.org/2018/credentials#VerifiableCredential")
         logger.info("expandedTypes: ${expandedTypes.toString()}")
-
 
         val w3cCredential = W3cCredential(
             context = jsonLdVerifiableCredential.context,
