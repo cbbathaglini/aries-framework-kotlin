@@ -168,6 +168,7 @@ class CredentialServiceV2(val agent: Agent) {
                 message = proposalMessage
             )
 
+            credentialExchangeRepository.save(credentialRecord)
             updateState(credentialRecord, CredentialState.ProposalReceived)
             return credentialRecord
         }
@@ -416,6 +417,7 @@ class CredentialServiceV2(val agent: Agent) {
             )
             credentialFormatCoordinator.processOffer(processOfferParams)
 
+            credentialExchangeRepository.save(credentialExchangeRecord)
             updateState(credentialExchangeRecord, CredentialState.OfferReceived)
             return credentialExchangeRecord
         }
@@ -652,6 +654,7 @@ class CredentialServiceV2(val agent: Agent) {
             )
             credentialFormatCoordinator.processRequest(processRequestParams)
 
+            credentialExchangeRepository.save(credentialExchangeRecord)
             updateState(credentialExchangeRecord, CredentialState.RequestReceived)
 
             return credentialExchangeRecord

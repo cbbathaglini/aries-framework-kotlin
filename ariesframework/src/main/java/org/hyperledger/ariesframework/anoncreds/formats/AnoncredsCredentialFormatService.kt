@@ -531,7 +531,6 @@ class AnoncredsCredentialFormatService(
 
         logger.info("credentialRequestMetadata: ${credentialRequestMetadata.toString()}")
 
-        //adicionar pq nao ta funfando
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
         val escaped = credentialRequestMetadata.toString()

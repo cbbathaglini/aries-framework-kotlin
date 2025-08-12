@@ -16,7 +16,6 @@ class MessageReceiver(val agent: Agent) {
         try {
             val decryptedMessage = agent.wallet.unpack(encryptedMessage)
             val message = MessageSerializer.decodeFromString(decryptedMessage.plaintextMessage)
-
             val connection = findConnection(decryptedMessage, message)
             val messageContext = InboundMessageContext(
                 message,
@@ -25,13 +24,16 @@ class MessageReceiver(val agent: Agent) {
                 decryptedMessage.senderKey,
                 decryptedMessage.recipientKey,
             )
+
             agent.dispatcher.dispatch(messageContext)
+
         } catch (e: Exception) {
             logger.error("failed to receive message: $e")
         }
     }
 
     suspend fun receivePlaintextMessage(plaintextMessage: String, connection: ConnectionRecord) {
+        logger.info("receivePlaintextMessage method")
         try {
             val message = MessageSerializer.decodeFromString(plaintextMessage)
             val messageContext = InboundMessageContext(
@@ -43,11 +45,12 @@ class MessageReceiver(val agent: Agent) {
             )
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
-            logger.error("failed to receive message: $e")
+            logger.error("[2]failed to receive message: $e")
         }
     }
 
     private suspend fun findConnection(decryptedMessage: DecryptedMessageContext, message: AgentMessage): ConnectionRecord? {
+        logger.info("findConnection method")
         var connection = findConnectionByMessageKeys(decryptedMessage)
         if (connection == null) {
             connection = findConnectionByMessageThreadId(message)
@@ -59,6 +62,7 @@ class MessageReceiver(val agent: Agent) {
     }
 
     private suspend fun findConnectionByMessageThreadId(message: AgentMessage): ConnectionRecord? {
+        logger.info("findConnectionByMessageThreadId method")
         val pthId = message.thread?.parentThreadId ?: ""
         val oobRecord = agent.outOfBandService.findByInvitationId(pthId)
         val invitationKey = oobRecord?.outOfBandInvitation?.invitationKey() ?: ""
@@ -86,9 +90,16 @@ class MessageReceiver(val agent: Agent) {
     }
 
     private suspend fun findConnectionByMessageKeys(decryptedMessage: DecryptedMessageContext): ConnectionRecord? {
-        return agent.connectionService.findByKeys(
+        logger.info("findConnectionByMessageKeys method")
+        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey.toString()}")
+        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey.toString()}")
+
+        val conn =  agent.connectionService.findByKeys(
             decryptedMessage.senderKey ?: "",
             decryptedMessage.recipientKey ?: "",
         )
+        logger.info("conn: ${conn.toString()}")
+
+        return conn;
     }
 }

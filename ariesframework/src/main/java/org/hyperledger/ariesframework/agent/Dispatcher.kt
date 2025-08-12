@@ -17,12 +17,13 @@ class Dispatcher(val agent: Agent) {
 
         //printDispatcherMessages(messageContext)
 
-        logger.info("message: ${messageContext.message}")
+        logger.info("message aaaa: ${messageContext.message}")
         val handler = handlers[messageContext.message.type]
             ?: throw Exception("No handler for message type: ${messageContext.message.type} - ${messageContext.plaintextMessage}")
 
         try {
             val outboundMessage = handler.handle(messageContext)
+
             if (outboundMessage != null) {
                 logger.debug("Finishing dispatch with message of type: ${outboundMessage.payload.type}")
                 agent.messageSender.send(outboundMessage)

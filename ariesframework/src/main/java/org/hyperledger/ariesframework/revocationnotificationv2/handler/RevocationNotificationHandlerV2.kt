@@ -12,13 +12,14 @@ import kotlin.math.log
 class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = RevocationNotificationMessageV2.type
     private val logger = LoggerFactory.getLogger(RevocationNotificationHandlerV2::class.java)
+
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.info("message: ${messageContext.message}")
         logger.info("plaintextMessage: ${messageContext.plaintextMessage}")
 
-        val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
-            ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
-        logger.info("revocationMessage: ${revocationMessage.toString()}")
+//        val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
+//            ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
+//        logger.info("revocationMessage: ${revocationMessage.toString()}")
 
         agent.revocationNotificationServicev2.processRevocationNotification(messageContext)
         return null
