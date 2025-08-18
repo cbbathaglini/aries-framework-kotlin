@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
+import anoncreds_uniffi.RevocationStatusList
 import indy_vdr_uniffi.Pool
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.ContractConfig
 import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.LedgerClient
+import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveCredentialDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusList
@@ -46,16 +49,16 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     //private val path = "/abi/";
 
     //cpqd
-    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
-    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
-    private val credentialDefinitionRegistryConfigAddress = "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
-    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";
+//    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
+//    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
+//    private val credentialDefinitionRegistryConfigAddress = "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
+//    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";
 
     //serpro
-//    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";
-//    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555";
-//    private val credentialDefinitionRegistryConfigAddress = "0x0000000000000000000000000000000000004444";
-//    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222";
+    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";
+    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555";
+    private val credentialDefinitionRegistryConfigAddress = "0x0000000000000000000000000000000000004444";
+    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222";
 
     data class ContractConfigBesu(
         val address: String,
@@ -155,6 +158,21 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         return Pair(schemaJson, seqNo)
     }
 
+
+    override suspend fun getSchemas(
+        schemaIds: Set<String>
+    ): Map<String, AnonCredsSchema> {
+        val schemas = mutableMapOf<String, AnonCredsSchema>()
+
+        for (schemaId in schemaIds) {
+            val (schema) = getSchema(schemaId)
+            val anonCredsSchema: AnonCredsSchema = Json.decodeFromString(schema)
+            schemas[schemaId] = anonCredsSchema
+        }
+
+        return schemas
+    }
+
     override suspend fun registerCredentialDefinition(
         did: DidInfo,
         credentialDefinitionTemplate: CredentialDefinitionTemplate,
@@ -214,6 +232,22 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         return Json.encodeToString(JsonObject(jsonObject))
     }
 
+    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): RevocationRegistryDefinition {
+        logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
+        //val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
+//        logger.info("revocarionrd: ${revocationRD.toString()}")
+//        val jsonObject = mapOf(
+//            "issuerId" to JsonPrimitive(revocationRD.issuerId),
+//            "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
+//            "credDefId" to JsonPrimitive(revocationRD.credDefId),
+//            "tag" to JsonPrimitive(revocationRD.tag),
+//            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
+//        )
+
+        return resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
+    }
+
+
     override suspend fun getRevocationRegistryDelta(
         id: String,
         to: Int,
@@ -242,6 +276,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         )
         val deltaTimestamp = revocationStatusList.timestamp
         return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
+    }
+
+    override suspend fun getRevocationStatusList(id: String, timestamp: Int): uniffi.indy_besu_vdr.RevocationStatusList {
+       return revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, timestamp.toULong())) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
     }
 
     override suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {

@@ -529,6 +529,7 @@ class AnoncredsCredentialFormatService(
             )
         }
 
+
         logger.info("credentialRequestMetadata: ${credentialRequestMetadata.toString()}")
 
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)

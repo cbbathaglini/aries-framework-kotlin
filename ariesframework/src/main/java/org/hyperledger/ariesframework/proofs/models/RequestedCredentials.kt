@@ -5,6 +5,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class RequestedCredentials(
@@ -30,4 +32,15 @@ data class RequestedCredentials(
     }
 
     fun toJsonString(): String = Json.encodeToString(this)
+
+    fun toMap(): MutableMap<String, JsonElement> {
+        val root: JsonElement = Json.encodeToJsonElement(RequestedCredentials.serializer(), this)
+        val obj = root as? JsonObject
+            ?: error("RequestedCredentials não serializou para um objeto JSON")
+
+        // Converte JsonObject -> MutableMap<String, JsonElement>
+        val map = mutableMapOf<String, JsonElement>()
+        for ((k, v) in obj) map[k] = v
+        return map
+    }
 }

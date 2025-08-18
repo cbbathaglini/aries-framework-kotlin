@@ -1,11 +1,11 @@
 package org.hyperledger.ariesframework.anoncreds.model.holder
 
 import kotlinx.serialization.Serializable
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinitions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistries
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSelectedCredentials
 
 @Serializable
 data class CreateProofOptions(

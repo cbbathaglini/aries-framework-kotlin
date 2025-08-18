@@ -200,20 +200,15 @@ class RevocationService(val agent: Agent) {
     suspend fun downloadTails(revocationRegistryDefinition: RevocationRegistryDefinition): File {
         logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}")
         val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
-        logger.info("agent.context.filesDir:${agent.context.filesDir} ")
-        logger.info("agent.context.filesDir.absolutePath:${agent.context.filesDir.absolutePath} ")
-        logger.info("tailsfolder: ${tailsFolder.name}")
         if (!tailsFolder.exists()) {
             tailsFolder.mkdir()
         }
 
         val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
 
-        logger.info("revocationRegistryDefinition.tailsHash(): ${revocationRegistryDefinition.tailsHash().toString()}")
         if (!tailsFile.exists()) {
-            logger.info("!tailsFile.exists()")
+
             val tailsLocation = revocationRegistryDefinition.tailsLocation()
-            logger.info("Downloading tails file from: $tailsLocation")
             val url = if (tailsLocation.startsWith("http")) {
                 URL(tailsLocation)
             } else {
@@ -225,4 +220,28 @@ class RevocationService(val agent: Agent) {
 
         return tailsFile
     }
+
+//    suspend fun downloadTailsBesu(revocationRegistryDefinition: uniffi.indy_besu_vdr.RevocationRegistryDefinition): File {
+//        logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.r()}")
+//        val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
+//        if (!tailsFolder.exists()) {
+//            tailsFolder.mkdir()
+//        }
+//
+//        val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
+//
+//        if (!tailsFile.exists()) {
+//
+//            val tailsLocation = revocationRegistryDefinition.tailsLocation()
+//            val url = if (tailsLocation.startsWith("http")) {
+//                URL(tailsLocation)
+//            } else {
+//                File(tailsLocation).toURI().toURL()
+//            }
+//            val tailsData = url.readBytes()
+//            tailsFile.writeBytes(tailsData)
+//        }
+//
+//        return tailsFile
+//    }
 }

@@ -662,10 +662,7 @@ class CredentialServiceV2(val agent: Agent) {
 
 
         agent.connectionService.assertConnectionOrOutOfBandExchange(
-            messageContext = messageContext,
-            lastReceivedMessage = null,
-            lastSentMessage = null,
-            expectedConnectionId = null
+            messageContext = messageContext
         )
 
         logger.debug("No credential record found for offer, creating a new one")

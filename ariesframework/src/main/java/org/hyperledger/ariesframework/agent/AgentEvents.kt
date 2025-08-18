@@ -14,6 +14,7 @@ sealed interface AgentEvents {
     class OutOfBandEvent(val record: OutOfBandRecord) : AgentEvents
     class CredentialEvent(val record: CredentialExchangeRecord) : AgentEvents
     class ProofEvent(val record: ProofExchangeRecord) : AgentEvents
+    class ProofEventV2(val record: ProofExchangeRecord) : AgentEvents
     class BasicMessageEvent(val record: BasicMessageRecord) : AgentEvents
     class ProblemReportEvent(val message: BaseProblemReportMessage) : AgentEvents
     class ProblemReportNotificationEvent(val message: BaseProblemReportMessage) : AgentEvents

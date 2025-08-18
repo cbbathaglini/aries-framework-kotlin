@@ -1,4 +1,4 @@
-package org.hyperledger.ariesframework.proofs
+package org.hyperledger.ariesframework.proofs.v1
 
 import android.util.Log
 import kotlinx.serialization.json.Json
@@ -17,6 +17,7 @@ import org.hyperledger.ariesframework.proofs.handlers.v2.RequestPresentationHand
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
@@ -38,9 +39,6 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         dispatcher.registerHandler(RequestPresentationHandler(agent))
         dispatcher.registerHandler(PresentationHandler(agent))
         dispatcher.registerHandler(PresentationAckHandler(agent))
-        dispatcher.registerHandler(RequestPresentationHandlerV2(agent))
-        dispatcher.registerHandler(PresentationHandlerV2(agent))
-        dispatcher.registerHandler(PresentationAckHandlerV2(agent))
     }
 
     private fun registerMessages() {
@@ -48,9 +46,6 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         MessageSerializer.registerMessage(PresentationMessage.type, PresentationMessage::class)
         MessageSerializer.registerMessage(RequestPresentationMessage.type, RequestPresentationMessage::class)
         MessageSerializer.registerMessage(PresentationAckMessage.type, PresentationAckMessage::class)
-        MessageSerializer.registerMessage(PresentationMessageV2.type, PresentationMessageV2::class)
-        MessageSerializer.registerMessage(RequestPresentationMessageV2.type, RequestPresentationMessageV2::class)
-        // MessageSerializer.registerMessage(PresentationAckMessageV2.type, PresentationAckMessageV2::class)
     }
 
     /**
@@ -124,7 +119,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             return proofRecord
         } catch (e: Exception) {
             val record = agent.proofRepository.getById(proofRecordId)
-            val (message, proofRecord) = agent.proofService.createPresentationV1(
+            val (message, proofRecord) = agent.proofService.createPresentation(
                 record,
                 requestedCredentials,
                 comment,
@@ -205,23 +200,9 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         val record = agent.proofRepository.getById(proofRecordId)
         // Select protocol version
         val recordMessageType = agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
-
-        if (recordMessageType.message.contains("/2.0/")) {
-            logger.debug("Select Version 2.0")
-            val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
-                record.id,
-                RequestPresentationMessageV2.type,
-            )
-            val proofRequestMessage =
-                MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
-
-            val proofRequestJson = proofRequestMessage.indyProofRequest()
-            logger.debug("Proof request json: $proofRequestJson")
-            val proofRequest = Json.decodeFromString<ProofRequest>(proofRequestJson)
-            return agent.proofService.getRequestedCredentialsForProofRequest(proofRequest)
+        if(recordMessageType.message.contains("/2.0/")){
+            throw Exception("Version of proof protocol is incorrect")
         }
-        // Select version 1.0
-
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             record.id,
             RequestPresentationMessage.type,

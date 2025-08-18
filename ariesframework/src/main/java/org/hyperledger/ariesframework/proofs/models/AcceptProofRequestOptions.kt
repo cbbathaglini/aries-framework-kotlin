@@ -5,8 +5,11 @@ import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 @Serializable
-data class FormatCreateRequestOptions(
+data class AcceptProofRequestOptions (
     val proofRecord: ProofExchangeRecord,
-    val attachmentId : String?,
-    val proofFormats: Map<String, JsonElement>? = emptyMap()
+    val proofFormats: Map<String, JsonElement>? = emptyMap(),
+    val comment: String? = null,
+    val goalCode: String? = null,
+    val goal: String? = null,
+    val autoAcceptProof: AutoAcceptProof? = null,
 )

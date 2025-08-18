@@ -14,7 +14,6 @@ import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectne
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionPrivateRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionRepository
-import org.hyperledger.ariesframework.anoncreds.service.AnonCredsHolderService
 import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRegistryService
 import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
 import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsIssuerService
@@ -41,15 +40,17 @@ import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
 import org.hyperledger.ariesframework.problemreports.ProblemReportsCommand
-import org.hyperledger.ariesframework.proofs.ProofCommand
-import org.hyperledger.ariesframework.proofs.ProofService
+import org.hyperledger.ariesframework.proofs.v1.ProofCommand
+import org.hyperledger.ariesframework.proofs.v1.ProofService
+import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
+import org.hyperledger.ariesframework.proofs.v2.ProofCommandV2
+import org.hyperledger.ariesframework.proofs.verifier.AnonCredsRsVerifierService
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
-import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfigOptions
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.hyperledger.ariesframework.vc.service.W3cCredentialService
 import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
@@ -92,6 +93,8 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
+    val proofServiceV2 = ProofServiceV2(this)
+    val anoncredsVerifierService = AnonCredsRsVerifierService(this)
 
     val anoncredsCredentialDefinitionRepository = AnonCredsCredentialDefinitionRepository(this)
     val anonCredsHolderService = AnonCredsRsHolderService(this)
@@ -117,6 +120,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val w3cCredentialService = W3cCredentialService(w3cCredentialRepository,w3cJsonLdCredentialService, w3cJwtCredentialService)
 
     val proofs = ProofCommand(this, dispatcher)
+    val proofCommandV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
 
     val problemReports = ProblemReportsCommand(this, dispatcher)

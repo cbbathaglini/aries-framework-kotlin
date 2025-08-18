@@ -9,28 +9,28 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsAccep
 class FormatGeneric {
     companion object{
         inline fun <reified T> getAnonCredsFormatGeneric(
-            credentialFormats: Map<String, JsonElement>?
+            formats: Map<String, JsonElement>?
         ): T {
             val json = Json {
                 ignoreUnknownKeys = true
             }
 
-            val anonCredsJson = credentialFormats?.get("anoncreds")
-                ?: throw IllegalArgumentException("Missing 'anoncreds' credential format")
+            val anonCredsJson = formats?.get("anoncreds")
+                ?: throw IllegalArgumentException("Missing 'anoncreds' format")
 
 
             return json.decodeFromJsonElement(anonCredsJson)
         }
 
         inline fun <reified T> getLegacyIndyFormatGeneric(
-            credentialFormats: Map<String, JsonElement>?
+            formats: Map<String, JsonElement>?
         ): T {
             val json = Json {
                 ignoreUnknownKeys = true
             }
 
-            val anonCredsJson = credentialFormats?.get("indy")
-                ?: throw IllegalArgumentException("Missing 'indy' credential format")
+            val anonCredsJson = formats?.get("indy")
+                ?: throw IllegalArgumentException("Missing 'indy' format")
 
             return json.decodeFromJsonElement(anonCredsJson)
         }

@@ -2,13 +2,10 @@ package org.hyperledger.ariesframework.proofs.formats
 
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.proofs.models.FormatCreateRequestOptions
-import org.hyperledger.ariesframework.proofs.models.ProofFormatAcceptProposalOptions
-import org.hyperledger.ariesframework.proofs.models.ProofFormatAcceptRequestOptions
-import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateProposalOptions
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
-import org.hyperledger.ariesframework.proofs.models.ProofFormatSelectCredentialsForRequestReturn
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 
@@ -16,21 +13,27 @@ interface ProofFormatService<CF : ProofFormat> {
     val formatKey: String
 
     suspend fun createProposal(
-        proofFormatCreateProposalOptions: ProofFormatCreateProposalOptions
+        profRecord: ProofExchangeRecord,
+        attachmentId: String? = null,
+        proofFormats: Map<String, JsonElement> = emptyMap()
     ): ProofFormatCreateReturn
 
-    // proposal methods
     suspend fun processProposal(
-        options: ProofFormatProcessOptions
+        attachment: Attachment,
+        proofRecord: ProofExchangeRecord
     )
 
     suspend fun acceptProposal(
-        options: ProofFormatAcceptProposalOptions
+        proofRecord: ProofExchangeRecord,
+        attachmentId: String? = null,
+        proposalAttachment: Attachment,
+        proofFormats: Map<String, JsonElement>? = emptyMap()
     ): ProofFormatCreateReturn
 
-    // request methods
     suspend fun createRequest(
-        options: FormatCreateRequestOptions
+        proofRecord: ProofExchangeRecord,
+        attachmentId : String? = null,
+        proofFormats: Map<String, JsonElement>? = emptyMap()
     ): ProofFormatCreateReturn
 
     suspend fun processRequest(
@@ -38,30 +41,34 @@ interface ProofFormatService<CF : ProofFormat> {
     )
 
     suspend fun acceptRequest(
-        options: ProofFormatAcceptRequestOptions
+        proofRecord: ProofExchangeRecord,
+        proofFormats: Map<String, JsonElement>? = emptyMap(),
+        attachmentId: String? = null,
+        requestAttachment: Attachment,
+        proposalAttachment: Attachment?
     ): ProofFormatCreateReturn
 
-    // presentation methods
     suspend fun processPresentation(
-        requestAttachment: Attachment
+        requestAttachment: Attachment,
+        attachment: Attachment,
+        proofRecord: ProofExchangeRecord
     ): Boolean
 
-    // credentials for request
-//    suspend fun getCredentialsForRequest(
-//        proofRecord: ProofExchangeRecord,
-//        proofFormats: Map<String, JsonElement>? = emptyMap(),
-//        requestAttachment: Attachment,
-//        proposalAttachment: Attachment?
-//    ): ProofFormatGetCredentialsForRequestReturn
+    suspend fun getCredentialsForRequest(
+        proofRecord: ProofExchangeRecord,
+        proofFormats: Map<String, JsonElement>? = emptyMap(),
+        requestAttachment: Attachment,
+        proposalAttachment: Attachment?
+    ): AnonCredsCredentialsForProofRequest
 
     suspend fun selectCredentialsForRequest(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>? = emptyMap(),
         requestAttachment: Attachment,
         proposalAttachment: Attachment? = null
-    ): ProofFormatSelectCredentialsForRequestReturn
+    ): AnonCredsSelectedCredentials
 
-    // auto accept methods
+
     suspend fun shouldAutoRespondToProposal(
         proofRecord: ProofExchangeRecord,
         proposalAttachment: Attachment,

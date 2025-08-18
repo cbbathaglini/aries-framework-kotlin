@@ -34,6 +34,7 @@ import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemR
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.models.ProofConstants
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -120,7 +121,7 @@ class WalletMainActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == ProofState.RequestReceived) {
                     runOnConfirm("Accept proof request?", action = {
-                        sendProof(it.record.id)
+                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
                     }, negAction = {
                         declineProof(it.record.id)
                     })
@@ -129,6 +130,24 @@ class WalletMainActivity : AppCompatActivity() {
                     showAlert("Proof done")
                 } else if (it.record.state == ProofState.PresentationReceived){
                     receivePresentationProof(app, it)
+                }
+            }
+        }
+
+        app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
+            lifecycleScope.launch(Dispatchers.Main) {
+                if (it.record.state == ProofState.RequestReceived) {
+                    runOnConfirm("Accept proof request?", action = {
+                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
+                    }, negAction = {
+                        declineProof(it.record.id)
+                    })
+                } else if (it.record.state == ProofState.Done) {
+                    proofProgress?.dismiss()
+                    showAlert("Proof done")
+                } else if (it.record.state == ProofState.PresentationReceived){
+                    //DESCOMENTAR
+                    //receivePresentationProof(app, it)
                 }
             }
         }
@@ -435,7 +454,7 @@ class WalletMainActivity : AppCompatActivity() {
             credentialProgress = progress
     }
 
-    private fun sendProof(id: String) {
+    private fun sendProof(id: String, version: String) {
         val app = application as WalletApp
         val progress = ProgressDialog(this)
         progress.setTitle("Sending proof")
@@ -446,11 +465,20 @@ class WalletMainActivity : AppCompatActivity() {
                 val requestedCredentials : RequestedCredentials
                 val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
 
-                val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                requestedCredentials = app.agent.proofService.autoSelectCredentialsForProofRequest(
-                    retrievedCredentials
-                )
-                app.agent.proofs.acceptRequest(id, requestedCredentials)
+                if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
+                    val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
+                    requestedCredentials =
+                        app.agent.proofService.autoSelectCredentialsForProofRequest(
+                            retrievedCredentials
+                        )
+                }else{
+                    val retrievedCredentials = app.agent.proofCommandV2.getRequestedCredentialsForProofRequest(id)
+                    requestedCredentials =
+                        app.agent.proofServiceV2.autoSelectCredentialsForProofRequest(
+                            retrievedCredentials
+                        )
+                }
+                app.agent.proofCommandV2.acceptRequest(id, requestedCredentials)
 
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {

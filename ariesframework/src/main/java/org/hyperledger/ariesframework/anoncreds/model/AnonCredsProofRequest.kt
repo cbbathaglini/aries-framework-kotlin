@@ -27,14 +27,3 @@ data class AnonCredsRequestedAttribute(
     val nonRevoked: AnonCredsNonRevokedInterval? = null
 )
 
-@Serializable
-data class AnonCredsRequestedPredicate(
-    val name: String,
-    @SerialName("p_type")
-    val pType: AnonCredsPredicateType,
-    @SerialName("p_value")
-    val pValue: Int,
-    val restrictions: List<AnonCredsProofRequestRestriction>? = null,
-    @SerialName("non_revoked")
-    val nonRevoked: AnonCredsNonRevokedInterval? = null
-)

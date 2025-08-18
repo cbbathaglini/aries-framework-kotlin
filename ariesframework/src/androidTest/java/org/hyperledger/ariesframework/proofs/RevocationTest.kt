@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before

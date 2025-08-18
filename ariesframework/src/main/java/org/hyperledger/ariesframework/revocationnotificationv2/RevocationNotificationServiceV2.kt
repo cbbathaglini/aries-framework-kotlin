@@ -51,7 +51,6 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
 
         val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
             ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
-        logger.info("Revocation message: ${revocationMessage.toString()}")
         val credentialId = revocationMessage.credentialId
 
         if (revocationMessage.revocationFormat !in listOf(
@@ -70,7 +69,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
                 ?: RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.find(credentialId)?.groupValues
 
         val anoncredsType : Boolean = RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.containsMatchIn(credentialId) ?: false;
-        logger.info("credentialIdGroups: ${credentialIdGroups.toString()}")
+
         if (credentialIdGroups == null || credentialIdGroups.size < 2) {
             throw CredoError(
                 "Incorrect revocation notification credentialId format: \n$credentialId\ndoes not match\n" +
@@ -121,16 +120,6 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
 
         credentialRecord.revocationNotification = RevocationNotification(comment)
         agent.credentialExchangeRepository.update(credentialRecord)
-
-        logger.trace("Emitting RevocationNotificationReceivedEventV2")
-
-//        val credentialExchangeRecord = credentialRecord.toCredentialExchangeRecord(
-//            connectionId = connection.id,
-//            threadId = threadId ?: UUID.randomUUID().toString(),
-//            state = CredentialState.Revoked,
-//            protocolVersion = RevocationNotificationConstants.PROTOCOL_VERSION,
-//            role = CredentialRole.Holder,
-//        )
 
         agent.historyRepository.save(
             HistoryRecord(
