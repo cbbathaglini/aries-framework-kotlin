@@ -40,4 +40,9 @@ class RequestPresentationMessageV2(
         val attachment = getRequestPresentationAttachmentById(INDY_PROOF_REQUEST_ATTACHMENT_ID)
         return attachment?.getDataAsString() ?: throw Exception("Request presentation attachment not found")
     }
+
+    fun anoncredsProofRequest(): String {
+        val attachment = getRequestPresentationAttachmentById("anoncreds")
+        return attachment?.getDataAsString() ?: throw Exception("Request presentation attachment not found")
+    }
 }

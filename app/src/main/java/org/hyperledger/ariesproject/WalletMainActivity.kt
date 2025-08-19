@@ -463,7 +463,7 @@ class WalletMainActivity : AppCompatActivity() {
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val requestedCredentials : RequestedCredentials
-                val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
+                //val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
 
                 if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
                     val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
@@ -477,6 +477,7 @@ class WalletMainActivity : AppCompatActivity() {
                         app.agent.proofServiceV2.autoSelectCredentialsForProofRequest(
                             retrievedCredentials
                         )
+                    Log.d("PROOF", requestedCredentials.toJsonString())
                 }
                 app.agent.proofCommandV2.acceptRequest(id, requestedCredentials)
 

@@ -8,6 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.PartialProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
@@ -97,6 +98,22 @@ class RevocationService(val agent: Agent) {
         val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
             revocationRegistryId,
             revocationInterval.to!!,
+            0,
+        )
+        val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)
+        val credentialRevocationIdInt = credentialRevocationId.toInt()
+        val revoked = revocationRegistryDelta.revoked?.contains(credentialRevocationIdInt) ?: false
+        return Pair(revoked, deltaTimestamp)
+    }
+
+    suspend fun getRevocationStatusAnonCreds(
+        credentialRevocationId: String,
+        revocationRegistryId: String,
+        revocationInterval: AnonCredsNonRevokedInterval,
+    ): Pair<Boolean, Int> {
+        val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
+            revocationRegistryId,
+            revocationInterval.to!!.toInt(),
             0,
         )
         val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)

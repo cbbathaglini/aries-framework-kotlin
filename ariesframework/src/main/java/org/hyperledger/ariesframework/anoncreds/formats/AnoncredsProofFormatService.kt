@@ -85,6 +85,8 @@ class AnoncredsProofFormatService (
     }
 
     override suspend fun processProposal(attachment: Attachment, proofRecord: ProofExchangeRecord) {
+
+        val json = attachment.getDataAsJson()
         val proposalJson : AnonCredsProofRequest = Json.decodeFromString<AnonCredsProofRequest>(attachment.getDataAsJson())
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(proposalJson)
     }
@@ -254,6 +256,7 @@ class AnoncredsProofFormatService (
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsSelectedCredentials>(proofFormats)
 
         val anonCredsCredentialsForProofRequest : AnonCredsCredentialsForProofRequest = GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
+            agent = agent,
             proofRequest = proofRequestJson,
             options = AnonCredsGetCredentialsForProofRequestOptions(
                 filterByNonRevocationRequirements = true
@@ -405,6 +408,7 @@ class AnoncredsProofFormatService (
         options: AnonCredsGetCredentialsForProofRequestOptions
     ): AnonCredsSelectedCredentials {
         val credentialsForRequest = GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
+            agent = agent,
             proofRequest = proofRequest,
             options = options
         )

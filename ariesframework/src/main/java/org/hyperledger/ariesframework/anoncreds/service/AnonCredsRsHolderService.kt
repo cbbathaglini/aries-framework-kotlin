@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.Gson
+import jnr.ffi.annotations.In
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -60,15 +61,19 @@ import kotlinx.serialization.json.jsonArray
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedAttributeMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedPredicateMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.ReferentWalletQuery
 import org.hyperledger.ariesframework.anoncreds.formats.model.CreateRevocationStateOptions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.anoncreds.model.CredentialWithMetadata
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
+import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
 import org.hyperledger.ariesframework.util.PrintLongLine
-import org.hyperledger.ariesframework.vc.proof.CredentialEntry
-import org.hyperledger.ariesframework.vc.proof.CredentialProve
 import java.security.SecureRandom
 import java.math.BigInteger
 
@@ -174,18 +179,124 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
     }
 
-    override suspend fun getCredentialsForProofRequest(options: GetCredentialsForProofRequestOptions): GetCredentialsForProofRequestReturn {
-        val (proofRequest, attributeReferent, start, limit, extraQuery) = options
+//    override suspend fun getCredentialsForProofRequest(options: GetCredentialsForProofRequestOptions): GetCredentialsForProofRequestReturn {
+//        val (proofRequest, attributeReferent, start, limit, extraQuery) = options
+//
+//        val requestedAttribute = proofRequest.requestedAttributes.get(attributeReferent) ?: proofRequest.requestedPredicates.get(attributeReferent)
+//        if (requestedAttribute == null){
+//           throw AnonCredsRsError("Referent not found in proof request")
+//        }
+//
+//        val and = "aa"
+//        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
+//        // Make sure the attribute(s) that are requested are present using the marker tag
+//        val attributes = requestedAttribute.names ?? [requestedAttribute.name]
+//        val attributes: List<String> =
+//            requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
+//    }
 
-        val requestedAttribute = proofRequest.requestedAttributes.get(attributeReferent) ?: proofRequest.requestedPredicates.get(attributeReferent)
-        if (requestedAttribute == null){
-           throw AnonCredsRsError("Referent not found in proof request")
+    override suspend fun getCredentialsForProofRequest(options: GetCredentialsForProofRequestOptions): GetCredentialsForProofRequestReturn {
+
+        val proofRequest = options.proofRequest
+        val referent = options.attributeReferent
+
+        // requested_attributes[referent] ?? requested_predicates[referent]
+        val requestedAttribute = proofRequest.requestedAttributes[referent]
+            ?: proofRequest.requestedPredicates[referent]
+            ?: throw AnonCredsRsError("Referent not found in proof request")
+
+        //var andClauses = mutableListOf<Map<String, Any?>>()
+        val andClauses = mutableListOf<Any>()
+
+        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
+
+        val attributes: List<String> =
+            when (requestedAttribute) {
+                is AnonCredsRequestedAttribute ->
+                    requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
+                is AnonCredsRequestedPredicate -> {
+                    // se seu predicate tiver "names", use a mesma lógica. Caso não, mantenha só "name".
+                    listOfNotNull(requestedAttribute.name)
+                }
+                else -> error("Tipo inesperado para requested referent")
+            }
+
+        // marcador: anonCredsAttr::<attribute>::marker = true
+        val attributeQuery = mutableMapOf<String, Any?>()
+        for (attr in attributes) {
+            attributeQuery["anonCredsAttr::$attr::marker"] = true
+        }
+        andClauses += attributeQuery
+
+//        // restrições do proof request
+//        requestedAttribute.restrictions?.let { restrictions ->
+//            if (restrictions.isNotEmpty()) {
+//                val restrictionQuery = queryFromRestrictions(restrictions)
+//                andClauses += restrictionQuery
+//            }
+//        }
+
+        when (requestedAttribute) {
+            is AnonCredsRequestedAttribute -> {
+                requestedAttribute.restrictions?.let { restrictions ->
+                    if (restrictions.isNotEmpty()) {
+                        val restrictionQuery = queryFromRestrictions(restrictions)
+                        andClauses += restrictionQuery
+                    }
+                }
+            }
+            is AnonCredsRequestedPredicate -> {
+                requestedAttribute.restrictions?.let { restrictions ->
+                    if (restrictions.isNotEmpty()) {
+                        val restrictionQuery = queryFromRestrictions(restrictions)
+                        andClauses += restrictionQuery
+                    }
+                }
+            }
+            else -> error("Tipo inesperado para requested referent")
         }
 
-        val and = "aa"
-        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
-        // Make sure the attribute(s) that are requested are present using the marker tag
-        val attributes = requestedAttribute.names ?? [requestedAttribute.name]
+
+        // extraQuery (opcional)
+        options.extraQuery?.let { andClauses += it }
+
+
+        // consulta final: { $and: [ ... ] }
+        val finalQuery: Map<String, Any?> = mapOf("\$and" to andClauses)
+
+        val credentials: List<W3cCredentialRecord> =
+            agent.w3cCredentialRepository.findByQuery(finalQuery.toString())
+
+        // buscar legados
+        val legacyCredentialWithMetadata : List<CredentialForProofRequest> =
+            getLegacyCredentialsForProofRequest(options).credentials
+
+        if (legacyCredentialWithMetadata.isNotEmpty()) {
+           logger.warn(
+                listOf(
+                    "Including legacy credentials in proof request.",
+                    "Please run the migration script to migrate credentials to the new W3C format."
+                ).joinToString("\n")
+            )
+        }
+
+        // mapear os atuais para { credentialInfo, interval }
+        val credentialWithMetadata: List<CredentialForProofRequest> =
+            credentials.map { credentialRecord ->
+                CredentialForProofRequest(
+                    credentialInfo = getAnoncredsCredentialInfoFromRecord(
+                        credentialRecord,
+                        useUnqualifiedIdentifiers
+                    ),
+                    interval = proofRequest.nonRevoked
+                )
+            }
+
+        // retorno combinado
+        return GetCredentialsForProofRequestReturn(
+            credentials = credentialWithMetadata + legacyCredentialWithMetadata
+        )
+
     }
 
 //    override suspend fun createProof(options: CreateProofOptions): AnonCredsProof {
@@ -790,4 +901,230 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 //    }
 
 
+    private fun queryFromRestrictions(
+        restrictions: List<AnonCredsProofRequestRestriction>
+    ): Map<String, Any?> {
+        val queries = mutableListOf<Map<String, Any?>>()
+
+        for (restriction in restrictions) {
+            val q = mutableMapOf<String, Any?>()
+
+            // credentialDefinitionId
+            restriction.credDefId?.let { cdId ->
+                if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(cdId)) {
+                    q["anonCredsUnqualifiedCredentialDefinitionId"] = cdId
+                } else {
+                    q["anonCredsCredentialDefinitionId"] = cdId
+                }
+            }
+
+            // issuerId / issuerDid
+            run {
+                val issuerId = restriction.issuerId ?: restriction.issuerDid
+                if (issuerId != null) {
+                    if (Indyidentifiers.isUnqualifiedIndyDid(issuerId)) {
+                        q["anonCredsUnqualifiedIssuerId"] = issuerId
+                    } else {
+                        q["issuerId"] = issuerId
+                    }
+                }
+            }
+
+            // schemaId
+            restriction.schemaId?.let { scId ->
+                if (Indyidentifiers.isUnqualifiedSchemaId(scId)) {
+                    q["anonCredsUnqualifiedSchemaId"] = scId
+                } else {
+                    q["anonCredsSchemaId"] = scId
+                }
+            }
+
+            // schemaIssuerId / schemaIssuerDid
+            run {
+                val schemaIssuerId = restriction.schemaIssuerId ?: restriction.schemaIssuerDid
+                if (schemaIssuerId != null) {
+                    if (Indyidentifiers.isUnqualifiedIndyDid(schemaIssuerId)) {
+                        q["anonCredsUnqualifiedSchemaIssuerId"] = schemaIssuerId
+                    } else {
+                        q["anonCredsSchemaIssuerId"] = schemaIssuerId
+                    }
+                }
+            }
+
+            // schemaName / schemaVersion
+            restriction.schemaName?.let { q["anonCredsSchemaName"] = it }
+            restriction.schemaVersion?.let { q["anonCredsSchemaVersion"] = it }
+
+            // attributeValues -> anonCredsAttr::<name>::value
+            for ((attrName, attrValue) in restriction.attributeValues) {
+                q["anonCredsAttr::$attrName::value"] = attrValue
+            }
+
+            // attributeMarkers -> anonCredsAttr::<name>::marker = true (quando true)
+            for ((attrName, isAvailable) in restriction.attributeMarkers) {
+                if (isAvailable) {
+                    q["anonCredsAttr::$attrName::marker"] = true
+                }
+            }
+
+            queries += q
+        }
+
+        return if (queries.size == 1) {
+            queries.first()
+        } else {
+            mapOf("\$or" to queries)
+        }
+    }
+
+    private suspend fun getLegacyCredentialsForProofRequest(
+        options: GetCredentialsForProofRequestOptions
+    ): GetCredentialsForProofRequestReturn{
+
+        val proofRequest = options.proofRequest
+        val referent = options.attributeReferent
+
+        // requested_attributes[ref] ?? requested_predicates[ref]
+        val requestedAttribute = proofRequest.requestedAttributes[referent]
+            ?: proofRequest.requestedPredicates[referent]
+            ?: throw AnonCredsRsError("Referent not found in proof request")
+
+        //val andClauses = mutableListOf<Map<String, Any?>>()
+        val andClauses = mutableListOf<Any>()
+
+        // names ?? [name]
+        val attributes: List<String> =
+            when (requestedAttribute) {
+                is AnonCredsRequestedAttribute ->
+                    requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
+                is AnonCredsRequestedPredicate -> {
+                    listOfNotNull(requestedAttribute.name)
+                }
+                else -> error("Tipo inesperado para requested referent")
+            }
+
+        val attributeQuery = mutableMapOf<String, Any?>()
+        attributes.forEach { attr ->
+            attributeQuery["anonCredsAttr::$attr::marker"] = true
+        }
+        andClauses += attributeQuery
+
+        // restrições do proof request (legacy)
+        when (requestedAttribute) {
+            is AnonCredsRequestedAttribute -> {
+                val restrictions = requestedAttribute.restrictions
+                if (!restrictions.isNullOrEmpty()) {
+                    val restrictionQuery = queryLegacyFromRestrictions(restrictions)
+                    andClauses += restrictionQuery
+                }
+            }
+            is AnonCredsRequestedPredicate -> {
+                val restrictions = requestedAttribute.restrictions
+                if (!restrictions.isNullOrEmpty()) {
+                    val restrictionQuery = queryLegacyFromRestrictions(restrictions)
+                    andClauses += restrictionQuery
+                }
+            }
+        }
+
+
+        options.extraQuery?.let { andClauses += it }
+
+
+        // No final:
+        val finalQuery: Map<String, Any?> = mapOf("\$and" to andClauses)
+
+
+        val credentials = agent.anonCredsCredentialRepository.findByQuery(finalQuery.toString())
+
+
+        val credentialForProofRequestList : List<CredentialForProofRequest> = credentials.map { credentialRecord ->
+            CredentialForProofRequest(
+                credentialInfo = getAnoncredsCredentialInfoFromRecord(credentialRecord),
+                interval = proofRequest.nonRevoked
+            )
+        }
+
+        return GetCredentialsForProofRequestReturn(
+            credentials = credentialForProofRequestList
+        )
+
+    }
+
+
+    private fun queryLegacyFromRestrictions(
+        restrictions: List<AnonCredsProofRequestRestriction>
+    ): Map<String, Any?> {
+        val queries = mutableListOf<Map<String, Any?>>()
+
+        for (restriction in restrictions) {
+            val queryElements = mutableMapOf<String, Any?>()
+            val additionalQueryElements = mutableMapOf<String, Any?>()
+
+            // credentialDefinitionId
+            restriction.credDefId?.let { cdId ->
+                queryElements["credentialDefinitionId"] = cdId
+                if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(cdId)) {
+                    additionalQueryElements["credentialDefinitionId"] = cdId
+                }
+            }
+
+            // issuerId / issuerDid
+            run {
+                val issuerId = restriction.issuerId ?: restriction.issuerDid
+                if (issuerId != null) {
+                    queryElements["issuerId"] = issuerId
+                    if (Indyidentifiers.isUnqualifiedIndyDid(issuerId)) {
+                        additionalQueryElements["issuerId"] = issuerId
+                    }
+                }
+            }
+
+            // schemaId
+            restriction.schemaId?.let { scId ->
+                queryElements["schemaId"] = scId
+                if (Indyidentifiers.isUnqualifiedSchemaId(scId)) {
+                    additionalQueryElements["schemaId"] = scId
+                }
+            }
+
+            // schemaIssuerId / schemaIssuerDid
+            run {
+                val schemaIssuerId = restriction.schemaIssuerId ?: restriction.schemaIssuerDid
+                if (schemaIssuerId != null) {
+                    queryElements["schemaIssuerId"] = schemaIssuerId
+                    if (Indyidentifiers.isUnqualifiedIndyDid(schemaIssuerId)) {
+                        additionalQueryElements["schemaIssuerId"] = schemaIssuerId
+                    }
+                }
+            }
+
+            // schemaName / schemaVersion
+            restriction.schemaName?.let { queryElements["schemaName"] = it }
+            restriction.schemaVersion?.let { queryElements["schemaVersion"] = it }
+
+            // attributeValues -> "attr::<name>::value"
+            for ((attributeName, attributeValue) in restriction.attributeValues) {
+                queryElements["attr::$attributeName::value"] = attributeValue
+            }
+
+            // attributeMarkers (true) -> "attr::<name>::marker"
+            for ((attributeName, isAvailable) in restriction.attributeMarkers) {
+                if (isAvailable) {
+                    queryElements["attr::$attributeName::marker"] = true
+                }
+            }
+
+            queries += queryElements
+            if (additionalQueryElements.isNotEmpty()) {
+                queries += additionalQueryElements
+            }
+        }
+
+        return if (queries.size == 1) {
+            queries.first()
+        } else {
+            mapOf("\$or" to queries)
+        }
+    }
 }

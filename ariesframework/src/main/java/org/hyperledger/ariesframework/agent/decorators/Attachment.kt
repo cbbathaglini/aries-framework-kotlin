@@ -50,7 +50,17 @@ data class Attachment(
     }
 
     fun getDataAsJson(): String {
-        return Json.encodeToString(data.json)
+        return when {
+            data.base64 != null -> {
+                val decoded = String(data.base64.decodeBase64())
+                decoded // return JSON as string
+            }
+            data.json != null -> {
+                Json.encodeToString(data.json)
+            }
+            else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
+        }
+//        return Json.encodeToString(data.json)
     }
 
     fun <T> Attachment.getDataAsJsonByType(deserializer: DeserializationStrategy<T>): T {

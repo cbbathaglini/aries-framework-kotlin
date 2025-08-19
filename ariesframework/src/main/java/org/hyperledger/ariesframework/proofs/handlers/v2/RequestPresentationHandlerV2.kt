@@ -12,7 +12,7 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = RequestPresentationMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        val proofRecord = agent.proofService.processRequest(messageContext)
+        val proofRecord = agent.proofServiceV2.processRequest(messageContext)
 
         if (proofRecord.autoAcceptProof == AutoAcceptProof.Always ||
             agent.agentConfig.autoAcceptProof == AutoAcceptProof.Always

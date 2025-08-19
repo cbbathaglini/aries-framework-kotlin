@@ -8,6 +8,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
@@ -201,12 +202,14 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             record.id,
             RequestPresentationMessageV2.type,
         )
+
         val proofRequestMessage =
             MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
 
-        val proofRequestJson = proofRequestMessage.indyProofRequest()
+        val proofRequestJson = proofRequestMessage.anoncredsProofRequest()
         logger.debug("Proof request json: $proofRequestJson")
-        val proofRequest = Json.decodeFromString<ProofRequest>(proofRequestJson)
+        val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
+
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
 
     }

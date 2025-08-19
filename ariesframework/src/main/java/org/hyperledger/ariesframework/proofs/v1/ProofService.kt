@@ -55,18 +55,18 @@ import kotlin.math.max
 
 class ProofService(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(ProofService::class.java)
-//
-//    companion object {
-//        /**
-//         * Generates 80-bit numbers that can be used as a nonce for proof request.
-//         *
-//         * @return generated number as a string.
-//         */
-//        suspend fun generateProofRequestNonce(): String {
-//            return Verifier().generateNonce()
-//        }
-//    }
-//
+
+    companion object {
+        /**
+         * Generates 80-bit numbers that can be used as a nonce for proof request.
+         *
+         * @return generated number as a string.
+         */
+        suspend fun generateProofRequestNonce(): String {
+            return Verifier().generateNonce()
+        }
+    }
+
     /**
      * Creates a new ``RequestPresentationMessage``.
      *
@@ -111,49 +111,51 @@ class ProofService(val agent: Agent) {
 
         return Pair(message, proofRecord)
     }
-//
-//    /**
-//     * Process a received ``RequestPresentationMessage``. This will not accept the presentation request
-//     * or send a presentation. It will only create a new, or update the existing proof record with
-//     * the information from the presentation request message. Use  ``createPresentation(proofRecord:requestedCredentials:comment:)``
-//     * after calling this method to create a presentation.
-//     *
-//     * @param messageContext the message context containing a presentation request message.
-//     * @return proof record associated with the presentation request message.
-//     */
-//    suspend fun processRequest(messageContext: InboundMessageContext): ProofExchangeRecord {
-//        val proofRequestMessage =
-//            MessageSerializer.decodeFromString(messageContext.plaintextMessage)
-//
-//        val connection = messageContext.assertReadyConnection()
-//        val proofRecord = ProofExchangeRecord(
-//            connectionId = connection.id,
-//            threadId = proofRequestMessage.threadId,
-//            state = ProofState.RequestReceived,
-//        )
-//
-//        agent.didCommMessageRepository.saveAgentMessage(
-//            DidCommMessageRole.Receiver,
-//            proofRequestMessage,
-//            proofRecord.id
-//        )
-//
-//        agent.proofRepository.save(proofRecord)
-//
-//        agent.historyRepository.save(
-//            HistoryRecord(
-//                historyType = HistoryType.ProofRequestReceived,
-//                connectionId = proofRecord.connectionId,
-//                theirLabel = connection.theirLabel,
-//                associatedRecordId = proofRecord.id,
-//                content = proofRequestMessage.toJsonString(),
-//            ),
-//        )
-//
-//        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
-//
-//        return proofRecord
-//    }
+
+    /**
+     * Process a received ``RequestPresentationMessage``. This will not accept the presentation request
+     * or send a presentation. It will only create a new, or update the existing proof record with
+     * the information from the presentation request message. Use  ``createPresentation(proofRecord:requestedCredentials:comment:)``
+     * after calling this method to create a presentation.
+     *
+     * @param messageContext the message context containing a presentation request message.
+     * @return proof record associated with the presentation request message.
+     */
+    suspend fun processRequest(messageContext: InboundMessageContext): ProofExchangeRecord {
+        val proofRequestMessage =
+            MessageSerializer.decodeFromString(messageContext.plaintextMessage)
+
+        val connection = messageContext.assertReadyConnection()
+        val proofRecord = ProofExchangeRecord(
+            connectionId = connection.id,
+            threadId = proofRequestMessage.threadId,
+            state = ProofState.RequestReceived,
+            role = ProofRole.Prover,
+            protocolVersion = ProofConstants.PROTOCOL_VERSION_V1,
+        )
+
+        agent.didCommMessageRepository.saveAgentMessage(
+            DidCommMessageRole.Receiver,
+            proofRequestMessage,
+            proofRecord.id
+        )
+
+        agent.proofRepository.save(proofRecord)
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestReceived,
+                connectionId = proofRecord.connectionId,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecord.id,
+                content = proofRequestMessage.toJsonString(),
+            ),
+        )
+
+        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
+
+        return proofRecord
+    }
 
 
     /**
@@ -194,44 +196,44 @@ class ProofService(val agent: Agent) {
         return Pair(presentationMessage, proofRecord)
     }
 
-//    /**
-//     * Process a received ``PresentationMessage``. This will not accept the presentation
-//     * or send a presentation acknowledgement. It will only update the existing proof record with
-//     * the information from the presentation message. Use  ``createAck(proofRecord:)``
-//     * after calling this method to create a presentation acknowledgement.
-//     *
-//     * @param messageContext the message context containing a presentation message.
-//     * @return proof record associated with the presentation message.
-//     */
-//    suspend fun processPresentationV1(messageContext: InboundMessageContext): ProofExchangeRecord {
-//        val presentationMessage =
-//            MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessage
-//
-//        val proofRecord =
-//            agent.proofRepository.getByThreadAndConnectionId(presentationMessage.threadId, null)
-//        proofRecord.assertState(ProofState.RequestSent)
-//
-//        val indyProofJson = presentationMessage.indyProof()
-//        val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(
-//            proofRecord.id,
-//            RequestPresentationMessage.type
-//        )
-//        val requestMessage =
-//            MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
-//        val indyProofRequest = requestMessage.indyProofRequest()
-//
-//        proofRecord.isVerified = verifyProof(indyProofRequest, indyProofJson)
-//
-//        agent.didCommMessageRepository.saveAgentMessage(
-//            DidCommMessageRole.Receiver,
-//            presentationMessage,
-//            proofRecord.id
-//        )
-//        updateState(proofRecord, ProofState.PresentationReceived)
-//
-//        return proofRecord
-//    }
-//
+    /**
+     * Process a received ``PresentationMessage``. This will not accept the presentation
+     * or send a presentation acknowledgement. It will only update the existing proof record with
+     * the information from the presentation message. Use  ``createAck(proofRecord:)``
+     * after calling this method to create a presentation acknowledgement.
+     *
+     * @param messageContext the message context containing a presentation message.
+     * @return proof record associated with the presentation message.
+     */
+    suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
+        val presentationMessage =
+            MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessage
+
+        val proofRecord =
+            agent.proofRepository.getByThreadAndConnectionId(presentationMessage.threadId, null)
+        proofRecord.assertState(ProofState.RequestSent)
+
+        val indyProofJson = presentationMessage.indyProof()
+        val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            RequestPresentationMessage.type
+        )
+        val requestMessage =
+            MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
+        val indyProofRequest = requestMessage.indyProofRequest()
+
+        proofRecord.isVerified = verifyProof(indyProofRequest, indyProofJson)
+
+        agent.didCommMessageRepository.saveAgentMessage(
+            DidCommMessageRole.Receiver,
+            presentationMessage,
+            proofRecord.id
+        )
+        updateState(proofRecord, ProofState.PresentationReceived)
+
+        return proofRecord
+    }
+
 //    suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
 //        val presentationMessage =
 //            MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessageV2
@@ -291,24 +293,24 @@ class ProofService(val agent: Agent) {
         return Pair(probMessage, proofRecord)
     }
 
-//    /**
-//     * Process a received ``PresentationAckMessage``.
-//     *
-//     * @param messageContext the message context containing a presentation acknowledgement message.
-//     * @return proof record associated with the presentation acknowledgement message.
-//     */
-//    suspend fun processAck(messageContext: InboundMessageContext): ProofExchangeRecord {
-//        val ackMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage)
-//        val connection = messageContext.assertReadyConnection()
-//
-//        val proofRecord =
-//            agent.proofRepository.getByThreadAndConnectionId(ackMessage.threadId, connection.id)
-//        proofRecord.assertState(ProofState.PresentationSent)
-//
-//        updateState(proofRecord, ProofState.Done)
-//
-//        return proofRecord
-//    }
+    /**
+     * Process a received ``PresentationAckMessage``.
+     *
+     * @param messageContext the message context containing a presentation acknowledgement message.
+     * @return proof record associated with the presentation acknowledgement message.
+     */
+    suspend fun processAck(messageContext: InboundMessageContext): ProofExchangeRecord {
+        val ackMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage)
+        val connection = messageContext.assertReadyConnection()
+
+        val proofRecord =
+            agent.proofRepository.getByThreadAndConnectionId(ackMessage.threadId, connection.id)
+        proofRecord.assertState(ProofState.PresentationSent)
+
+        updateState(proofRecord, ProofState.Done)
+
+        return proofRecord
+    }
 
     /**
      * Create a ``RetrievedCredentials`` object. Given input proof request,
@@ -367,89 +369,89 @@ class ProofService(val agent: Agent) {
     }
 
     /**
-//     * Takes a ``RetrievedCredentials`` object and auto selects credentials in a ``RequestedCredentials`` object.
-//     *
-//     * Use the return value of this method as input to ``createPresentation(proofRecord:requestedCredentials:comment:)`` to
-//     * automatically select credentials for presentation.
-//     *
-//     * @param retrievedCredentials the retrieved credentials to auto select from.
-//     * @return a ``RequestedCredentials`` object.
-//     */
-//    suspend fun autoSelectCredentialsForProofRequest(retrievedCredentials: RetrievedCredentials): RequestedCredentials {
-//        val requestedCredentials = RequestedCredentials()
-//        retrievedCredentials.requestedAttributes.keys.forEach { attributeName ->
-//            val attributeArray = retrievedCredentials.requestedAttributes[attributeName]!!
-//
-//            if (attributeArray.isEmpty()) {
-//                throw Exception("Cannot find credentials for attribute '$attributeName'.")
-//            }
-//            val nonRevokedAttributes = attributeArray.filter { attr ->
-//                attr.revoked != true
-//            }
-//            if (nonRevokedAttributes.isEmpty()) {
-//                throw Exception("Cannot find non-revoked credentials for attribute '$attributeName'.")
-//            }
-//            requestedCredentials.requestedAttributes[attributeName] = attributeArray[0]
-//        }
-//
-//        retrievedCredentials.requestedPredicates.keys.forEach { predicateName ->
-//            val predicateArray = retrievedCredentials.requestedPredicates[predicateName]!!
-//
-//            if (predicateArray.isEmpty()) {
-//                throw Exception("Cannot find credentials for predicate '$predicateName'.")
-//            }
-//            val nonRevokedPredicates = predicateArray.filter { pred ->
-//                pred.revoked != true
-//            }
-//            if (nonRevokedPredicates.isEmpty()) {
-//                throw Exception("Cannot find non-revoked credentials for predicate '$predicateName'.")
-//            }
-//            requestedCredentials.requestedPredicates[predicateName] = nonRevokedPredicates[0]
-//        }
-//
-//        return requestedCredentials
-//    }
-//
-//    /**
-//     * Verify an indy proof object.
-//     *
-//     * @param proofRequest the proof request to use for proof verification.
-//     * @param proof the proof to verify.
-//     * @return true if the proof is valid, false otherwise.
-//     */
-//    suspend fun verifyProof(proofRequest: String, proof: String): Boolean = coroutineScope {
-//        logger.debug("verifying proof: $proof")
-//        val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
-//        val schemas = async { getSchemas(partialProof.identifiers.map { it.schemaId }.toSet()) }
-//        val credentialDefinitions = async {
-//            getCredentialDefinitions(partialProof.identifiers.map { it.credentialDefinitionId }
-//                .toSet())
-//        }
-//        val revocationRegistryDefinitions =
-//            async {
-//                getRevocationRegistryDefinitions(partialProof.identifiers.mapNotNull { it.revocationRegistryId }
-//                    .toSet())
-//            }
-//        val revocationStatusLists = agent.revocationService.getRevocationStatusLists(
-//            partialProof,
-//            revocationRegistryDefinitions.await()
-//        )
-//
-//        return@coroutineScope try {
-//            Verifier().verifyPresentation(
-//                Presentation(proof),
-//                PresentationRequest(proofRequest),
-//                schemas.await(),
-//                credentialDefinitions.await(),
-//                revocationRegistryDefinitions.await(),
-//                revocationStatusLists,
-//                null,
-//            )
-//        } catch (e: Exception) {
-//            logger.error("Error verifying proof: $e")
-//            false
-//        }
-//    }
+     * Takes a ``RetrievedCredentials`` object and auto selects credentials in a ``RequestedCredentials`` object.
+     *
+     * Use the return value of this method as input to ``createPresentation(proofRecord:requestedCredentials:comment:)`` to
+     * automatically select credentials for presentation.
+     *
+     * @param retrievedCredentials the retrieved credentials to auto select from.
+     * @return a ``RequestedCredentials`` object.
+     */
+    suspend fun autoSelectCredentialsForProofRequest(retrievedCredentials: RetrievedCredentials): RequestedCredentials {
+        val requestedCredentials = RequestedCredentials()
+        retrievedCredentials.requestedAttributes.keys.forEach { attributeName ->
+            val attributeArray = retrievedCredentials.requestedAttributes[attributeName]!!
+
+            if (attributeArray.isEmpty()) {
+                throw Exception("Cannot find credentials for attribute '$attributeName'.")
+            }
+            val nonRevokedAttributes = attributeArray.filter { attr ->
+                attr.revoked != true
+            }
+            if (nonRevokedAttributes.isEmpty()) {
+                throw Exception("Cannot find non-revoked credentials for attribute '$attributeName'.")
+            }
+            requestedCredentials.requestedAttributes[attributeName] = attributeArray[0]
+        }
+
+        retrievedCredentials.requestedPredicates.keys.forEach { predicateName ->
+            val predicateArray = retrievedCredentials.requestedPredicates[predicateName]!!
+
+            if (predicateArray.isEmpty()) {
+                throw Exception("Cannot find credentials for predicate '$predicateName'.")
+            }
+            val nonRevokedPredicates = predicateArray.filter { pred ->
+                pred.revoked != true
+            }
+            if (nonRevokedPredicates.isEmpty()) {
+                throw Exception("Cannot find non-revoked credentials for predicate '$predicateName'.")
+            }
+            requestedCredentials.requestedPredicates[predicateName] = nonRevokedPredicates[0]
+        }
+
+        return requestedCredentials
+    }
+
+    /**
+     * Verify an indy proof object.
+     *
+     * @param proofRequest the proof request to use for proof verification.
+     * @param proof the proof to verify.
+     * @return true if the proof is valid, false otherwise.
+     */
+    suspend fun verifyProof(proofRequest: String, proof: String): Boolean = coroutineScope {
+        logger.debug("verifying proof: $proof")
+        val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
+        val schemas = async { getSchemas(partialProof.identifiers.map { it.schemaId }.toSet()) }
+        val credentialDefinitions = async {
+            getCredentialDefinitions(partialProof.identifiers.map { it.credentialDefinitionId }
+                .toSet())
+        }
+        val revocationRegistryDefinitions =
+            async {
+                getRevocationRegistryDefinitions(partialProof.identifiers.mapNotNull { it.revocationRegistryId }
+                    .toSet())
+            }
+        val revocationStatusLists = agent.revocationService.getRevocationStatusLists(
+            partialProof,
+            revocationRegistryDefinitions.await()
+        )
+
+        return@coroutineScope try {
+            Verifier().verifyPresentation(
+                Presentation(proof),
+                PresentationRequest(proofRequest),
+                schemas.await(),
+                credentialDefinitions.await(),
+                revocationRegistryDefinitions.await(),
+                revocationStatusLists,
+                null,
+            )
+        } catch (e: Exception) {
+            logger.error("Error verifying proof: $e")
+            false
+        }
+    }
 
     suspend fun getRevocationStatusForRequestedItem(
         proofRequest: ProofRequest,

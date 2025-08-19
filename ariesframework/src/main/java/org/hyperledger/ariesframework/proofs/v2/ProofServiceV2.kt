@@ -11,6 +11,10 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
+import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
@@ -48,6 +52,7 @@ import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestOptions
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.utils.MapperProofRequestAnoncredsProofRequest
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
@@ -318,11 +323,16 @@ class ProofServiceV2(val agent: Agent) {
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
         logger.debug("Processing proof request with id ${requestMessage.id}")
 
-        var proofRecord = agent.proofRepository.findByThreadRoleAndConnection(
-            role = ProofRole.Prover,
-            connectionId = connection?.id,
-            threadId = requestMessage.threadId
-        )
+        var proofRecord : ProofExchangeRecord? = null
+        try {
+            proofRecord = agent.proofRepository.findByThreadRoleAndConnection(
+                role = ProofRole.Prover,
+                connectionId = connection?.id,
+                threadId = requestMessage.threadId
+            )
+        }catch (e: Exception){
+            logger.debug("Proof record not found")
+        }
 
         val formatServices = getFormatServicesFromMessage(requestMessage.formats)
         if (formatServices.isEmpty()) {
@@ -374,7 +384,7 @@ class ProofServiceV2(val agent: Agent) {
 
         logger.debug("No proof record found for request, creating a new one")
 
-        proofRecord = ProofExchangeRecord(
+        val record = ProofExchangeRecord(
             connectionId = connection?.id!!,
             threadId = requestMessage.threadId,
             parentThreadId = requestMessage.thread?.parentThreadId,
@@ -384,7 +394,7 @@ class ProofServiceV2(val agent: Agent) {
         )
 
         proofFormatCoordinator.processRequest(
-            proofRecord = proofRecord,
+            proofRecord = record,
             message = requestMessage,
             formatServices = formatServices
         )
@@ -392,9 +402,9 @@ class ProofServiceV2(val agent: Agent) {
         logger.debug("Saving proof record and emit request-received event")
 
         // save new registry and emit an event
-        agent.proofRepository.save(proofRecord)
-        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
-        return proofRecord
+        agent.proofRepository.save(record)
+        agent.eventBus.publish(AgentEvents.ProofEventV2(record.copy()))
+        return record
     }
 
     suspend fun acceptRequest(params: AcceptProofRequestOptions): Pair<PresentationMessageV2, ProofExchangeRecord> {
@@ -980,13 +990,28 @@ class ProofServiceV2(val agent: Agent) {
         val lock = Mutex()
 
         proofRequest.requestedAttributes.concurrentForEach { (referent, requestedAttribute) ->
-            val credentials =
-                agent.anoncredsService.getCredentialsForProofRequest(proofRequest, referent)
+            val anonCredsNonRevokedInterval = MapperProofRequestAnoncredsProofRequest.toAnonCredsTimeInterval(proofRequest.nonRevoked),
+            val anoncredsProofRequest = AnonCredsProofRequest(
+                name = proofRequest.name,
+                version = proofRequest.version,
+                nonce = proofRequest.nonce,
+                requestedAttributes = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedAttribute(proofRequest.requestedAttributes),
+                requestedPredicates = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedPredicate(proofRequest.requestedPredicates),
+                nonRevoked = anonCredsNonRevokedInterval,
+                ver = proofRequest.ver
+            )
 
-            val attributes = credentials.concurrentMap { credentialInfo ->
-                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItem(
-                    proofRequest,
-                    requestedAttribute.nonRevoked,
+            val credentials =
+                agent.anonCredsHolderService.getCredentialsForProofRequest(
+                    options = GetCredentialsForProofRequestOptions(
+                        proofRequest = anoncredsProofRequest,
+                        attributeReferent = referent
+                    ))
+
+            val attributes = credentials.credentials.concurrentMap { credentialInfo ->
+                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
+                    anoncredsProofRequest,
+                    anonCredsNonRevokedInterval,
                     credentialInfo,
                 )
 
@@ -1004,13 +1029,29 @@ class ProofServiceV2(val agent: Agent) {
         }
 
         proofRequest.requestedPredicates.concurrentForEach { (referent, requestedPredicate) ->
-            val credentials =
-                agent.anoncredsService.getCredentialsForProofRequest(proofRequest, referent)
+            val anonCredsNonRevokedInterval = proofRequest.requestedAttributes
+            val anoncredsProofRequest = AnonCredsProofRequest(
+                name = proofRequest.name,
+                version = proofRequest.version,
+                nonce = proofRequest.nonce,
+                requestedAttributes = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedAttribute(proofRequest.requestedAttributes),
+                requestedPredicates = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedPredicate(proofRequest.requestedPredicates),
+                nonRevoked = MapperProofRequestAnoncredsProofRequest.toAnonCredsTimeInterval(proofRequest.nonRevoked),
+                ver = proofRequest.ver
+            )
 
-            val predicates = credentials.concurrentMap { credentialInfo ->
-                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItem(
-                    proofRequest,
-                    requestedPredicate.nonRevoked,
+            val credentials =
+                agent.anonCredsHolderService.getCredentialsForProofRequest(
+                    options = GetCredentialsForProofRequestOptions(
+                        proofRequest = anoncredsProofRequest,
+                        attributeReferent = referent
+                    ))
+
+
+            val predicates = credentials.credentials.concurrentMap { credentialInfo ->
+                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
+                    anoncredsProofRequest,
+                    anonCredsNonRevokedInterval,
                     credentialInfo,
                 )
 
@@ -1027,11 +1068,12 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun getRevocationStatusForRequestedItem(
         proofRequest: ProofRequest,
         nonRevoked: RevocationInterval?,
-        credential: IndyCredentialInfo,
+        credential: CredentialForProofRequest,
     ): Pair<Boolean?, Int?> {
+
         val requestNonRevoked = nonRevoked ?: proofRequest.nonRevoked
-        val credentialRevocationId = credential.credentialRevocationId
-        val revocationRegistryId = credential.revocationRegistryId
+        val credentialRevocationId = credential.credentialInfo.credentialRevocationId
+        val revocationRegistryId = credential.credentialInfo.revocationRegistryId
         if (requestNonRevoked == null || credentialRevocationId == null || revocationRegistryId == null) {
             return Pair(null, null)
         }
@@ -1041,6 +1083,30 @@ class ProofServiceV2(val agent: Agent) {
         }
 
         return agent.revocationService.getRevocationStatus(
+            credentialRevocationId,
+            revocationRegistryId,
+            requestNonRevoked
+        )
+    }
+
+    suspend fun getRevocationStatusForRequestedItemAnoncreds(
+        proofRequest: AnonCredsProofRequest,
+        nonRevoked: AnonCredsNonRevokedInterval?,
+        credential: CredentialForProofRequest,
+    ): Pair<Boolean?, Int?> {
+
+        val requestNonRevoked = nonRevoked ?: proofRequest.nonRevoked
+        val credentialRevocationId = credential.credentialInfo.credentialRevocationId
+        val revocationRegistryId = credential.credentialInfo.revocationRegistryId
+        if (requestNonRevoked == null || credentialRevocationId == null || revocationRegistryId == null) {
+            return Pair(null, null)
+        }
+
+        if (agent.agentConfig.ignoreRevocationCheck) {
+            return Pair(false, requestNonRevoked.to?.toInt())
+        }
+
+        return agent.revocationService.getRevocationStatusAnonCreds(
             credentialRevocationId,
             revocationRegistryId,
             requestNonRevoked

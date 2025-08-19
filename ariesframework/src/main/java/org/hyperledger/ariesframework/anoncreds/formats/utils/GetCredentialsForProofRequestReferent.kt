@@ -11,6 +11,15 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsReque
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
+import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
+import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
+import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
+import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
+import org.slf4j.LoggerFactory
+import java.util.Date
 
 interface CredentialWithInfo {
     val credentialInfo: AnonCredsCredentialInfo
@@ -19,14 +28,16 @@ interface CredentialWithInfo {
 class GetCredentialsForProofRequestReferent {
 
     companion object {
-        /**
-         * Equivalente ao getCredentialsForProofRequestReferent do TS.
-         */
+
+        private val logger =
+            LoggerFactory.getLogger(GetCredentialsForProofRequestReferent::class.java)
+
+
         suspend fun getCredentialsForProofRequestReferent(
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
             attributeReferent: String
-        ): List<CredentialWithInfo> {
+        ): GetCredentialsForProofRequestReturn {
 
             return agent.anonCredsHolderService.getCredentialsForProofRequest(
                 options = GetCredentialsForProofRequestOptions(
@@ -48,12 +59,11 @@ class GetCredentialsForProofRequestReferent {
          * Equivalente ao getRevocationStatus do TS.
          */
         suspend fun getRevocationStatus(
-            agentContext: AgentContext,
+            agent: Agent,
             proofRequest: AnonCredsProofRequest,
             requestedItem: Any, // AnonCredsRequestedAttribute | AnonCredsRequestedPredicate
             credentialInfo: AnonCredsCredentialInfo
         ): RevocationStatusResult {
-            // requestedItem tem a propriedade nonRevoked em ambos os tipos
             val requestNonRevoked: AnonCredsNonRevokedInterval? = when (requestedItem) {
                 is AnonCredsRequestedAttribute -> requestedItem.nonRevoked
                     ?: proofRequest.nonRevoked
@@ -67,30 +77,31 @@ class GetCredentialsForProofRequestReferent {
             val credentialRevocationId = credentialInfo.credentialRevocationId
             val revocationRegistryId = credentialInfo.revocationRegistryId
 
-            // Se não há intervalo de não-revogação OU a credencial não é revogável, não buscamos status
             if (requestNonRevoked == null || credentialRevocationId == null || revocationRegistryId.isNullOrBlank()) {
                 return RevocationStatusResult(isRevoked = null, timestamp = null)
             }
 
-            agentContext.config.logger.trace(
+            logger.trace(
                 "Fetching credential revocation status for credential revocation id '$credentialRevocationId' " +
                         "with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
             )
 
             // Boas práticas (Aries RFC 0441)
-            assertBestPracticeRevocationInterval(requestNonRevoked)
+            RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
 
-            val toTs = requestNonRevoked.to ?: dateToTimestamp(java.util.Date())
-            val (revocationStatusList) = fetchRevocationStatusList(
-                agentContext = agentContext,
-                revocationRegistryId = revocationRegistryId,
-                timestamp = toTs
-            )
+            val toTs = requestNonRevoked.to ?: dateToTimestamp(Date())
+            val revocationStatusList: AnonCredsRevocationStatusList =
+                AnonCredsObjects.fetchRevocationStatusList(
+                    agent = agent,
+                    revocationRegistryId = revocationRegistryId,
+                    timestamp = toTs
+                )
+
 
             val index = credentialRevocationId.toInt()
             val isRevoked = revocationStatusList.revocationList[index] == 1
 
-            agentContext.config.logger.trace(
+            logger.trace(
                 "Credential with credential revocation index '$credentialRevocationId' is " +
                         (if (isRevoked) "" else "not ") +
                         "revoked with revocation interval to '${requestNonRevoked.to}' & from '${requestNonRevoked.from}'"
@@ -102,11 +113,9 @@ class GetCredentialsForProofRequestReferent {
             )
         }
 
-        /**
-         * Equivalente ao getCredentialsForAnonCredsProofRequest do TS.
-         * Paraleliza o cálculo de revogação por credencial (Promise.all -> async/awaitAll).
-         */
+
         suspend fun getCredentialsForAnonCredsProofRequest(
+            agent: Agent,
             proofRequest: AnonCredsProofRequest,
             options: AnonCredsGetCredentialsForProofRequestOptions
         ): AnonCredsCredentialsForProofRequest = coroutineScope {
@@ -115,14 +124,18 @@ class GetCredentialsForProofRequestReferent {
 
             // requested_attributes
             for ((referent, requestedAttribute) in proofRequest.requestedAttributes) {
-                val credentials =
-                    getCredentialsForProofRequestReferent(agentContext, proofRequest, referent)
+                val getCredentialsForProofRequestReferentReturn =
+                    getCredentialsForProofRequestReferent(
+                        agent = agent,
+                        proofRequest = proofRequest,
+                        attributeReferent = referent
+                    )
 
-                val matches = credentials
+                val matches = getCredentialsForProofRequestReferentReturn.credentials
                     .map { credential ->
                         async {
                             val rev = getRevocationStatus(
-                                agentContext = agentContext,
+                                agent = agent,
                                 proofRequest = proofRequest,
                                 requestedItem = requestedAttribute,
                                 credentialInfo = credential.credentialInfo
@@ -137,7 +150,7 @@ class GetCredentialsForProofRequestReferent {
                         }
                     }
                     .awaitAll()
-                    .let { SortRequestedCredentialsMatches.sortRequestedCredentialsMatches(it) }
+                    .let { SortRequestedCredentialsMatches.sortRequestedCredentialsAttrMatches(it) }
 
                 val filtered = if (options.filterByNonRevocationRequirements == true) {
                     matches.filter { it.revoked != true }
@@ -148,13 +161,18 @@ class GetCredentialsForProofRequestReferent {
 
             // requested_predicates
             for ((referent, requestedPredicate) in proofRequest.requestedPredicates) {
-                val credentials =
-                    getCredentialsForProofRequestReferent(proofRequest, referent)
+                val getCredentialsForProofRequestReferentReturn =
+                    getCredentialsForProofRequestReferent(
+                        agent = agent,
+                        proofRequest = proofRequest,
+                        attributeReferent = referent
+                    )
 
-                val matches = credentials
+                val matches = getCredentialsForProofRequestReferentReturn.credentials
                     .map { credential ->
                         async {
                             val rev = getRevocationStatus(
+                                agent = agent,
                                 proofRequest = proofRequest,
                                 requestedItem = requestedPredicate,
                                 credentialInfo = credential.credentialInfo
@@ -168,7 +186,7 @@ class GetCredentialsForProofRequestReferent {
                         }
                     }
                     .awaitAll()
-                    .let { SortRequestedCredentialsMatches.sortRequestedCredentialsMatches(it) }
+                    .let { SortRequestedCredentialsMatches.sortRequestedCredentialsPredicatesMatches(it) }
 
                 val filtered = if (options.filterByNonRevocationRequirements == true) {
                     matches.filter { it.revoked != true }
@@ -183,6 +201,12 @@ class GetCredentialsForProofRequestReferent {
             )
 
         }
+
+        private fun dateToTimestamp(date: Date): Long {
+            return date.time / 1000
+        }
     }
+
+
 }
 

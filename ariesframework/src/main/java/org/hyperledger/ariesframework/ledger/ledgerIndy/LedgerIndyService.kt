@@ -22,6 +22,7 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRecord
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRecord
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
@@ -107,6 +108,10 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         val schemaJson = Json.encodeToString(schema)
 
         return Pair(schemaJson, seqNo)
+    }
+
+    override suspend fun getSchemas(schemaIds: Set<String>): Map<String, AnonCredsSchema> {
+        throw Exception("not implemented for indy")
     }
 
     override suspend fun registerCredentialDefinition(
@@ -270,6 +275,10 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
 
     }
 
+    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): uniffi.indy_besu_vdr.RevocationRegistryDefinition {
+        throw Exception("not implemented for indy")
+    }
+
     override suspend fun getRevocationRegistryDelta(
         id: String,
         to: Int, // TODO to: Int = (System.currentTimeMillis() / 1000L).toInt(),
@@ -344,6 +353,13 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
 //            logger.debug("Revocation record: creddefid= ${rev.credDefId} | \n revocRegDef= ${rev.revocRegDef} | \n revocRegId= ${rev.revocRegId} | \n createdat= ${rev.createdAt} | \n updatedat= ${rev.updatedAt.toString()}"
 //            )
 //        }
+    }
+
+    override suspend fun getRevocationStatusList(
+        id: String,
+        timestamp: Int
+    ): uniffi.indy_besu_vdr.RevocationStatusList {
+        throw Exception("not implemented for indy")
     }
 
     private fun validateResponse(response: String) {

@@ -35,7 +35,7 @@ class SortRequestedCredentialsMatches {
         }
 
         // Atalho: atributos
-        fun sortRequestedCredentialsMatches(
+        fun sortRequestedCredentialsAttrMatches(
             credentials: List<AnonCredsRequestedAttributeMatch>
         ): List<AnonCredsRequestedAttributeMatch> =
             sortRequestedCredentialsMatches(
@@ -45,7 +45,7 @@ class SortRequestedCredentialsMatches {
             )
 
         // Atalho: predicados
-        fun sortRequestedCredentialsMatches(
+        fun sortRequestedCredentialsPredicatesMatches(
             credentials: List<AnonCredsRequestedPredicateMatch>
         ): List<AnonCredsRequestedPredicateMatch> =
             sortRequestedCredentialsMatches(
