@@ -46,6 +46,8 @@ import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
+import anoncreds_uniffi.W3cProcess
+
 class AnoncredsProofFormatService (
     override val formatKey: String = "anoncreds",
     val agent: Agent

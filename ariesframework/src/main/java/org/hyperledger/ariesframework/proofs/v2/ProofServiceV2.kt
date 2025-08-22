@@ -35,7 +35,6 @@ import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.CreateProposalProofOptionsV2
 import org.hyperledger.ariesframework.proofs.models.GetCredentialsForRequestOptions
-import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.NegotiateProofProposalOptions
 import org.hyperledger.ariesframework.proofs.models.NegotiateProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.ProofConstants
@@ -45,9 +44,13 @@ import org.hyperledger.ariesframework.proofs.models.ProofRole
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.RequestedAttribute
+import org.hyperledger.ariesframework.proofs.models.RequestedAttributeAnonCreds
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.models.RequestedPredicate
+import org.hyperledger.ariesframework.proofs.models.RequestedPredicateAnonCreds
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestOptions
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
@@ -943,8 +946,8 @@ class ProofServiceV2(val agent: Agent) {
      * @param retrievedCredentials the retrieved credentials to auto select from.
      * @return a ``RequestedCredentials`` object.
      */
-    suspend fun autoSelectCredentialsForProofRequest(retrievedCredentials: RetrievedCredentials): RequestedCredentials {
-        val requestedCredentials = RequestedCredentials()
+    suspend fun autoSelectCredentialsForProofRequest(retrievedCredentials: RetrievedCredentialsAnonCreds): RequestedCredentialsAnoncreds {
+        val requestedCredentials = RequestedCredentialsAnoncreds()
         retrievedCredentials.requestedAttributes.keys.forEach { attributeName ->
             val attributeArray = retrievedCredentials.requestedAttributes[attributeName]!!
 
@@ -985,22 +988,11 @@ class ProofServiceV2(val agent: Agent) {
      * @param proofRequest the proof request to build the requested credentials object from.
      * @return ``RetrievedCredentials`` object.
      */
-    suspend fun getRequestedCredentialsForProofRequest(proofRequest: ProofRequest): RetrievedCredentials {
-        val retrievedCredentials = RetrievedCredentials()
+    suspend fun getRequestedCredentialsForProofRequest(anoncredsProofRequest: AnonCredsProofRequest): RetrievedCredentialsAnonCreds {
+        val retrievedCredentials = RetrievedCredentialsAnonCreds()
         val lock = Mutex()
 
-        proofRequest.requestedAttributes.concurrentForEach { (referent, requestedAttribute) ->
-            val anonCredsNonRevokedInterval = MapperProofRequestAnoncredsProofRequest.toAnonCredsTimeInterval(proofRequest.nonRevoked),
-            val anoncredsProofRequest = AnonCredsProofRequest(
-                name = proofRequest.name,
-                version = proofRequest.version,
-                nonce = proofRequest.nonce,
-                requestedAttributes = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedAttribute(proofRequest.requestedAttributes),
-                requestedPredicates = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedPredicate(proofRequest.requestedPredicates),
-                nonRevoked = anonCredsNonRevokedInterval,
-                ver = proofRequest.ver
-            )
-
+        anoncredsProofRequest.requestedAttributes.concurrentForEach { (referent, requestedAttribute) ->
             val credentials =
                 agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
@@ -1011,15 +1003,15 @@ class ProofServiceV2(val agent: Agent) {
             val attributes = credentials.credentials.concurrentMap { credentialInfo ->
                 val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
                     anoncredsProofRequest,
-                    anonCredsNonRevokedInterval,
+                    requestedAttribute.nonRevoked,
                     credentialInfo,
                 )
 
-                RequestedAttribute(
-                    credentialInfo.referent,
+                RequestedAttributeAnonCreds(
+                    referent,
                     deltaTimestamp,
                     true,
-                    credentialInfo,
+                    credentialInfo.credentialInfo,
                     revoked
                 )
             }
@@ -1028,18 +1020,7 @@ class ProofServiceV2(val agent: Agent) {
             }
         }
 
-        proofRequest.requestedPredicates.concurrentForEach { (referent, requestedPredicate) ->
-            val anonCredsNonRevokedInterval = proofRequest.requestedAttributes
-            val anoncredsProofRequest = AnonCredsProofRequest(
-                name = proofRequest.name,
-                version = proofRequest.version,
-                nonce = proofRequest.nonce,
-                requestedAttributes = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedAttribute(proofRequest.requestedAttributes),
-                requestedPredicates = MapperProofRequestAnoncredsProofRequest.toAnonCredsRequestedPredicate(proofRequest.requestedPredicates),
-                nonRevoked = MapperProofRequestAnoncredsProofRequest.toAnonCredsTimeInterval(proofRequest.nonRevoked),
-                ver = proofRequest.ver
-            )
-
+        anoncredsProofRequest.requestedPredicates.concurrentForEach { (referent, requestedPredicate) ->
             val credentials =
                 agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
@@ -1051,11 +1032,15 @@ class ProofServiceV2(val agent: Agent) {
             val predicates = credentials.credentials.concurrentMap { credentialInfo ->
                 val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
                     anoncredsProofRequest,
-                    anonCredsNonRevokedInterval,
+                    requestedPredicate.nonRevoked,
                     credentialInfo,
                 )
 
-                RequestedPredicate(credentialInfo.referent, deltaTimestamp, credentialInfo, revoked)
+                RequestedPredicateAnonCreds(
+                    referent,
+                    deltaTimestamp,
+                    credentialInfo.credentialInfo,
+                    revoked)
             }
             lock.withLock {
                 retrievedCredentials.requestedPredicates[referent] = predicates

@@ -27,7 +27,9 @@ import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
 
@@ -97,7 +99,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun acceptRequest(
         proofRecordId: String,
-        requestedCredentials: RequestedCredentials,
+        requestedCredentials: RequestedCredentialsAnoncreds,
         comment: String? = null,
     ): ProofExchangeRecord {
 
@@ -126,7 +128,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = proofRecordId,
-                proofRequestedCredentials = requestedCredentials,
+                proofRequestedCredentialsAnoncreds = requestedCredentials,
             ),
         )
 
@@ -188,7 +190,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      * @param proofRecordId the id of the proof request to get the matching credentials for.
      * @return [RetrievedCredentials] object.
      */
-    suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentials {
+    suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentialsAnonCreds {
         val record = agent.proofRepository.getById(proofRecordId)
         // Select protocol version
         val recordMessageType =

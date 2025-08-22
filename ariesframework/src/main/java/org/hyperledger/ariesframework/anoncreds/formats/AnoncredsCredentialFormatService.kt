@@ -229,10 +229,8 @@ class AnoncredsCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord
     ) {
         logger.info("Processing anoncreds credential offer for credential record ${credentialExchangeRecord.id}")
-        logger.info("attachment credential offer  ${attachment}")
 
         val offer = AnonCredsCredentialOffer.fromAttachment(attachment)//FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
-        logger.info("credential offer: ${offer}")
         if (offer.schemaId.isBlank() || offer.credDefId.isBlank()) {
             throw ProblemReportError(
                 message = "Invalid credential offer",
@@ -259,19 +257,13 @@ class AnoncredsCredentialFormatService(
 
         val cd = agent.ledgerService.getCredentialDefinition(offer.credDefId)
         val credentialDefinition = cd.replace("\\\"", "\"")
-        PrintLongLine.print(">>>> cred def : ${credentialDefinition}")
-
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
-        logger.info("linkSecret: ${linkSecret}")
-
         val holderDid = getHolderDid(credentialExchangeRecord)
-        logger.info("holderDid: ${holderDid}")
 
         var credentialDefinitionUniffi : CredentialDefinition? = null
         try {
             credentialDefinitionUniffi =
                 CredentialDefinition(credentialDefinition)
-            logger.info("credentialDefinitionUniffi: ${credentialDefinitionUniffi.toJson()}")
             PrintLongLine.print(">>>> cred def uniffi: ${credentialDefinitionUniffi.toJson()}")
         }catch (e: Throwable){
             logger.error("error anoncred uniffi: ${e.message}")

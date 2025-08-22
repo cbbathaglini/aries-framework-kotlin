@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttrib
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -27,6 +28,7 @@ data class HistoryRecord(
     var credentials: MutableList<CredentialRecordBinding>? = null,
     var credentialPreviewAttr: List<CredentialPreviewAttribute>? = null,
     var proofRequestedCredentials: RequestedCredentials? = null,
+    var proofRequestedCredentialsAnoncreds: RequestedCredentialsAnoncreds? = null,
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.proofs.models.PredicateType
+import org.hyperledger.ariesframework.proofs.models.ProofAttributeInfo
 
 @Serializable
 data class AnonCredsRequestedPredicate(
@@ -15,4 +16,12 @@ data class AnonCredsRequestedPredicate(
     val restrictions: List<AnonCredsProofRequestRestriction>? = null,
     @SerialName("non_revoked")
     val nonRevoked: AnonCredsNonRevokedInterval? = null
-)
+){
+    fun asAnonCredsRequestedAttribute(): AnonCredsRequestedAttribute {
+        return AnonCredsRequestedAttribute(
+            name=name,
+            names=null,
+            nonRevoked = nonRevoked,
+            restrictions = restrictions)
+    }
+}

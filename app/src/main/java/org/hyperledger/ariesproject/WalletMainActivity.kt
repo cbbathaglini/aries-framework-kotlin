@@ -37,6 +37,8 @@ import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofConstants
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
@@ -128,7 +130,7 @@ class WalletMainActivity : AppCompatActivity() {
                 } else if (it.record.state == ProofState.Done) {
                     proofProgress?.dismiss()
                     showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived){
+                } else if (it.record.state == ProofState.PresentationReceived) {
                     receivePresentationProof(app, it)
                 }
             }
@@ -145,7 +147,7 @@ class WalletMainActivity : AppCompatActivity() {
                 } else if (it.record.state == ProofState.Done) {
                     proofProgress?.dismiss()
                     showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived){
+                } else if (it.record.state == ProofState.PresentationReceived) {
                     //DESCOMENTAR
                     //receivePresentationProof(app, it)
                 }
@@ -197,7 +199,10 @@ class WalletMainActivity : AppCompatActivity() {
         val (message, proofRecord) = app.agent.proofService.createAck(it.record)
         val connection = app.agent.connectionRepository.getById(it.record.connectionId)
         app.agent.messageSender.send(OutboundMessage(message, connection))
-        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(proofRecord.id, PresentationMessageV2.type)
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            PresentationMessageV2.type
+        )
         val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
 
         // Primeiro, parseia como JsonElement
@@ -361,7 +366,7 @@ class WalletMainActivity : AppCompatActivity() {
                     sendProblemReport = true
                 )
                 app.agent.credentialsV2.declineOffer(
-                    credentialRecordId= id,
+                    credentialRecordId = id,
                     options = decline,
                 )
             } catch (e: Exception) {
@@ -397,7 +402,10 @@ class WalletMainActivity : AppCompatActivity() {
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentials.acceptOffer(
-                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    AcceptOfferOptions(
+                        credentialRecordId = id,
+                        autoAcceptCredential = AutoAcceptCredential.Always
+                    ),
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -415,43 +423,44 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-   private fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
-            Log.i("CV2", "HERE")
-            val app = application as WalletApp
-            val progress = ProgressDialog(this)
-            progress.setTitle("Loading")
-            progress.setCancelable(true)
+    private fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
+        Log.i("CV2", "HERE")
+        val app = application as WalletApp
+        val progress = ProgressDialog(this)
+        progress.setTitle("Loading")
+        progress.setCancelable(true)
 
-            val job = lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val connectionRecordList = app.agent.connectionRepository.getAll()
-                    Log.i("connectionRecordList", connectionRecordList.toString())
+        val job = lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val connectionRecordList = app.agent.connectionRepository.getAll()
+                Log.i("connectionRecordList", connectionRecordList.toString())
 
-                    val connectionRecord = app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
-                    Log.i("IDD", connectionRecord.toString())
-                    app.agent.credentialsV2.acceptOffer(
-                        AcceptCredentialOfferOptionsV2(
-                            credentialExchangeRecord = credentialExchangeRecord,
-                            credentialFormats = credentialExchangeRecord.formats,
-                            autoAcceptCredential = AutoAcceptCredential.Always,
-                        )
+                val connectionRecord =
+                    app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
+                Log.i("IDD", connectionRecord.toString())
+                app.agent.credentialsV2.acceptOffer(
+                    AcceptCredentialOfferOptionsV2(
+                        credentialExchangeRecord = credentialExchangeRecord,
+                        credentialFormats = credentialExchangeRecord.formats,
+                        autoAcceptCredential = AutoAcceptCredential.Always,
                     )
-                } catch (e: Exception) {
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        Log.d("demo", e.localizedMessage)
-                        progress.dismiss()
-                        showAlert("Failed to receive a credential.")
-                    }
+                )
+            } catch (e: Exception) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    Log.d("demo", e.localizedMessage)
+                    progress.dismiss()
+                    showAlert("Failed to receive a credential.")
                 }
             }
+        }
 
-            progress.setOnCancelListener {
-                job.cancel()
-            }
-            progress.show()
+        progress.setOnCancelListener {
+            job.cancel()
+        }
+        progress.show()
 
 
-            credentialProgress = progress
+        credentialProgress = progress
     }
 
     private fun sendProof(id: String, version: String) {
@@ -462,24 +471,26 @@ class WalletMainActivity : AppCompatActivity() {
 
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val requestedCredentials : RequestedCredentials
                 //val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
 
                 if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
-                    val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                    requestedCredentials =
+                    val retrievedCredentials =
+                        app.agent.proofs.getRequestedCredentialsForProofRequest(id)
+                    val requestedCredentials: RequestedCredentials =
                         app.agent.proofService.autoSelectCredentialsForProofRequest(
                             retrievedCredentials
                         )
-                }else{
-                    val retrievedCredentials = app.agent.proofCommandV2.getRequestedCredentialsForProofRequest(id)
-                    requestedCredentials =
+                    app.agent.proofs.acceptRequest(id, requestedCredentials)
+                } else {
+                    val retrievedCredentials: RetrievedCredentialsAnonCreds =
+                        app.agent.proofCommandV2.getRequestedCredentialsForProofRequest(id)
+                    val requestedCredentialsAnoncreds: RequestedCredentialsAnoncreds =
                         app.agent.proofServiceV2.autoSelectCredentialsForProofRequest(
                             retrievedCredentials
                         )
-                    Log.d("PROOF", requestedCredentials.toJsonString())
+                    Log.d("PROOF", requestedCredentialsAnoncreds.toJsonString())
+                    app.agent.proofCommandV2.acceptRequest(id, requestedCredentialsAnoncreds)
                 }
-                app.agent.proofCommandV2.acceptRequest(id, requestedCredentials)
 
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -517,7 +528,10 @@ class WalletMainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION))
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(
+            this,
+            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION)
+        )
     }
 
     class SimpleItemRecyclerViewAdapter(
@@ -551,7 +565,11 @@ class WalletMainActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuItemHolder {
-            val binding = MenuItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val binding = MenuItemListContentBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
             return MenuItemHolder(binding)
         }
 
@@ -567,7 +585,8 @@ class WalletMainActivity : AppCompatActivity() {
 
         override fun getItemCount() = values.size
 
-        inner class MenuItemHolder(val binding: MenuItemListContentBinding) : RecyclerView.ViewHolder(binding.root) {
+        inner class MenuItemHolder(val binding: MenuItemListContentBinding) :
+            RecyclerView.ViewHolder(binding.root) {
             val contentView: TextView = binding.content
         }
 
