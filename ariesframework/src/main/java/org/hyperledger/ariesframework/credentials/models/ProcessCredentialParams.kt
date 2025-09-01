@@ -7,9 +7,9 @@ import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 
 @Serializable
-data class ProcessCredentialParams (
+data class ProcessCredentialParams(
     val credentialExchangeRecord: CredentialExchangeRecord,
     val formatService: List<CredentialFormatService<*>>,
     val requestCredentialMessageV2: RequestCredentialMessageV2,
-    val message: IssueCredentialMessageV2
+    val message: IssueCredentialMessageV2,
 )

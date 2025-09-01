@@ -4,8 +4,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 
 @Serializable
-data class UploadTailsFileResult (
+data class UploadTailsFileResult(
     val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
-    val revocationRegistryDefinitionId: String?
-){
-}
+    val revocationRegistryDefinitionId: String?,
+)

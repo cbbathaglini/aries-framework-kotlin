@@ -19,7 +19,6 @@ import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
-import kotlin.math.log
 
 private enum class ReferentType {
     Attribute,
@@ -209,7 +208,7 @@ class RevocationService(val agent: Agent) {
 
         val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
 
-        logger.info("revocationRegistryDefinition.tailsHash(): ${revocationRegistryDefinition.tailsHash().toString()}")
+        logger.info("revocationRegistryDefinition.tailsHash(): ${revocationRegistryDefinition.tailsHash()}")
         if (!tailsFile.exists()) {
             logger.info("!tailsFile.exists()")
             val tailsLocation = revocationRegistryDefinition.tailsLocation()

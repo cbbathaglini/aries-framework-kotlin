@@ -10,5 +10,5 @@ data class CredentialFormatCreateProposalReturn(
     val format: Format,
     val attachment: Attachment,
     val appendAttachment: Attachment? = null,
-    val previewAttribute:  List<CredentialPreviewAttribute>? = emptyList()
+    val previewAttribute: List<CredentialPreviewAttribute>? = emptyList(),
 )

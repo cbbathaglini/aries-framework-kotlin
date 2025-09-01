@@ -7,7 +7,6 @@ import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = RevocationNotificationMessageV2.type
@@ -18,7 +17,7 @@ class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
 
         val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
             ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
-        logger.info("revocationMessage: ${revocationMessage.toString()}")
+        logger.info("revocationMessage: $revocationMessage")
 
         agent.revocationNotificationServicev2.processRevocationNotification(messageContext)
         return null

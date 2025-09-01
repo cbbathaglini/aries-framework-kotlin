@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 data class LegacyToW3cCredentialOptions(
     val credential: AnonCredsCredential,
     val issuerId: String,
-    val processOptions: ProcessOptions? = null
+    val processOptions: ProcessOptions? = null,
 )
 
 @Serializable
 data class ProcessOptions(
     val credentialDefinition: AnonCredsCredentialDefinition,
     val credentialRequestMetadata: AnonCredsCredentialRequestMetadata,
-    val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null
+    val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null,
 )

@@ -11,7 +11,8 @@ enum class ClaimFormat(val value: String) {
     DiVc("di_vc"),
     DiVp("di_vp"),
     SdJwtVc("vc+sd-jwt"),
-    MsoMdoc("mso_mdoc");
+    MsoMdoc("mso_mdoc"),
+    ;
 
     companion object {
         fun fromValue(value: String): ClaimFormat? {

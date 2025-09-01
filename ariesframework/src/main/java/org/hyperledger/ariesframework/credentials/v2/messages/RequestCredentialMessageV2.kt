@@ -23,7 +23,7 @@ class RequestCredentialMessageV2(
 
     val comment: String? = null,
 
-    ) : AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
 
     companion object {
         val type = CredentialsConstants.REQUEST_CREDENTIAL_V2
@@ -36,6 +36,4 @@ class RequestCredentialMessageV2(
     override fun toString(): String {
         return "RequestCredentialMessageV2(formats=$formats, requestAttachments=$requestAttachments, attachments=$attachments, goalCode=$goalCode, goal=$goal, comment=$comment)"
     }
-
-
 }

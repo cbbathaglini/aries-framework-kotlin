@@ -7,5 +7,5 @@ data class AnonCredsSchema(
     val issuerId: String,
     val name: String,
     val version: String,
-    val attrNames: List<String>
+    val attrNames: List<String>,
 )

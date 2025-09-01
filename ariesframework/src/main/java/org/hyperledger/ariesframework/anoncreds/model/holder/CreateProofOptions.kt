@@ -14,5 +14,5 @@ data class CreateProofOptions(
     val schemas: AnonCredsSchemas,
     val credentialDefinitions: AnonCredsCredentialDefinitions,
     val revocationRegistries: AnonCredsRevocationRegistries,
-    val useUnqualifiedIdentifiers: Boolean? = null
+    val useUnqualifiedIdentifiers: Boolean? = null,
 )

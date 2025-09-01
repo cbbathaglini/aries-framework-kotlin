@@ -34,10 +34,8 @@ open class ProblemReportMessage(
     @SerialName("escalation_uri")
     open val escalationUri: String? = null,
 
-
-    ) : AgentMessage(generateId(), type) {
+) : AgentMessage(generateId(), type) {
     companion object {
         const val type = "https://didcomm.org/notification/2.0/problem-report"
-
     }
 }

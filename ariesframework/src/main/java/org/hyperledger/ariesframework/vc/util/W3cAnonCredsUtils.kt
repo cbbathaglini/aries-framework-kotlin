@@ -4,10 +4,9 @@ import W3cCredentialSubject
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsClaimRecord
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRecord
-import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.credentials.utils.Functions
@@ -17,10 +16,9 @@ import org.hyperledger.ariesframework.vc.model.W3cAnonCredsCredentialMetadata
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class W3cAnonCredsUtils {
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(W3cAnonCredsUtils::class.java)
         fun getW3cRecordAnonCredsTags(
             credentialSubject: W3cCredentialSubject,
@@ -31,10 +29,10 @@ class W3cAnonCredsUtils {
             revocationRegistryId: String? = null,
             credentialRevocationId: String? = null,
             linkSecretId: String,
-            methodName: String
-        ): Tags { //MutableMap<String, Any?> {
+            methodName: String,
+        ): Tags { // MutableMap<String, Any?> {
 
-            val tags  = mutableMapOf<String, Any?>(
+            val tags = mutableMapOf<String, Any?>(
                 "anonCredsLinkSecretId" to linkSecretId,
                 "anonCredsCredentialDefinitionId" to credentialDefinitionId,
                 "anonCredsSchemaId" to schemaId,
@@ -53,8 +51,8 @@ class W3cAnonCredsUtils {
                         "anonCredsUnqualifiedCredentialDefinitionId" to Indyidentifiers.getUnqualifiedDidIndyDid(credentialDefinitionId),
                         "anonCredsUnqualifiedSchemaId" to Indyidentifiers.getUnqualifiedDidIndyDid(schemaId),
                         "anonCredsUnqualifiedSchemaIssuerId" to Indyidentifiers.getUnqualifiedDidIndyDid(schema.issuerId),
-                        "anonCredsUnqualifiedRevocationRegistryId" to revocationRegistryId?.let { Indyidentifiers.getUnqualifiedDidIndyDid(it) }
-                    )
+                        "anonCredsUnqualifiedRevocationRegistryId" to revocationRegistryId?.let { Indyidentifiers.getUnqualifiedDidIndyDid(it) },
+                    ),
                 )
             }
 
@@ -69,7 +67,6 @@ class W3cAnonCredsUtils {
             return convertToTags(tags)
         }
 
-
         private fun convertToTags(map: MutableMap<String, Any?>): Tags {
             return map.mapNotNull { (key, value) ->
                 (value as? String)?.let { key to it }
@@ -79,7 +76,7 @@ class W3cAnonCredsUtils {
         fun anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord: W3cCredentialRecord, useUnqualifiedIdentifiers: Boolean?): AnonCredsCredentialInfo {
             val w3c = w3cCredentialRecord.credential
 
-            val w3cCredential :W3cJsonLdVerifiableCredential = W3cJsonLdVerifiableCredential(
+            val w3cCredential: W3cJsonLdVerifiableCredential = W3cJsonLdVerifiableCredential(
                 context = w3c.context,
                 id = w3c.id,
                 type = w3c.type,
@@ -88,23 +85,23 @@ class W3cAnonCredsUtils {
                 credentialSubject = w3c.credentialSubject,
                 expirationDate = w3c.expirationDate,
                 credentialSchema = w3c.credentialSchema,
-                credentialStatus = w3c.credentialStatus
+                credentialStatus = w3c.credentialStatus,
             )
             if (w3cCredential.credentialSubject.size > 1) {
                 throw CredoError("Credential subject must be an object, not an array.")
             }
 
             val anonCredsTags = getAnonCredsTagsFromRecord(w3cCredentialRecord)
-            logger.info("tags: ${anonCredsTags.toString()}")
+            logger.info("tags: $anonCredsTags")
             if (anonCredsTags == null) {
                 throw CredoError("AnonCreds tags not found on credential record.")
             }
 
             val w3cAnonCredsCredentialMetadataElement = w3cCredentialRecord.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey)
-                ?:  throw CredoError("AnonCreds metadata not found on credential record.")
+                ?: throw CredoError("AnonCreds metadata not found on credential record.")
 
             val w3cAnonCredsCredentialMetadata = Json.decodeFromJsonElement<W3cAnonCredsCredentialMetadata>(W3cAnonCredsCredentialMetadata.serializer(), w3cAnonCredsCredentialMetadataElement)
-            logger.info("w3cAnonCredsCredentialMetadata: ${w3cAnonCredsCredentialMetadata.toString()}")
+            logger.info("w3cAnonCredsCredentialMetadata: $w3cAnonCredsCredentialMetadata")
 
             val credentialDefinitionId = anonCredsTags.unqualifiedCredentialDefinitionId
                 ?.takeIf { useUnqualifiedIdentifiers == true }
@@ -118,7 +115,6 @@ class W3cAnonCredsUtils {
                 ?.takeIf { useUnqualifiedIdentifiers == true }
                 ?: anonCredsTags.revocationRegistryId
 
-
             return AnonCredsCredentialInfo(
                 credentialId = w3cCredentialRecord.id,
                 attributes = (w3cCredential.credentialSubject.first().claims as AnonCredsClaimRecord),
@@ -131,20 +127,18 @@ class W3cAnonCredsUtils {
                 createdAt = w3cCredentialRecord.createdAt,
                 updatedAt = w3cCredentialRecord.updatedAt ?: w3cCredentialRecord.createdAt,
             )
-
         }
 
         fun getAnonCredsTagsFromRecord(record: W3cCredentialRecord): AnonCredsCredentialTags? {
-            logger.info("record: ${record.toString()}")
+            logger.info("record: $record")
 
-
-            val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) //as? W3cAnonCredsCredentialMetadata
-            logger.info("metadata: ${metadata.toString()}")
+            val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) // as? W3cAnonCredsCredentialMetadata
+            logger.info("metadata: $metadata")
             if (metadata == null) return null
 
             val tags = record.getTags() as? Map<String, String?> ?: return null
 
-            logger.info("taaaags: ${tags.toString()}")
+            logger.info("taaaags: $tags")
             val requiredKeys = listOf(
                 "anonCredsLinkSecretId",
                 "anonCredsMethodName",
@@ -152,7 +146,7 @@ class W3cAnonCredsUtils {
                 "anonCredsSchemaName",
                 "anonCredsSchemaVersion",
                 "anonCredsSchemaIssuerId",
-                "anonCredsCredentialDefinitionId"
+                "anonCredsCredentialDefinitionId",
             )
 
             if (requiredKeys.any { tags[it].isNullOrBlank() }) return null
@@ -172,12 +166,11 @@ class W3cAnonCredsUtils {
                 unqualifiedSchemaIssuerId = tags["anonCredsUnqualifiedSchemaIssuerId"],
                 unqualifiedCredentialDefinitionId = tags["anonCredsUnqualifiedCredentialDefinitionId"],
                 unqualifiedRevocationRegistryId = tags["anonCredsUnqualifiedRevocationRegistryId"],
-                dynamicAttributes = tags.filterKeys { it.startsWith("anonCredsAttr::") }
+                dynamicAttributes = tags.filterKeys { it.startsWith("anonCredsAttr::") },
             )
         }
 
         fun anonCredsCredentialInfoFromAnonCredsRecord(anonCredsCredentialRecord: AnonCredsCredentialRecord): AnonCredsCredentialInfo {
-
             val attributes = mutableMapOf<String, String>()
 
             for ((attribute, valueWrapper) in anonCredsCredentialRecord.credencial.values) {

@@ -13,19 +13,18 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatCoordinator
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
-import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
-import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
-import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.hyperledger.ariesframework.credentials.models.CredentialRole
-import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferParams
+import org.hyperledger.ariesframework.credentials.models.AcceptProposalParams
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptionsV2
 import org.hyperledger.ariesframework.credentials.models.AcceptRequestParams
 import org.hyperledger.ariesframework.credentials.models.CreateCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.models.CreateCredentialParams
-import org.hyperledger.ariesframework.credentials.v2.models.problemreport.CreateCredentialProblemReportOptions
 import org.hyperledger.ariesframework.credentials.models.CreateCredentialRequestOptions
+import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
+import org.hyperledger.ariesframework.credentials.models.CredentialRole
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.ProcessCredentialParams
@@ -45,6 +44,7 @@ import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialM
 import org.hyperledger.ariesframework.credentials.v2.models.CreateProposalOptionsV2
 import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.v2.models.Format
+import org.hyperledger.ariesframework.credentials.v2.models.problemreport.CreateCredentialProblemReportOptions
 import org.hyperledger.ariesframework.credentials.v2.models.problemreport.SendCredentialProblemReportOptions
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.problemreports.messages.DescriptionOptions
@@ -55,15 +55,14 @@ import org.hyperledger.ariesframework.util.composeAutoAccept
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
-
 class CredentialServiceV2(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(CredentialServiceV2::class.java)
 
     private val credentialExchangeRepository = agent.credentialExchangeRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
     private val ledgerService = agent.ledgerService
-    private val credentialFormats = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent= agent), LegacyIndyCredentialFormatService(agent= agent))
-    private val credentialFormatCoordinator = CredentialFormatCoordinator(agent,credentialFormats)
+    private val credentialFormats = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent = agent), LegacyIndyCredentialFormatService(agent = agent))
+    private val credentialFormatCoordinator = CredentialFormatCoordinator(agent, credentialFormats)
 
     init {
         Registers(agent).initialize()
@@ -75,11 +74,11 @@ class CredentialServiceV2(val agent: Agent) {
      * @param options options for the proposal.
      * @return proposal message and associated credential record.
      */
-     suspend fun createProposal(options: CreateProposalOptionsV2): Pair<ProposeCredentialMessageV2, CredentialExchangeRecord> {
+    suspend fun createProposal(options: CreateProposalOptionsV2): Pair<ProposeCredentialMessageV2, CredentialExchangeRecord> {
         logger.debug("Get the Format Service and Create Proposal Message")
 
         val formatServices = this.getFormatServices(options.credentialFormats)
-        if (formatServices.isEmpty()){
+        if (formatServices.isEmpty()) {
             throw CredoError("Unable to create proposal. No supported formats")
         }
 
@@ -98,7 +97,7 @@ class CredentialServiceV2(val agent: Agent) {
             credentialExchangeRecord,
             options.comment,
             options.goalCode,
-            options.goal
+            options.goal,
         )
 
         val proposalCredentialMessageV2 = this.credentialFormatCoordinator.createProposal(createProposalParams)
@@ -116,8 +115,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @param messageContext the inbound propose credential message
      * @returns credential record appropriate for this incoming message (once accepted)
      */
-     suspend fun processProposal(messageContext: InboundMessageContext): CredentialExchangeRecord {
-
+    suspend fun processProposal(messageContext: InboundMessageContext): CredentialExchangeRecord {
         val connection = messageContext.connection
         val proposalMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as ProposeCredentialMessageV2
         logger.debug("[2.0] Processing credential proposal with id ${proposalMessage.id}")
@@ -133,13 +131,13 @@ class CredentialServiceV2(val agent: Agent) {
             val proposalCredentialMessage = agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
                 associatedRecordId = credentialRecord.id,
                 messageType = ProposeCredentialMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             )
 
             val offerCredentialMessage = didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
-                    associatedRecordId = credentialRecord.id,
-                    messageType = OfferCredentialMessageV2.type,
-                    role = DidCommMessageRole.Sender
+                associatedRecordId = credentialRecord.id,
+                messageType = OfferCredentialMessageV2.type,
+                role = DidCommMessageRole.Sender,
             )
 
             // assert
@@ -150,14 +148,14 @@ class CredentialServiceV2(val agent: Agent) {
                 messageContext = messageContext,
                 lastReceivedMessage = proposalCredentialMessage,
                 lastSentMessage = offerCredentialMessage,
-                expectedConnectionId = credentialRecord.connectionId
+                expectedConnectionId = credentialRecord.connectionId,
             )
 
             // verification of authorization
             if (credentialRecord.connectionId == null) {
                 agent.connectionService.matchIncomingMessageToRequestMessageInOutOfBandExchange(
-                    messageContext= messageContext,
-                    expectedConnectionId = credentialRecord.connectionId
+                    messageContext = messageContext,
+                    expectedConnectionId = credentialRecord.connectionId,
                 )
                 credentialRecord.connectionId = connection?.id
             }
@@ -165,7 +163,7 @@ class CredentialServiceV2(val agent: Agent) {
             credentialFormatCoordinator.processProposal(
                 credentialExchangeRecord = credentialRecord,
                 formatServices = formatServices,
-                message = proposalMessage
+                message = proposalMessage,
             )
 
             updateState(credentialRecord, CredentialState.ProposalReceived)
@@ -174,7 +172,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         // assert
         agent.connectionService.assertConnectionOrOutOfBandExchange(
-            messageContext = messageContext
+            messageContext = messageContext,
         )
 
         // none credential record finded with this thread id - create a new one
@@ -185,23 +183,21 @@ class CredentialServiceV2(val agent: Agent) {
             parentThreadId = proposalMessage.thread?.parentThreadId,
             state = CredentialState.ProposalReceived,
             role = CredentialRole.Issuer,
-            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
         )
 
         // process the proposal with format services
         credentialFormatCoordinator.processProposal(
             credentialExchangeRecord = credentialExchangeRecord,
             formatServices = formatServices,
-            message = proposalMessage
+            message = proposalMessage,
         )
 
         // save new registry and emit an event
         agent.credentialExchangeRepository.save(credentialExchangeRecord)
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy()))
         return credentialExchangeRecord
-
     }
-
 
     /**
      * Accept a received {@link ProposeCredentialMessageV2} and create a {@link OfferCredentialMessageV2}.
@@ -221,9 +217,8 @@ class CredentialServiceV2(val agent: Agent) {
      * @throws CredoError if no supported credential formats are provided or detected
      */
     suspend fun acceptProposal(
-        options: AcceptCredentialProposalOptions
+        options: AcceptCredentialProposalOptions,
     ): Pair<OfferCredentialMessageV2, CredentialExchangeRecord> {
-
         val credentialExchangeRecord = options.credentialExchangeRecord
         val credentialFormats = options.credentialFormats
         val comment = options.comment
@@ -239,7 +234,7 @@ class CredentialServiceV2(val agent: Agent) {
             val proposalMessage = didCommMessageRepository.getAgentMessage(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = ProposeCredentialMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             )
             val proposalMessageV2 = MessageSerializer.decodeFromString(proposalMessage) as ProposeCredentialMessageV2
             formatServices = getFormatServicesFromMessage(proposalMessageV2.formats)
@@ -255,14 +250,14 @@ class CredentialServiceV2(val agent: Agent) {
             comment = comment,
             goal = goal,
             goalCode = goalCode,
-            credentialFormats = credentialFormats
+            credentialFormats = credentialFormats,
         )
         val offerMessage = credentialFormatCoordinator.acceptProposal(acceptParams)
 
         credentialExchangeRecord.autoAcceptCredential = autoAcceptCredential ?: credentialExchangeRecord.autoAcceptCredential
         updateState(credentialExchangeRecord, CredentialState.OfferSent)
 
-        return Pair(offerMessage,credentialExchangeRecord)
+        return Pair(offerMessage, credentialExchangeRecord)
     }
 
     /**
@@ -272,7 +267,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @param options configuration for the offer see {@link NegotiateCredentialProposalOptions}
      * @returns Credential exchange record associated with the credential offer
      */
-    suspend fun negotiateProposal(options: NegotiateCredentialProposalOptions): Pair<CredentialExchangeRecord, OfferCredentialMessageV2>{
+    suspend fun negotiateProposal(options: NegotiateCredentialProposalOptions): Pair<CredentialExchangeRecord, OfferCredentialMessageV2> {
         val credentialExchangeRecord = options.credentialExchangeRecord
         val credentialFormats = options.credentialFormats
         val comment = options.comment
@@ -282,7 +277,7 @@ class CredentialServiceV2(val agent: Agent) {
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialExchangeRecord.assertState(CredentialState.ProposalReceived)
 
-        if (credentialExchangeRecord.connectionId.isNullOrBlank()){
+        if (credentialExchangeRecord.connectionId.isNullOrBlank()) {
             throw CredoError("No connectionId found for credential record '${credentialExchangeRecord.id}'. Connection-less issuance does not support negotiation.")
         }
 
@@ -297,7 +292,7 @@ class CredentialServiceV2(val agent: Agent) {
             comment = comment,
             goal = goal,
             goalCode = goalCode,
-            credentialFormats = credentialFormats
+            credentialFormats = credentialFormats,
         )
         val offerMessage = credentialFormatCoordinator.createOffer(createCredential)
         val autoAcceptCredential = options.autoAcceptCredential ?: credentialExchangeRecord.autoAcceptCredential
@@ -306,7 +301,6 @@ class CredentialServiceV2(val agent: Agent) {
         updateState(credentialExchangeRecord, CredentialState.OfferSent)
 
         return Pair(credentialExchangeRecord, offerMessage)
-
     }
 
     /**
@@ -318,26 +312,26 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns Object containing offer message and associated credential record
      *
      */
-    suspend fun createOffer(options: CreateCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, OfferCredentialMessageV2>{
+    suspend fun createOffer(options: CreateCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, OfferCredentialMessageV2> {
         val connectionRecord = options.connectionRecord
         val credentialFormats = options.credentialFormat
         val autoAcceptCredential = options.autoAcceptCredential
         val comment = options.comment
         val goal = options.goal
         val goalCode = options.goalCode
-        
+
         var formatServices = getFormatServices(credentialFormats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create offer. No supported formats.")
         }
-        
+
         val credentialExchangeRecord = CredentialExchangeRecord(
-            connectionId= connectionRecord?.id,
-            threadId= BaseRecord.generateId(),
-            state= CredentialState.OfferSent,
-            role= CredentialRole.Issuer,
-            autoAcceptCredential= autoAcceptCredential,
-            protocolVersion= CredentialsConstants.PROTOCOL_VERSION_V2
+            connectionId = connectionRecord?.id,
+            threadId = BaseRecord.generateId(),
+            state = CredentialState.OfferSent,
+            role = CredentialRole.Issuer,
+            autoAcceptCredential = autoAcceptCredential,
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
         )
 
         val createCredential = CreateCredentialParams(
@@ -346,7 +340,7 @@ class CredentialServiceV2(val agent: Agent) {
             comment = comment,
             goal = goal,
             goalCode = goalCode,
-            credentialFormats = credentialFormats
+            credentialFormats = credentialFormats,
         )
         val offerMessage = credentialFormatCoordinator.createOffer(createCredential)
         logger.debug("Saving record and emitting state changed for credential exchange record ${credentialExchangeRecord.id}")
@@ -363,39 +357,38 @@ class CredentialServiceV2(val agent: Agent) {
      * @param messageContext the inbound offer credential message
      * @returns credential record appropriate for this incoming message (once accepted)
      */
-    suspend fun processOffer(messageContext: InboundMessageContext): CredentialExchangeRecord{
-
+    suspend fun processOffer(messageContext: InboundMessageContext): CredentialExchangeRecord {
         val connection = messageContext.connection
         val offerMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as OfferCredentialMessageV2
-        PrintLongLine.print("offer message long: ${offerMessage.toString()}")
+        PrintLongLine.print("offer message long: $offerMessage")
 
         logger.info("Processing credential offer with id ${offerMessage.id}")
 
         var credentialExchangeRecord = agent.credentialExchangeRepository.findByThreadRoleAndConnectionId(
             threadId = offerMessage.threadId,
             role = CredentialRole.Holder,
-            connectionId = connection?.id
+            connectionId = connection?.id,
         )
 
         val formatServices = getFormatServicesFromMessage(offerMessage.formats)
-        if (formatServices.isEmpty()){
+        if (formatServices.isEmpty()) {
             throw CredoError("Unable to process offer. No supported formats")
         }
 
         logger.info("formatservices: $formatServices")
 
-        if (credentialExchangeRecord!=null){
+        if (credentialExchangeRecord != null) {
             val proposeMessage = agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = ProposeCredentialMessageV2.type,
-                role = DidCommMessageRole.Sender
+                role = DidCommMessageRole.Sender,
             )
             logger.info("proposeMessage: ${proposeMessage?.toJsonString()}")
 
             val offerCredentialMessage = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = OfferCredentialMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             )
             logger.info("offerCredentialMessage: ${offerCredentialMessage?.toJsonString()}")
 
@@ -406,13 +399,13 @@ class CredentialServiceV2(val agent: Agent) {
                 messageContext = messageContext,
                 lastReceivedMessage = offerCredentialMessage,
                 lastSentMessage = proposeMessage,
-                expectedConnectionId = credentialExchangeRecord.connectionId
+                expectedConnectionId = credentialExchangeRecord.connectionId,
             )
 
             val processOfferParams = ProcessOfferParams(
                 credentialExchangeRecord = credentialExchangeRecord,
                 message = offerMessage,
-                formatService = formatServices
+                formatService = formatServices,
             )
             credentialFormatCoordinator.processOffer(processOfferParams)
 
@@ -421,60 +414,57 @@ class CredentialServiceV2(val agent: Agent) {
         }
 
         agent.connectionService.assertConnectionOrOutOfBandExchange(
-            messageContext = messageContext
+            messageContext = messageContext,
         )
 
         logger.info("No credential record found for offer, creating a new one")
 
         credentialExchangeRecord = CredentialExchangeRecord(
-            connectionId= connection?.id,
-            threadId= offerMessage.threadId,
-            parentThreadId= offerMessage.thread?.parentThreadId,
-            state= CredentialState.OfferReceived,
-            role= CredentialRole.Holder,
-            protocolVersion= CredentialsConstants.PROTOCOL_VERSION_V2,
-            formats = offerMessage.formats
+            connectionId = connection?.id,
+            threadId = offerMessage.threadId,
+            parentThreadId = offerMessage.thread?.parentThreadId,
+            state = CredentialState.OfferReceived,
+            role = CredentialRole.Holder,
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
+            formats = offerMessage.formats,
         )
 
         val processOfferParams = ProcessOfferParams(
             credentialExchangeRecord = credentialExchangeRecord,
             message = offerMessage,
-            formatService = formatServices
+            formatService = formatServices,
         )
         credentialFormatCoordinator.processOffer(processOfferParams)
 
         logger.info("Saving credential record and emit offer-received event")
         agent.credentialExchangeRepository.save(credentialExchangeRecord)
-        logger.info(" ===== credential exchange: ${credentialExchangeRecord.toString()}")
+        logger.info(" ===== credential exchange: $credentialExchangeRecord")
 
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy()))
 
         return credentialExchangeRecord
     }
 
-
-
-    suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, RequestCredentialMessageV2>{
-
+    suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): Pair<CredentialExchangeRecord, RequestCredentialMessageV2> {
         val credentialExchangeRecord = options.credentialExchangeRecord
         val credentialFormats = options.credentialFormats
 
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialExchangeRecord.assertState(CredentialState.OfferReceived)
-        logger.info("credentialExchangeRecord str: ${credentialExchangeRecord.toString()}")
+        logger.info("credentialExchangeRecord str: $credentialExchangeRecord")
 
         var formatServices = getFormatServicesByList(credentialFormats!!)
-        if (formatServices.isEmpty()){
-             val offerMessage  : OfferCredentialMessageV2? = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
+        if (formatServices.isEmpty()) {
+            val offerMessage: OfferCredentialMessageV2? = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = OfferCredentialMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             )
 
             formatServices = if (offerMessage != null) getFormatServicesFromMessage(offerMessage.formats) else emptyList()
         }
 
-        if (formatServices.isEmpty()){
+        if (formatServices.isEmpty()) {
             throw CredoError("Unable to accept offer. No supported formats provided as input or in offer message")
         }
 
@@ -484,7 +474,7 @@ class CredentialServiceV2(val agent: Agent) {
             comment = options.comment,
             goal = options.goal,
             goalCode = options.goalCode,
-            credentialFormats = credentialFormats
+            credentialFormats = credentialFormats,
         )
 
         val requestCredentialMessageV2 = credentialFormatCoordinator.acceptOffer(acceptOfferParams)
@@ -494,11 +484,10 @@ class CredentialServiceV2(val agent: Agent) {
         updateState(credentialExchangeRecord, CredentialState.RequestSent)
         logger.debug("credential updated status to request sent")
 
-        logger.info("credentialExchangeRecord metadata ==> ${credentialExchangeRecord.metadata.toString()}")
+        logger.info("credentialExchangeRecord metadata ==> ${credentialExchangeRecord.metadata}")
 
         return Pair(credentialExchangeRecord, requestCredentialMessageV2)
     }
-
 
     /**
      * Create a {@link ProposePresentationMessage} as response to a received credential offer.
@@ -508,7 +497,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns Object containing proposal message and associated credential record
      *
      */
-    suspend fun negotiateOffer(options: NegotiateCredentialOfferOptions): Pair<CredentialExchangeRecord, ProposeCredentialMessageV2>{
+    suspend fun negotiateOffer(options: NegotiateCredentialOfferOptions): Pair<CredentialExchangeRecord, ProposeCredentialMessageV2> {
         val credentialExchangeRecord = options.credentialExchangeRecord
         val autoAcceptCredential = options.autoAcceptCredential
         val credentialFormats = options.credentialFormat
@@ -516,12 +505,12 @@ class CredentialServiceV2(val agent: Agent) {
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialExchangeRecord.assertState(CredentialState.OfferReceived)
 
-        if (credentialExchangeRecord.connectionId == null){
+        if (credentialExchangeRecord.connectionId == null) {
             throw CredoError("No connectionId found for credential record '${credentialExchangeRecord.id}'. Connection-less issuance does not support negotiation.")
         }
 
         val formatServices = getFormatServices(credentialFormats)
-        if (credentialFormats.isEmpty()){
+        if (credentialFormats.isEmpty()) {
             throw CredoError("Unable to create proposal. No supported formats")
         }
 
@@ -531,7 +520,7 @@ class CredentialServiceV2(val agent: Agent) {
             credentialExchangeRecord,
             options.comment,
             options.goalCode,
-            options.goal
+            options.goal,
         )
         val proposeMessage = credentialFormatCoordinator.createProposal(createProposalParams)
         credentialExchangeRecord.autoAcceptCredential = autoAcceptCredential ?: credentialExchangeRecord.autoAcceptCredential
@@ -540,41 +529,39 @@ class CredentialServiceV2(val agent: Agent) {
         return Pair(credentialExchangeRecord, proposeMessage)
     }
 
-
     /**
      * Create a {@link RequestCredentialMessageV2} as beginning of protocol process.
      * @returns Object containing offer message and associated credential record
      *
      */
-    suspend fun createRequest(options: CreateCredentialRequestOptions): Pair<CredentialExchangeRecord, RequestCredentialMessageV2>{
-
+    suspend fun createRequest(options: CreateCredentialRequestOptions): Pair<CredentialExchangeRecord, RequestCredentialMessageV2> {
         val autoAcceptCredential = options.autoAcceptCredential
         val connectionRecord = options.connectionRecord
         val credentialFormats = options.credentialFormats
 
-        logger.info("credentialFormats: ${credentialFormats.toString()}")
+        logger.info("credentialFormats: $credentialFormats")
 
         val formatServices = getFormatServicesFromMessage(credentialFormats)
-        if (formatServices.isEmpty()){
+        if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
         val credentialExchangeRecord = CredentialExchangeRecord(
-            connectionId= connectionRecord.id,
-            threadId= UUID.randomUUID().toString(),
-            state= CredentialState.RequestSent,
-            role= CredentialRole.Holder,
+            connectionId = connectionRecord.id,
+            threadId = UUID.randomUUID().toString(),
+            state = CredentialState.RequestSent,
+            role = CredentialRole.Holder,
             autoAcceptCredential = autoAcceptCredential,
-            protocolVersion= CredentialsConstants.PROTOCOL_VERSION_V2
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
         )
 
         val requestParams = RequestCredentialParams(
-            credentialFormats = credentialFormats, //map
+            credentialFormats = credentialFormats, // map
             formatServices = formatServices,
             credentialRecord = credentialExchangeRecord,
             comment = options.comment,
             goalCode = options.goalCode,
-            goal = options.goal
+            goal = options.goal,
         )
         val requestMessage = credentialFormatCoordinator.createRequest(requestParams)
 
@@ -584,7 +571,6 @@ class CredentialServiceV2(val agent: Agent) {
 
         return Pair(credentialExchangeRecord, requestMessage)
     }
-
 
     /**
      * Process a received {@link RequestCredentialMessage}. This will not accept the credential request
@@ -596,7 +582,7 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns credential record associated with the credential request message
      *
      */
-    suspend fun processRequest(messageContext: InboundMessageContext): CredentialExchangeRecord{
+    suspend fun processRequest(messageContext: InboundMessageContext): CredentialExchangeRecord {
         val connection = messageContext.connection
         val message = messageContext.message
 
@@ -604,7 +590,7 @@ class CredentialServiceV2(val agent: Agent) {
         logger.debug("Processing credential request with id ${requestMessage.id}")
 
         var credentialExchangeRecord = agent.credentialExchangeRepository.findSingleByQuery(
-            "{\"threadId\": \"${requestMessage.threadId}\", \"role\": \"${CredentialRole.Issuer}\"}"
+            "{\"threadId\": \"${requestMessage.threadId}\", \"role\": \"${CredentialRole.Issuer}\"}",
         )
 
         val formatServices = getFormatServicesFromMessage(requestMessage.formats)
@@ -612,17 +598,17 @@ class CredentialServiceV2(val agent: Agent) {
             throw CredoError("Unable to process proposal. No supported formats")
         }
 
-        if (credentialExchangeRecord != null){
+        if (credentialExchangeRecord != null) {
             val proposalCredentialMessage = agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = ProposeCredentialMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             )
 
             val offerCredentialMessage = didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = OfferCredentialMessageV2.type,
-                role = DidCommMessageRole.Sender
+                role = DidCommMessageRole.Sender,
             )
 
             // assert
@@ -633,14 +619,14 @@ class CredentialServiceV2(val agent: Agent) {
                 messageContext = messageContext,
                 lastReceivedMessage = proposalCredentialMessage,
                 lastSentMessage = offerCredentialMessage,
-                expectedConnectionId = credentialExchangeRecord.connectionId
+                expectedConnectionId = credentialExchangeRecord.connectionId,
             )
 
             // verification of authorization
             if (credentialExchangeRecord.connectionId == null) {
                 agent.connectionService.matchIncomingMessageToRequestMessageInOutOfBandExchange(
-                    messageContext= messageContext,
-                    expectedConnectionId = credentialExchangeRecord.connectionId
+                    messageContext = messageContext,
+                    expectedConnectionId = credentialExchangeRecord.connectionId,
                 )
                 credentialExchangeRecord.connectionId = connection?.id
             }
@@ -648,7 +634,7 @@ class CredentialServiceV2(val agent: Agent) {
             val processRequestParams = ProcessRequestParams(
                 credentialExchangeRecord = credentialExchangeRecord,
                 message = requestMessage,
-                formatService = formatServices
+                formatService = formatServices,
             )
             credentialFormatCoordinator.processRequest(processRequestParams)
 
@@ -657,12 +643,11 @@ class CredentialServiceV2(val agent: Agent) {
             return credentialExchangeRecord
         }
 
-
         agent.connectionService.assertConnectionOrOutOfBandExchange(
             messageContext = messageContext,
             lastReceivedMessage = null,
             lastSentMessage = null,
-            expectedConnectionId = null
+            expectedConnectionId = null,
         )
 
         logger.debug("No credential record found for offer, creating a new one")
@@ -673,13 +658,13 @@ class CredentialServiceV2(val agent: Agent) {
             parentThreadId = requestMessage.thread?.parentThreadId,
             state = CredentialState.RequestReceived,
             role = CredentialRole.Issuer,
-            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2
+            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
         )
 
         val processRequestParams = ProcessRequestParams(
             credentialExchangeRecord = credentialExchangeRecord,
             message = requestMessage,
-            formatService = formatServices
+            formatService = formatServices,
         )
         credentialFormatCoordinator.processRequest(processRequestParams)
 
@@ -691,8 +676,7 @@ class CredentialServiceV2(val agent: Agent) {
         return credentialExchangeRecord
     }
 
-    suspend fun acceptRequest(options: AcceptRequestOptionsV2): Pair<CredentialExchangeRecord, IssueCredentialMessageV2>{
-
+    suspend fun acceptRequest(options: AcceptRequestOptionsV2): Pair<CredentialExchangeRecord, IssueCredentialMessageV2> {
         val credentialExchangeRecord = options.credentialExchangeRecord
         val credentialFormats = options.credentialFormats
         val autoAcceptCredential = options.autoAcceptCredential
@@ -705,7 +689,7 @@ class CredentialServiceV2(val agent: Agent) {
             val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = RequestCredentialMessageV2.type,
-                role = DidCommMessageRole.Sender
+                role = DidCommMessageRole.Sender,
             )
 
             formatServices = if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()
@@ -721,7 +705,7 @@ class CredentialServiceV2(val agent: Agent) {
             comment = options.comment,
             goal = options.goal,
             goalCode = options.goalCode,
-            credentialFormat = credentialFormats
+            credentialFormat = credentialFormats,
         )
         val message = credentialFormatCoordinator.acceptRequest(acceptRequestParams)
 
@@ -742,33 +726,34 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns credential record associated with the issue credential message
      *
      */
-    suspend fun processCredential(messageContext: InboundMessageContext): CredentialExchangeRecord{
+    suspend fun processCredential(messageContext: InboundMessageContext): CredentialExchangeRecord {
         val connection = messageContext.connection
         val message = messageContext.plaintextMessage
-        logger.info("message in process ${message.toString()}")
+        logger.info("message in process $message")
 
         val issueCredential = MessageSerializer.decodeFromString(message) as IssueCredentialMessageV2
         logger.info("Processing credential with id ${issueCredential.id}")
-        logger.info("Processing credential ${issueCredential.credentialAttachments.first().toString()}")
+        logger.info("Processing credential ${issueCredential.credentialAttachments.first()}")
 
         val credentialExchangeRecord = agent.credentialExchangeRepository.getByThreadAndRoleAndConnectionId(
             threadId = issueCredential.threadId,
             connectionId = connection?.id,
-            role = CredentialRole.Holder.name)
+            role = CredentialRole.Holder.name,
+        )
 
-        logger.info("credentialExchangeRecord ========> ${credentialExchangeRecord.toString()}")
-        logger.info("credentialExchange AnonCredsCredentialRequestMetadataKey process => ${credentialExchangeRecord.metadata.toString()}")
+        logger.info("credentialExchangeRecord ========> $credentialExchangeRecord")
+        logger.info("credentialExchange AnonCredsCredentialRequestMetadataKey process => ${credentialExchangeRecord.metadata}")
 
         val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = RequestCredentialMessageV2.type,
-            role = DidCommMessageRole.Sender
+            role = DidCommMessageRole.Sender,
         ) ?: throw CredoError("Request message not found")
 
         val offerMessage = didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = OfferCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
+            role = DidCommMessageRole.Receiver,
         )
         logger.info("request message ${requestMessage.toJsonString()} || \n offer message: ${offerMessage?.toJsonString()}")
 
@@ -780,11 +765,11 @@ class CredentialServiceV2(val agent: Agent) {
             messageContext = messageContext,
             lastReceivedMessage = requestMessage,
             lastSentMessage = offerMessage,
-            expectedConnectionId = credentialExchangeRecord.connectionId
+            expectedConnectionId = credentialExchangeRecord.connectionId,
         )
 
         val formatServices = getFormatServicesFromMessage(issueCredential.formats)
-        if (formatServices.isEmpty()){
+        if (formatServices.isEmpty()) {
             throw CredoError("Unable to process credential. No supported formats")
         }
 
@@ -792,17 +777,16 @@ class CredentialServiceV2(val agent: Agent) {
             credentialExchangeRecord = credentialExchangeRecord,
             formatService = formatServices,
             requestCredentialMessageV2 = requestMessage,
-            message = issueCredential
+            message = issueCredential,
         )
-        PrintLongLine.print("processCredentialParams ==> ${processCredentialParams.toString()}")
-        PrintLongLine.print("processCredentialParams message==> ${processCredentialParams.message.credentialAttachments.toString()}")
+        PrintLongLine.print("processCredentialParams ==> $processCredentialParams")
+        PrintLongLine.print("processCredentialParams message==> ${processCredentialParams.message.credentialAttachments}")
 
         credentialFormatCoordinator.processCredential(processCredentialParams)
         updateState(credentialExchangeRecord, CredentialState.CredentialReceived)
 
-        logger.info("processCredentialParams ==> ${processCredentialParams.toString()}")
+        logger.info("processCredentialParams ==> $processCredentialParams")
         return credentialExchangeRecord
-
     }
 
     private suspend fun printAllDidCommMessages() {
@@ -828,9 +812,8 @@ class CredentialServiceV2(val agent: Agent) {
      *
      */
     suspend fun acceptCredential(
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ): Pair<CredentialExchangeRecord, CredentialAckMessageV2> {
-
         logger.info("accept <<<<<<<<<")
         // Ensure the protocol and state are valid before proceeding
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
@@ -838,22 +821,22 @@ class CredentialServiceV2(val agent: Agent) {
 
         val ackMessage = CredentialAckMessageV2(
             status = AckStatus.OK,
-            threadId = credentialExchangeRecord.threadId
+            threadId = credentialExchangeRecord.threadId,
         ).apply {
             setThread(
                 threadId = credentialExchangeRecord.threadId,
-                parentThreadId = credentialExchangeRecord.parentThreadId
+                parentThreadId = credentialExchangeRecord.parentThreadId,
             )
         }
 
-        logger.info("ack ${ackMessage.toString()}")
+        logger.info("ack $ackMessage")
 
         updateState(
             credentialRecord = credentialExchangeRecord,
-            newState = CredentialState.Done
+            newState = CredentialState.Done,
         )
 
-        logger.info("credentialExchangeRecord ack ${credentialExchangeRecord.toString()}")
+        logger.info("credentialExchangeRecord ack $credentialExchangeRecord")
 
         return credentialExchangeRecord to ackMessage
     }
@@ -865,27 +848,27 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns credential record associated with the credential acknowledgement message
      *
      */
-    suspend fun processAck(messageContext: InboundMessageContext): CredentialExchangeRecord{
+    suspend fun processAck(messageContext: InboundMessageContext): CredentialExchangeRecord {
         val connection = messageContext.connection
 
         val ackMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as CredentialAckMessageV2
         logger.debug("Processing credential ack with id ${ackMessage.id}")
 
         var credentialExchangeRecord = agent.credentialExchangeRepository.getSingleByQuery(
-            "{\"threadId\": \"${ackMessage.threadId}\", \"role\": \"${CredentialRole.Issuer}\", \"connectionId\": \"${connection?.id}\"}"
+            "{\"threadId\": \"${ackMessage.threadId}\", \"role\": \"${CredentialRole.Issuer}\", \"connectionId\": \"${connection?.id}\"}",
         )
         credentialExchangeRecord.connectionId = connection?.id
 
         val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = RequestCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
+            role = DidCommMessageRole.Receiver,
         ) ?: throw CredoError("Request message not found")
 
         val issueCredentialMessage = didCommMessageRepository.getTypedAgentMessage<IssueCredentialMessageV2>(
             associatedRecordId = credentialExchangeRecord.id,
             messageType = IssueCredentialMessageV2.type,
-            role = DidCommMessageRole.Sender
+            role = DidCommMessageRole.Sender,
         ) ?: throw CredoError("issue credential message not found")
 
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
@@ -895,12 +878,11 @@ class CredentialServiceV2(val agent: Agent) {
             messageContext = messageContext,
             lastReceivedMessage = requestMessage,
             lastSentMessage = issueCredentialMessage,
-            expectedConnectionId = credentialExchangeRecord.connectionId
+            expectedConnectionId = credentialExchangeRecord.connectionId,
         )
 
         updateState(credentialExchangeRecord, CredentialState.Done)
         return credentialExchangeRecord
-
     }
 
     /**
@@ -910,23 +892,22 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns a {@link CredentialProblemReportMessageV2}
      *
      */
-    suspend fun createProblemReport(options: CreateCredentialProblemReportOptions): Pair<CredentialExchangeRecord, CredentialProblemReportMessageV2>{
+    suspend fun createProblemReport(options: CreateCredentialProblemReportOptions): Pair<CredentialExchangeRecord, CredentialProblemReportMessageV2> {
         val credentialExchangeRecord = options.credentialExchangeRecord
         val message = CredentialProblemReportMessageV2(
             description = DescriptionOptions(
                 en = options.description,
-                code = CredentialProblemReportReason.IssuanceAbandoned.name
-            )
+                code = CredentialProblemReportReason.IssuanceAbandoned.name,
+            ),
         )
 
         message.setThread(
             threadId = credentialExchangeRecord.threadId,
-            parentThreadId = credentialExchangeRecord.parentThreadId
+            parentThreadId = credentialExchangeRecord.parentThreadId,
         )
 
         return Pair(credentialExchangeRecord, message)
     }
-
 
     /**
      * Get all the format service objects for a given credential format
@@ -934,21 +915,21 @@ class CredentialServiceV2(val agent: Agent) {
      * @return List of matching CredentialFormatService instances
      */
     private fun getFormatServices(
-        credentialFormats: Map<String, JsonElement>
+        credentialFormats: Map<String, JsonElement>,
     ): List<CredentialFormatService<*>> {
         return credentialFormats.keys.mapNotNull { getFormatServiceForFormatKey(it) }
             .distinct()
     }
 
     private fun getFormatServicesByList(
-        credentialFormats: List<Format>
+        credentialFormats: List<Format>,
     ): List<CredentialFormatService<*>> {
         return credentialFormats.mapNotNull { getFormatServiceForFormat(it.attachId) }
             .distinct()
     }
 
     private fun getFormatServiceForFormatKey(formatKey: String): CredentialFormatService<*>? {
-        return credentialFormats.find {  formatService -> formatService.formatKey == formatKey }
+        return credentialFormats.find { formatService -> formatService.formatKey == formatKey }
     }
 
     private fun getFormatServiceForFormat(format: String): CredentialFormatService<*>? {
@@ -958,7 +939,7 @@ class CredentialServiceV2(val agent: Agent) {
     protected fun getFormatServiceForRecordType(credentialRecordType: String): CredentialFormatService<*> {
         return credentialFormats.find { it.credentialRecordType == credentialRecordType }
             ?: throw CredoError(
-                "No format service found for credential record type $credentialRecordType in v2 credential protocol"
+                "No format service found for credential record type $credentialRecordType in v2 credential protocol",
             )
     }
 
@@ -982,10 +963,10 @@ class CredentialServiceV2(val agent: Agent) {
         credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
         credentialRecord.assertState(CredentialState.OfferReceived)
 
-        if (options.sendProblemReport != null && options.sendProblemReport){
+        if (options.sendProblemReport != null && options.sendProblemReport) {
             val sendCredentialProblemReportOptions = SendCredentialProblemReportOptions(
                 credentialRecordId = credentialRecord.id,
-                description = options.problemReportDescription ?: "offer declined"
+                description = options.problemReportDescription ?: "offer declined",
             )
             sendProblemReport(sendCredentialProblemReportOptions)
         }
@@ -1000,17 +981,17 @@ class CredentialServiceV2(val agent: Agent) {
      * @param credentialRecordId The id of the credential record for which to send problem report
      * @returns credential record associated with the credential problem report message
      */
-    suspend fun sendProblemReport(options: SendCredentialProblemReportOptions) : CredentialExchangeRecord {
+    suspend fun sendProblemReport(options: SendCredentialProblemReportOptions): CredentialExchangeRecord {
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
         val offerMessage = agent.credentialServiceV2.findOfferMessage(credentialRecord.id)
 
         val createCredentialProblemReportOptions = CreateCredentialProblemReportOptions(
             credentialExchangeRecord = credentialRecord,
-            description = options.description
+            description = options.description,
         )
         val (credentialExchangeRecord, credentialProblemReportMessageV2) = createProblemReport(createCredentialProblemReportOptions)
 
-        var connectionRecord : ConnectionRecord? = null
+        var connectionRecord: ConnectionRecord? = null
         if (credentialRecord.connectionId != null) {
             connectionRecord = agent.connectionService.getById(credentialRecord.connectionId!!)
         }
@@ -1025,12 +1006,11 @@ class CredentialServiceV2(val agent: Agent) {
             }
         }
 
-        //[TODO]como faz para colocar o connection se for connectiion-less???? mudei no Outboundmessage
+        // [TODO]como faz para colocar o connection se for connectiion-less???? mudei no Outboundmessage
         agent.messageSender.send(OutboundMessage(credentialProblemReportMessageV2, connectionRecord))
 
         return credentialRecord
     }
-
 
     /**
      * Determine whether the agent should automatically respond to a received proposal message.
@@ -1047,14 +1027,13 @@ class CredentialServiceV2(val agent: Agent) {
      */
     suspend fun shouldAutoRespondToProposal(
         credentialRecord: CredentialExchangeRecord,
-        messageContext: InboundMessageContext
+        messageContext: InboundMessageContext,
     ): Boolean {
-
         val proposalMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as ProposeCredentialMessageV2
 
         val autoAccept = composeAutoAccept(
             credentialRecord.autoAcceptCredential,
-            agent.agentConfig.autoAcceptCredential
+            agent.agentConfig.autoAcceptCredential,
         )
 
         // Always or Never settings short-circuit
@@ -1069,21 +1048,20 @@ class CredentialServiceV2(val agent: Agent) {
             val offerAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 offerMessage.formats,
-                offerMessage.offerAttachments
+                offerMessage.offerAttachments,
             )
 
             val proposalAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 proposalMessage.formats,
-                proposalMessage.proposalAttachments
+                proposalMessage.proposalAttachments,
             )
 
             val shouldAutoRespondToFormat = formatService.shouldAutoRespondToProposal(
                 credentialRecord = credentialRecord,
                 offerAttachment = offerAttachment,
-                proposalAttachment = proposalAttachment
+                proposalAttachment = proposalAttachment,
             )
-
 
             if (!shouldAutoRespondToFormat) return false
         }
@@ -1093,13 +1071,12 @@ class CredentialServiceV2(val agent: Agent) {
 
             return arePreviewAttributesEqual(
                 proposalMessage.credentialPreview.attributes,
-                offerMessage.credentialPreview.attributes
+                offerMessage.credentialPreview.attributes,
             )
         }
 
         return true
     }
-
 
     /**
      * Determine whether a credential offer should be automatically accepted.
@@ -1121,7 +1098,7 @@ class CredentialServiceV2(val agent: Agent) {
      */
     suspend fun shouldAutoRespondToOffer(
         credentialRecord: CredentialExchangeRecord,
-        messageContext: InboundMessageContext
+        messageContext: InboundMessageContext,
     ): Boolean {
         val offerMessage = messageContext.plaintextMessage
             .let { MessageSerializer.decodeFromString(it) as? OfferCredentialMessageV2 }
@@ -1129,7 +1106,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         val autoAccept = composeAutoAccept(
             credentialRecord.autoAcceptCredential,
-            agent.agentConfig.autoAcceptCredential
+            agent.agentConfig.autoAcceptCredential,
         )
 
         // Always or Never settings short-circuit
@@ -1146,19 +1123,19 @@ class CredentialServiceV2(val agent: Agent) {
             val offerAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 offerMessage.formats,
-                offerMessage.offerAttachments
+                offerMessage.offerAttachments,
             )
 
             val proposalAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 proposalMessage.formats,
-                proposalMessage.proposalAttachments
+                proposalMessage.proposalAttachments,
             )
 
             val shouldAutoRespond = formatService.shouldAutoRespondToOffer(
                 credentialRecord,
                 offerAttachment,
-                proposalAttachment
+                proposalAttachment,
             )
 
             if (!shouldAutoRespond) return false
@@ -1169,7 +1146,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         return arePreviewAttributesEqual(
             proposalPreview ?: emptyList(),
-            offerPreview ?: emptyList()
+            offerPreview ?: emptyList(),
         )
     }
 
@@ -1196,14 +1173,12 @@ class CredentialServiceV2(val agent: Agent) {
      * @return `true` if the request should be automatically accepted, `false` otherwise
      */
     suspend fun shouldAutoRespondToRequest(credentialRecord: CredentialExchangeRecord, messageContext: InboundMessageContext): Boolean {
-
         val requestCredentialMessageV2 =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestCredentialMessageV2
 
-
         val autoAccept = composeAutoAccept(
-                credentialRecord.autoAcceptCredential,
-                agent.agentConfig.autoAcceptCredential
+            credentialRecord.autoAcceptCredential,
+            agent.agentConfig.autoAcceptCredential,
         )
 
         if (autoAccept === AutoAcceptCredential.Always) return true
@@ -1218,26 +1193,26 @@ class CredentialServiceV2(val agent: Agent) {
             val offerAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 offerMessage.formats,
-                offerMessage.offerAttachments
+                offerMessage.offerAttachments,
             )
 
             val proposalAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 proposalMessage.formats,
-                proposalMessage.proposalAttachments
+                proposalMessage.proposalAttachments,
             )
 
             val requestAttachment = this.credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 requestCredentialMessageV2.formats,
-                requestCredentialMessageV2.requestAttachments
+                requestCredentialMessageV2.requestAttachments,
             )
 
             val shouldAutoRespondToFormat = formatService.shouldAutoRespondToRequest(
-                    credentialRecord,
-                    offerAttachment,
-                    requestAttachment,
-                    proposalAttachment,
+                credentialRecord,
+                offerAttachment,
+                requestAttachment,
+                proposalAttachment,
             )
 
             if (!shouldAutoRespondToFormat) return false
@@ -1250,10 +1225,9 @@ class CredentialServiceV2(val agent: Agent) {
         val issueMessage =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as IssueCredentialMessageV2
 
-
         val autoAccept = composeAutoAccept(
             credentialRecord.autoAcceptCredential,
-            agent.agentConfig.autoAcceptCredential
+            agent.agentConfig.autoAcceptCredential,
         )
 
         if (autoAccept === AutoAcceptCredential.Always) return true
@@ -1269,25 +1243,25 @@ class CredentialServiceV2(val agent: Agent) {
             val offerAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 offerMessage.formats,
-                offerMessage.offerAttachments
+                offerMessage.offerAttachments,
             )
 
             val proposalAttachment = credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 proposalMessage.formats,
-                proposalMessage.proposalAttachments
+                proposalMessage.proposalAttachments,
             )
 
             val requestAttachment = this.credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 requestMessage.formats,
-                requestMessage.requestAttachments
+                requestMessage.requestAttachments,
             )
 
             val issueAttachment = this.credentialFormatCoordinator.getAttachmentForService(
                 formatService,
                 issueMessage.formats,
-                issueMessage.credentialAttachments
+                issueMessage.credentialAttachments,
             )
 
             val shouldAutoRespondToFormat = formatService.shouldAutoRespondToCredential(
@@ -1315,14 +1289,14 @@ class CredentialServiceV2(val agent: Agent) {
 
     private suspend inline fun <reified T> findMessage(
         credentialExchangeId: String,
-        messageType: String
+        messageType: String,
     ): T? {
         val messageStr = agent.didCommMessageRepository.getAgentMessage(
             associatedRecordId = credentialExchangeId,
-            messageType = messageType
+            messageType = messageType,
         ) ?: return null
 
-        logger.info("messageStr: ${messageStr.toString()}")
+        logger.info("messageStr: $messageStr")
         return runCatching {
             MessageSerializer.decodeFromString(messageStr) as T
         }.getOrElse {
@@ -1333,7 +1307,7 @@ class CredentialServiceV2(val agent: Agent) {
 
     private fun arePreviewAttributesEqual(
         firstAttributes: List<CredentialPreviewAttribute>,
-        secondAttributes: List<CredentialPreviewAttribute>
+        secondAttributes: List<CredentialPreviewAttribute>,
     ): Boolean {
         if (firstAttributes.size != secondAttributes.size) return false
 
@@ -1359,8 +1333,6 @@ class CredentialServiceV2(val agent: Agent) {
         credentialExchangeRepository.update(credentialRecord)
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialRecord.copy()))
     }
-
-
 
     /*** -------------------------- ***/
 //    /**
@@ -1729,8 +1701,4 @@ class CredentialServiceV2(val agent: Agent) {
 //
 //        return CredentialProblemReportMessage(credentialRecord.threadId)
 //    }
-
-
-
-
 }

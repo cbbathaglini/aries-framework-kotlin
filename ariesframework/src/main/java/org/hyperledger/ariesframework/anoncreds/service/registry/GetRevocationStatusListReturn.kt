@@ -9,5 +9,5 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusL
 data class GetRevocationStatusListReturn(
     val revocationStatusList: AnonCredsRevocationStatusList? = null,
     val resolutionMetadata: AnonCredsResolutionMetadata,
-    val revocationStatusListMetadata: Map<String, @Contextual Any> = emptyMap() // Extensible
+    val revocationStatusListMetadata: Map<String, @Contextual Any> = emptyMap(), // Extensible
 )

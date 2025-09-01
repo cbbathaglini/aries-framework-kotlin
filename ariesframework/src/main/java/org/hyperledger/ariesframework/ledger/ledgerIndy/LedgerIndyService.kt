@@ -34,7 +34,6 @@ import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class LedgerIndyService(val agent: Agent) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerIndyService::class.java)
@@ -91,7 +90,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         val request = ledger.buildGetSchemaRequest(null, schemaId)
         val res = submitReadRequest(request)
         val response = jsonIgnoreUnknown.decodeFromString<SchemaResponse>(res)
-        logger.info("get schema response = ${response.toString()}")
+        logger.info("get schema response = $response")
         val seqNo = response.result.seqNo
             ?: throw Exception("Invalid schema response: $res")
         val attrNames = response.result.data.attr_names
@@ -151,9 +150,9 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
     override suspend fun getCredentialDefinition(id: String): String {
         logger.info("Get CredentialDefinition with id: $id")
         val request = ledger.buildGetCredDefRequest(null, id)
-        logger.info("request: ${request.toString()}")
+        logger.info("request: $request")
         val response = submitReadRequest(request)
-        logger.info("response: ${response.toString()}")
+        logger.info("response: $response")
 
         val json = Json.decodeFromString<JsonObject>(response)
         val result = json.get("result") as JsonObject?
@@ -241,20 +240,19 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
     override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.info("Get RevocationRegistryDefinition with id: $id")
         val request = ledger.buildGetRevocRegDefRequest(null, id)
-        logger.info("request: ${request.toString()}")
+        logger.info("request: $request")
         val response = submitReadRequest(request)
-        logger.info("response: ${response.toString()}")
+        logger.info("response: $response")
         val json = Json {
             ignoreUnknownKeys = true
         }
 
         val jsonObject = json.decodeFromString<JsonObject>(response)
-        logger.info("jsonObject: ${jsonObject.toString()}")
+        logger.info("jsonObject: $jsonObject")
         val result = jsonObject["result"]?.jsonObject
             ?: throw Exception("Invalid rev reg def response")
 
-
-        logger.info("result: ${result.toString()}")
+        logger.info("result: $result")
         val indyData = result["data"] as JsonObject?
             ?: throw Exception("Invalid rev reg def response")
         val issuerId = id.split(":")[0]
@@ -264,10 +262,9 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
             },
         )
 
-        val dataresponse= Json.encodeToString(data)
-        logger.info("dataresponse: ${dataresponse.toString()}")
+        val dataresponse = Json.encodeToString(data)
+        logger.info("dataresponse: $dataresponse")
         return dataresponse
-
     }
 
     override suspend fun getRevocationRegistryDelta(

@@ -17,7 +17,7 @@ data class CredentialsModuleConfigOptions(
  * Aceita um conjunto de opções e expõe getters para leitura.
  */
 class CredentialsModuleConfig(
-    private val options: CredentialsModuleConfigOptions
+    private val options: CredentialsModuleConfigOptions,
 ) {
 
     /**
@@ -26,5 +26,4 @@ class CredentialsModuleConfig(
      */
     val autoAcceptCredentials: AutoAcceptCredential
         get() = options.autoAcceptCredentials ?: AutoAcceptCredential.Never
-
 }

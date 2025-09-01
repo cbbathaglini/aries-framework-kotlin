@@ -6,11 +6,11 @@ import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
-data class CreateCredentialRequestOptions (
-    val credentialFormats : List<Format>,
+data class CreateCredentialRequestOptions(
+    val credentialFormats: List<Format>,
     val autoAcceptCredential: AutoAcceptCredential? = null,
     val comment: String? = null,
     val goal: String? = null,
     val goalCode: String? = null,
-    val connectionRecord: ConnectionRecord
+    val connectionRecord: ConnectionRecord,
 )

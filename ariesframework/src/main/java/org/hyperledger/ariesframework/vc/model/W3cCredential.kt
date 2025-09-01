@@ -1,21 +1,12 @@
 package org.hyperledger.ariesframework.vc.model
 
 import W3cCredentialSubject
-import android.os.Parcelable
-import androidx.versionedparcelable.VersionedParcelize
-import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonPrimitive
-import org.hyperledger.ariesframework.util.ConvertMapAnySerializer
 
 @Serializable
-data class W3cCredential (
+data class W3cCredential(
     @SerialName("@context")
     val context: List<JsonElement>,
     val id: String?,
@@ -32,7 +23,7 @@ data class W3cCredential (
 //        return json.encodeToString(W3cCredential.serializer(), this)
 //    }
 
-    companion object{
+    companion object {
 //        private val json = Json {
 //            prettyPrint = true
 //            ignoreUnknownKeys = true
@@ -53,7 +44,7 @@ data class W3cCredential (
     }
 }
 
-//abstract class W3cCredential {
+// abstract class W3cCredential {
 //
 //    @SerialName("@context")
 //    open var context: List<JsonElement> = emptyList()
@@ -84,4 +75,4 @@ data class W3cCredential (
 //    val contexts: List<Any>
 //        get() = context // ou `context.map(JsonElement::toString)` se desejar
 //
-//}
+// }

@@ -14,5 +14,5 @@ data class AnonCredsCredentialProposalFormat(
     @SerialName("issuer_id") val issuerId: String? = null,
 
     @SerialName("schema_issuer_did") val schemaIssuerDid: String? = null,
-    @SerialName("issuer_did") val issuerDid: String? = null
+    @SerialName("issuer_did") val issuerDid: String? = null,
 )

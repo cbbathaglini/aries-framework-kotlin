@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class W3cAnonCredsCredentialMetadata(
     val methodName: String,
     val credentialRevocationId: String? = null,
-    val linkSecretId: String
+    val linkSecretId: String,
 )

@@ -17,14 +17,14 @@ fun Tags.toJsonString(): String {
     return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), this)
 }
 
-//typealias Tags = Map<String, Any?>
-//fun Tags.toJsonString(): String {
+// typealias Tags = Map<String, Any?>
+// fun Tags.toJsonString(): String {
 //    val stringMap = this.mapNotNull { (key, value) ->
 //        value?.toString()?.let { key to it }
 //    }.toMap()
 //
 //    return Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), stringMap)
-//}
+// }
 
 fun List<String>.toJsonString(): String {
     return Json.encodeToString(ListSerializer(String.serializer()), this)
@@ -102,11 +102,11 @@ data class InboundMessageContext(
 data class OutboundMessageContext(
     val message: AgentMessage,
     val connection: ConnectionRecord? = null,
-    //val serviceParams: ServiceMessageParams? = null,
+    // val serviceParams: ServiceMessageParams? = null,
 //    val outOfBand: OutOfBandRecord? = null,
     val associatedRecord: BaseRecord? = null,
     val sessionId: String? = null,
-    val inboundMessageContext: InboundMessageContext? = null
+    val inboundMessageContext: InboundMessageContext? = null,
 ) {
 
     fun assertReadyConnection(): ConnectionRecord {
@@ -114,29 +114,28 @@ data class OutboundMessageContext(
             ?: throw CredoError("No connection associated with outgoing message ${message.type}")
     }
 
-
     fun toJson(): Map<String, Any?> {
         return mapOf(
             "message" to message,
             "associatedRecord" to associatedRecord,
-            "connection" to connection
+            "connection" to connection,
         )
     }
 }
 
-//data class ServiceMessageParams(
+// data class ServiceMessageParams(
 //    val senderKey: Key,
 //    val service: ResolvedDidCommService,
 //    val returnRoute: Boolean? = null
-//)
+// )
 //
-//@Serializable
-//data class ResolvedDidCommService(
+// @Serializable
+// data class ResolvedDidCommService(
 //    val id: String,
 //    val serviceEndpoint: String,
 //    val recipientKeys: List<Key>,
 //    val routingKeys: List<Key>
-//)
+// )
 
 enum class AckStatus {
     OK,

@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnonCredsAcceptOfferFormat(
     @SerialName("linkSecretId")
-    val linkSecretId: String? = null
+    val linkSecretId: String? = null,
 )

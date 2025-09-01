@@ -5,17 +5,17 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 
 @Serializable
 data class GetCredentialsForProofRequestReturn(
-    val credentials: List<CredentialForProofRequest>
+    val credentials: List<CredentialForProofRequest>,
 )
 
 @Serializable
 data class CredentialForProofRequest(
     val credentialInfo: AnonCredsCredentialInfo,
-    val interval: AnonCredsNonRevokedInterval? = null
+    val interval: AnonCredsNonRevokedInterval? = null,
 )
 
 @Serializable
 data class AnonCredsNonRevokedInterval(
     val from: Long? = null,
-    val to: Long? = null
+    val to: Long? = null,
 )

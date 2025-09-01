@@ -145,7 +145,7 @@ class MessageSender(val agent: Agent) {
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }
-        logger.debug("recipientKeys: ${recipientKeys} endpoint: ${endpoint} requestResponse: ${message.requestResponse()}")
+        logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
         return OutboundPackage(encryptedMessage, message.requestResponse(), endpoint, connectionId)
     }
 

@@ -23,7 +23,7 @@ class Functions {
     companion object {
         fun createAndLinkAttachmentsToPreview(
             attachments: List<LinkedAttachment>,
-            previewAttributes: List<CredentialPreviewAttribute>
+            previewAttributes: List<CredentialPreviewAttribute>,
         ): List<CredentialPreviewAttribute> {
             val existingAttributeNames = previewAttributes.map { it.name }.toSet()
             val newPreviewAttributes = previewAttributes.toMutableList()
@@ -36,7 +36,7 @@ class Functions {
                     newPreviewAttributes += CredentialPreviewAttribute(
                         name = linkedAttachment.attributeName,
                         mimeType = linkedAttachment.attachment.mimetype,
-                        value = encodedValue
+                        value = encodedValue,
                     )
                 }
             }
@@ -77,7 +77,7 @@ class Functions {
         }
 
         fun mapAttributeRawValuesToAnonCredsCredentialValues(
-            record: Map<String, Any>
+            record: Map<String, Any>,
         ): Map<String, AnonCredsCredentialValue> {
             return record.mapValues { (key, value) ->
                 if (value is Map<*, *>) {
@@ -86,7 +86,7 @@ class Functions {
 
                 AnonCredsCredentialValue(
                     raw = value.toString(),
-                    encoded = encodeCredentialValue(value)
+                    encoded = encodeCredentialValue(value),
                 )
             }
         }
@@ -94,7 +94,7 @@ class Functions {
         fun encodeAttachment(
             attachment: Attachment,
             hashAlgorithm: String = "sha-256",
-            baseName: String = "base58btc"
+            baseName: String = "base58btc",
         ): String {
             val data = attachment.data
 

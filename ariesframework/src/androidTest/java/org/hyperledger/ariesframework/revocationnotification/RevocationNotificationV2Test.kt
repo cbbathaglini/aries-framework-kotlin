@@ -1,43 +1,43 @@
-//package org.hyperledger.ariesframework.revocationnotification
+// package org.hyperledger.ariesframework.revocationnotification
 //
-//import androidx.test.filters.LargeTest
-//import kotlinx.coroutines.CompletableDeferred
-//import kotlinx.coroutines.delay
-//import kotlinx.coroutines.test.runTest
-//import kotlinx.coroutines.withTimeoutOrNull
-//import org.hyperledger.ariesframework.InboundMessageContext
-//import org.hyperledger.ariesframework.TestHelper
-//import org.hyperledger.ariesframework.agent.Agent
-//import org.hyperledger.ariesframework.agent.AgentEvents
-//import org.hyperledger.ariesframework.agent.decorators.Attachment
-//import org.hyperledger.ariesframework.agent.decorators.AttachmentData
-//import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-//import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
-//import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
-//import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
-//import org.hyperledger.ariesframework.credentials.models.CredentialState
-//import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-//import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
-//import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-//import org.hyperledger.ariesframework.credentials.v2.models.Format
-//import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
-//import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
-//import org.hyperledger.ariesframework.ledger.SchemaTemplate
-//import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
-//import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
-//import org.junit.After
-//import org.junit.Assert.assertEquals
-//import org.junit.Assert.assertFalse
-//import org.junit.Assert.assertNotNull
-//import org.junit.Assert.assertTrue
-//import org.junit.Before
-//import org.junit.Test
-//import org.mockito.kotlin.mock
-//import org.slf4j.LoggerFactory
-//import java.util.UUID
-//import kotlin.time.Duration.Companion.seconds
+// import androidx.test.filters.LargeTest
+// import kotlinx.coroutines.CompletableDeferred
+// import kotlinx.coroutines.delay
+// import kotlinx.coroutines.test.runTest
+// import kotlinx.coroutines.withTimeoutOrNull
+// import org.hyperledger.ariesframework.InboundMessageContext
+// import org.hyperledger.ariesframework.TestHelper
+// import org.hyperledger.ariesframework.agent.Agent
+// import org.hyperledger.ariesframework.agent.AgentEvents
+// import org.hyperledger.ariesframework.agent.decorators.Attachment
+// import org.hyperledger.ariesframework.agent.decorators.AttachmentData
+// import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+// import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+// import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+// import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+// import org.hyperledger.ariesframework.credentials.models.CredentialState
+// import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+// import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
+// import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
+// import org.hyperledger.ariesframework.credentials.v2.models.Format
+// import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
+// import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
+// import org.hyperledger.ariesframework.ledger.SchemaTemplate
+// import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
+// import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
+// import org.junit.After
+// import org.junit.Assert.assertEquals
+// import org.junit.Assert.assertFalse
+// import org.junit.Assert.assertNotNull
+// import org.junit.Assert.assertTrue
+// import org.junit.Before
+// import org.junit.Test
+// import org.mockito.kotlin.mock
+// import org.slf4j.LoggerFactory
+// import java.util.UUID
+// import kotlin.time.Duration.Companion.seconds
 //
-//class RevocationNotificationV2Test {
+// class RevocationNotificationV2Test {
 //    private val logger = LoggerFactory.getLogger(RevocationNotificationV2Test::class.java)
 //    lateinit var faberAgent: Agent
 //    lateinit var aliceAgent: Agent
@@ -258,4 +258,4 @@
 //
 //        return Pair(aliceCredentialRecord, faberCredentialRecord)
 //    }
-//}
+// }

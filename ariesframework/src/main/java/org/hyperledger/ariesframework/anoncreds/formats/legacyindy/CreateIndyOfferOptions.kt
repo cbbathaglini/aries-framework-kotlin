@@ -6,10 +6,10 @@ import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttrib
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 @Serializable
-data class CreateIndyOfferOptions (
+data class CreateIndyOfferOptions(
     val credentialExchangeRecord: CredentialExchangeRecord,
     val attachmentId: String? = null,
     val attributes: List<CredentialPreviewAttribute>? = emptyList(),
     val credentialDefinitionId: String,
-    val linkedAttachments: List<LinkedAttachment>? = emptyList()
+    val linkedAttachments: List<LinkedAttachment>? = emptyList(),
 )

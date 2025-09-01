@@ -7,10 +7,10 @@ import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialRet
 interface AnonCredsIssuerService {
 
     suspend fun createCredentialOffer(
-        credentialDefinitionId : String
+        credentialDefinitionId: String,
     ): AnonCredsCredentialOffer
 
     suspend fun createCredential(
-        options: CreateCredentialOptions
+        options: CreateCredentialOptions,
     ): CreateCredentialReturn
 }

@@ -9,8 +9,8 @@ data class AnonCredsRevocationRegistryDefinition(
     val revocDefType: String = "CL_ACCUM",
     val credDefId: String,
     val tag: String,
-    val value: RevocationRegistryValue
-){
+    val value: RevocationRegistryValue,
+) {
 
     fun toJson(): String {
         val json = Json { prettyPrint = true }
@@ -24,15 +24,15 @@ data class RevocationRegistryValue(
     val maxCredNum: Int,
     val tailsLocation: String,
     val tailsHash: String,
-    val issuanceType: String? = null //indy
+    val issuanceType: String? = null, // indy
 )
 
 @Serializable
 data class PublicKeys(
-    val accumKey: AccumKey
+    val accumKey: AccumKey,
 )
 
 @Serializable
 data class AccumKey(
-    val z: String
+    val z: String,
 )

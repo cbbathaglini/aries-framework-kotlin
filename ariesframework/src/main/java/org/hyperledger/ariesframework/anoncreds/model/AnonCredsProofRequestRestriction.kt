@@ -34,5 +34,5 @@ data class AnonCredsProofRequestRestriction(
     val issuerDid: String? = null,
 
     // ctch-all for attr::<name>::marker or attr::<name>::value fields
-    val dynamicAttributes: Map<String, String> = emptyMap()
+    val dynamicAttributes: Map<String, String> = emptyMap(),
 )

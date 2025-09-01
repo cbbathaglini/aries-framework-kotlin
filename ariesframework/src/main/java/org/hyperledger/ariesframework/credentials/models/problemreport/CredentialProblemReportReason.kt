@@ -4,5 +4,5 @@ import kotlinx.serialization.SerialName
 
 enum class CredentialProblemReportReason {
     @SerialName("issuance-abandoned")
-    IssuanceAbandoned
+    IssuanceAbandoned,
 }

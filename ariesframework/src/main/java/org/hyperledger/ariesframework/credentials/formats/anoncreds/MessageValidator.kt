@@ -12,7 +12,7 @@ object MessageValidator {
             throw ClassValidationError(
                 message = "Failed to validate class.",
                 classType = classInstance::class.simpleName ?: "UnknownClass",
-                validationErrors = errors
+                validationErrors = errors,
             )
         }
     }
@@ -33,5 +33,5 @@ object MessageValidator {
 class ClassValidationError(
     override val message: String,
     val classType: String,
-    val validationErrors: List<String> = emptyList()
+    val validationErrors: List<String> = emptyList(),
 ) : Exception(message)

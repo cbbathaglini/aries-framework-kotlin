@@ -13,16 +13,16 @@ interface AnonCredsRegistry {
     suspend fun getSchema(schemaId: String): GetSchemaReturn
 
     suspend fun getCredentialDefinition(
-        credentialDefinitionId: String
+        credentialDefinitionId: String,
     ): GetCredentialDefinitionReturn
 
     suspend fun getRevocationRegistryDefinition(
-        revocationRegistryDefinitionId: String
+        revocationRegistryDefinitionId: String,
     ): GetRevocationRegistryDefinitionReturn
 
     suspend fun getRevocationStatusList(
         revocationRegistryId: String,
-        timestamp: Long
+        timestamp: Long,
     ): GetRevocationStatusListReturn
 
 //    suspend fun registerRevocationStatusList(

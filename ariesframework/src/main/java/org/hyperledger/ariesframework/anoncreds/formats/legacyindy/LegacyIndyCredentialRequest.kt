@@ -22,5 +22,5 @@ data class LegacyIndyCredentialRequest(
     val blindedMsCorrectnessProof: JsonObject,
 
     @SerialName("nonce")
-    val nonce: String
+    val nonce: String,
 )

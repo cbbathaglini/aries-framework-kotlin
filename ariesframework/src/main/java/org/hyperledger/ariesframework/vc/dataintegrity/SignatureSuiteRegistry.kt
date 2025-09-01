@@ -1,10 +1,9 @@
 package org.hyperledger.ariesframework.vc.dataintegrity
 
 import org.hyperledger.ariesframework.util.SupportedPublicJwkClass
-import kotlin.reflect.KClass
 
 class SignatureSuiteRegistry(
-    suites: List<SuiteInfo>
+    suites: List<SuiteInfo>,
 ) {
     private val suiteMapping: List<SuiteInfo> = suites.filterNot { it.isDefault }
 
@@ -36,5 +35,5 @@ data class SuiteInfo(
     val proofType: String,
     val verificationMethodTypes: List<String>,
     val supportedPublicJwkTypes: List<SupportedPublicJwkClass>,
-    val isDefault: Boolean = false
+    val isDefault: Boolean = false,
 )

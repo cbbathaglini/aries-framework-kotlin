@@ -1,13 +1,13 @@
 package org.hyperledger.ariesframework.credentials.formats.anoncreds
 
 class MetadataKeys {
-    companion object{
+    companion object {
         /**
          * Metadata key for strong metadata on an AnonCreds credential.
          *
          * MUST be used with {@link AnonCredsCredentialMetadata}
          */
-         const val AnonCredsCredentialMetadataKey = "_anoncreds/credential"
+        const val AnonCredsCredentialMetadataKey = "_anoncreds/credential"
 
         /**
          * Metadata key for storing metadata on an AnonCreds credential request.

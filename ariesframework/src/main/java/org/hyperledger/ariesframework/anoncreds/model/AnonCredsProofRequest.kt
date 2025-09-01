@@ -15,7 +15,7 @@ data class AnonCredsProofRequest(
     val requestedPredicates: Map<String, AnonCredsRequestedPredicate>,
     @SerialName("non_revoked")
     val nonRevoked: AnonCredsNonRevokedInterval? = null,
-    val ver: String? = null // can be "1.0" or "2.0"
+    val ver: String? = null, // can be "1.0" or "2.0"
 )
 
 @Serializable
@@ -24,7 +24,7 @@ data class AnonCredsRequestedAttribute(
     val names: List<String>? = null,
     val restrictions: List<AnonCredsProofRequestRestriction>? = null,
     @SerialName("non_revoked")
-    val nonRevoked: AnonCredsNonRevokedInterval? = null
+    val nonRevoked: AnonCredsNonRevokedInterval? = null,
 )
 
 @Serializable
@@ -36,5 +36,5 @@ data class AnonCredsRequestedPredicate(
     val pValue: Int,
     val restrictions: List<AnonCredsProofRequestRestriction>? = null,
     @SerialName("non_revoked")
-    val nonRevoked: AnonCredsNonRevokedInterval? = null
+    val nonRevoked: AnonCredsNonRevokedInterval? = null,
 )

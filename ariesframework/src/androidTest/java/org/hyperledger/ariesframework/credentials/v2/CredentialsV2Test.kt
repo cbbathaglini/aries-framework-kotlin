@@ -1,35 +1,35 @@
-//package org.hyperledger.ariesframework.credentials.v2
+// package org.hyperledger.ariesframework.credentials.v2
 //
-//import androidx.test.filters.LargeTest
-//import kotlinx.coroutines.test.runTest
-//import kotlinx.serialization.json.Json
-//import kotlinx.serialization.json.JsonObject
-//import kotlinx.serialization.json.jsonObject
-//import kotlinx.serialization.json.jsonPrimitive
-//import org.hyperledger.ariesframework.TestHelper
-//import org.hyperledger.ariesframework.agent.Agent
-//import org.hyperledger.ariesframework.agent.decorators.Attachment
-//import org.hyperledger.ariesframework.agent.decorators.AttachmentData
-//import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-//import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
-//import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
-//import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
-//import org.hyperledger.ariesframework.credentials.models.CredentialState
-//import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-//import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-//import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
-//import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
-//import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-//import org.hyperledger.ariesframework.credentials.v2.models.Format
-//import org.junit.After
-//import org.junit.Assert.assertEquals
-//import org.junit.Assert.assertNotNull
-//import org.junit.Before
-//import org.junit.Test
-//import org.slf4j.LoggerFactory
-//import kotlin.time.Duration.Companion.seconds
+// import androidx.test.filters.LargeTest
+// import kotlinx.coroutines.test.runTest
+// import kotlinx.serialization.json.Json
+// import kotlinx.serialization.json.JsonObject
+// import kotlinx.serialization.json.jsonObject
+// import kotlinx.serialization.json.jsonPrimitive
+// import org.hyperledger.ariesframework.TestHelper
+// import org.hyperledger.ariesframework.agent.Agent
+// import org.hyperledger.ariesframework.agent.decorators.Attachment
+// import org.hyperledger.ariesframework.agent.decorators.AttachmentData
+// import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+// import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOptions
+// import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
+// import org.hyperledger.ariesframework.credentials.models.AcceptRequestOptions
+// import org.hyperledger.ariesframework.credentials.models.CredentialState
+// import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+// import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+// import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
+// import org.hyperledger.ariesframework.credentials.v2.models.CreateCredentialOfferOptionsV2
+// import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
+// import org.hyperledger.ariesframework.credentials.v2.models.Format
+// import org.junit.After
+// import org.junit.Assert.assertEquals
+// import org.junit.Assert.assertNotNull
+// import org.junit.Before
+// import org.junit.Test
+// import org.slf4j.LoggerFactory
+// import kotlin.time.Duration.Companion.seconds
 //
-//class CredentialsV2Test {
+// class CredentialsV2Test {
 //    private val logger = LoggerFactory.getLogger(CredentialsV2Test::class.java)
 //    lateinit var faberAgent: Agent
 //    lateinit var aliceAgent: Agent
@@ -192,4 +192,4 @@
 //        assertEquals(aliceCredentialRecord.state, CredentialState.Done)
 //        assertEquals(faberCredentialRecord.state, CredentialState.Done)
 //    }
-//}
+// }

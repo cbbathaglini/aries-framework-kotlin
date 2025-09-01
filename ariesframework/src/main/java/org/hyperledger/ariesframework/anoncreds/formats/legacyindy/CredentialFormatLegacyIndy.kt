@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsAccep
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsAcceptProposalFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsAcceptRequestFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsOfferCredentialFormat
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsProposeCredentialFormat
 
 data class CredentialFormatLegacyIndy(
     override val createProposal: LegacyIndyProposeCredentialFormat,
@@ -13,5 +12,5 @@ data class CredentialFormatLegacyIndy(
     override val createOffer: AnonCredsOfferCredentialFormat,
     override val acceptOffer: AnonCredsAcceptOfferFormat,
     override val createRequest: Nothing? = null,
-    override val acceptRequest: AnonCredsAcceptRequestFormat
-) : CredentialFormatOperations( createProposal, acceptProposal, createOffer, acceptOffer, createRequest, acceptRequest)
+    override val acceptRequest: AnonCredsAcceptRequestFormat,
+) : CredentialFormatOperations(createProposal, acceptProposal, createOffer, acceptOffer, createRequest, acceptRequest)

@@ -6,11 +6,11 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 
 @Serializable
-data class AcceptRequestOptionsV2 (
+data class AcceptRequestOptionsV2(
     val credentialExchangeRecord: CredentialExchangeRecord,
     val autoAcceptCredential: AutoAcceptCredential? = null,
-    val comment: String?  = null,
-    val goal: String?  = null,
-    val goalCode: String?  = null,
+    val comment: String? = null,
+    val goal: String? = null,
+    val goalCode: String? = null,
     val credentialFormats: Map<String, JsonElement>? = emptyMap(),
 )

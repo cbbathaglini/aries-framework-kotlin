@@ -19,7 +19,7 @@ val SupportedPublicJwkClasses: List<KClass<out PublicJwk>> = listOf(
     P521PublicJwk::class,
     RsaPublicJwk::class,
     Secp256k1PublicJwk::class,
-    X25519PublicJwk::class
+    X25519PublicJwk::class,
 )
 
 typealias SupportedPublicJwkClass = KClass<out PublicJwk>

@@ -8,5 +8,5 @@ data class GetCredentialDefinitionReturn(
     val credentialDefinition: AnonCredsCredentialDefinition? = null,
     val credentialDefinitionId: String,
     val resolutionMetadata: AnonCredsResolutionMetadata,
-    val credentialDefinitionMetadata: Map<String, @Contextual Any> = emptyMap()
+    val credentialDefinitionMetadata: Map<String, @Contextual Any> = emptyMap(),
 )

@@ -6,11 +6,11 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 
 @Serializable
-data class NegotiateCredentialOfferOptions (
+data class NegotiateCredentialOfferOptions(
     val credentialExchangeRecord: CredentialExchangeRecord,
     val credentialFormat: Map<String, JsonElement>,
     val autoAcceptCredential: AutoAcceptCredential,
     val comment: String?,
     val goal: String?,
-    val goalCode: String?
+    val goalCode: String?,
 )

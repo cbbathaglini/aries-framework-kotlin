@@ -7,20 +7,19 @@ class AnonCredsCredentialRepository(agent: Agent) : Repository<AnonCredsCredenti
     AnonCredsCredentialRecord::class,
     agent,
 ) {
-    suspend fun getByCredentialDefinitionId( credentialDefinitionId: String): AnonCredsCredentialRecord{
+    suspend fun getByCredentialDefinitionId(credentialDefinitionId: String): AnonCredsCredentialRecord {
         return getSingleByQuery("{\"credentialDefinitionId\": \"$credentialDefinitionId\"}")
     }
 
-    suspend fun findByCredentialDefinitionId(credentialDefinitionId: String): AnonCredsCredentialRecord?{
+    suspend fun findByCredentialDefinitionId(credentialDefinitionId: String): AnonCredsCredentialRecord? {
         return findSingleByQuery("{\"credentialDefinitionId\": \"$credentialDefinitionId\"}")
     }
 
-    suspend fun getByCredentialId(credentialId: String): AnonCredsCredentialRecord{
+    suspend fun getByCredentialId(credentialId: String): AnonCredsCredentialRecord {
         return getSingleByQuery("{\"credentialId\": \"$credentialId\"}")
     }
 
-    suspend fun findByCredentialId(credentialId: String): AnonCredsCredentialRecord?{
+    suspend fun findByCredentialId(credentialId: String): AnonCredsCredentialRecord? {
         return findSingleByQuery("{\"credentialId\": \"$credentialId\"}")
     }
-
 }

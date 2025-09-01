@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.vc.model
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class W3cCredentialStatus(
@@ -9,5 +9,5 @@ data class W3cCredentialStatus(
     val id: String,
 
     @SerialName("type")
-    val type: String
+    val type: String,
 )

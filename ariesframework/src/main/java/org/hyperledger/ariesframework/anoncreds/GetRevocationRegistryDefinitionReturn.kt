@@ -10,5 +10,5 @@ data class GetRevocationRegistryDefinitionReturn(
     val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null,
     val revocationRegistryDefinitionId: String,
     val resolutionMetadata: AnonCredsResolutionMetadata,
-    val revocationRegistryDefinitionMetadata: Map<String, JsonElement> //exensible
+    val revocationRegistryDefinitionMetadata: Map<String, JsonElement>, // exensible
 )

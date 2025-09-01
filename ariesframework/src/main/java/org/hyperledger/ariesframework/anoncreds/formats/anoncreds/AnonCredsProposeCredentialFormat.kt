@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.credentials.formats.LinkedAttachment
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
-
 @Serializable
 data class AnonCredsProposeCredentialFormat(
     @SerialName("schemaIssuerId") val schemaIssuerId: String? = null,
@@ -21,6 +20,6 @@ data class AnonCredsProposeCredentialFormat(
 
     // Compatibility with previous versions
     @SerialName("schemaIssuerDid") val schemaIssuerDid: String? = null,
-    @SerialName("issuerDid") val issuerDid: String? = null
+    @SerialName("issuerDid") val issuerDid: String? = null,
 
 )

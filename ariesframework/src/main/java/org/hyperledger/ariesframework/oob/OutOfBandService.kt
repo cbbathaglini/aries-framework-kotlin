@@ -5,10 +5,8 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.oob.messages.HandshakeReuseAcceptedMessage
 import org.hyperledger.ariesframework.oob.messages.HandshakeReuseMessage
-import org.hyperledger.ariesframework.oob.models.OutOfBandDidCommService
 import org.hyperledger.ariesframework.oob.models.OutOfBandRole
 import org.hyperledger.ariesframework.oob.models.OutOfBandState
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord

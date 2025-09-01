@@ -8,5 +8,5 @@ data class FormatDataLegacyIndy(
     override val proposal: LegacyIndyCredentialProposalFormat,
     override val offer: AnonCredsCredentialOffer,
     override val request: LegacyIndyCredentialRequest,
-    override val credential: AnonCredsCredential
+    override val credential: AnonCredsCredential,
 ) : FormatData(proposal, offer, request, credential)

@@ -12,5 +12,5 @@ data class AcceptCredentialProposalOptions(
     val autoAcceptCredential: AutoAcceptCredential? = null,
     val comment: String? = null,
     val goal: String? = null,
-    val goalCode: String? = null
+    val goalCode: String? = null,
 )

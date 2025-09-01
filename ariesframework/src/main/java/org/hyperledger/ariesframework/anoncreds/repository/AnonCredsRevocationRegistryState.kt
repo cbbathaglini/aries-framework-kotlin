@@ -12,5 +12,5 @@ enum class AnonCredsRevocationRegistryState {
     Active,
 
     @SerialName("full")
-    Full
+    Full,
 }

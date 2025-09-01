@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.vc.model
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequestMetadata
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
@@ -17,5 +17,5 @@ data class ProcessCredentialOptions(
     val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null,
 
     @Contextual
-    val credentialDefinition: AnonCredsCredentialDefinition
+    val credentialDefinition: AnonCredsCredentialDefinition,
 )

@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.vc.dataintegrity
 
 import android.content.Context
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -11,13 +10,12 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
-import org.hyperledger.ariesframework.vc.service.W3cCredentialService
 import org.slf4j.LoggerFactory
 
 class W3cJsonLdCredentialService(
     private val agent: Agent,
     private val w3cCredentialsModuleConfig: W3cCredentialsModuleConfig,
-    private val context: Context
+    private val context: Context,
 
 ) {
     private val logger = LoggerFactory.getLogger(W3cJsonLdCredentialService::class.java)
@@ -25,16 +23,15 @@ class W3cJsonLdCredentialService(
 
     // [TODO] revisar a implementacao
     suspend fun getExpandedTypesForCredential(
-        credential: W3cJsonLdVerifiableCredential
+        credential: W3cJsonLdVerifiableCredential,
     ): Map<String, String> {
-
         logger.info("credential2 => $credential")
 
         val localContexts = mapOf(
-            "https://www.w3.org/2018/credentials/v1" to W3cCredentialsModuleConfig.loadFile(context= appContext, file= "/types/credentials_2018.json"),
-            "https://w3id.org/security/data-integrity/v2" to W3cCredentialsModuleConfig.loadFile(context= appContext, file= "/types/security-data-integrity-v2.json")
+            "https://www.w3.org/2018/credentials/v1" to W3cCredentialsModuleConfig.loadFile(context = appContext, file = "/types/credentials_2018.json"),
+            "https://w3id.org/security/data-integrity/v2" to W3cCredentialsModuleConfig.loadFile(context = appContext, file = "/types/security-data-integrity-v2.json"),
         )
-        PrintLongLine.print("localcontexts: ${localContexts}")
+        PrintLongLine.print("localcontexts: $localContexts")
 
 //        val credentialJson = credential.toJsonString()
 //        val documentLoader = w3cCredentialsModuleConfig.documentLoader
@@ -54,7 +51,7 @@ class W3cJsonLdCredentialService(
 //            else -> emptyList()
 //        }
 
-        return  emptyMap()
+        return emptyMap()
     }
 
 //    fun loadContextFromAssets(path: String): String {
@@ -64,7 +61,7 @@ class W3cJsonLdCredentialService(
 
     suspend fun expandJsonLd(
         input: JsonElement,
-        documentLoader: suspend (String) -> JsonObject
+        documentLoader: suspend (String) -> JsonObject,
     ): List<JsonObject> {
         val context = extractAndResolveContext(input, documentLoader)
         val expanded = expandElement(input, context)
@@ -74,7 +71,7 @@ class W3cJsonLdCredentialService(
 
     suspend fun extractAndResolveContext(
         input: JsonElement,
-        documentLoader: suspend (String) -> JsonObject
+        documentLoader: suspend (String) -> JsonObject,
     ): Map<String, TermDefinition> {
         val context = (input as? JsonObject)?.get("@context") ?: return emptyMap()
 
@@ -91,7 +88,7 @@ class W3cJsonLdCredentialService(
 
     data class TermDefinition(
         val iri: String,
-        val type: String? = null // "@id", "@vocab", etc
+        val type: String? = null, // "@id", "@vocab", etc
     )
 
     fun parseContext(contextObj: JsonObject): Map<String, TermDefinition> {

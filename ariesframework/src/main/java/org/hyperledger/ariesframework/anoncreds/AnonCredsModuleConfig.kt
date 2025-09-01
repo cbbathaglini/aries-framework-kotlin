@@ -7,7 +7,7 @@ import org.hyperledger.ariesframework.anoncreds.service.tails.TailsFileService
 
 class AnonCredsModuleConfig(
     val agent: Agent,
-    private val options: AnonCredsModuleConfigOptions? = null
+    private val options: AnonCredsModuleConfigOptions? = null,
 ) {
 
     val registries: List<AnonCredsRegistry>

@@ -1,14 +1,10 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 import com.google.gson.annotations.SerializedName
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredentialValue
-
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-
+import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredentialValue
 
 @Serializable
 data class AnonCredsCredential(
@@ -34,8 +30,8 @@ data class AnonCredsCredential(
     val revReg: JsonElement? = null,
 
     @SerialName("witness")
-    val witness: JsonElement? = null
-){
+    val witness: JsonElement? = null,
+) {
     override fun toString(): String {
         return "AnonCredsCredential(schemaId='$schemaId', credDefId='$credDefId', revRegId=$revRegId, values=$values, signature=$signature, signatureCorrectnessProof=$signatureCorrectnessProof, revReg=$revReg, witness=$witness)"
     }

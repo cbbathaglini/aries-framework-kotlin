@@ -7,12 +7,9 @@ import androidx.annotation.RequiresApi
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
 import indy_vdr_uniffi.Pool
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
@@ -41,22 +38,21 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-
     private val path = "/serproabi/"; // caso do cpqd/abi/
-    //private val path = "/abi/";
+    // private val path = "/abi/";
 
-    //cpqd
+    // cpqd
     /*private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
     private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
     private val credentialDefinitionRegistryConfigAddress = "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
     private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";*/
 
-    //serpro
+    // serpro
 
-    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";
-    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555";
-    private val credentialDefinitionRegistryConfigAddress = "0x0000000000000000000000000000000000004444";
-    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222";
+    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888"
+    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555"
+    private val credentialDefinitionRegistryConfigAddress = "0x0000000000000000000000000000000000004444"
+    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222"
 
     data class ContractConfigBesu(
         val address: String,
@@ -87,7 +83,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = didRegistryConfigAddress,
-            specPath =  path+"EthereumExtDidRegistry.json",
+            specPath = path + "EthereumExtDidRegistry.json",
         )
     }
 
@@ -95,7 +91,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = schemaRegistryConfigAddress,
-            specPath = path+"SchemaRegistry.json",
+            specPath = path + "SchemaRegistry.json",
         )
     }
 
@@ -103,7 +99,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = credentialDefinitionRegistryConfigAddress,
-            specPath = path+"CredentialDefinitionRegistry.json",
+            specPath = path + "CredentialDefinitionRegistry.json",
         )
     }
 
@@ -111,7 +107,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = revocationRegistryConfigAddress,
-            specPath = path+"RevocationRegistry.json",
+            specPath = path + "RevocationRegistry.json",
         )
     }
 
@@ -128,10 +124,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             credentialDefinitionRegistryConfig,
             revocationRegistryConfig,
         )
-        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
+        ledgerBesu = LedgerClient(
+            agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
             agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "",
-            contratos, agent.agentConfig.besuLedgerConfig?.network,
-            null)
+            contratos,
+            agent.agentConfig.besuLedgerConfig?.network,
+            null,
+        )
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -168,17 +167,17 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             throw Exception("Ledger não foi inicializado")
         }
 
-        var credentialDefinition : uniffi.indy_besu_vdr.CredentialDefinition? = null
+        var credentialDefinition: uniffi.indy_besu_vdr.CredentialDefinition? = null
         try {
             credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
-        }catch (e: Throwable){
+        } catch (e: Throwable) {
             logger.error("error cred def >>> ${e.message}")
         }
-        logger.info("credentialDefinition >>> ${credentialDefinition.toString()}")
+        logger.info("credentialDefinition >>> $credentialDefinition")
 
         val json = Json { ignoreUnknownKeys = true }
         val innerJson = json.parseToJsonElement(credentialDefinition!!.value)
-        logger.info("innerJson >>> ${innerJson.toString()}")
+        logger.info("innerJson >>> $innerJson")
         val credDef = mapOf(
             "issuerId" to JsonPrimitive(credentialDefinition!!.issuerId),
             "schemaId" to JsonPrimitive(credentialDefinition!!.schemaId),
@@ -186,9 +185,9 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "tag" to JsonPrimitive(credentialDefinition!!.tag),
             "value" to innerJson,
         )
-        logger.info("credDef >>> ${credDef.toString()}")
-        var encode : String = Json.encodeToString(credDef)
-        logger.info("encode >>> ${encode}")
+        logger.info("credDef >>> $credDef")
+        var encode: String = Json.encodeToString(credDef)
+        logger.info("encode >>> $encode")
         return encode
     }
 
@@ -202,7 +201,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
         val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
-        logger.info("revocarionrd: ${revocationRD.toString()}")
+        logger.info("revocarionrd: $revocationRD")
         val jsonObject = mapOf(
             "issuerId" to JsonPrimitive(revocationRD.issuerId),
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
@@ -211,7 +210,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
         )
 
-        logger.info("revocarionrd: ${revocationRD.toString()}")
+        logger.info("revocarionrd: $revocationRD")
         return Json.encodeToString(JsonObject(jsonObject))
     }
 

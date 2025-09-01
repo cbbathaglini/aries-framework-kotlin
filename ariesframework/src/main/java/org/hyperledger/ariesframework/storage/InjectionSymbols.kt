@@ -1,6 +1,6 @@
 package org.hyperledger.ariesframework.storage
 
-//object InjectionSymbols {
+// object InjectionSymbols {
 //    val StorageService = "StorageService"
 //    val Logger = "Logger"
 //    val AgentContextProvider = "AgentContextProvider"
@@ -8,4 +8,4 @@ package org.hyperledger.ariesframework.storage
 //    val Stop = "Stop$"
 //    val FileSystem = "FileSystem"
 //    val WebCrypto = "WebCrypto"
-//}
+// }

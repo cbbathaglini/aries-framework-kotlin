@@ -2,9 +2,7 @@ package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
-import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.storage.Repository
-import org.json.JSONObject
 
 class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(
     CredentialExchangeRecord::class,
@@ -27,14 +25,12 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
     }
 
     suspend fun getByThreadAndRole(threadId: String, role: CredentialRole?): CredentialExchangeRecord? {
-        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role.toString()}\"}")
-
+        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role}\"}")
     }
 
     suspend fun getByThreadAndRoleAndConnectionId(threadId: String, role: String?, connectionId: String?): CredentialExchangeRecord {
         return getSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\", \"role\": \"$role\"}")
     }
-
 
     suspend fun findByThreadRoleAndConnectionId(
         threadId: String,
@@ -65,5 +61,4 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
             record.credentials.any { it.credentialRecordId == credentialRecordId }
         }
     }
-
 }

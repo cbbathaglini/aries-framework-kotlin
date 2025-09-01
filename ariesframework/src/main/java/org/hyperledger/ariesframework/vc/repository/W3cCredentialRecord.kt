@@ -2,27 +2,19 @@ package org.hyperledger.ariesframework.vc.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.storage.BaseRecord
-import org.hyperledger.ariesframework.vc.model.ClaimFormat
 import org.hyperledger.ariesframework.vc.model.W3cCredential
-import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
-import org.hyperledger.ariesframework.vc.model.W3cVerifiableCredential
-import org.hyperledger.ariesframework.vc.util.W3cAnonCredsUtils
-import org.slf4j.LoggerFactory
 
 @Serializable
-class W3cCredentialRecord (
+class W3cCredentialRecord(
     override var id: String,
     override var _tags: Tags?,
     override val createdAt: Instant,
     override var updatedAt: Instant?,
-    val credential: W3cCredential
-) : BaseRecord(){
+    val credential: W3cCredential,
+) : BaseRecord() {
 
     companion object {
         const val type = "W3cCredentialRecord"
@@ -30,37 +22,37 @@ class W3cCredentialRecord (
 
     constructor(
         tags: Tags? = null,
-        credential: W3cCredential
+        credential: W3cCredential,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
         createdAt = Clock.System.now(),
         updatedAt = null,
-        credential = credential
+        credential = credential,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap
     }
 
-     fun getTagsW3cJsonLd(): Tags {
-         val tags = (_tags ?: mutableMapOf()).toMutableMap()
-         tags.putAll(this._tags ?: emptyMap())
+    fun getTagsW3cJsonLd(): Tags {
+        val tags = (_tags ?: mutableMapOf()).toMutableMap()
+        tags.putAll(this._tags ?: emptyMap())
         tags["issuerId"] = credential.issuer.toString()
         tags["subjectIds"] = credential.credentialSubject.toString()
-        //fazer funcionar
+        // fazer funcionar
 //            tags["schemaIds"] = credential.credentialSchemaIds.toString()
 //            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
         tags["givenId"] = credential.id.toString()
-       // tags["claimFormat"] = credential.claimFormat
+        // tags["claimFormat"] = credential.claimFormat
         tags["types"] = credential.type.toString()
-        //tags["proofTypes"] = credential.proofTypes.toString()
-        //tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
-         return tags
+        // tags["proofTypes"] = credential.proofTypes.toString()
+        // tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
+        return tags
     }
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
-        //val stringContexts = this.credential.contexts.filter((ctx): ctx is string => typeof ctx === 'string')
+        // val stringContexts = this.credential.contexts.filter((ctx): ctx is string => typeof ctx === 'string')
         tags.putAll(this._tags ?: emptyMap())
 //        if(credential is W3cJsonLdVerifiableCredential){
 //            tags["issuerId"] = credential.issuer.toString()
@@ -85,7 +77,6 @@ class W3cCredentialRecord (
 //                tags["algs"] = listOfNotNull(credential.jwt.header.alg)
 //            }
 
-
 //        tags["issuerId"] = credential.issuerId
 //        tags["subjectIds"] = credential.credentialSubjectIds
 //        tags["schemaIds"] = credential.credentialSchemaIds
@@ -95,18 +86,14 @@ class W3cCredentialRecord (
 //        tags["types"] = credential.type
 //        tags["algs"] = listOf((credential as? JwtVerifiableCredential)?.jwt?.header?.alg)
 
-
         return this._tags!!
     }
 
     fun getTagsAux(): Tags {
-
         return this._tags!!
     }
 
     override fun toString(): String {
         return "W3cCredentialRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, credential=$credential)"
     }
-
-
 }

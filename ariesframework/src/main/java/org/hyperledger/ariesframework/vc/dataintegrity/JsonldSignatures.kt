@@ -11,10 +11,9 @@ interface Purposes {
     val assertionProofPurpose: Any
 }
 
-
 object JsonLdSuites : Suites {
     override val linkedDataSignature: Any = Any() // substituir com a classe real
-    override val linkedDataProof: Any = Any()      // substituir com a classe real
+    override val linkedDataProof: Any = Any() // substituir com a classe real
 }
 
 object JsonLdPurposes : Purposes {

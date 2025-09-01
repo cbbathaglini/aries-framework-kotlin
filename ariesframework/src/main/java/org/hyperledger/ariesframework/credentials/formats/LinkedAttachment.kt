@@ -9,16 +9,16 @@ import java.math.BigInteger
 @Serializable
 data class LinkedAttachment(
     val attributeName: String,
-    val attachment: Attachment
+    val attachment: Attachment,
 ) {
     companion object {
         fun fromOptions(options: LinkedAttachmentOptions): LinkedAttachment {
             val updatedAttachment = options.attachment.copy(
-                id = getId(options.attachment)
+                id = getId(options.attachment),
             )
             return LinkedAttachment(
                 attributeName = options.name,
-                attachment = updatedAttachment
+                attachment = updatedAttachment,
             )
         }
 
@@ -28,11 +28,10 @@ data class LinkedAttachment(
             return encoded.split(":").getOrNull(1)?.take(64) ?: ""
         }
 
-
         fun encodeAttachment(
             attachment: Attachment,
             hashAlgorithm: String = "sha-256",
-            baseName: String = "base58btc"
+            baseName: String = "base58btc",
         ): String {
             val data = attachment.data
 
@@ -61,8 +60,6 @@ data class LinkedAttachment(
         }
     }
 }
-
-
 
 object TypedArrayEncoder {
     fun fromBase64(base64: String): ByteArray {

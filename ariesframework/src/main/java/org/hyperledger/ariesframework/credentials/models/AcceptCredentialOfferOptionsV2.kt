@@ -12,6 +12,6 @@ data class AcceptCredentialOfferOptionsV2(
     val comment: String? = null,
     val goal: String? = null,
     val goalCode: String? = null,
-    //val credentialFormats:Map<String,JsonElement>? = emptyMap(),
+    // val credentialFormats:Map<String,JsonElement>? = emptyMap(),
     val credentialFormats: List<Format>? = emptyList(),
 )

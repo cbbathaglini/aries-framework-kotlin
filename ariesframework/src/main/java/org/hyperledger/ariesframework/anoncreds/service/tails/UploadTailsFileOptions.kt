@@ -1,10 +1,8 @@
 package org.hyperledger.ariesframework.anoncreds.service.tails
 
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 
 @Serializable
-data class UploadTailsFileOptions (
-    val tailsFilePath: String
-){
-}
+data class UploadTailsFileOptions(
+    val tailsFilePath: String,
+)

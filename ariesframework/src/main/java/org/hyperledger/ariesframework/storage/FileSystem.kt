@@ -15,10 +15,10 @@ interface FileSystem {
 }
 
 data class DownloadToFileOptions(
-    val verifyHash: VerifyHash? = null
+    val verifyHash: VerifyHash? = null,
 )
 
 data class VerifyHash(
     val algorithm: String = "sha256",
-    val hash: ByteArray
+    val hash: ByteArray,
 )

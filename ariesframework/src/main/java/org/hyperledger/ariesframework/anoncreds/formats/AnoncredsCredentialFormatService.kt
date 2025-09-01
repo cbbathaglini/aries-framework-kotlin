@@ -1,22 +1,15 @@
 package org.hyperledger.ariesframework.anoncreds.formats
 
-import android.util.Base64
-import android.util.Log
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.CredentialOffer
-import anoncreds_uniffi.CredentialRequestMetadata
 import anoncreds_uniffi.CredentialRequestTuple
 import anoncreds_uniffi.Prover
 import anoncreds_uniffi.RevocationRegistryDefinition
-import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
-import com.google.gson.Gson
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -24,21 +17,26 @@ import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.exception.ProblemReportError
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsAcceptOfferFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialProposalFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsProposeCredentialFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnoncredsCredentialFormat
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateProposalReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateReturn
 import org.hyperledger.ariesframework.anoncreds.formats.utils.Credential
 import org.hyperledger.ariesframework.anoncreds.formats.utils.FormatDataUtil
 import org.hyperledger.ariesframework.anoncreds.formats.utils.FormatGeneric
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredential
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialOffer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequestMetadata
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsLinkSecretBlindingData
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-import org.hyperledger.ariesframework.anoncreds.model.CreateCredentialRequestOptions
+import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
+import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
+import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredential
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
@@ -50,37 +48,22 @@ import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCre
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.CreateAnoncredsOffer
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MessageValidator
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
-import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsLinkSecretBlindingData
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
-import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
-import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
-import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
-import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
-import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
-import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.util.Base64Operations
-import org.hyperledger.ariesframework.util.ConvertFromAny
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
-import java.sql.Types
 import java.util.Date
-import kotlin.math.log
-
 
 class AnoncredsCredentialFormatService(
     override val formatKey: String = "anoncreds",
     override val credentialRecordType: String = "w3c",
-    val agent: Agent
+    val agent: Agent,
 ) : CredentialFormatService<AnoncredsCredentialFormat> {
 
     private val logger = LoggerFactory.getLogger(AnoncredsCredentialFormatService::class.java)
@@ -101,9 +84,8 @@ class AnoncredsCredentialFormatService(
      */
     override suspend fun createProposal(
         credentialFormats: Map<String, JsonElement>?,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ): CredentialFormatCreateProposalReturn {
-
         val format = Format(format = ANONCREDS_CREDENTIAL_FILTER)
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeCredentialFormat>(credentialFormats)
 
@@ -115,14 +97,13 @@ class AnoncredsCredentialFormatService(
             schemaVersion = anoncredsFormat.schemaVersion,
             credentialDefinitionId = anoncredsFormat.credentialDefinitionId,
             issuerDid = anoncredsFormat.issuerDid,
-            issuerId = anoncredsFormat.issuerId
+            issuerId = anoncredsFormat.issuerId,
         )
 
-
-        try{
+        try {
             MessageValidator.validateSync(proposal)
-        } catch (error:Exception) {
-            throw CredoError("Invalid proposal supplied: ${proposal} in AnonCredsFormatService")
+        } catch (error: Exception) {
+            throw CredoError("Invalid proposal supplied: $proposal in AnonCredsFormatService")
         }
 
         val jsonElement = Json.encodeToJsonElement(AnonCredsCredentialProposal.serializer(), proposal)
@@ -130,42 +111,43 @@ class AnoncredsCredentialFormatService(
 
         val credentialLinkedAttachmentsResult = FormatDataUtil.getCredentialLinkedAttachments(
             anoncredsFormat.attributes,
-            anoncredsFormat.linkedAttachments
+            anoncredsFormat.linkedAttachments,
         )
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = proposal.schemaId,
-                credentialDefinitionId = proposal.credentialDefinitionId
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = proposal.schemaId,
+                    credentialDefinitionId = proposal.credentialDefinitionId,
+                ),
+            ),
         )
 
         return CredentialFormatCreateProposalReturn(
             format = format,
             attachment = attachment,
-            previewAttribute = credentialLinkedAttachmentsResult.previewAttributes
+            previewAttribute = credentialLinkedAttachmentsResult.previewAttributes,
         )
     }
 
     override suspend fun processProposal(
         attachment: Attachment,
-        credentialRecord: CredentialExchangeRecord
+        credentialRecord: CredentialExchangeRecord,
     ) {
         val proposal = FormatDataUtil.parseAttachmentData<AnonCredsCredentialProposal>(attachment)
-        logger.info("Processed proposal ${proposal}")
+        logger.info("Processed proposal $proposal")
     }
 
     override suspend fun acceptProposal(
         attachmentId: String?,
         credentialFormats: Map<String, JsonElement>?,
         credentialRecord: CredentialExchangeRecord,
-        proposalAttachments: Attachment
+        proposalAttachments: Attachment,
     ): CredentialFormatCreateOfferReturn {
-
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
-        val proposalJson = proposalAttachments.getDataAsJson()//<AnonCredsCredentialProposalFormat>()
+        val proposalJson = proposalAttachments.getDataAsJson() // <AnonCredsCredentialProposalFormat>()
         val proposalFormat = Json.decodeFromString<AnonCredsCredentialProposalFormat>(proposalJson)
         val credentialDefinitionId = anoncredsFormat.credentialDefinitionId ?: proposalFormat.credDefId
 
@@ -180,66 +162,63 @@ class AnoncredsCredentialFormatService(
         }
 
         val createAnoncredsOffer = CreateAnoncredsOffer(
-            credentialExchangeRecord= credentialRecord,
-            attachmentId= attachmentId,
-            attributes= attributes,
-            credentialDefinitionId= credentialDefinitionId,
-            revocationRegistryDefinitionId= anoncredsFormat.revocationRegistryDefinitionId,
-            revocationRegistryIndex= anoncredsFormat.revocationRegistryIndex,
-            linkedAttachments= anoncredsFormat.linkedAttachments,
+            credentialExchangeRecord = credentialRecord,
+            attachmentId = attachmentId,
+            attributes = attributes,
+            credentialDefinitionId = credentialDefinitionId,
+            revocationRegistryDefinitionId = anoncredsFormat.revocationRegistryDefinitionId,
+            revocationRegistryIndex = anoncredsFormat.revocationRegistryIndex,
+            linkedAttachments = anoncredsFormat.linkedAttachments,
         )
         val credentialFormatCreateOfferReturn = createAnonCredsOffer(createAnoncredsOffer)
 
         return CredentialFormatCreateOfferReturn(
-            format= credentialFormatCreateOfferReturn.format,
+            format = credentialFormatCreateOfferReturn.format,
             attachment = credentialFormatCreateOfferReturn.attachment,
-            previewAttributes = credentialFormatCreateOfferReturn.previewAttributes
+            previewAttributes = credentialFormatCreateOfferReturn.previewAttributes,
         )
     }
 
     override suspend fun createOffer(
         credentialFormats: Map<String, JsonElement>?,
         credentialExchangeRecord: CredentialExchangeRecord,
-        attachmentId: String?
+        attachmentId: String?,
     ): CredentialFormatCreateOfferReturn {
-
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val createAnoncredsOffer = CreateAnoncredsOffer(
-            credentialExchangeRecord= credentialExchangeRecord,
-            attachmentId= attachmentId,
-            attributes= anoncredsFormat.attributes,
-            credentialDefinitionId= anoncredsFormat.credentialDefinitionId,
-            revocationRegistryDefinitionId= anoncredsFormat.revocationRegistryDefinitionId,
-            revocationRegistryIndex= anoncredsFormat.revocationRegistryIndex,
-            linkedAttachments= anoncredsFormat.linkedAttachments,
+            credentialExchangeRecord = credentialExchangeRecord,
+            attachmentId = attachmentId,
+            attributes = anoncredsFormat.attributes,
+            credentialDefinitionId = anoncredsFormat.credentialDefinitionId,
+            revocationRegistryDefinitionId = anoncredsFormat.revocationRegistryDefinitionId,
+            revocationRegistryIndex = anoncredsFormat.revocationRegistryIndex,
+            linkedAttachments = anoncredsFormat.linkedAttachments,
         )
         val credentialFormatCreateOfferReturn = createAnonCredsOffer(createAnoncredsOffer)
 
         return CredentialFormatCreateOfferReturn(
-            format= credentialFormatCreateOfferReturn.format,
+            format = credentialFormatCreateOfferReturn.format,
             attachment = credentialFormatCreateOfferReturn.attachment,
-            previewAttributes = credentialFormatCreateOfferReturn.previewAttributes
+            previewAttributes = credentialFormatCreateOfferReturn.previewAttributes,
         )
-
     }
 
     override suspend fun processOffer(
         attachment: Attachment,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ) {
         logger.info("Processing anoncreds credential offer for credential record ${credentialExchangeRecord.id}")
-        logger.info("attachment credential offer  ${attachment}")
+        logger.info("attachment credential offer  $attachment")
 
-        val offer = AnonCredsCredentialOffer.fromAttachment(attachment)//FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
-        logger.info("credential offer: ${offer}")
+        val offer = AnonCredsCredentialOffer.fromAttachment(attachment) // FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
+        logger.info("credential offer: $offer")
         if (offer.schemaId.isBlank() || offer.credDefId.isBlank()) {
             throw ProblemReportError(
                 message = "Invalid credential offer",
-                problemCode = CredentialProblemReportReason.IssuanceAbandoned.name
+                problemCode = CredentialProblemReportReason.IssuanceAbandoned.name,
             )
         }
-
     }
 
     override suspend fun acceptOffer(
@@ -247,42 +226,41 @@ class AnoncredsCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord,
         credentialFormats: List<Format>?,
         attachmentId: String?,
-        offerCredentialMessageV2: OfferCredentialMessageV2
+        offerCredentialMessageV2: OfferCredentialMessageV2,
     ): CredentialFormatCreateReturn {
-        val offer = AnonCredsCredentialOffer.fromAttachment(attachment)//FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
+        val offer = AnonCredsCredentialOffer.fromAttachment(attachment) // FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
 
         val credentialOfferJson = offerCredentialMessageV2.getCredentialOfferAttach(attachment.id)
         val credentialOffer = CredentialOffer(credentialOfferJson)
         logger.info("credentialOffer: ${credentialOffer.toJson()}")
-        //PrintLongLine.print(">>>> offer: ${offer.toString()}")
-
+        // PrintLongLine.print(">>>> offer: ${offer.toString()}")
 
         val cd = agent.ledgerService.getCredentialDefinition(offer.credDefId)
         val credentialDefinition = cd.replace("\\\"", "\"")
-        PrintLongLine.print(">>>> cred def : ${credentialDefinition}")
+        PrintLongLine.print(">>>> cred def : $credentialDefinition")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
-        logger.info("linkSecret: ${linkSecret}")
+        logger.info("linkSecret: $linkSecret")
 
         val holderDid = getHolderDid(credentialExchangeRecord)
-        logger.info("holderDid: ${holderDid}")
+        logger.info("holderDid: $holderDid")
 
-        var credentialDefinitionUniffi : CredentialDefinition? = null
+        var credentialDefinitionUniffi: CredentialDefinition? = null
         try {
             credentialDefinitionUniffi =
                 CredentialDefinition(credentialDefinition)
             logger.info("credentialDefinitionUniffi: ${credentialDefinitionUniffi.toJson()}")
             PrintLongLine.print(">>>> cred def uniffi: ${credentialDefinitionUniffi.toJson()}")
-        }catch (e: Throwable){
+        } catch (e: Throwable) {
             logger.error("error anoncred uniffi: ${e.message}")
         }
 
-        var ct : CredentialRequestTuple? = null
+        var ct: CredentialRequestTuple? = null
 
-        //to do get
-        //val isLegacyIdentifier = Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId)
-        //val entropy = if ((useLegacyProverDid!=null && !useLegacyProverDid) || !isLegacyIdentifier) Verifier().generateNonce() else null //[TODO] anoncreds came from uniffi
-        val entropy = Verifier().generateNonce()  //[TODO] anoncreds came from uniffi
+        // to do get
+        // val isLegacyIdentifier = Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId)
+        // val entropy = if ((useLegacyProverDid!=null && !useLegacyProverDid) || !isLegacyIdentifier) Verifier().generateNonce() else null //[TODO] anoncreds came from uniffi
+        val entropy = Verifier().generateNonce() // [TODO] anoncreds came from uniffi
         try {
             ct = Prover().createCredentialRequest(
                 entropy,
@@ -292,8 +270,8 @@ class AnoncredsCredentialFormatService(
                 agent.wallet.linkSecretId!!,
                 credentialOffer,
             )
-            logger.info("credReqTuple: ${ct.toString()}")
-        }catch (e:Throwable){
+            logger.info("credReqTuple: $ct")
+        } catch (e: Throwable) {
             logger.info("error --->>>>> : ${e.message}")
         }
 
@@ -303,27 +281,28 @@ class AnoncredsCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialRequestMetadataKey,
-            Json.encodeToJsonElement(credReqTuple.metadata.toJson())
+            Json.encodeToJsonElement(credReqTuple.metadata.toJson()),
         )
-        logger.info("credentialExchangeRecord metadada1: ${credentialExchangeRecord.metadata.toString()}")
-        logger.info("credentialExchange get: ${credentialExchangeRecord.metadata.get( MetadataKeys.AnonCredsCredentialRequestMetadataKey)}")
+        logger.info("credentialExchangeRecord metadada1: ${credentialExchangeRecord.metadata}")
+        logger.info("credentialExchange get: ${credentialExchangeRecord.metadata.get(MetadataKeys.AnonCredsCredentialRequestMetadataKey)}")
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = offer.schemaId,
-                credentialDefinitionId = offer.credDefId
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = offer.schemaId,
+                    credentialDefinitionId = offer.credDefId,
+                ),
+            ),
         )
 
-        logger.info("credentialExchangeRecord ======: ${credentialExchangeRecord.toString()}")
+        logger.info("credentialExchangeRecord ======: $credentialExchangeRecord")
         logger.info("credentialExchangeRecord metadada: ${credentialExchangeRecord.metadata}")
 
         val format = Format(
-                attachId = attachmentId ?: BaseRecord.generateId(),
-                format= ANONCREDS_CREDENTIAL_REQUEST,
+            attachId = attachmentId ?: BaseRecord.generateId(),
+            format = ANONCREDS_CREDENTIAL_REQUEST,
         )
-
 
         val attachment = Attachment.fromData(
             credReqTuple.request.toJson().toByteArray(),
@@ -332,13 +311,13 @@ class AnoncredsCredentialFormatService(
 
         return CredentialFormatCreateReturn(
             attachment = attachment,
-            format = format
+            format = format,
         )
     }
 
     override suspend fun createRequest(
         credentialFormats: List<Format>?,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ): CredentialFormatCreateReturn {
         throw CredoError("Starting from a request is not supported for anoncreds credentials")
     }
@@ -348,11 +327,10 @@ class AnoncredsCredentialFormatService(
      */
     override suspend fun processRequest(
         attachment: Attachment,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ) {
         // not needed for anoncreds
     }
-
 
     override suspend fun acceptRequest(
         requestAttachment: Attachment,
@@ -360,9 +338,8 @@ class AnoncredsCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord,
         credentialFormats: Map<String, JsonElement>?,
         requestAppendAttachments: List<Attachment>?,
-        attachmentId: String?
+        attachmentId: String?,
     ): CredentialFormatCreateReturn {
-
         val credentialAttributes = credentialExchangeRecord.credentialAttributes
         if (credentialAttributes == null) {
             throw CredoError("Missing required credential attribute values on credential record with id ${credentialExchangeRecord.id}")
@@ -376,12 +353,11 @@ class AnoncredsCredentialFormatService(
         val credentialDefinition = anonCredsCredentialDefinitionRecord.credentialDefinition
         val revocation = credentialDefinition.value.revocation
 
-        var revocationRegistryDefinitionId : String? = null
-        var revocationRegistryIndex : Int? = null
-        var revocationStatusList : AnonCredsRevocationStatusList? = null
+        var revocationRegistryDefinitionId: String? = null
+        var revocationRegistryIndex: Int? = null
+        var revocationStatusList: AnonCredsRevocationStatusList? = null
 
         if (revocation != null) {
-
             val metadata = credentialExchangeRecord.metadata
 
             val credentialMetadata = metadata[MetadataKeys.AnonCredsCredentialMetadataKey] as? AnonCredsCredentialMetadata
@@ -398,14 +374,14 @@ class AnoncredsCredentialFormatService(
 
             if (revocationRegistryDefinitionPrivateRecord.state != AnonCredsRevocationRegistryState.Active) {
                 throw CredoError(
-                    "Revocation registry $revocationRegistryDefinitionId is in ${revocationRegistryDefinitionPrivateRecord.state} state"
+                    "Revocation registry $revocationRegistryDefinitionId is in ${revocationRegistryDefinitionPrivateRecord.state} state",
                 )
             }
 
             revocationStatusList = AnonCredsObjects.fetchRevocationStatusList(
                 agent,
                 revocationRegistryDefinitionId,
-                dateToTimestamp(Date())
+                dateToTimestamp(Date()),
             )
         }
 
@@ -415,40 +391,42 @@ class AnoncredsCredentialFormatService(
             credentialValues = Credential.convertAttributesToCredentialValues(credentialAttributes),
             revocationRegistryDefinitionId = revocationRegistryDefinitionId,
             revocationStatusList = revocationStatusList,
-            revocationRegistryIndex = revocationRegistryIndex
+            revocationRegistryIndex = revocationRegistryIndex,
         )
-        val createCredentialReturn =  agent.anonCredsIssuerService.createCredential(createCredentialOptions)
+        val createCredentialReturn = agent.anonCredsIssuerService.createCredential(createCredentialOptions)
         val credentialRevocationId = createCredentialReturn.credentialRevocationId
         val credential = createCredentialReturn.credential
 
         if (credential.revRegId != null) {
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                    revocationRegistryId = revocationRegistryDefinitionId,
-                    credentialRevocationId = createCredentialReturn.credentialRevocationId
-                ))
+                Json.encodeToJsonElement(
+                    AnonCredsCredentialMetadata(
+                        revocationRegistryId = revocationRegistryDefinitionId,
+                        credentialRevocationId = createCredentialReturn.credentialRevocationId,
+                    ),
+                ),
             )
 
             if (revocationRegistryDefinitionId != null && credentialRevocationId != null) {
                 val tags: Tags = mapOf(
                     "anonCredsRevocationRegistryId" to revocationRegistryDefinitionId,
-                    "anonCredsCredentialRevocationId" to credentialRevocationId
+                    "anonCredsCredentialRevocationId" to credentialRevocationId,
                 )
                 credentialExchangeRecord.setTags(tags)
             }
         }
 
         val format = Format(
-                attachId = attachmentId ?: BaseRecord.generateId(),
-                format= ANONCREDS_CREDENTIAL,
+            attachId = attachmentId ?: BaseRecord.generateId(),
+            format = ANONCREDS_CREDENTIAL,
         )
 
         val attachment = FormatDataUtil.getFormatData(credential, format.attachId)
 
         return CredentialFormatCreateReturn(
             attachment = attachment,
-            format = format
+            format = format,
         )
     }
 
@@ -457,40 +435,39 @@ class AnoncredsCredentialFormatService(
         offerAttachment: Attachment,
         requestAttachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        requestAppendAttachments: List<Attachment>?
+        requestAppendAttachments: List<Attachment>?,
     ) {
-
-        val credentialRequestMetadata : JsonElement? = credentialExchangeRecord.metadata.get(MetadataKeys.AnonCredsCredentialRequestMetadataKey)
-        logger.info("credentialRequestMetadata: ${credentialRequestMetadata}")
+        val credentialRequestMetadata: JsonElement? = credentialExchangeRecord.metadata.get(MetadataKeys.AnonCredsCredentialRequestMetadataKey)
+        logger.info("credentialRequestMetadata: $credentialRequestMetadata")
 
         if (credentialRequestMetadata == null) {
             throw CredoError("Missing required request metadata for credential exchange with thread id with id ${credentialExchangeRecord.id}")
         }
 
         if (credentialExchangeRecord.credentialAttributes == null ||
-            (credentialExchangeRecord.credentialAttributes != null && credentialExchangeRecord.credentialAttributes!!.isEmpty())) {
+            (credentialExchangeRecord.credentialAttributes != null && credentialExchangeRecord.credentialAttributes!!.isEmpty())
+        ) {
             throw CredoError("Missing credential attributes on credential record. Unable to check credential attributes")
         }
 
         logger.info("attachment.data.base64: ${attachment.data.base64}")
         val decodedString = Base64Operations.fromBase64ToStr(attachment.data.base64)
         val anonCredsCredential: AnonCredsCredential = Json.decodeFromString(decodedString)
-        logger.info("anonCredsCredential_gson: ${anonCredsCredential.toString()}")
-
+        logger.info("anonCredsCredential_gson: $anonCredsCredential")
 
         val credentialDefinitionResult =
             agent.ledgerService.getCredentialDefinition(anonCredsCredential.credDefId)
-        logger.info("credentialDefinitionResult: ${credentialDefinitionResult.toString()}")
+        logger.info("credentialDefinitionResult: $credentialDefinitionResult")
 
         val anoncredscredentialDefinition = Json.decodeFromString<AnonCredsCredentialDefinition>(credentialDefinitionResult)
 
         val fetchSchemaReturn_aux = agent.ledgerService.getSchema(anonCredsCredential.schemaId)
         val jsonElementSchema: JsonElement = Json.parseToJsonElement(fetchSchemaReturn_aux.first)
-        logger.info("jsonElementSchema: ${jsonElementSchema.toString()}")
-        val fetchSchemaReturn : FetchSchemaReturn = FetchSchemaReturn.fromJson(jsonElementSchema, anonCredsCredential.schemaId)
+        logger.info("jsonElementSchema: $jsonElementSchema")
+        val fetchSchemaReturn: FetchSchemaReturn = FetchSchemaReturn.fromJson(jsonElementSchema, anonCredsCredential.schemaId)
 
-        var revocationRegistryResult : FetchIntermediateRevocationRegistryDefinitionResult? = null
-        if (anonCredsCredential.revRegId != null){
+        var revocationRegistryResult: FetchIntermediateRevocationRegistryDefinitionResult? = null
+        if (anonCredsCredential.revRegId != null) {
             val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)
             revocationRegistryResult = Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocation)
             revocationRegistryResult.revocationRegistryDefinitionId = anonCredsCredential.revRegId
@@ -498,7 +475,7 @@ class AnoncredsCredentialFormatService(
 
         val revocationRegistryJson =
             anonCredsCredential.revRegId?.let { agent.ledgerService.getRevocationRegistryDefinition(it) }
-        logger.info("revocationRegistryJson: ${revocationRegistryJson.toString()}")
+        logger.info("revocationRegistryJson: $revocationRegistryJson")
 
         val revocationRegistry = revocationRegistryJson?.let { RevocationRegistryDefinition(it) }
         if (revocationRegistry != null) {
@@ -508,30 +485,33 @@ class AnoncredsCredentialFormatService(
         }
         logger.info("revocationRegistry: ${revocationRegistry?.toJson()}")
 
-        val recordCredentialValues = if(credentialExchangeRecord.credentialAttributes != null) Credential.convertAttributesToCredentialValues(credentialExchangeRecord.credentialAttributes!!) else
+        val recordCredentialValues = if (credentialExchangeRecord.credentialAttributes != null) {
+            Credential.convertAttributesToCredentialValues(credentialExchangeRecord.credentialAttributes!!)
+        } else {
             throw CredoError("Missing credential attributes on credential record. Unable to check credential attributes")
+        }
 
-        logger.info("anonCredsCredential.values: ${anonCredsCredential.values.toString()}")
-        logger.info("recordCredentialValues: ${recordCredentialValues.toString()}")
+        logger.info("anonCredsCredential.values: ${anonCredsCredential.values}")
+        logger.info("recordCredentialValues: $recordCredentialValues")
 
-        var revocationRegistryInfo : RevocationRegistryInfo? = null
-        if(revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinitionId != null) {
+        var revocationRegistryInfo: RevocationRegistryInfo? = null
+        if (revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinitionId != null) {
             val revRegDefinition = AnonCredsRevocationRegistryDefinition(
                 issuerId = revocationRegistryResult.issuerId,
                 revocDefType = revocationRegistryResult.revocDefType,
                 credDefId = revocationRegistryResult.credDefId,
                 tag = revocationRegistryResult.tag,
-                value = revocationRegistryResult.value
+                value = revocationRegistryResult.value,
             )
             revocationRegistryInfo = RevocationRegistryInfo(
                 id = revocationRegistryResult.revocationRegistryDefinitionId!!,
-                definition = revRegDefinition
+                definition = revRegDefinition,
             )
         }
 
-        logger.info("credentialRequestMetadata: ${credentialRequestMetadata.toString()}")
+        logger.info("credentialRequestMetadata: $credentialRequestMetadata")
 
-        //adicionar pq nao ta funfando
+        // adicionar pq nao ta funfando
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
         val escaped = credentialRequestMetadata.toString()
@@ -540,15 +520,14 @@ class AnoncredsCredentialFormatService(
         val metadataObject = Json.parseToJsonElement(unescaped).jsonObject
         val linkSecretBlindingDataStr = metadataObject.get("link_secret_blinding_data").toString()
         val linkSecretBlindingData = Json.decodeFromString<AnonCredsLinkSecretBlindingData>(linkSecretBlindingDataStr)
-        logger.info("linkSecretBlindingData: ${linkSecretBlindingData.toString()}")
+        logger.info("linkSecretBlindingData: $linkSecretBlindingData")
 
         val anonCredsCredentialRequestMetadata = AnonCredsCredentialRequestMetadata(
             link_secret_blinding_data = linkSecretBlindingData,
             link_secret_name = metadataObject.get("link_secret_name").toString(),
-            nonce = metadataObject.get("nonce").toString()
+            nonce = metadataObject.get("nonce").toString(),
         )
-        logger.info("anonCredsCredentialRequestMetadata: ${anonCredsCredentialRequestMetadata.toString()}")
-
+        logger.info("anonCredsCredentialRequestMetadata: $anonCredsCredentialRequestMetadata")
 
         val storeCredential = StoreCredentialOptions(
             credential = anonCredsCredential,
@@ -557,50 +536,50 @@ class AnoncredsCredentialFormatService(
             schema = fetchSchemaReturn.schema,
             credentialDefinitionId = anonCredsCredential.credDefId,
             credentialId = BaseRecord.generateId(),
-            revocationRegistry = revocationRegistryInfo
+            revocationRegistry = revocationRegistryInfo,
         )
-        logger.info("storeCredential: ${storeCredential.toString()}")
-        logger.info("fetchSchemaReturn: ${fetchSchemaReturn.toString()}")
+        logger.info("storeCredential: $storeCredential")
+        logger.info("fetchSchemaReturn: $fetchSchemaReturn")
 
         val storeCredentialOptions = StoreCredential.getStoreCredentialOptions(
-            options =  storeCredential,
-            indyNamespace = "von:local" //fetchSchemaReturn.indyNamespace
+            options = storeCredential,
+            indyNamespace = "von:local", // fetchSchemaReturn.indyNamespace
         )
-        logger.info("storeCredentialOptions: ${storeCredentialOptions.toString()}")
-
+        logger.info("storeCredentialOptions: $storeCredentialOptions")
 
         val credentialId = agent.anonCredsHolderService.storeCredential(
-            options = storeCredentialOptions)
-        logger.info("credentialId: ${credentialId.toString()}")
+            options = storeCredentialOptions,
+        )
+        logger.info("credentialId: $credentialId")
 
         if (anonCredsCredential.revRegId != null) {
             logger.info("anonCredsCredential:>>>> ${anonCredsCredential.revRegId}")
             val credential = agent.anonCredsHolderService.getCredential(credentialId)
-            logger.info("credential rev reg: ${credential.toString()}")
+            logger.info("credential rev reg: $credential")
             val revocationRegistryId = credential.revocationRegistryId
             val credentialRevocationId = credential.credentialRevocationId
 
-            logger.info("credentialRevocationId: ${credentialRevocationId.toString()}")
+            logger.info("credentialRevocationId: $credentialRevocationId")
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                    credentialRevocationId = credentialRevocationId,
-                    revocationRegistryId = revocationRegistryId
-                ))
+                Json.encodeToJsonElement(
+                    AnonCredsCredentialMetadata(
+                        credentialRevocationId = credentialRevocationId,
+                        revocationRegistryId = revocationRegistryId,
+                    ),
+                ),
             )
 
             if (revocationRegistryId != null && credentialRevocationId != null) {
                 val tags: Tags = mapOf(
                     "anonCredsRevocationRegistryId" to revocationRegistryId,
-                    "anonCredsCredentialRevocationId" to credentialRevocationId
+                    "anonCredsCredentialRevocationId" to credentialRevocationId,
                 )
                 credentialExchangeRecord.setTags(tags)
             }
         }
 
-        logger.info("credentialExchangeRecord: ${credentialExchangeRecord.toString()}")
-
-
+        logger.info("credentialExchangeRecord: $credentialExchangeRecord")
 
 //        agent.credentialRepository.save(
 //            CredentialRecord(
@@ -619,41 +598,43 @@ class AnoncredsCredentialFormatService(
 //            ),
 //        )
 
-        credentialExchangeRecord.credentials.add(CredentialRecordBinding(
-            credentialRecordType= this.credentialRecordType,
-            credentialRecordId= credentialId,
-        ))
+        credentialExchangeRecord.credentials.add(
+            CredentialRecordBinding(
+                credentialRecordType = this.credentialRecordType,
+                credentialRecordId = credentialId,
+            ),
+        )
     }
 
     override suspend fun shouldAutoRespondToProposal(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val proposal = FormatDataUtil.parseAttachmentData<AnonCredsCredentialProposalFormat>(proposalAttachment) ?: throw CredoError("Missing anoncreds credential proposal in shouldAutoRespondToProposal")
-        return  proposal.credDefId == credentialOffer.credDefId
+        return proposal.credDefId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToOffer(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val proposal = FormatDataUtil.parseAttachmentData<AnonCredsCredentialProposalFormat>(proposalAttachment) ?: throw CredoError("Missing anoncreds credential proposal in shouldAutoRespondToProposal")
-        return  proposal.credDefId == credentialOffer.credDefId
+        return proposal.credDefId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToRequest(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val requestOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialRequest>(requestAttachment) ?: throw CredoError("Missing anoncreds credential request in shouldAutoRespondToProposal")
-        return  requestOffer.credDefId == credentialOffer.credDefId
+        return requestOffer.credDefId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToCredential(
@@ -661,7 +642,7 @@ class AnoncredsCredentialFormatService(
         offerAttachment: Attachment,
         issueAttachment: Attachment,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credential = FormatDataUtil.parseAttachmentData<AnonCredsCredential>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val requestOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialRequest>(requestAttachment) ?: throw CredoError("Missing anoncreds credential request in shouldAutoRespondToProposal")
@@ -681,30 +662,29 @@ class AnoncredsCredentialFormatService(
             ANONCREDS_CREDENTIAL_REQUEST,
             ANONCREDS_CREDENTIAL_OFFER,
             ANONCREDS_CREDENTIAL_FILTER,
-            ANONCREDS_CREDENTIAL
+            ANONCREDS_CREDENTIAL,
         )
 
         return formatIdentifier in supportedFormats
     }
 
-
-    private suspend fun createAnonCredsOffer(createAnoncredsOffer: CreateAnoncredsOffer) : CredentialFormatCreateOfferReturn {
-
+    private suspend fun createAnonCredsOffer(createAnoncredsOffer: CreateAnoncredsOffer): CredentialFormatCreateOfferReturn {
         val credentialExchangeRecord = createAnoncredsOffer.credentialExchangeRecord
         val revocationRegistryDefinitionId = createAnoncredsOffer.revocationRegistryDefinitionId
         val credentialDefinitionId = createAnoncredsOffer.credentialDefinitionId
         val revocationRegistryIndex = createAnoncredsOffer.revocationRegistryIndex
 
         val format = Format(
-                attachId = createAnoncredsOffer.attachmentId ?: BaseRecord.generateId(),
-                format =  ANONCREDS_CREDENTIAL_OFFER,
+            attachId = createAnoncredsOffer.attachmentId ?: BaseRecord.generateId(),
+            format = ANONCREDS_CREDENTIAL_OFFER,
         )
 
-        val anoncredsCredentialOffer =  agent.anonCredsIssuerService.createCredentialOffer(credentialDefinitionId)
+        val anoncredsCredentialOffer = agent.anonCredsIssuerService.createCredentialOffer(credentialDefinitionId)
 
-        val ( attachments, previewAttributes ) = FormatDataUtil.getCredentialLinkedAttachments(
+        val (attachments, previewAttributes) = FormatDataUtil.getCredentialLinkedAttachments(
             attributes = createAnoncredsOffer.attributes,
-            linkedAttachments = createAnoncredsOffer.linkedAttachments)
+            linkedAttachments = createAnoncredsOffer.linkedAttachments,
+        )
 
         if (previewAttributes == null) {
             throw CredoError("Missing required preview attributes for anoncreds offer")
@@ -722,20 +702,21 @@ class AnoncredsCredentialFormatService(
 
             val tags: Tags = mapOf(
                 "anonCredsRevocationRegistryId" to revocationRegistryDefinitionId,
-                "anonCredsCredentialRevocationId" to revocationRegistryIndex.toString()
+                "anonCredsCredentialRevocationId" to revocationRegistryIndex.toString(),
             )
             credentialExchangeRecord.setTags(tags)
         }
 
-
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = anoncredsCredentialOffer.schemaId,
-                credentialDefinitionId = anoncredsCredentialOffer.credDefId,
-                credentialRevocationId = revocationRegistryIndex.toString(),
-                revocationRegistryId = revocationRegistryDefinitionId
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = anoncredsCredentialOffer.schemaId,
+                    credentialDefinitionId = anoncredsCredentialOffer.credDefId,
+                    credentialRevocationId = revocationRegistryIndex.toString(),
+                    revocationRegistryId = revocationRegistryDefinitionId,
+                ),
+            ),
         )
 
         val attachment = FormatDataUtil.getFormatData(anoncredsCredentialOffer, format.attachId)
@@ -743,14 +724,14 @@ class AnoncredsCredentialFormatService(
         return CredentialFormatCreateOfferReturn(
             format = format,
             attachment = attachment,
-            previewAttributes = previewAttributes
+            previewAttributes = previewAttributes,
         )
     }
 
     fun dateToTimestamp(date: Date): Long = date.time / 1000
 
     private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
-        if (credentialRecord.connectionId == null){
+        if (credentialRecord.connectionId == null) {
             throw CredoError("Connection id not found")
         }
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)

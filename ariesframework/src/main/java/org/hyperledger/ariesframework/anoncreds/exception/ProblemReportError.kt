@@ -4,23 +4,22 @@ import org.hyperledger.ariesframework.error.CredoError
 
 class ProblemReportError(
     message: String,
-    problemCode: String
+    problemCode: String,
 ) : CredoError(message) {
 
     val problemReport: ProblemReportMessage = ProblemReportMessage(
         description = ProblemReportDescription(
             en = message,
-            code = problemCode
-        )
+            code = problemCode,
+        ),
     )
 }
 
-
 data class ProblemReportMessage(
-    val description: ProblemReportDescription
+    val description: ProblemReportDescription,
 )
 
 data class ProblemReportDescription(
     val en: String,
-    val code: String
+    val code: String,
 )

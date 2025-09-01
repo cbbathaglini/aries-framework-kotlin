@@ -11,13 +11,13 @@ data class CreateCredentialOptions(
     val credentialValues: AnonCredsCredentialValues,
     val revocationRegistryDefinitionId: String? = null,
     val revocationStatusList: AnonCredsRevocationStatusList? = null,
-    val revocationRegistryIndex: Int? = null
+    val revocationRegistryIndex: Int? = null,
 )
 
 @Serializable
 data class AnonCredsCredentialValue(
     val raw: String,
-    val encoded: String
+    val encoded: String,
 )
 
 typealias AnonCredsCredentialValues = Map<String, AnonCredsCredentialValue>

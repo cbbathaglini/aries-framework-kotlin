@@ -8,14 +8,14 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistr
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
-class AnonCredsRevocationRegistryDefinitionRecord (
+class AnonCredsRevocationRegistryDefinitionRecord(
     override var id: String,
     override var _tags: Tags?,
     override val createdAt: Instant,
     override var updatedAt: Instant?,
     val revocationRegistryDefinitionId: String,
-    val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
-) : BaseRecord(){
+    val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
+) : BaseRecord() {
     companion object {
         const val type = "AnonCredsRevocationRegistryDefinitionRecord"
     }
@@ -23,7 +23,7 @@ class AnonCredsRevocationRegistryDefinitionRecord (
     constructor(
         tags: Tags? = null,
         revocationRegistryDefinitionId: String,
-        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
@@ -35,7 +35,6 @@ class AnonCredsRevocationRegistryDefinitionRecord (
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap
     }
-
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

@@ -15,6 +15,5 @@ class AnoncredsCredentialFormat(
     val revocationRegistryIndex: Long? = null,
     val attributes: List<CredentialPreviewAttribute>,
     val linkedAttachments: List<LinkedAttachment>? = emptyList(),
-    val linkSecretId: String //[TODO] Added for me
-) : CredentialFormat {
-}
+    val linkSecretId: String, // [TODO] Added for me
+) : CredentialFormat

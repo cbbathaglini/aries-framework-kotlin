@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.vc.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,5 +13,5 @@ data class DefaultW3cCredentialTags(
     val proofTypes: List<String>? = null,
     val cryptosuites: List<String>? = null,
     val types: List<String>,
-    val algs: List<String>? = null
+    val algs: List<String>? = null,
 )

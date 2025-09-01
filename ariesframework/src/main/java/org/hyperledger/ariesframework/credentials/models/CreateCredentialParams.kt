@@ -6,11 +6,11 @@ import org.hyperledger.ariesframework.credentials.formats.CredentialFormatServic
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 @Serializable
-data class CreateCredentialParams (
+data class CreateCredentialParams(
     val credentialRecord: CredentialExchangeRecord,
     val formatServices: List<CredentialFormatService<*>>,
     val comment: String? = null,
     val goal: String? = null,
     val goalCode: String? = null,
-    val credentialFormats: Map<String, JsonElement>? = emptyMap()
+    val credentialFormats: Map<String, JsonElement>? = emptyMap(),
 )

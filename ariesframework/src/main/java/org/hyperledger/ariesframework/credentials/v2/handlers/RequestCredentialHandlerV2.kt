@@ -22,7 +22,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToRequest(
             credentialRecord = credentialRecord,
-            messageContext = messageContext
+            messageContext = messageContext,
         )
 
         if (shouldAutoRespond) {
@@ -33,7 +33,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
         return null
     }
 
-    private suspend fun acceptRequest(credentialRecord: CredentialExchangeRecord) :  IssueCredentialMessageV2{
+    private suspend fun acceptRequest(credentialRecord: CredentialExchangeRecord): IssueCredentialMessageV2 {
         logger.info("Automatically sending credential with autoAccept")
 
         val offerMessage = agent.credentialServiceV2.findOfferMessage(credentialRecord.id)
@@ -42,11 +42,10 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
         }
 
         val accept = AcceptRequestOptionsV2(
-            credentialExchangeRecord = credentialRecord
+            credentialExchangeRecord = credentialRecord,
         )
-        val ( credentialExchange, message ) = agent.credentialServiceV2.acceptRequest(accept)
+        val (credentialExchange, message) = agent.credentialServiceV2.acceptRequest(accept)
 
         return message
     }
-
 }

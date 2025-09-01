@@ -17,5 +17,5 @@ data class AnonCredsCredentialInfo(
     val methodName: String,
     val createdAt: Instant = Clock.System.now(),
     val updatedAt: Instant,
-    val linkSecretId: String
+    val linkSecretId: String,
 )

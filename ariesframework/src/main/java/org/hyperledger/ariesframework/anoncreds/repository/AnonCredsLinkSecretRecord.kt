@@ -2,20 +2,19 @@ package org.hyperledger.ariesframework.anoncreds.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
-class AnonCredsLinkSecretRecord (
+class AnonCredsLinkSecretRecord(
     override var id: String,
     override var _tags: Tags? = null,
     override val createdAt: Instant,
     override var updatedAt: Instant?,
-    val linkSecretId : String,
-    val value : String? = null
-): BaseRecord() {
+    val linkSecretId: String,
+    val value: String? = null,
+) : BaseRecord() {
 
     companion object {
         const val type = "AnonCredsLinkSecretRecord"
@@ -24,7 +23,7 @@ class AnonCredsLinkSecretRecord (
     constructor(
         tags: Tags? = null,
         linkSecretId: String,
-        value: String? = null
+        value: String? = null,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,

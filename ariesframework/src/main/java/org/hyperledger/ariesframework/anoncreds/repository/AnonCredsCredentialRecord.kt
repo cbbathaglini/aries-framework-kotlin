@@ -2,23 +2,21 @@ package org.hyperledger.ariesframework.anoncreds.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredential
 import org.hyperledger.ariesframework.storage.BaseRecord
 
-class AnonCredsCredentialRecord (
+class AnonCredsCredentialRecord(
     override var id: String,
     override var _tags: Tags?,
     override val createdAt: Instant,
     override var updatedAt: Instant?,
-    val credentialId : String,
+    val credentialId: String,
     val credentialRevocationId: String? = null,
     val linkSecretId: String,
     val credencial: AnonCredsCredential,
-    val methodName: String
-): BaseRecord() {
+    val methodName: String,
+) : BaseRecord() {
 
     companion object {
         const val type = "AnonCredsCredentialRecord"
@@ -26,11 +24,11 @@ class AnonCredsCredentialRecord (
 
     constructor(
         tags: Tags? = null,
-        credentialId : String,
-        credentialRevocationId : String?,
+        credentialId: String,
+        credentialRevocationId: String?,
         linkSecretId: String,
-        credencial : AnonCredsCredential,
-        methodName: String
+        credencial: AnonCredsCredential,
+        methodName: String,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
@@ -40,7 +38,7 @@ class AnonCredsCredentialRecord (
         credentialRevocationId = credentialRevocationId,
         linkSecretId = linkSecretId,
         credencial = credencial,
-        methodName = methodName
+        methodName = methodName,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap

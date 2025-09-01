@@ -6,5 +6,5 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 @Serializable
 data class LinkedAttachmentOptions(
     val name: String,
-    val attachment: Attachment
+    val attachment: Attachment,
 )
