@@ -31,6 +31,7 @@ class PresentationMessageV2(
 
     companion object {
         const val INDY_PROOF_ATTACHMENT_ID = "indy"
+        const val ANONCREDS_PROOF_ATTACHMENT_ID = "indy"
         const val type = "https://didcomm.org/present-proof/2.0/presentation"
     }
 
@@ -40,6 +41,11 @@ class PresentationMessageV2(
 
     fun indyProof(): String {
         val attachment = getPresentationAttachmentById(INDY_PROOF_ATTACHMENT_ID)
+        return attachment?.getDataAsString() ?: throw Exception("Presentation attachment not found")
+    }
+
+    fun anoncredsProof(): String {
+        val attachment = getPresentationAttachmentById(ANONCREDS_PROOF_ATTACHMENT_ID)
         return attachment?.getDataAsString() ?: throw Exception("Presentation attachment not found")
     }
 

@@ -24,7 +24,7 @@ class BasicMessageHandler(val agent: Agent) : MessageHandler {
         if (messageContext.connection != null) {
             agent.historyRepository.save(
                 HistoryRecord(
-                    historyType = HistoryType.BasicMessageReceived,
+                    historyType = HistoryType.BasicMessageReceived.name,
                     connectionId = messageContext.connection.id,
                     theirLabel = messageContext.connection.theirLabel,
                     associatedRecordId = basicMessageRecord.id,

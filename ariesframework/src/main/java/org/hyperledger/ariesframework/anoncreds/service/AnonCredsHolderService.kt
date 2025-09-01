@@ -56,6 +56,7 @@ interface AnonCredsHolderService {
         options: GetCredentialsForProofRequestOptions
     ): GetCredentialsForProofRequestReturn
 
+
 //    suspend fun createW3cPresentation(
 //        options: CreateW3cPresentationOptions
 //    ): W3cJsonLdVerifiablePresentation

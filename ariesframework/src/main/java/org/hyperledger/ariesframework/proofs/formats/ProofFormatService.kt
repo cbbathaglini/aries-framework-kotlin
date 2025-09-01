@@ -4,10 +4,10 @@ import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
+import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-
 
 interface ProofFormatService<CF : ProofFormat> {
     val formatKey: String
@@ -41,11 +41,12 @@ interface ProofFormatService<CF : ProofFormat> {
     )
 
     suspend fun acceptRequest(
+        requestMessage: RequestPresentationMessageV2,
         proofRecord: ProofExchangeRecord,
-        proofFormats: Map<String, JsonElement>? = emptyMap(),
-        attachmentId: String? = null,
+        proofFormats: Map<String, JsonElement>?,
+        attachmentId: String,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment?
+        proposalAttachment: Attachment? = null
     ): ProofFormatCreateReturn
 
     suspend fun processPresentation(

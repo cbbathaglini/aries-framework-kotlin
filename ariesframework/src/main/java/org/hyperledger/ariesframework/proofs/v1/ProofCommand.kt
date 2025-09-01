@@ -26,6 +26,7 @@ import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(ProofCommand::class.java)
@@ -108,7 +109,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
             agent.historyRepository.save(
                 HistoryRecord(
-                    historyType = HistoryType.ProofRequestAccepted,
+                    historyType = HistoryType.ProofRequestAccepted.name,
                     connectionId = connection.id,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = proofRecordId,
@@ -126,14 +127,12 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             )
 
             val connection = agent.connectionRepository.getById(record.connectionId)
-            Log.d("MAIN_MESSAGE", "acceptRequest")
-            Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
-            Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
+
 
             agent.historyRepository.save(
                 HistoryRecord(
-                    historyType = HistoryType.ProofRequestAccepted,
+                    historyType = HistoryType.ProofRequestAccepted.name,
                     connectionId = connection.id,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = proofRecordId,
@@ -163,7 +162,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.ProofRequestDeclined,
+                historyType = HistoryType.ProofRequestDeclined.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = proofRecordId,

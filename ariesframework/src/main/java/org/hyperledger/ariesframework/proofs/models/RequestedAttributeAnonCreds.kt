@@ -6,7 +6,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 
 @Serializable
 data class RequestedAttributeAnonCreds(
-    @SerialName("cred_id")
+    //@SerialName("cred_id")
     val credentialId: String,
     val timestamp: Int? = null,
     val revealed: Boolean,
@@ -19,7 +19,7 @@ data class RequestedAttributeAnonCreds(
 
 @Serializable
 data class RequestedPredicateAnonCreds(
-    @SerialName("cred_id")
+    //@SerialName("cred_id")
     val credentialId: String,
     val timestamp: Int? = null,
     @Transient

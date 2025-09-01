@@ -1,3 +1,4 @@
+
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
@@ -31,4 +32,7 @@ interface ILedgerService {
     suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int)
 
     suspend fun getRevocationStatusList(id: String, timestamp: Int): RevocationStatusList
+    suspend fun getTailsPath(): String
+    suspend fun getSchemaObj(schemaId: String): AnonCredsSchema
+
 }

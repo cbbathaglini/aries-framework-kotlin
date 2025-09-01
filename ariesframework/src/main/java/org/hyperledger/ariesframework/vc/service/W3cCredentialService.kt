@@ -43,7 +43,8 @@ class W3cCredentialService(
             credentialSubject = jsonLdVerifiableCredential.credentialSubject,
             expirationDate = jsonLdVerifiableCredential.expirationDate,
             credentialSchema = jsonLdVerifiableCredential.credentialSchema,
-            credentialStatus = jsonLdVerifiableCredential.credentialStatus
+            credentialStatus = jsonLdVerifiableCredential.credentialStatus,
+            proofs= jsonLdVerifiableCredential.proofs
         )
 
         val w3cCredentialRecord = W3cCredentialRecord(

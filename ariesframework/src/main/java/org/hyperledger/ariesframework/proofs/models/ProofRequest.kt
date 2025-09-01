@@ -22,6 +22,4 @@ data class ProofRequest(
     val ver: String? = null,
 ) {
     fun toJsonString(): String = Json.encodeToString(this)
-
-
 }

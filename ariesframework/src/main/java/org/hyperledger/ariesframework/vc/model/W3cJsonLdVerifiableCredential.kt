@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
 data class W3cJsonLdVerifiableCredential(
@@ -29,7 +30,10 @@ data class W3cJsonLdVerifiableCredential(
 
 ) { //: W3cCredential {
 
-
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(W3cJsonLdVerifiableCredential.serializer(), this)
 
     val encoded: Map<String, Any?>
         get() = mapOf( // simulate JSON for now; use kotlinx.serialization to generate full JSON

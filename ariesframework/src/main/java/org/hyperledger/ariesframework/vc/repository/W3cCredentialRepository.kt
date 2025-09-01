@@ -11,18 +11,4 @@ import org.hyperledger.ariesframework.vc.model.W3cCredential
 class W3cCredentialRepository (agent: Agent) : Repository<W3cCredentialRecord>(
     W3cCredentialRecord::class,
     agent,
-) {
-
-//    suspend fun findByThreadAndConnectionId(threadId: String, connectionId: String?): CredentialExchangeRecord? {
-//        return
-//            findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")
-//        }
-//    }
-
-
-//    suspend fun getAllAsJson(): String {
-//        val records = getAll()
-//        val credentials = records.map { it.credential }
-//        return Json.encodeToString(ListSerializer(W3cCredential.serializer()), credentials)
-//    }
-}
+)

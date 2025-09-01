@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class AnonCredsRevocationRegistryEntry(
     val tailsFilePath: String,
     val definition: AnonCredsRevocationRegistryDefinition,
-    val revocationStatusLists: Map<Long, AnonCredsRevocationStatusList>
+    val revocationStatusLists: Map<Long, AnonCredsRevocationStatusList>? = null
 )
 
-typealias AnonCredsRevocationRegistries = Map<String, AnonCredsRevocationRegistryEntry>
+typealias AnonCredsRevocationRegistries = MutableMap<String, AnonCredsRevocationRegistryEntry>

@@ -20,7 +20,7 @@ data class HistoryRecord(
     @EncodeDefault
     override val createdAt: Instant = Clock.System.now(),
     override var updatedAt: Instant? = null,
-    var historyType: HistoryType,
+    var historyType: String, // from history type
     var connectionId: String,
     var associatedRecordId: String,
     var theirLabel: String? = null,
@@ -33,7 +33,7 @@ data class HistoryRecord(
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
-        tags["historyType"] = historyType.name
+        tags["historyType"] = historyType
         tags["connectionId"] = connectionId
         tags["associatedRecordId"] = associatedRecordId
 

@@ -15,7 +15,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribut
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
-import org.hyperledger.ariesframework.proofs.models.AnonCredsRestriction
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
@@ -62,9 +61,11 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
             val definition = reg.definition as JsonObject
             revocationRegistryDefinitions[revRegDefId] = definition
 
-            val revocationStatusLists = reg.revocationStatusLists.values
-            for (lst in revocationStatusLists) {
-                lists.add(lst as JsonObject)
+            val revocationStatusLists = reg.revocationStatusLists?.values
+            if (revocationStatusLists!=null) {
+                for (lst in revocationStatusLists) {
+                    lists.add(lst as JsonObject)
+                }
             }
         }
 

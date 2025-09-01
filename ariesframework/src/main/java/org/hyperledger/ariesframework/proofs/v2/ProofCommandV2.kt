@@ -1,9 +1,6 @@
 package org.hyperledger.ariesframework.proofs.v2
 
-import android.util.Log
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
@@ -25,6 +22,7 @@ import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
@@ -99,39 +97,49 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun acceptRequest(
         proofRecordId: String,
-        requestedCredentials: RequestedCredentialsAnoncreds,
         comment: String? = null,
     ): ProofExchangeRecord {
 
-        agent.didCommMessageRepository.getAgentMessage(
+        val retrievedCredentials: RetrievedCredentialsAnonCreds =
+            getRequestedCredentialsForProofRequest(proofRecordId)
+        val requestedCredentials: RequestedCredentialsAnoncreds =
+            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+
+        val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,
             RequestPresentationMessageV2.type
         )
+
         val record = agent.proofRepository.getById(proofRecordId)
 
+        val requestedCredentialsMap = requestedCredentials.toMap()
         val params = AcceptProofRequestOptions(
             proofRecord = record,
-            proofFormats = requestedCredentials.toMap(),
-            comment = comment
+            proofFormats = record.formats!!,
+            comment = comment,
+            requestedCredentials = requestedCredentialsMap
         )
+
         val (message, proofRecord) = agent.proofServiceV2.acceptRequest(params)
 
         val connection = agent.connectionRepository.getById(record.connectionId)
-        Log.d("MAIN_MESSAGE", "acceptRequest")
-        Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
-        Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
+
+        try {
+
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ProofRequestAccepted.name,
+                    connectionId = connection.id,
+                    theirLabel = connection.theirLabel,
+                    associatedRecordId = proofRecordId,
+                    proofRequestedCredentialsAnoncreds = requestedCredentials,
+                ),
+            )
+        } catch (e: Exception) {
+            logger.error("error: ${e.message}")
+        }
+
         agent.messageSender.send(OutboundMessage(message, connection))
-
-        agent.historyRepository.save(
-            HistoryRecord(
-                historyType = HistoryType.ProofRequestAccepted,
-                connectionId = connection.id,
-                theirLabel = connection.theirLabel,
-                associatedRecordId = proofRecordId,
-                proofRequestedCredentialsAnoncreds = requestedCredentials,
-            ),
-        )
-
         return proofRecord
 
     }
@@ -148,7 +156,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 //        proofRecordId: String,
 //    ): ProofExchangeRecord {
 //        val record = agent.proofRepository.getById(proofRecordId)
-//        val (message, proofRecord) = agent.proofService.createPresentationDeclinedProblemReport(
+//        val (message, proofRecord) = agent.proofServiceV2.createPresentationDeclinedProblemReport(
 //            record
 //        )
 //
@@ -207,6 +215,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val proofRequestMessage =
             MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
+        updateProofFormat(record, proofRequestMessage.formats)
 
         val proofRequestJson = proofRequestMessage.anoncredsProofRequest()
         logger.debug("Proof request json: $proofRequestJson")
@@ -214,5 +223,13 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
 
+    }
+
+    private suspend fun updateProofFormat(
+        record: ProofExchangeRecord,
+        formats: List<ProofFormatSpec>
+    ) {
+        record.formats = formats
+        agent.proofRepository.update(record)
     }
 }

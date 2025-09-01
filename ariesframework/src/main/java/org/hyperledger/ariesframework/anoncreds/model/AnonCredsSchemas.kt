@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AnonCredsSchemas(
-    val schemas: Map<String, AnonCredsSchema>
+    val schemas: Map<String, AnonCredsSchema> = mutableMapOf()
 )

@@ -123,7 +123,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
 
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.CredentialRevoked,
+                historyType = HistoryType.CredentialRevoked.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = credentialRecord.id,

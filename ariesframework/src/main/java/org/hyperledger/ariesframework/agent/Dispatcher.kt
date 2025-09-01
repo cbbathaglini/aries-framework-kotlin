@@ -13,7 +13,7 @@ class Dispatcher(val agent: Agent) {
     }
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
-        logger.debug("Dispatching message of type: ${messageContext.message.type}")
+        logger.info("Dispatching message of type: ${messageContext.message.type}")
 
         //printDispatcherMessages(messageContext)
 

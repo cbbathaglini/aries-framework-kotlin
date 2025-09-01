@@ -11,6 +11,11 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
     CredentialExchangeRecord::class,
     agent,
 ) {
+
+    suspend fun getByCredentialId(credentialId: String): CredentialExchangeRecord {
+        return getSingleByQuery("{\"credentialId\": \"$credentialId\"}")
+    }
+
     suspend fun findByThreadAndConnectionId(threadId: String, connectionId: String?): CredentialExchangeRecord? {
         return if (connectionId != null) {
             findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")

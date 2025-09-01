@@ -1,18 +1,10 @@
 package org.hyperledger.ariesframework.vc.model
 
 import W3cCredentialSubject
-import android.os.Parcelable
-import androidx.versionedparcelable.VersionedParcelize
-import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonPrimitive
-import org.hyperledger.ariesframework.util.ConvertMapAnySerializer
 
 @Serializable
 data class W3cCredential (
@@ -23,14 +15,19 @@ data class W3cCredential (
     val issuer: JsonElement,
     val issuanceDate: String,
     val credentialSubject: List<W3cCredentialSubject>,
-    val expirationDate: String?,
-    val credentialSchema: List<W3cCredentialSchema>?,
+    val expirationDate: String? = null,
+    val credentialSchema: List<W3cCredentialSchema>? = emptyList(),
     val credentialStatus: W3cCredentialStatus?,
+
+    @SerialName("proof")
+    val proofs: List<LinkedDataProofBase>?  = emptyList() // add by me
+
 ) {
 
-//    fun toJson(): String {
-//        return json.encodeToString(W3cCredential.serializer(), this)
-//    }
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(W3cCredential.serializer(), this)
 
     companion object{
 //        private val json = Json {

@@ -135,7 +135,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         logger.info("after send message")
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.CredentialOfferAccepted,
+                historyType = HistoryType.CredentialOfferAccepted.name,
                 connectionId = connectionRecord.id,
                 theirLabel = connectionRecord.theirLabel,
                 associatedRecordId = credentialExchange.id,
@@ -166,7 +166,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.CredentialOfferDeclined,
+                historyType = HistoryType.CredentialOfferDeclined.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = credentialRecord.id,

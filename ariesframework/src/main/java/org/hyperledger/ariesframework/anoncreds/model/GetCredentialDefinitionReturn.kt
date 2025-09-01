@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 data class GetCredentialDefinitionReturn(
     val credentialDefinition: AnonCredsCredentialDefinition? = null,
     val credentialDefinitionId: String,
-    val resolutionMetadata: AnonCredsResolutionMetadata,
+    val resolutionMetadata: AnonCredsResolutionMetadata? = null,
     val credentialDefinitionMetadata: Map<String, @Contextual Any> = emptyMap()
 )

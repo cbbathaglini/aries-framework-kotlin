@@ -4,6 +4,6 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelec
 
 
 data class RevocationRegistriesForRequestResult(
-    val revocationRegistries: MutableMap<String, RevocationRegistryBucket>,
+    val revocationRegistries: Map<String, RevocationRegistryBucket>,
     val updatedSelectedCredentials: AnonCredsSelectedCredentials
 )

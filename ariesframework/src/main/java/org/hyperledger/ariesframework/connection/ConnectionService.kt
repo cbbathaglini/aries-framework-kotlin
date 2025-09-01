@@ -100,7 +100,7 @@ class ConnectionService(val agent: Agent) {
         runBlocking {
             agent.historyRepository.save(
                 HistoryRecord(
-                    historyType = HistoryType.ConnectionCreated,
+                    historyType = HistoryType.ConnectionCreated.name,
                     connectionId = connectionRecord.id,
                     theirLabel = theirLabel,
                     associatedRecordId = connectionRecord.id,

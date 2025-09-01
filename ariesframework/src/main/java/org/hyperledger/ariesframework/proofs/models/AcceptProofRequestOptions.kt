@@ -7,9 +7,10 @@ import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 @Serializable
 data class AcceptProofRequestOptions (
     val proofRecord: ProofExchangeRecord,
-    val proofFormats: Map<String, JsonElement>? = emptyMap(),
+    val proofFormats: List<ProofFormatSpec> = emptyList(),
     val comment: String? = null,
     val goalCode: String? = null,
     val goal: String? = null,
     val autoAcceptProof: AutoAcceptProof? = null,
+    val requestedCredentials : Map<String, JsonElement>? = emptyMap()
 )

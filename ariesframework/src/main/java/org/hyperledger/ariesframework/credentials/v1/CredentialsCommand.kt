@@ -104,7 +104,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.CredentialOfferAccepted,
+                historyType = HistoryType.CredentialOfferAccepted.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = credentialRecord.id,
@@ -130,7 +130,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.historyRepository.save(
             HistoryRecord(
-                historyType = HistoryType.CredentialOfferDeclined,
+                historyType = HistoryType.CredentialOfferDeclined.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = options.credentialRecordId,

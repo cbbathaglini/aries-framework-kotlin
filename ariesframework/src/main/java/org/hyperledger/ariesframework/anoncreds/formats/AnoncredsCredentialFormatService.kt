@@ -105,6 +105,7 @@ class AnoncredsCredentialFormatService(
     ): CredentialFormatCreateProposalReturn {
 
         val format = Format(format = ANONCREDS_CREDENTIAL_FILTER)
+        PrintLongLine.print("credentialFormats------- ${credentialFormats.toString()}")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeCredentialFormat>(credentialFormats)
 
         val proposal = AnonCredsCredentialProposal(
@@ -163,6 +164,7 @@ class AnoncredsCredentialFormatService(
         proposalAttachments: Attachment
     ): CredentialFormatCreateOfferReturn {
 
+        PrintLongLine.print("credentialFormats------- ${credentialFormats.toString()}")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val proposalJson = proposalAttachments.getDataAsJson()//<AnonCredsCredentialProposalFormat>()
@@ -202,7 +204,8 @@ class AnoncredsCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord,
         attachmentId: String?
     ): CredentialFormatCreateOfferReturn {
-
+        logger.info("AAAAAA---A-A-A-A--A-A-A-A-A")
+        PrintLongLine.print("credentialFormats------- ${credentialFormats.toString()}")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val createAnoncredsOffer = CreateAnoncredsOffer(

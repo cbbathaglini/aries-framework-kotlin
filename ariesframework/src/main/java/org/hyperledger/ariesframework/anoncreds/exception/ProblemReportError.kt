@@ -2,7 +2,7 @@ package org.hyperledger.ariesframework.anoncreds.exception
 
 import org.hyperledger.ariesframework.error.CredoError
 
-class ProblemReportError(
+open class ProblemReportError(
     message: String,
     problemCode: String
 ) : CredoError(message) {

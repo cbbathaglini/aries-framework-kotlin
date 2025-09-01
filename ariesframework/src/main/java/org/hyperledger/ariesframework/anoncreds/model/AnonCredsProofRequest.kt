@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.anoncreds.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 
 @Serializable
@@ -16,7 +17,12 @@ data class AnonCredsProofRequest(
     @SerialName("non_revoked")
     val nonRevoked: AnonCredsNonRevokedInterval? = null,
     val ver: String? = null // can be "1.0" or "2.0"
-)
+){
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(AnonCredsProofRequest.serializer(), this)
+}
 
 @Serializable
 data class AnonCredsRequestedAttribute(

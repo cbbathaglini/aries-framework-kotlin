@@ -70,7 +70,7 @@ class FormatDataUtil {
                 .getSchema(schemaId)
 
             if (result.schema == null) {
-                throw CredoError("Schema not found for id $schemaId: ${result.resolutionMetadata.message}")
+                throw CredoError("Schema not found for id $schemaId: ${result.resolutionMetadata?.message}")
             }
 
             return FetchSchemaReturn(

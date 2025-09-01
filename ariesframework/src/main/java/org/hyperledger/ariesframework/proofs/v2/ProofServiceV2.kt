@@ -1,5 +1,8 @@
 package org.hyperledger.ariesframework.proofs.v2
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
@@ -16,13 +19,17 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
+import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatCoordinator
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
+import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationProblemReportErrorV2
 import org.hyperledger.ariesframework.proofs.messages.v2.ProposePresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalParams
@@ -55,20 +62,20 @@ import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestOptions
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.proofs.utils.MapperProofRequestAnoncredsProofRequest
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
+import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.hyperledger.ariesframework.util.concurrentMap
 import org.slf4j.LoggerFactory
 import java.util.UUID
+import kotlin.math.log
 
 class ProofServiceV2(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
 
     private val proofRepository = agent.proofRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
-    private val ledgerService = agent.ledgerService
     private val proofFormats = listOf<ProofFormatService<*>>(
         AnoncredsProofFormatService(agent = agent)
     )
@@ -114,6 +121,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processProposal(messageContext: InboundMessageContext): ProofExchangeRecord {
+        logger.info("PROCESS PROPOSAL -------------------------")
         val proofProposalMessage =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as ProposePresentationMessageV2
         val connection = messageContext.assertReadyConnection()
@@ -198,6 +206,7 @@ class ProofServiceV2(val agent: Agent) {
 
 
     suspend fun acceptProposal(params: AcceptProofProposalServiceParams): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
+        logger.info("ACCEPT PROPOSAL -------------------------")
         val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof, willConfirm) = params
 
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
@@ -240,6 +249,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun negotiateProposal(params: NegotiateProofProposalOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
+        logger.info("NEGOTIATE PROPOSAL -------------------------")
         val (proofRecord, proofFormats, autoAcceptProof, comment, goalCode, goal, willConfirm) = params
 
         // Assert
@@ -282,7 +292,7 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-
+        logger.info("CREATE REQUEST -------------------------")
         val (proofRecord, proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
         val formatServices = getFormatServices(proofFormats)
@@ -320,27 +330,31 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processRequest(messageContext: InboundMessageContext): ProofExchangeRecord {
+        logger.info("PROCESS REQUEST -------------------------")
         val connection = messageContext.connection
 
         val requestMessage =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
         logger.debug("Processing proof request with id ${requestMessage.id}")
 
-        var proofRecord : ProofExchangeRecord? = null
-        try {
-            proofRecord = agent.proofRepository.findByThreadRoleAndConnection(
-                role = ProofRole.Prover,
+
+        logger.info("conn proof: ${connection?.id}")
+        logger.info("thread proof: ${requestMessage.threadId}")
+        logger.info("role: prover")
+
+        val proofRecord : ProofExchangeRecord? = agent.proofRepository.getByThreadAndConnectionIdAndRole(
+                role = ProofRole.Prover.name,
                 connectionId = connection?.id,
                 threadId = requestMessage.threadId
-            )
-        }catch (e: Exception){
-            logger.debug("Proof record not found")
-        }
+        )
+        logger.info("proofRecord-proofRecord: ${proofRecord?.state}")
 
         val formatServices = getFormatServicesFromMessage(requestMessage.formats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to process request. No supported formats")
         }
+
+        logger.info("formatServices: ${formatServices.toString()}")
 
         if (proofRecord != null) {
             val lastSentMessage =
@@ -411,39 +425,43 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun acceptRequest(params: AcceptProofRequestOptions): Pair<PresentationMessageV2, ProofExchangeRecord> {
-
-        val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof) = params
+        val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof, requestedCredentials) = params
 
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
         proofRecord.assertState(ProofState.RequestReceived)
 
-        var formatServices = getFormatServices(proofFormats ?: emptyMap())
+        var formatServices = getFormatServicesByList(proofFormats ?: emptyList<ProofFormatSpec>())
         if (formatServices.isEmpty()) {
-            val requestMessage =
-                agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
-                    associatedRecordId = proofRecord.id,
-                    messageType = RequestPresentationMessageV2.type,
-                    role = DidCommMessageRole.Receiver
-                )
+            try {
+                val requestMessage =
+                    agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
+                        associatedRecordId = proofRecord.id,
+                        messageType = RequestPresentationMessageV2.type,
+                        role = DidCommMessageRole.Receiver
+                    )
 
-            formatServices =
-                if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()
+                formatServices =
+                    if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()
+            }catch (e: Exception){
+                logger.error("msg error: ${e.message}")
+            }
         }
 
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to accept request. No supported formats provided as input or in request message")
         }
 
+
         val acceptRequestParams = AcceptProofRequestParams(
             proofRecord = proofRecord,
-            proofFormats = proofFormats,
+            proofFormats =  requestedCredentials,
             formatServices = formatServices,
             comment = comment,
             lastPresentation = true,
             goalCode = goalCode,
             goal = goal
         )
-        val message = proofFormatCoordinator.acceptRequest(acceptRequestParams)
+        val message : PresentationMessageV2 = proofFormatCoordinator.acceptRequest(acceptRequestParams)
 
         proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
         updateState(proofRecord, ProofState.PresentationSent)
@@ -458,11 +476,11 @@ class ProofServiceV2(val agent: Agent) {
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
         proofRecord.assertState(ProofState.RequestReceived)
 
-        if (proofRecord.connectionId.isNullOrBlank()) {
+        if (proofRecord.connectionId.isBlank()) {
             throw CredoError("No connectionId found for proof record '${proofRecord.id}'. Connection-less verification does not support negotiation.")
         }
 
-        var formatServices = getFormatServices(proofFormats)
+        val formatServices = getFormatServices(proofFormats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats.")
         }
@@ -610,10 +628,12 @@ class ProofServiceV2(val agent: Agent) {
         if (formatServices.isEmpty()) {
             proofRecord.errorMessage = "Unable to process presentation. No supported formats"
             updateState(proofRecord, ProofState.Abandoned)
-//            throw V2PresentationProblemReportError(proofRecord.errorMessage, {
-//                    problemCode: PresentationProblemReportReason.Abandoned,
-//            })
-            throw CredoError("Error: ${proofRecord.errorMessage}")
+            throw PresentationProblemReportErrorV2(
+                message = proofRecord.errorMessage!!,
+                problemCode = "abandoned",
+                threadId = proofRecord.threadId
+            )
+
         }
 
 
@@ -631,11 +651,13 @@ class ProofServiceV2(val agent: Agent) {
             proofRecord.errorMessage = result.message
             proofRecord.isVerified = false
             updateState(proofRecord, ProofState.Abandoned)
-//            throw new V2PresentationProblemReportError(proofRecord.errorMessage, {
-//                    problemCode: PresentationProblemReportReason.Abandoned,
-//            })
 
-            throw CredoError("Error: ${proofRecord.errorMessage}")
+            throw PresentationProblemReportErrorV2(
+                message = proofRecord.errorMessage!!,
+                problemCode = "abandoned",
+                threadId = proofRecord.threadId
+            )
+
         }
 
         return proofRecord
@@ -673,6 +695,15 @@ class ProofServiceV2(val agent: Agent) {
         updateState(proofRecord, ProofState.Done)
 
         return Pair(message, proofRecord)
+    }
+
+    suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessage, ProofExchangeRecord> {
+        proofRecord.assertState(ProofState.PresentationReceived)
+
+        val ackMessage = PresentationAckMessage(proofRecord.threadId, AckStatus.OK)
+        updateState(proofRecord, ProofState.Done)
+
+        return Pair(ackMessage, proofRecord)
     }
 
     suspend fun processAck(messageContext: InboundMessageContext): ProofExchangeRecord {
@@ -890,7 +921,6 @@ class ProofServiceV2(val agent: Agent) {
             messageType = messageType
         ) ?: return null
 
-        logger.info("messageStr: ${messageStr.toString()}")
         return runCatching {
             MessageSerializer.decodeFromString(messageStr) as T
         }.getOrElse {
@@ -899,36 +929,34 @@ class ProofServiceV2(val agent: Agent) {
         }
     }
 
-
-    /**
-     * Get all the format service objects for a given proof format
-     * @param proofFormats Map of format keys to any payload
-     * @return List of matching  instances ProofFormatService
-     */
-    private fun getFormatServices(
-        proofFormats: Map<String, JsonElement>
+    private fun getFormatServicesByList(
+        formats: List<ProofFormatSpec>
     ): List<ProofFormatService<*>> {
-        return proofFormats.keys.mapNotNull { getFormatServiceForFormatKey(it) }
+        return formats.mapNotNull { getFormatServiceForFormatKey(it.attachmentId!!) }
             .distinct()
     }
 
     private fun getFormatServiceForFormatKey(formatKey: String): ProofFormatService<*>? {
-        return proofFormats.find { formatService -> formatService.formatKey == formatKey }
-    }
-
-    /**
-     * Get all the format service objects for a given proof format from an incoming message
-     * @param messageFormats the format objects containing the format name (eg indy)
-     * @return the proof format service objects in an array - derived from format object keys
-     */
-    private fun getFormatServicesFromMessage(messageFormats: List<ProofFormatSpec>): List<ProofFormatService<*>> {
-        return messageFormats.mapNotNull { getFormatServiceForFormat(it.format) }.distinct()
+        logger.info("format key: ${formatKey}")
+        val finded = proofFormats.find {  formatService -> formatService.formatKey == formatKey }
+        logger.info("finded: ${finded}")
+        return finded
     }
 
     private fun getFormatServiceForFormat(format: String): ProofFormatService<*>? {
         return proofFormats.find { it.supportsFormat(format) }
     }
 
+    private fun getFormatServices(
+        formats: Map<String, JsonElement>
+    ): List<ProofFormatService<*>> {
+        return formats.keys.mapNotNull { getFormatServiceForFormatKey(it) }
+            .distinct()
+    }
+
+    private fun getFormatServicesFromMessage(messageFormats: List<ProofFormatSpec>): List<ProofFormatService<*>> {
+        return messageFormats.mapNotNull { getFormatServiceForFormat(it.format) }.distinct()
+    }
 
     suspend fun updateState(proofRecord: ProofExchangeRecord, newState: ProofState) {
         proofRecord.state = newState
@@ -988,66 +1016,69 @@ class ProofServiceV2(val agent: Agent) {
      * @param proofRequest the proof request to build the requested credentials object from.
      * @return ``RetrievedCredentials`` object.
      */
-    suspend fun getRequestedCredentialsForProofRequest(anoncredsProofRequest: AnonCredsProofRequest): RetrievedCredentialsAnonCreds {
-        val retrievedCredentials = RetrievedCredentialsAnonCreds()
-        val lock = Mutex()
+    suspend fun getRequestedCredentialsForProofRequest(
+        anoncredsProofRequest: AnonCredsProofRequest
+    ): RetrievedCredentialsAnonCreds = coroutineScope {
 
-        anoncredsProofRequest.requestedAttributes.concurrentForEach { (referent, requestedAttribute) ->
-            val credentials =
-                agent.anonCredsHolderService.getCredentialsForProofRequest(
+        // 1) Dispara tudo em paralelo, mas apenas coleta resultados (Pair)
+        val attrDeferred = anoncredsProofRequest.requestedAttributes.map { (referent, requestedAttribute) ->
+            async {
+                val credentials = agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent
-                    ))
-
-            val attributes = credentials.credentials.concurrentMap { credentialInfo ->
-                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
-                    anoncredsProofRequest,
-                    requestedAttribute.nonRevoked,
-                    credentialInfo,
+                    )
                 )
 
-                RequestedAttributeAnonCreds(
-                    referent,
-                    deltaTimestamp,
-                    true,
-                    credentialInfo.credentialInfo,
-                    revoked
-                )
-            }
-            lock.withLock {
-                retrievedCredentials.requestedAttributes[referent] = attributes
+                val attributes = credentials.credentials.map { credentialInfo ->
+                    val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
+                        anoncredsProofRequest,
+                        requestedAttribute.nonRevoked,
+                        credentialInfo,
+                    )
+                    RequestedAttributeAnonCreds(
+                        credentialId = credentialInfo.credentialInfo.credentialId,
+                        timestamp = deltaTimestamp,
+                        revealed = true,
+                        credentialInfo = credentialInfo.credentialInfo,
+                        revoked = revoked
+                    )
+                }
+                referent to attributes
             }
         }
 
-        anoncredsProofRequest.requestedPredicates.concurrentForEach { (referent, requestedPredicate) ->
-            val credentials =
-                agent.anonCredsHolderService.getCredentialsForProofRequest(
+        val predDeferred = anoncredsProofRequest.requestedPredicates.map { (referent, requestedPredicate) ->
+            async {
+                val credentials = agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent
-                    ))
-
-
-            val predicates = credentials.credentials.concurrentMap { credentialInfo ->
-                val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
-                    anoncredsProofRequest,
-                    requestedPredicate.nonRevoked,
-                    credentialInfo,
+                    )
                 )
 
-                RequestedPredicateAnonCreds(
-                    referent,
-                    deltaTimestamp,
-                    credentialInfo.credentialInfo,
-                    revoked)
-            }
-            lock.withLock {
-                retrievedCredentials.requestedPredicates[referent] = predicates
+                val predicates = credentials.credentials.map { credentialInfo ->
+                    val (revoked, deltaTimestamp) = getRevocationStatusForRequestedItemAnoncreds(
+                        anoncredsProofRequest,
+                        requestedPredicate.nonRevoked,
+                        credentialInfo,
+                    )
+                    RequestedPredicateAnonCreds(
+                        credentialId = credentialInfo.credentialInfo.credentialId,
+                        timestamp = deltaTimestamp,
+                        credentialInfo = credentialInfo.credentialInfo,
+                        revoked = revoked
+                    )
+                }
+                referent to predicates
             }
         }
 
-        return retrievedCredentials
+        // 2) Consolida resultados sem concorrência (sem lock)
+        val retrieved = RetrievedCredentialsAnonCreds()
+        retrieved.requestedAttributes.putAll(attrDeferred.awaitAll().toMap())
+        retrieved.requestedPredicates.putAll(predDeferred.awaitAll().toMap())
+        retrieved
     }
 
     suspend fun getRevocationStatusForRequestedItem(

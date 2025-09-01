@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 @Serializable
 class RequestPresentationMessageV2(
     val comment: String? = null,
+
     val goal: String? = null,
 
     @SerialName("goal_code")
@@ -29,6 +30,7 @@ class RequestPresentationMessageV2(
 
     companion object {
         const val INDY_PROOF_REQUEST_ATTACHMENT_ID = "indy"
+        const val ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID = "anoncreds"
         const val type = "https://didcomm.org/present-proof/2.0/request-presentation"
     }
 
@@ -42,7 +44,7 @@ class RequestPresentationMessageV2(
     }
 
     fun anoncredsProofRequest(): String {
-        val attachment = getRequestPresentationAttachmentById("anoncreds")
+        val attachment = getRequestPresentationAttachmentById(ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID)
         return attachment?.getDataAsString() ?: throw Exception("Request presentation attachment not found")
     }
 }

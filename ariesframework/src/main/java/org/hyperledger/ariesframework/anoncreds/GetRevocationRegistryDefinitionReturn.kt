@@ -9,6 +9,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistr
 data class GetRevocationRegistryDefinitionReturn(
     val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null,
     val revocationRegistryDefinitionId: String,
-    val resolutionMetadata: AnonCredsResolutionMetadata,
+    val resolutionMetadata: AnonCredsResolutionMetadata? = null,
     val revocationRegistryDefinitionMetadata: Map<String, JsonElement> //exensible
 )

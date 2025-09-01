@@ -36,6 +36,12 @@ data class AnonCredsCredential(
     @SerialName("witness")
     val witness: JsonElement? = null
 ){
+
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(AnonCredsCredential.serializer(), this)
+
     override fun toString(): String {
         return "AnonCredsCredential(schemaId='$schemaId', credDefId='$credDefId', revRegId=$revRegId, values=$values, signature=$signature, signatureCorrectnessProof=$signatureCorrectnessProof, revReg=$revReg, witness=$witness)"
     }

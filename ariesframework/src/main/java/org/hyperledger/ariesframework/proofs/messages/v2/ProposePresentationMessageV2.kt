@@ -9,11 +9,15 @@ import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 @Serializable
 class ProposePresentationMessageV2(
     val comment: String? = null,
+
     @SerialName("goal_code")
     val goalCode: String? = null,
+
     val goal: String? = null,
+
     @SerialName("proposals~attach")
     val proposalAttachments: MutableList<Attachment> = mutableListOf(),
+
     val formats : MutableList<ProofFormatSpec> = mutableListOf()
 ) : AgentMessage(generateId(), type) {
 

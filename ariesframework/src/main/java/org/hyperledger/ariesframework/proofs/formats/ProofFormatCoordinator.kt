@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.proofs.formats
 
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
@@ -20,6 +21,7 @@ import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.ProcessPresentationReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateProposalOptions
+import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestProofRequestParams
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -229,12 +231,14 @@ class ProofFormatCoordinator(
                 role = DidCommMessageRole.Receiver
             ) ?: throw CredoError("Request message not found")
 
-        val proposalMessage =
-            agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
+        val proposal =
+            agent.didCommMessageRepository.findAgentMessage(
                 associatedRecordId = proofRecord.id,
-                messageType = ProposePresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
-            ) ?: throw CredoError("Proposal message not found")
+                messageType = ProposePresentationMessageV2.type
+            )
+
+        val proposalMessage = if (proposal != null)
+            MessageSerializer.decodeFromString(proposal) as ProposePresentationMessageV2 else null
 
 
         val formats = mutableListOf<ProofFormatSpec>()
@@ -247,17 +251,20 @@ class ProofFormatCoordinator(
                 attachments = requestMessage.requestAttachment
             )
 
-            val proposalAttachment = getAttachmentForService(
+            val proposalAttachment = if(proposalMessage != null) getAttachmentForService(
                 proofFormatService = formatService,
                 formats = proposalMessage.formats,
                 attachments = proposalMessage.proposalAttachments
-            )
+            ) else null
 
-            val proofAccepted = formatService.acceptRequest(
+
+            val proofAccepted : ProofFormatCreateReturn= formatService.acceptRequest(
+                requestMessage = requestMessage,
                 proofFormats = proofFormats,
                 proofRecord = proofRecord,
                 proposalAttachment = proposalAttachment,
-                requestAttachment = requestAttachment
+                requestAttachment = requestAttachment,
+                attachmentId = formatService.formatKey
             )
 
             presentationAttachments.add(proofAccepted.attachment)
@@ -489,7 +496,7 @@ class ProofFormatCoordinator(
         val format = formats.find { proofFormatService.supportsFormat(it.format) }
             ?: throw CredoError("No attachment found for service ${proofFormatService.formatKey}")
 
-        return format.attachmentId
+        return format.attachmentId!!
     }
 
 }

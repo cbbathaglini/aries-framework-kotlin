@@ -244,7 +244,6 @@ class CredentialFormatCoordinator(
             formatService.processOffer(attachment, credentialExchangeRecord)
         }
 
-
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Receiver,
             agentMessage = message,

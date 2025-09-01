@@ -7,6 +7,6 @@ import java.util.UUID
 @Serializable
 data class ProofFormatSpec (
     @SerialName("attach_id")
-    val attachmentId: String = UUID.randomUUID().toString(),
+    val attachmentId: String? = UUID.randomUUID().toString(),
     val format: String
 )

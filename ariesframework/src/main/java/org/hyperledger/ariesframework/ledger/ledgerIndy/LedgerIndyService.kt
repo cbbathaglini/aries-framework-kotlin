@@ -362,6 +362,14 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         throw Exception("not implemented for indy")
     }
 
+    override suspend fun getTailsPath(): String {
+        throw Exception("not implemented for indy")
+    }
+
+    override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
+        throw Exception("not implemented for indy")
+    }
+
     private fun validateResponse(response: String) {
         val indyResponse = jsonIgnoreUnknown.decodeFromString<IndyResponse>(response)
         if (indyResponse.op != "REPLY") {

@@ -196,7 +196,7 @@ class CredentialService(val agent: Agent) {
 
             agent.historyRepository.save(
                 HistoryRecord(
-                    historyType = HistoryType.CredentialOfferReceived,
+                    historyType = HistoryType.CredentialOfferReceived.name,
                     connectionId = credentialRecord.connectionId!!,
                     theirLabel = connection.theirLabel,
                     associatedRecordId = credentialRecord.id,

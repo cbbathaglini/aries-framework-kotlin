@@ -27,7 +27,7 @@ class AnonCredsObjects {
 
             if (credentialDefinition == null) {
                 throw CredoError(
-                    "Credential definition not found for id $credentialDefinitionId: ${resolutionMetadata.message}"
+                    "Credential definition not found for id $credentialDefinitionId: ${resolutionMetadata?.message}"
                 )
             }
 
@@ -53,7 +53,7 @@ class AnonCredsObjects {
             val resolutionMetadata = result.resolutionMetadata
 
             return  result.revocationStatusList ?: throw CredoError(
-                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata.message}"
+                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata?.message}"
             )
         }
 
@@ -67,7 +67,7 @@ class AnonCredsObjects {
                 .getRevocationRegistryDefinition(revocationRegistryDefinitionId)
 
             if (result.revocationRegistryDefinition == null) {
-                val message = result.resolutionMetadata.message ?: "Unknown error"
+                val message = result.resolutionMetadata?.message ?: "Unknown error"
                 throw CredoError("RevocationRegistryDefinition not found for id $revocationRegistryDefinitionId: $message")
             }
 

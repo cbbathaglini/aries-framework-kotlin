@@ -142,15 +142,15 @@ class ProofService(val agent: Agent) {
 
         agent.proofRepository.save(proofRecord)
 
-        agent.historyRepository.save(
-            HistoryRecord(
-                historyType = HistoryType.ProofRequestReceived,
-                connectionId = proofRecord.connectionId,
-                theirLabel = connection.theirLabel,
-                associatedRecordId = proofRecord.id,
-                content = proofRequestMessage.toJsonString(),
-            ),
-        )
+//        agent.historyRepository.save(
+//            HistoryRecord(
+//                historyType = HistoryType.ProofRequestReceived.name,
+//                connectionId = proofRecord.connectionId,
+//                theirLabel = connection.theirLabel,
+//                associatedRecordId = proofRecord.id,
+//                content = proofRequestMessage.toJsonString(),
+//            ),
+//        )
 
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
 

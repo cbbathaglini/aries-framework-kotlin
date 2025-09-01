@@ -20,5 +20,5 @@ data class VerifyProofOptions(
 @Serializable
 data class RevocationRegistryEntry(
     val definition: AnonCredsRevocationRegistryDefinition,
-    val revocationStatusLists: Map<Long, AnonCredsRevocationStatusList>
+    val revocationStatusLists: MutableMap<Long, AnonCredsRevocationStatusList>? = mutableMapOf<Long, AnonCredsRevocationStatusList>()
 )

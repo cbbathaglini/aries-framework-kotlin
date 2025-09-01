@@ -86,6 +86,7 @@ class MessageSender(val agent: Agent) {
             if (endpointPrefix != null && !service.serviceEndpoint.startsWith(endpointPrefix)) {
                 continue
             }
+            logger.info("agent type:: ${agentMessage.type}")
             logger.debug("Send outbound message of type ${agentMessage.type} to endpoint ${service.serviceEndpoint}")
             logger.debug("Message value ${agentMessage.toJsonString()} to endpoint ${service.serviceEndpoint}")
             if (endpointPrefix == null && outboundTransportForEndpoint(service.serviceEndpoint) == null) {

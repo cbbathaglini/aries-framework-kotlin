@@ -38,5 +38,13 @@ class ProofRepository(agent: Agent) :
         return getSingleByQuery(queryObj.toString())
     }
 
+    suspend fun getByThreadAndConnectionIdAndRole(
+        threadId: String?,
+        connectionId: String?,
+        role: String
+    ): ProofExchangeRecord?{
+        return findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\", \"role\": \"$role\"}")
+
+    }
 
 }

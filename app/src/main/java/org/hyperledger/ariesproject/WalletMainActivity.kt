@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
+import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
@@ -123,7 +124,7 @@ class WalletMainActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == ProofState.RequestReceived) {
                     runOnConfirm("Accept proof request?", action = {
-                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
+                        sendProof( it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
                     }, negAction = {
                         declineProof(it.record.id)
                     })
@@ -138,18 +139,20 @@ class WalletMainActivity : AppCompatActivity() {
 
         app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
-                if (it.record.state == ProofState.RequestReceived) {
+
+                if (it.record.state == ProofState.RequestReceived) { //1
                     runOnConfirm("Accept proof request?", action = {
                         sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
                     }, negAction = {
                         declineProof(it.record.id)
                     })
-                } else if (it.record.state == ProofState.Done) {
+                } else if (it.record.state == ProofState.Done) {//3
                     proofProgress?.dismiss()
                     showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived) {
-                    //DESCOMENTAR
-                    //receivePresentationProof(app, it)
+                } else if (it.record.state == ProofState.PresentationReceived) {//2
+                    receivePresentationProof(app, it)
+                }else{
+                    showAlert("message: ${it.record.state}")
                 }
             }
         }
@@ -190,6 +193,25 @@ class WalletMainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private suspend fun receivePresentationProof(
+        app: WalletApp,
+        it: AgentEvents.ProofEventV2
+    ) {
+        val (message, proofRecord) = app.agent.proofServiceV2.createAck(it.record)
+        val connection = app.agent.connectionRepository.getById(it.record.connectionId)
+        app.agent.messageSender.send(OutboundMessage(message, connection))
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            PresentationMessageV2.type
+        )
+        val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
+        // Primeiro, parseia como JsonElement
+        val element = json.decodeFromString<JsonElement>(presentationMessageJson)
+        val type = element.jsonObject["type"]?.jsonPrimitive?.content
+        val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessageV2
+        showProofInfo(presentationMessage.anoncredsProof())
     }
 
     private suspend fun receivePresentationProof(
@@ -463,49 +485,46 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-    private fun sendProof(id: String, version: String) {
-        val app = application as WalletApp
-        val progress = ProgressDialog(this)
-        progress.setTitle("Sending proof")
-        progress.setCancelable(true)
+    private fun sendProof( id: String, version: String) {
 
-        val job = lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                //val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
+        try {
+            val app = application as WalletApp
+            val progress = ProgressDialog(this)
+            progress.setTitle("Sending proof")
+            progress.setCancelable(true)
 
-                if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
-                    val retrievedCredentials =
-                        app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                    val requestedCredentials: RequestedCredentials =
-                        app.agent.proofService.autoSelectCredentialsForProofRequest(
-                            retrievedCredentials
-                        )
-                    app.agent.proofs.acceptRequest(id, requestedCredentials)
-                } else {
-                    val retrievedCredentials: RetrievedCredentialsAnonCreds =
-                        app.agent.proofCommandV2.getRequestedCredentialsForProofRequest(id)
-                    val requestedCredentialsAnoncreds: RequestedCredentialsAnoncreds =
-                        app.agent.proofServiceV2.autoSelectCredentialsForProofRequest(
-                            retrievedCredentials
-                        )
-                    Log.d("PROOF", requestedCredentialsAnoncreds.toJsonString())
-                    app.agent.proofCommandV2.acceptRequest(id, requestedCredentialsAnoncreds)
-                }
+            val job = lifecycleScope.launch(Dispatchers.IO) {
+                try {
 
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    progress.dismiss()
-                    showAlert("Failed to present proof.")
+                    if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
+                        val retrievedCredentials =
+                            app.agent.proofs.getRequestedCredentialsForProofRequest(id)
+                        val requestedCredentials: RequestedCredentials =
+                            app.agent.proofService.autoSelectCredentialsForProofRequest(
+                                retrievedCredentials
+                            )
+                        app.agent.proofs.acceptRequest(id, requestedCredentials)
+                    } else {
+                        app.agent.proofCommandV2.acceptRequest(id)
+                    }
+
+                } catch (e: Exception) {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        Log.i("demo proof", e.localizedMessage)
+                        progress.dismiss()
+                        showAlert("Failed to present proof.")
+                    }
                 }
             }
-        }
 
-        progress.setOnCancelListener {
-            job.cancel()
+            progress.setOnCancelListener {
+                job.cancel()
+            }
+            progress.show()
+            proofProgress = progress
+        }catch (e: Exception){
+            showAlert("Error in proof: ${e.message} | ${e.localizedMessage}")
         }
-        progress.show()
-        proofProgress = progress
     }
 
 

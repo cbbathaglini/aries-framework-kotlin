@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.service
 
+import android.util.Log
 import anoncreds_uniffi.Credential
 import anoncreds_uniffi.CredentialConversions
 import anoncreds_uniffi.CredentialDefinition
@@ -7,7 +8,10 @@ import anoncreds_uniffi.CredentialOffer
 import anoncreds_uniffi.CredentialRequestMetadata
 import anoncreds_uniffi.CredentialRequestTuple
 import anoncreds_uniffi.CredentialRevocationState
+import anoncreds_uniffi.Presentation
+import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.Prover
+import anoncreds_uniffi.RequestedCredential
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.RevocationStatusList
 import anoncreds_uniffi.Verifier
@@ -52,6 +56,7 @@ import com.google.gson.Gson
 import jnr.ffi.annotations.In
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
@@ -60,25 +65,39 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedAttributeMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedPredicateMatch
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.ReferentWalletQuery
 import org.hyperledger.ariesframework.anoncreds.formats.model.CreateRevocationStateOptions
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntry
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntryResult
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinitions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
 import org.hyperledger.ariesframework.anoncreds.model.CredentialWithMetadata
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
+import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.hyperledger.ariesframework.toJsonString
+import org.hyperledger.ariesframework.util.JsonUtils
 import org.hyperledger.ariesframework.util.PrintLongLine
+import org.hyperledger.ariesframework.util.concurrentForEach
+import org.hyperledger.ariesframework.vc.proof.CredentialProve
+import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
+import uniffi.indy_besu_vdr.Schema
 import java.security.SecureRandom
 import java.math.BigInteger
+import kotlin.math.max
 
 class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
@@ -177,26 +196,378 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
     }
 
     //todo
-    override suspend fun createProof(options: CreateProofOptions): AnonCredsProof? {
-        return null
+    override suspend fun createProof(
+        options: CreateProofOptions
+    ): AnonCredsProof { //AnonCredsProof {
+        val requestMessage = options.requestMessage
+        val proofFormats = options.proofFormats
+        val credentialDefinitions = options.credentialDefinitions
+        val proofRequest = options.proofRequest
+        val selectedCredentials = options.selectedCredentials
+        val schemas = options.schemas
 
+        var presentation: Presentation? = null
+
+        // Record<string, JsonObject> vira Map<String, JsonObject>
+        val rsCredentialDefinitions: MutableMap<String, JsonObject> = mutableMapOf()
+        for ((credDefId, credDef) in credentialDefinitions.credentialDefinitions) {
+            val credDefJsonObject: JsonObject = Json.parseToJsonElement(credDef.toJson()).jsonObject
+            rsCredentialDefinitions[credDefId] = credDefJsonObject
+        }
+
+        val rsSchemas: MutableMap<String, JsonObject> = mutableMapOf()
+        for ((schemaId, schema) in schemas.schemas) {
+            val schemaJsonObject: JsonObject = Json.parseToJsonElement(schema.toJson()).jsonObject
+            rsSchemas[schemaId] = schemaJsonObject
+        }
+
+        // Cache para minimizar chamadas de storage
+        val retrievedCredentials: MutableMap<String, Any> = mutableMapOf()
+
+        fun getCredentialUniffiByW3cCredentialRecord(credentialRecord: W3cCredentialRecord): Credential {
+            val cred = credentialRecord.credential.toJson()
+
+            val jsonld: W3cJsonLdVerifiableCredential = W3cJsonLdVerifiableCredential.fromJson(cred)
+            val w3cJsonLdVerifiableCredentialStr = Json.encodeToString(jsonld)
+            var w3cJsonLdVerifiableCredentialStrClean =
+                w3cJsonLdVerifiableCredentialStr.replace("\\\"", "")
+            w3cJsonLdVerifiableCredentialStrClean =
+                Regex("\"credentialSubject\"\\s*:\\s*\\[(\\{.*?\\})\\]")
+                    .replace(w3cJsonLdVerifiableCredentialStrClean) { matchResult ->
+                        val inner = matchResult.groupValues[1]
+                        "\"credentialSubject\": $inner"
+                    }
+
+            logger.info("w3cJsonLdVerifiableCredentialStr PROOF: ${w3cJsonLdVerifiableCredentialStrClean.toString()} ")
+            return CredentialConversions().credentialFromW3cJson(
+                w3cJsonLdVerifiableCredentialStrClean
+            )
+        }
+
+        suspend fun credentialEntryFromAttribute(
+            attribute: Any /* pode ser AnonCredsRequestedAttributeMatch ou AnonCredsRequestedPredicateMatch */
+        ): CredentialEntryResult {
+            val credentialId = when (attribute) {
+                is AnonCredsRequestedAttributeMatch -> attribute.credentialId
+                is AnonCredsRequestedPredicateMatch -> attribute.credentialId
+                else -> error("Tipo inesperado ${attribute::class}")
+            }
+
+            var credentialRecord = retrievedCredentials[credentialId]
+
+            if (credentialRecord == null) {
+                val w3cCredentialRecord =
+                    agent.w3cCredentialRepository.findById(credentialId)
+                credentialRecord = if (w3cCredentialRecord != null) {
+                    retrievedCredentials.put(credentialId,w3cCredentialRecord)
+                    w3cCredentialRecord
+                } else {
+                    val legacy =
+                        agent.anonCredsCredentialRepository.getByCredentialId(credentialId)
+                    logger.warn(
+                        """
+                        Creating AnonCreds proof with legacy credential $credentialId.
+                        Please run the migration script to migrate credentials to the new W3C format.
+                        See https://credo.js.org/guides/updating/versions/0.4-to-0.5 for information on how to migrate.
+                        """.trimIndent()
+                    )
+                    retrievedCredentials.put(credentialId,legacy)
+                    legacy
+                }
+            }
+
+            val proofUsesUnqualifiedIdentifiers =
+                ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
+
+            val info : AnonCredsCredentialInfo = getAnoncredsCredentialInfoFromRecord(
+                credentialRecord,
+                proofUsesUnqualifiedIdentifiers
+            )
+
+            val timestamp = when (attribute) {
+                is AnonCredsRequestedAttributeMatch -> attribute.timestamp
+                is AnonCredsRequestedPredicateMatch -> attribute.timestamp
+                else -> null
+            }
+
+            var revocationState: CredentialRevocationState? = null
+            var revocationRegistryDefinition: RevocationRegistryDefinition? = null
+
+            if (timestamp != null && info.credentialRevocationId != null && info.revocationRegistryId != null) {
+                val registryData = options.revocationRegistries[info.revocationRegistryId]
+                    ?: throw AnonCredsRsError("Revocation Registry ${info.revocationRegistryId} not found")
+
+                val revocationStatusList = registryData.revocationStatusLists?.get(timestamp)
+                    ?: throw CredoError(
+                        "Revocation status list for revocation registry ${info.revocationRegistryId} and timestamp $timestamp not found"
+                    )
+
+                revocationRegistryDefinition =
+                    RevocationRegistryDefinition(registryData.definition.toJson())
+
+                val rs = mapOf(
+                    "revocationRegistryIndex" to info.credentialRevocationId.toInt(),
+                    "revocationRegistryDefinition" to revocationRegistryDefinition,
+                    "tailsPath" to registryData.tailsFilePath,
+                    "revocationStatusList" to RevocationStatusList(revocationStatusList.toString())
+                )
+
+                val rsJson: JsonObject = JsonObject(
+                    rs.mapValues { (_, v) ->
+                        when (v) {
+                            is Number -> JsonPrimitive(v)
+                            is Boolean -> JsonPrimitive(v)
+                            is String -> JsonPrimitive(v)
+                            is JsonObject -> v
+                            is JsonElement -> v
+                            else -> Json.encodeToJsonElement(v) // usa kotlinx.serialization se for @Serializable
+                        }
+                    }
+                )
+
+
+                revocationState = CredentialRevocationState(rsJson.toString())
+            }
+
+            //can be Credential or AnoncredsCredential
+            val credential : Any = if (credentialRecord is W3cCredentialRecord) {
+
+                getCredentialUniffiByW3cCredentialRecord(credentialRecord)
+
+                //CredentialConversions().credentialFromW3cJson(w3cJsonLdVerifiableCredentialStrClean)
+
+            } else {
+                (credentialRecord as AnonCredsCredentialRecord).credencial
+            }
+
+            //todo
+            var newCredential : Any
+            if (proofUsesUnqualifiedIdentifiers) {
+                if (credential is Credential) {
+                    val credUniffi = credential.toJson()
+//                    credential.schema_id = info.schemaId
+//                    credential.cred_def_id = info.credentialDefinitionId
+//                    credential.rev_reg_id = info.revocationRegistryId
+                }else if (credential is AnonCredsCredential){
+
+                }
+            }
+
+            var revocationStateJsonElement : JsonElement? = null
+            if (revocationState != null) {
+                revocationStateJsonElement =
+                    Json.parseToJsonElement(revocationState.toJson())
+            }
+
+            var credJsonElement : JsonElement = if (credential is Credential){
+                Json.parseToJsonElement(credential.toJson())
+            }else{
+                credential as AnonCredsCredential
+                Json.parseToJsonElement(credential.toJson())
+            }
+
+            return CredentialEntryResult(
+                linkSecretId = info.linkSecretId,
+                credentialId = credentialId,
+                credentialEntry = CredentialEntry(
+                    credential = credJsonElement,
+                    revocationState = revocationStateJsonElement,
+                    timestamp = timestamp
+                )
+            )
+        }
+
+        val credentialsProve = mutableListOf<CredentialProve>()
+        val credentials = mutableListOf<CredentialEntryResult>()
+        var entryIndex = 0
+
+        for ((referent, attribute) in selectedCredentials.attributes) {
+            val existingIndex = credentials.indexOfFirst {
+                it.credentialId == attribute.credentialId &&
+                        it.credentialEntry.timestamp == attribute.timestamp
+            }
+
+            if (existingIndex != -1) {
+                credentialsProve.add(
+                    CredentialProve(
+                        entryIndex = existingIndex,
+                        referent = referent,
+                        isPredicate = false,
+                        reveal = attribute.revealed
+                    )
+                )
+            } else {
+                credentials.add(credentialEntryFromAttribute(attribute))
+                credentialsProve.add(
+                    CredentialProve(
+                        entryIndex = existingIndex,
+                        referent = referent,
+                        isPredicate = false,
+                        reveal = attribute.revealed
+                    )
+                )
+                entryIndex++
+            }
+        }
+
+        for ((referent, predicate) in selectedCredentials.predicates) {
+            val existingIndex = credentials.indexOfFirst {
+                it.credentialId == predicate.credentialId &&
+                        it.credentialEntry.timestamp == predicate.timestamp
+            }
+
+            if (existingIndex != -1) {
+                credentialsProve.add(
+                    CredentialProve(
+                        entryIndex = existingIndex,
+                        referent = referent,
+                        isPredicate = true,
+                        reveal = true
+                    )
+                )
+            } else {
+                credentials.add(credentialEntryFromAttribute(predicate))
+                credentialsProve.add(
+                    CredentialProve(
+                        entryIndex = existingIndex,
+                        referent = referent,
+                        isPredicate = true,
+                        reveal = true
+                    )
+                )
+                entryIndex++
+            }
+        }
+
+        //val credentialsMapsJsons : List<String> = credentials.map { it.credentialEntry.toJson() }
+
+        val credentialsMaps: List<JsonElement> = credentials.map {
+            Json.parseToJsonElement(it.credentialEntry.toJson())
+        }
+
+        val linkSecretIds = credentials.map { it.linkSecretId }
+        val linkSecretId = assertLinkSecretsMatch(linkSecretIds)
+        val linkSecret =  agent.anoncredsService.getLinkSecret(linkSecretId)
+
+        val map: Map<String, Any?> = mapOf(
+            "credentialDefinitions" to rsCredentialDefinitions,
+            "schemas" to rsSchemas,
+            "presentationRequest" to Json.parseToJsonElement(proofRequest.toJson()),
+            "credentials" to credentialsMaps,
+            "credentialsProve" to credentialsProve,
+            "selfAttest" to selectedCredentials.selfAttestedAttributes,
+            "linkSecret" to linkSecret
+        )
+
+        val jsonString = JsonUtils.mapToJson2(map).toString()
+
+//        var jsonStringClean =
+//            jsonString.replace("\\\"", "")
+
+        try {
+
+            //`presReq`: PresentationRequest,
+        // `requestedCredentials`: List<RequestedCredential>,
+        // `selfAttestedAttributes`: Map<String, String>?,
+        // `linkSecret`: String,
+        // `schemas`: Map<String, Schema>,
+        // `credDefs`: Map<String, CredentialDefinition>
+            val anoncredsCreds = mutableListOf<RequestedCredential>()
+            val schemaIds = mutableSetOf<String>()
+            val credentialDefinitionIds = mutableSetOf<String>()
+
+            val requestedCredentials: RequestedCredentialsAnoncreds = RequestedCredentialsAnoncreds.mapToRequestedCredentialsWithKotlinx(proofFormats!!)
+            val credentialIds = requestedCredentials.getCredentialIdentifiers()
+
+            credentialIds.concurrentForEach { credId ->
+                logger.info("id: $credId")
+                val w3cs = agent.w3cCredentialRepository.getAll()
+                w3cs.forEach { cred ->
+                    logger.error("w3c --> $cred")
+                }
+
+                val credex = agent.credentialExchangeRepository.getAll()
+                credex.forEach { cred ->
+                    logger.error("credex --> $cred")
+                }
+
+
+                val credentialRecord = agent.w3cCredentialRepository.getById(credId)
+                val credential = getCredentialUniffiByW3cCredentialRecord(credentialRecord)
+                schemaIds.add(credential.schemaId())
+                credentialDefinitionIds.add(credential.credDefId())
+
+                val requestedAttributes = mutableMapOf<String, Boolean>()
+                val requestedPredicates = mutableListOf<String>()
+                var timestamp: Int? = null
+                requestedCredentials.requestedAttributes.forEach { (referent, attr) ->
+                    if (attr.credentialId == credId) {
+                        requestedAttributes[referent] = attr.revealed
+                        if (attr.timestamp != null) {
+                            timestamp = max(attr.timestamp, timestamp ?: 0)
+                        }
+                    }
+                }
+                requestedCredentials.requestedPredicates.forEach { (referent, pred) ->
+                    if (pred.credentialId == credId) {
+                        requestedPredicates.add(referent)
+                        if (pred.timestamp != null) {
+                            timestamp = max(pred.timestamp, timestamp ?: 0)
+                        }
+                    }
+                }
+
+                val revocationState = if (timestamp != null) {
+                    agent.revocationService.createRevocationState(credential, timestamp!!)
+                } else {
+                    null
+                }
+
+                val requestedCredential = RequestedCredential(
+                    credential,
+                    timestamp?.toULong(),
+                    revocationState,
+                    requestedAttributes,
+                    requestedPredicates,
+                )
+                anoncredsCreds.add(requestedCredential)
+
+            }
+
+            val schemas : Map<String, anoncreds_uniffi.Schema> = ProofUtils.getSchemasUniffi(agent, schemaIds)
+            val credentialDefinitions : Map<String, CredentialDefinition> = ProofUtils.getCredentialDefinitionsUniffi(agent, credentialDefinitionIds)
+
+            val presentation = Prover().createPresentation(
+                PresentationRequest(requestMessage.anoncredsProofRequest()),
+                anoncredsCreds,
+                emptyMap(),
+                linkSecret,
+                schemas,
+                credentialDefinitions,
+            )
+
+            val anonCredsProof : AnonCredsProof = Json.decodeFromString<AnonCredsProof>(presentation.toJson())
+
+            Log.d("TESTES", presentation.toJson().toString())
+            return anonCredsProof
+        }catch (e: Exception){
+           throw  Exception("error presentation: ${e.message}")
+        }
     }
 
-//    override suspend fun getCredentialsForProofRequest(options: GetCredentialsForProofRequestOptions): GetCredentialsForProofRequestReturn {
-//        val (proofRequest, attributeReferent, start, limit, extraQuery) = options
-//
-//        val requestedAttribute = proofRequest.requestedAttributes.get(attributeReferent) ?: proofRequest.requestedPredicates.get(attributeReferent)
-//        if (requestedAttribute == null){
-//           throw AnonCredsRsError("Referent not found in proof request")
-//        }
-//
-//        val and = "aa"
-//        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
-//        // Make sure the attribute(s) that are requested are present using the marker tag
-//        val attributes = requestedAttribute.names ?? [requestedAttribute.name]
-//        val attributes: List<String> =
-//            requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
-//    }
+    private fun assertLinkSecretsMatch(linkSecretIds: List<String>): String {
+        require(linkSecretIds.isNotEmpty()) {
+            "No link secret ids provided"
+        }
+
+        val distinct = linkSecretIds.distinct()
+        if (distinct.size > 1) {
+            throw IllegalArgumentException("Multiple different link secret ids found: $linkSecretIds")
+        }
+
+        return distinct.first()
+    }
+
 
     override suspend fun getCredentialsForProofRequest(options: GetCredentialsForProofRequestOptions): GetCredentialsForProofRequestReturn {
         val proofRequest = options.proofRequest
@@ -206,30 +577,35 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             ?: proofRequest.requestedPredicates[referent]?.asAnonCredsRequestedAttribute()
             ?: throw Exception("Referent not found in proof request")
 
-        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
+        val useUnqualifiedIdentifiers =
+            ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
 
-        val tags = mutableMapOf<String, String>()
+
         if (requestedAttribute.names == null && requestedAttribute.name == null) {
             throw Exception("Proof request attribute must have either name or names")
         }
+
         if (requestedAttribute.names != null && requestedAttribute.name != null) {
             throw Exception("Proof request attribute cannot have both name and names")
         }
+
+        val attibutesList = mutableListOf<String>()
         val attributes = requestedAttribute.names ?: listOf(requestedAttribute.name!!)
         for (attribute in attributes) {
-            tags["anonCredsAttr::$attribute::marker"] = "1"
-        }
-        if (requestedAttribute.restrictions != null) {
-            val restrictionTag = queryFromRestrictions(requestedAttribute.restrictions)
-            tags.putAll(restrictionTag)
+            attibutesList.add("anonCredsAttr::$attribute::value")
         }
 
-        val credentialsV1 = agent.credentialRepository.findByQuery(tags.toJsonString())
+        var tags = mutableMapOf<String, String>()
+        if (requestedAttribute.restrictions != null) {
+            tags = queryFromRestrictions(requestedAttribute.restrictions)
+        }
         val credentials = agent.w3cCredentialRepository.findByQuery(tags.toJsonString())
 
+        val filteredCredentials = credentials.filter { rec ->
+            attibutesList.all(rec.getTags()::containsKey)
+        }
 
-
-        val legacyCredentialWithMetadata : List<CredentialForProofRequest> =
+        val legacyCredentialWithMetadata: List<CredentialForProofRequest> =
             getLegacyCredentialsForProofRequest(options).credentials
 
         if (legacyCredentialWithMetadata.isNotEmpty()) {
@@ -243,7 +619,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         // mapear os atuais para { credentialInfo, interval }
         val credentialWithMetadata: List<CredentialForProofRequest> =
-            credentials.map { credentialRecord ->
+            filteredCredentials.map { credentialRecord ->
                 CredentialForProofRequest(
                     credentialInfo = getAnoncredsCredentialInfoFromRecord(
                         credentialRecord,
@@ -256,111 +632,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         return GetCredentialsForProofRequestReturn(
             credentials = credentialWithMetadata + legacyCredentialWithMetadata
         )
-
-//        val proofRequest = options.proofRequest
-//        val referent = options.attributeReferent
-//
-//        // requested_attributes[referent] ?? requested_predicates[referent]
-//        val requestedAttribute = proofRequest.requestedAttributes[referent]
-//            ?: proofRequest.requestedPredicates[referent]
-//            ?: throw AnonCredsRsError("Referent not found in proof request")
-//
-//        //var andClauses = mutableListOf<Map<String, Any?>>()
-//        val andClauses = mutableListOf<Any>()
-//
-//        val useUnqualifiedIdentifiers = ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
-//
-//        val attributes: List<String> =
-//            when (requestedAttribute) {
-//                is AnonCredsRequestedAttribute ->
-//                    requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
-//                is AnonCredsRequestedPredicate -> {
-//                    // se seu predicate tiver "names", use a mesma lógica. Caso não, mantenha só "name".
-//                    listOfNotNull(requestedAttribute.name)
-//                }
-//                else -> error("Tipo inesperado para requested referent")
-//            }
-//
-//        // marcador: anonCredsAttr::<attribute>::marker = true
-//        val attributeQuery = mutableMapOf<String, Any?>()
-//        for (attr in attributes) {
-//            attributeQuery["anonCredsAttr::$attr::marker"] = true
-//        }
-//        andClauses += attributeQuery
-//
-////        // restrições do proof request
-////        requestedAttribute.restrictions?.let { restrictions ->
-////            if (restrictions.isNotEmpty()) {
-////                val restrictionQuery = queryFromRestrictions(restrictions)
-////                andClauses += restrictionQuery
-////            }
-////        }
-//
-//        when (requestedAttribute) {
-//            is AnonCredsRequestedAttribute -> {
-//                requestedAttribute.restrictions?.let { restrictions ->
-//                    if (restrictions.isNotEmpty()) {
-//                        val restrictionQuery = queryFromRestrictions(restrictions)
-//                        andClauses += restrictionQuery
-//                    }
-//                }
-//            }
-//            is AnonCredsRequestedPredicate -> {
-//                requestedAttribute.restrictions?.let { restrictions ->
-//                    if (restrictions.isNotEmpty()) {
-//                        val restrictionQuery = queryFromRestrictions(restrictions)
-//                        andClauses += restrictionQuery
-//                    }
-//                }
-//            }
-//            else -> error("Tipo inesperado para requested referent")
-//        }
-//
-//
-//        // extraQuery (opcional)
-//        options.extraQuery?.let { andClauses += it }
-//
-//
-//        // consulta final: { $and: [ ... ] }
-//        val finalQuery: Map<String, Any?> = mapOf("\$and" to andClauses)
-//
-//        logger.info("final query: ${finalQuery.toString()}")
-//
-//        //var query = "{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}"
-//
-//        val credentials: List<W3cCredentialRecord> =
-//            agent.w3cCredentialRepository.findByQuery(finalQuery.toString())
-//
-//        // buscar legados
-//        val legacyCredentialWithMetadata : List<CredentialForProofRequest> =
-//            getLegacyCredentialsForProofRequest(options).credentials
-//
-//        if (legacyCredentialWithMetadata.isNotEmpty()) {
-//           logger.warn(
-//                listOf(
-//                    "Including legacy credentials in proof request.",
-//                    "Please run the migration script to migrate credentials to the new W3C format."
-//                ).joinToString("\n")
-//            )
-//        }
-//
-//        // mapear os atuais para { credentialInfo, interval }
-//        val credentialWithMetadata: List<CredentialForProofRequest> =
-//            credentials.map { credentialRecord ->
-//                CredentialForProofRequest(
-//                    credentialInfo = getAnoncredsCredentialInfoFromRecord(
-//                        credentialRecord,
-//                        useUnqualifiedIdentifiers
-//                    ),
-//                    interval = proofRequest.nonRevoked
-//                )
-//            }
-//
-//        // retorno combinado
-//        return GetCredentialsForProofRequestReturn(
-//            credentials = credentialWithMetadata + legacyCredentialWithMetadata
-//        )
-
     }
 
 //    override suspend fun createProof(options: CreateProofOptions): AnonCredsProof {
@@ -653,7 +924,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         var revocationRegistryDefinitionUniffi: RevocationRegistryDefinition? = null
         if (revocationRegistryDefinition != null) {
-            logger.info("seloko")
             val anonCredsRevocationRegistryDefinitionJson =
                 Gson().toJson(revocationRegistryDefinition)
                     ?: throw CredoError("revocationRegistryDefinition not found")
@@ -711,6 +981,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         val credentialUniffi: Credential =
             CredentialConversions().credentialFromW3cJson(w3cJsonLdVerifiableCredentialStrClean)
+
         logger.info("credentialUniffi: ${credentialUniffi.toJson()} ")
 
         val credentialW3cStr: String = CredentialConversions().credentialToW3cJson(
@@ -979,7 +1250,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
     private fun queryFromRestrictions(
         restrictions: List<AnonCredsProofRequestRestriction>
-    ): Map<String, String> {
+    ): MutableMap<String, String> {
         val queries = mutableListOf<Map<String, String>>()
 
         for (restriction in restrictions) {
@@ -1046,7 +1317,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             queries += q
         }
 
-        return queries.first()
+        return queries.first().toMutableMap()
 //        return if (queries.size == 1) {
 //            queries.first()
 //        } else {
@@ -1056,7 +1327,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
     private suspend fun getLegacyCredentialsForProofRequest(
         options: GetCredentialsForProofRequestOptions
-    ): GetCredentialsForProofRequestReturn{
+    ): GetCredentialsForProofRequestReturn {
 
         val proofRequest = options.proofRequest
         val referent = options.attributeReferent
@@ -1071,9 +1342,11 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             when (requestedAttribute) {
                 is AnonCredsRequestedAttribute ->
                     requestedAttribute.names ?: listOfNotNull(requestedAttribute.name)
+
                 is AnonCredsRequestedPredicate -> {
                     listOfNotNull(requestedAttribute.name)
                 }
+
                 else -> error("Tipo inesperado para requested referent")
             }
 
@@ -1092,6 +1365,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     andClauses += restrictionQuery
                 }
             }
+
             is AnonCredsRequestedPredicate -> {
                 val restrictions = requestedAttribute.restrictions
                 if (!restrictions.isNullOrEmpty()) {
@@ -1107,12 +1381,13 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         val finalQuery: Map<String, Any?> = mapOf("\$and" to andClauses)
         val credentials = agent.anonCredsCredentialRepository.findByQuery(finalQuery.toString())
 
-        val credentialForProofRequestList : List<CredentialForProofRequest> = credentials.map { credentialRecord ->
-            CredentialForProofRequest(
-                credentialInfo = getAnoncredsCredentialInfoFromRecord(credentialRecord),
-                interval = proofRequest.nonRevoked
-            )
-        }
+        val credentialForProofRequestList: List<CredentialForProofRequest> =
+            credentials.map { credentialRecord ->
+                CredentialForProofRequest(
+                    credentialInfo = getAnoncredsCredentialInfoFromRecord(credentialRecord),
+                    interval = proofRequest.nonRevoked
+                )
+            }
 
         return GetCredentialsForProofRequestReturn(
             credentials = credentialForProofRequestList
