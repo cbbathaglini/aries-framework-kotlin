@@ -596,7 +596,6 @@ class AnoncredsCredentialFormatService(
         logger.info("credentialExchangeRecord: ${credentialExchangeRecord.toString()}")
 
 
-
 //        agent.credentialRepository.save(
 //            CredentialRecord(
 //                credentialId = credentialId,

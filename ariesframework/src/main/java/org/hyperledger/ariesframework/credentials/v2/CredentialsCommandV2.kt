@@ -133,20 +133,20 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
         logger.info("after send message")
-        agent.historyRepository.save(
-            HistoryRecord(
-                historyType = HistoryType.CredentialOfferAccepted.name,
-                connectionId = connectionRecord.id,
-                theirLabel = connectionRecord.theirLabel,
-                associatedRecordId = credentialExchange.id,
-                credentialPreviewAttr = credentialExchange.credentialAttributes,
-                credentials = credentialExchange.credentials,
-            ),
-        )
+//        agent.historyRepository.save(
+//            HistoryRecord(
+//                historyType = HistoryType.CredentialOfferAccepted.name,
+//                connectionId = connectionRecord.id,
+//                theirLabel = connectionRecord.theirLabel,
+//                associatedRecordId = credentialExchange.id,
+//                credentialPreviewAttr = credentialExchange.credentialAttributes,
+//                credentials = credentialExchange.credentials,
+//            ),
+//        )
 
-        for (historyRecord in agent.historyRepository.getAll()) {
-            logger.info(" ----> ${historyRecord.toString()}")
-        }
+//        for (historyRecord in agent.historyRepository.getAll()) {
+//            logger.info(" ----> ${historyRecord.toString()}")
+//        }
 
         return credentialExchange
     }
