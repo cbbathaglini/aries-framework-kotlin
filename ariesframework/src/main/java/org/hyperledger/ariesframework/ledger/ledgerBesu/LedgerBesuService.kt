@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
 import anoncreds_uniffi.RevocationStatusList
+import indy_vdr_uniffi.Ledger
 import indy_vdr_uniffi.Pool
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -32,6 +33,7 @@ import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveCredentialDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusList
+import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusListFull
 import uniffi.indy_besu_vdr.resolveSchema
 import uniffi.indy_besu_vdr.revocationStatusListFromString
 import java.io.File
@@ -43,22 +45,25 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private var pool: Pool? = null
     private val context: Context = context
     private var ledgerBesu: LedgerClient? = null
+
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
     private val path = "/serproabi/";
 
     //cpqd
-//    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
-//    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
-//    private val credentialDefinitionRegistryConfigAddress = "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
-//    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";
+    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
+    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
+    private val credentialDefinitionRegistryConfigAddress =
+        "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
+    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";
 
     //serpro
-    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";
-    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555";
-    private val credentialDefinitionRegistryConfigAddress = "0x0000000000000000000000000000000000004444";
-    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222";
+//    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";
+//    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555";
+//    private val credentialDefinitionRegistryConfigAddress =
+//        "0x0000000000000000000000000000000000004444";
+//    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222";
 
     data class ContractConfigBesu(
         val address: String,
@@ -67,12 +72,18 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     ) {
         companion object {
             // Modificar o método para aceitar um Context
-            fun loadFromFile(context: Context, address: String, specPath: String): uniffi.indy_besu_vdr.ContractConfig {
+            fun loadFromFile(
+                context: Context,
+                address: String,
+                specPath: String
+            ): uniffi.indy_besu_vdr.ContractConfig {
                 // Usando o contexto para acessar o arquivo dentro da pasta assets
-                val inputStream = context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
+                val inputStream =
+                    context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
                 val content = inputStream.bufferedReader().use { it.readText() }
                 val jsonObject = JSONObject(content)
-                val name = jsonObject.getString("sourceName").substringAfterLast("/").substringBeforeLast(".")
+                val name = jsonObject.getString("sourceName").substringAfterLast("/")
+                    .substringBeforeLast(".")
                 val abi = jsonObject.getJSONArray("abi").toString()
 
                 return uniffi.indy_besu_vdr.ContractConfig(
@@ -89,7 +100,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = didRegistryConfigAddress,
-            specPath =  path+"EthereumExtDidRegistry.json",
+            specPath = path + "EthereumExtDidRegistry.json",
         )
     }
 
@@ -97,7 +108,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = schemaRegistryConfigAddress,
-            specPath = path+"SchemaRegistry.json",
+            specPath = path + "SchemaRegistry.json",
         )
     }
 
@@ -105,7 +116,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = credentialDefinitionRegistryConfigAddress,
-            specPath = path+"CredentialDefinitionRegistry.json",
+            specPath = path + "CredentialDefinitionRegistry.json",
         )
     }
 
@@ -113,7 +124,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = revocationRegistryConfigAddress,
-            specPath = path+"RevocationRegistry.json",
+            specPath = path + "RevocationRegistry.json",
         )
     }
 
@@ -130,10 +141,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             credentialDefinitionRegistryConfig,
             revocationRegistryConfig,
         )
-        ledgerBesu = LedgerClient(agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
+        ledgerBesu = LedgerClient(
+            agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
             agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "",
             contratos, agent.agentConfig.besuLedgerConfig?.network,
-            null)
+            null
+        )
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -158,7 +171,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         return Pair(schemaJson, seqNo)
     }
 
-    override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema{
+    override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
         val ledger = ledgerBesu ?: throw Exception("Ledger não foi inicializado")
 
         val schema = resolveSchema(ledger, schemaId)
@@ -195,15 +208,30 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         throw Exception("registerCredentialDefinition not implemented for Besu")
     }
 
+
+    override suspend fun getCredentialDefinitionvVdr(credentialId: String): uniffi.indy_besu_vdr.CredentialDefinition {
+        if (this.ledgerBesu == null) {
+            throw Exception("Ledger não foi inicializado")
+        }
+
+        try {
+            return resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+        } catch (e: Throwable) {
+            logger.error("error cred def >>> ${e.message}")
+            throw Exception("credential definition not found")
+        }
+    }
+
+
     override suspend fun getCredentialDefinition(credentialId: String): String {
         if (this.ledgerBesu == null) {
             throw Exception("Ledger não foi inicializado")
         }
 
-        var credentialDefinition : uniffi.indy_besu_vdr.CredentialDefinition? = null
+        var credentialDefinition: uniffi.indy_besu_vdr.CredentialDefinition? = null
         try {
             credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
-        }catch (e: Throwable){
+        } catch (e: Throwable) {
             logger.error("error cred def >>> ${e.message}")
         }
         logger.info("credentialDefinition >>> ${credentialDefinition.toString()}")
@@ -219,7 +247,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "value" to innerJson,
         )
         logger.info("credDef >>> ${credDef.toString()}")
-        var encode : String = Json.encodeToString(credDef)
+        var encode: String = Json.encodeToString(credDef)
         logger.info("encode >>> ${encode}")
         return encode
     }
@@ -268,8 +296,29 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
-        // RevocationRegistryDelta, from is ignored.
-        val revocationStatusList = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, to.toULong()))
+
+        if (this.ledgerBesu == null) {
+            throw Exception("Ledger não foi inicializado")
+        }
+
+        //val correct = "did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7/anoncreds/v0/REV_REG_DEF/did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7:identidade_v2:1.0:default/CL_ACCUM/0"
+
+        val def = resolveRevocationRegistryDefinition(
+            client = this.ledgerBesu!!,
+            revRegDefId = id
+        )
+        logger.info("def: ${def.toString()}")
+        ensureRevRegId(id)
+        //val toSeconds = toSecondsULong(to.toLong())
+
+        val revocationStatusList =
+            resolveRevocationRegistryStatusListFull(
+                this.ledgerBesu!!,
+                id,
+                to.toULong()
+            )
+
+        logger.info("rev status list: ${revocationStatusList}")
         // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
         val revocationRegistryDelta = RevocationRegistryDelta(
             // prevAccum = revocationStatusList.currentAccumulator,
@@ -279,10 +328,27 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         )
         val deltaTimestamp = revocationStatusList.timestamp
         return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
+
+    }
+
+    fun toSecondsULong(ts: Long): ULong =
+        if (ts > 10_000_000_000L) (ts / 1000L).toULong() else ts.toULong()
+
+
+    fun ensureRevRegId(id: String) {
+        require(
+            id.contains("/REV_REG_DEF/") || id.contains("/REV_REG/")
+        ) { "Esperado REV_REG_DEF ou REV_REG id, recebido: $id" }
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
-        val revocationStatusList = revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, timestamp.toULong())) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+        val revocationStatusList = revocationStatusListFromString(
+            resolveRevocationRegistryStatusList(
+                this.ledgerBesu!!,
+                id,
+                timestamp.toULong()
+            )
+        ) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
         val revocationRegistryDelta = RevocationRegistryDelta(
             // prevAccum = revocationStatusList.currentAccumulator,
             accum = revocationStatusList.currentAccumulator,
@@ -293,16 +359,27 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
     }
 
-    override suspend fun getRevocationStatusList(id: String, timestamp: Int): uniffi.indy_besu_vdr.RevocationStatusList {
-       return revocationStatusListFromString(resolveRevocationRegistryStatusList(this.ledgerBesu!!, id, timestamp.toULong())) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+    override suspend fun getRevocationStatusList(
+        id: String,
+        timestamp: Int
+    ): uniffi.indy_besu_vdr.RevocationStatusList {
+        val revocationStatusList: uniffi.indy_besu_vdr.RevocationStatusList =
+            resolveRevocationRegistryStatusListFull(
+                this.ledgerBesu!!,
+                id,
+                timestamp.toULong()
+
+            ) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+
+        return revocationStatusList
     }
 
 
     override suspend fun getTailsPath(): String {
-            val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
-            if (!tailsFolder.exists()) {
-                tailsFolder.mkdir()
-            }
+        val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
+        if (!tailsFolder.exists()) {
+            tailsFolder.mkdir()
+        }
         return tailsFolder.path
 
     }

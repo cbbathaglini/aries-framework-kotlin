@@ -105,27 +105,74 @@ data class RevocationRegistries (val agent: Agent){
 
                 val revocationRegistry : RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 
-                val revocationRegistryIndyBesuValue = revocationRegistry.value.toString()
-//                val revocationRegistryValue =  Json.decodeFromString<RevocationRegistryValue>(revocationRegistryIndyBesuValue)
+                if(revocationRegistry == null){
+                    throw Exception("Could not retrieve revocation registry definition for revocation registry ${revocationRegistryId}")
+                }
 
-//                val anonCredsRevocationRegistryDefinition = AnonCredsRevocationRegistryDefinition(
-//                    issuerId = revocationRegistry.issuerId,
-//                    revocDefType = revocationRegistry.revocDefType,
-//                    credDefId = revocationRegistry.credDefId,
-//                    tag = revocationRegistry.tag,
-//                    value = revocationRegistryValue
-//                )
+                val revRegValue: RevocationRegistryValue = Json.decodeFromString(
+                    RevocationRegistryValue.serializer(),
+                    revocationRegistry.value
+                )
 
                 revocationRegistries.put(
                     key=revocationRegistryId,
                     value = RevocationRegistryBucket(
                         tailsFilePath = agent.ledgerService.getTailsPath(),
+                        tailsHash = revRegValue.tailsHash,
                         definition = revocationRegistry
                     )
                 )
 
             }
+
+            val timestampToFetch = timestamp ?: nonRevoked.to
+
+            if (revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
+                val revocationStatusList : RevocationStatusList =
+                    agent.ledgerService
+                        .getRevocationStatusList(
+                            id = revocationRegistryId!!,
+                            timestamp = timestampToFetch!!.toInt())
+
+                if (revocationStatusList == null) {
+                    throw CredoError(
+                        "Could not retrieve revocation status list for revocation registry " +
+                                "$revocationRegistryId"
+                    )
+                }
+
+                val revocationStatusMap : MutableMap<Long, RevocationStatusList> = mutableMapOf(
+                    revocationStatusList.timestamp.toLong() to revocationStatusList
+                )
+
+                val revocationRegistryEntry = RevocationRegistryBucket(
+                    definition = revocationRegistries.get(revocationRegistryId)!!.definition,
+                    tailsFilePath = revocationRegistries.get(revocationRegistryId)!!.tailsFilePath,
+                    tailsHash = revocationRegistries.get(revocationRegistryId)!!.tailsHash,
+                    revocationStatusLists =  revocationStatusMap
+                )
+
+                revocationRegistries.put(
+                    key = revocationRegistryId,
+                    value = revocationRegistryEntry
+                )
+
+//                if (timestamp == null) {
+//                    val credsOfType = updatedSelectedCredentials[type]?.toMutableMap() ?: mutableMapOf()
+//                    val referentEntry = credsOfType[referent]?.toMutableMap() ?: mutableMapOf()
+//
+//                    referentEntry["timestamp"] = revocationStatusList.timestamp
+//                    credsOfType[referent] = referentEntry
+//
+//                    val updatedType = updatedSelectedCredentials.toMutableMap()
+//                    updatedType[type] = credsOfType
+//
+//                    updatedSelectedCredentials = updatedType
+                }
+
         }
+
+
 
         logger.debug(
             "Retrieved revocation registries for proof request: $revocationRegistries"
@@ -178,7 +225,7 @@ data class RevocationRegistries (val agent: Agent){
                     val entry = revocationRegistries.getValue(revocationRegistryId)
                     if (entry.revocationStatusLists?.get(timestamp) == null) {
                         val (revocationStatusList, statusListResolutionMetadata) =
-                            registry.getRevocationStatusList(revocationRegistryId, timestamp)
+                            registry.getRevocationStatusList(agent, revocationRegistryId, timestamp)
 
                         if (revocationStatusList == null) {
                             throw CredoError(

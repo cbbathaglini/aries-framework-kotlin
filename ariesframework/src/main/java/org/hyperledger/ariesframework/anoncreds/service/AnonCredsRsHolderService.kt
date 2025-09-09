@@ -8,12 +8,15 @@ import anoncreds_uniffi.CredentialOffer
 import anoncreds_uniffi.CredentialRequestMetadata
 import anoncreds_uniffi.CredentialRequestTuple
 import anoncreds_uniffi.CredentialRevocationState
+import anoncreds_uniffi.Issuer
 import anoncreds_uniffi.Presentation
 import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.Prover
 import anoncreds_uniffi.RequestedCredential
 import anoncreds_uniffi.RevocationRegistryDefinition
+import anoncreds_uniffi.RevocationRegistryDefinitionTuple
 import anoncreds_uniffi.RevocationStatusList
+import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
 import anoncreds_uniffi.W3cCredential
 import anoncreds_uniffi.W3cProcess
@@ -39,7 +42,6 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.StoreLinkSecretOpti
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRecord
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRecord
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
-import org.hyperledger.ariesframework.anoncreds.utils.LinkSecret
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.BaseRecord
@@ -53,48 +55,38 @@ import org.slf4j.LoggerFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.Gson
-import jnr.ffi.annotations.In
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.modules.SerializersModule
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedAttributeMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedPredicateMatch
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.ReferentWalletQuery
-import org.hyperledger.ariesframework.anoncreds.formats.model.CreateRevocationStateOptions
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntry
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntryResult
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinitions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
-import org.hyperledger.ariesframework.anoncreds.model.CredentialWithMetadata
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryEntry
+import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
-import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
-import org.hyperledger.ariesframework.proofs.models.AttributeFilter
-import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.JsonUtils
 import org.hyperledger.ariesframework.util.PrintLongLine
+import org.hyperledger.ariesframework.util.serializer.RevocationStatusListSerializer
 import org.hyperledger.ariesframework.util.concurrentForEach
+import org.hyperledger.ariesframework.util.serializer.RevocationRegistryDefinitionSerializer
 import org.hyperledger.ariesframework.vc.proof.CredentialProve
-import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
-import uniffi.indy_besu_vdr.Schema
+import java.io.File
 import java.security.SecureRandom
 import java.math.BigInteger
 import kotlin.math.max
@@ -143,6 +135,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             credential = w3cJsonLdCredential,
             credentialDefinitionId = credentialDefinitionId,
             schema = schema,
+            schemaId = options.schemaId,
             credentialDefinition = credentialDefinition,
             revocationRegistryDefinition = revocationRegistry?.definition,
             revocationRegistryId = revocationRegistry?.id,
@@ -294,48 +287,99 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             var revocationRegistryDefinition: RevocationRegistryDefinition? = null
 
             if (timestamp != null && info.credentialRevocationId != null && info.revocationRegistryId != null) {
-                val registryData = options.revocationRegistries[info.revocationRegistryId]
+                val registryData : AnonCredsRevocationRegistryEntry = options.revocationRegistries.get(info.revocationRegistryId)
                     ?: throw AnonCredsRsError("Revocation Registry ${info.revocationRegistryId} not found")
+
 
                 val revocationStatusList = registryData.revocationStatusLists?.get(timestamp)
                     ?: throw CredoError(
                         "Revocation status list for revocation registry ${info.revocationRegistryId} and timestamp $timestamp not found"
                     )
 
-                revocationRegistryDefinition =
-                    RevocationRegistryDefinition(registryData.definition.toJson())
+                val registryDataDefinition = registryData.definition
+//                val registryValue = registryDataDefinition.value
+//                val registryValueJson: JsonElement =
+//                    Json.encodeToJsonElement(RevocationRegistryValue.serializer(), registryValue)
+//                val registryValueString: String =
+//                    Json { prettyPrint = true }.encodeToString(registryValueJson)
 
-                val rs = mapOf(
-                    "revocationRegistryIndex" to info.credentialRevocationId.toInt(),
-                    "revocationRegistryDefinition" to revocationRegistryDefinition,
-                    "tailsPath" to registryData.tailsFilePath,
-                    "revocationStatusList" to RevocationStatusList(revocationStatusList.toString())
+                /*RevocationRegistryDefinition -->
+                 fun `issuerId`(): String
+                fun `maxCredNum`(): UInt
+                fun `revRegId`(): String
+                fun `tailsHash`(): String
+                fun `tailsLocation`(): String
+                fun `toJson`(): String
+
+
+                indy besu
+
+                 var `issuerId`: String,
+                var `revocDefType`: String,
+                var `credDefId`: String,
+                var `tag`: String,
+                var `value`: JsonValue
+                 */
+
+//                val revocationRegistryDefinitionIndyBesu = uniffi.indy_besu_vdr.RevocationRegistryDefinition(
+//                    revocDefType = registryDataDefinition.revocDefType,
+//                    credDefId = registryDataDefinition.credDefId,
+//                    tag = registryDataDefinition.tag,
+//                    value = registryValueString,
+//                    issuerId = registryDataDefinition.issuerId
+//                )
+//
+//                //val revocationStatusList = RevocationStatusList()
+//
+//                val revocationStatusListIndyBesu = uniffi.indy_besu_vdr.RevocationStatusList(
+//                    issuerId = revocationStatusList.issuerId,
+//                    revRegDefId = revocationStatusList.revRegDefId,
+//                    timestamp = revocationStatusList.timestamp.toULong(),
+//                    revocationList = revocationStatusList.revocationList.map { it.toUInt() },
+//                    currentAccumulator = revocationStatusList.currentAccumulator
+//                )
+
+                val tails = agent.ledgerService.getTailsPath()
+                val credentialDefinitionStr = agent.ledgerService.getCredentialDefinition(registryDataDefinition.credDefId);
+                val credentialDefinition = credentialDefinitionStr.replace("\\\"", "\"")
+
+                var credentialDefinitionUniffi : CredentialDefinition = CredentialDefinition(credentialDefinition)
+
+                val revocationRegistryDefinitionAnoncreds : RevocationRegistryDefinitionTuple = Issuer().createRevocationRegistryDef(
+                    credDef = credentialDefinitionUniffi,
+                    credDefId = registryDataDefinition.credDefId,
+                    tag = registryDataDefinition.tag,
+                    maxCredNum = 1000U,
+                    tailsDirPath = registryData.tailsFilePath
                 )
 
-                val rsJson: JsonObject = JsonObject(
-                    rs.mapValues { (_, v) ->
-                        when (v) {
-                            is Number -> JsonPrimitive(v)
-                            is Boolean -> JsonPrimitive(v)
-                            is String -> JsonPrimitive(v)
-                            is JsonObject -> v
-                            is JsonElement -> v
-                            else -> Json.encodeToJsonElement(v) // usa kotlinx.serialization se for @Serializable
-                        }
-                    }
+                val revocationStatusListAnoncreds = Issuer().createRevocationStatusList(
+                    revRegDefId = revocationStatusList.revRegDefId,
+                    timestamp = revocationStatusList.timestamp.toULong(),
+                    credDef = credentialDefinitionUniffi,
+                    revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
+                    revRegPriv = revocationRegistryDefinitionAnoncreds.revRegDefPriv,
+                    issuanceByDefault = true
                 )
 
 
-                revocationState = CredentialRevocationState(rsJson.toString())
+                val tailsFile = File(registryData.tailsFilePath, "${registryData.tailsHash}") // ou + ".tails" se for esse o padrão
+                require(tailsFile.exists()) { "Tails file not found at ${tailsFile.absolutePath}" }
+
+                revocationState = Prover().createOrUpdateRevocationState(
+                    revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
+                    revStatusList = revocationStatusListAnoncreds,
+                    revRegIdx = info.credentialRevocationId.toUInt(),
+                    tailsPath = tailsFile.absolutePath,
+                    revState = null,
+                    oldRevStatusList = null,
+                )
+
             }
 
             //can be Credential or AnoncredsCredential
             val credential : Any = if (credentialRecord is W3cCredentialRecord) {
-
                 getCredentialUniffiByW3cCredentialRecord(credentialRecord)
-
-                //CredentialConversions().credentialFromW3cJson(w3cJsonLdVerifiableCredentialStrClean)
-
             } else {
                 (credentialRecord as AnonCredsCredentialRecord).credencial
             }
@@ -534,7 +578,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
             }
 
-            val schemas : Map<String, anoncreds_uniffi.Schema> = ProofUtils.getSchemasUniffi(agent, schemaIds)
+            val schemas : Map<String, Schema> = ProofUtils.getSchemasUniffi(agent, schemaIds)
             val credentialDefinitions : Map<String, CredentialDefinition> = ProofUtils.getCredentialDefinitionsUniffi(agent, credentialDefinitionIds)
 
             val presentation = Prover().createPresentation(
@@ -1002,8 +1046,9 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             throw CredoError("Credential subject must be an object, not an array.")
         }
 
-//        val methodName = agent.anonCredsRegistryService
-//            .getRegistryForIdentifier(issuer).methodName
+        val methodName = agent.anonCredsRegistryService
+            .getRegistryForIdentifier(options.schemaId!!).methodName
+
         val tags = W3cAnonCredsUtils.getW3cRecordAnonCredsTags(
             credentialSubject = credential.credentialSubject.first(),
             issuerId = issuer,
@@ -1014,7 +1059,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             credentialRevocationId = credentialUniffi.revRegIndex()
                 ?.toString(), // w3ccredential revRegIndex
             linkSecretId = credentialRequestMetadata.link_secret_name,
-            methodName = "ethr"
+            methodName = methodName
         )
         logger.info("tags: ${tags.toString()} ")
 

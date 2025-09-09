@@ -1,9 +1,11 @@
 
+import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.wallet.DidInfo
+import uniffi.indy_besu_vdr.CredentialDefinition
 import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.RevocationStatusList
 
@@ -17,6 +19,7 @@ interface ILedgerService {
         credentialDefinitionTemplate: CredentialDefinitionTemplate,
     ): String
     suspend fun getCredentialDefinition(id: String): String
+    suspend fun getCredentialDefinitionvVdr(id: String): CredentialDefinition
     suspend fun registerRevocationRegistryDefinition(
         did: DidInfo,
         revRegDefTemplate: RevocationRegistryDefinitionTemplate,

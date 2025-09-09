@@ -200,13 +200,8 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentialsAnonCreds {
         val record = agent.proofRepository.getById(proofRecordId)
-        // Select protocol version
-        val recordMessageType =
-            agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
 
-        if (!recordMessageType.message.contains("/2.0/")) {
-            throw Exception("Version of proof protocol is incorrect")
-        }
+        checkIfMessageTypeIsCorrect(proofRecordId)
 
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             record.id,
@@ -223,6 +218,15 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
 
+    }
+
+    private suspend fun checkIfMessageTypeIsCorrect(proofRecordId: String) {
+        val recordMessageType =
+            agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
+
+        if (!recordMessageType.message.contains("/2.0/")) {
+            throw Exception("Version of proof protocol is incorrect")
+        }
     }
 
     private suspend fun updateProofFormat(

@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.anoncreds.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntryResult
 
 @Serializable
 data class AnonCredsRevocationRegistryDefinition(
@@ -12,10 +13,10 @@ data class AnonCredsRevocationRegistryDefinition(
     val value: RevocationRegistryValue
 ){
 
-    fun toJson(): String {
-        val json = Json { prettyPrint = true }
-        return json.encodeToString(AnonCredsRevocationRegistryDefinition.serializer(), this)
-    }
+    fun toJson(): String = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }.encodeToString(AnonCredsRevocationRegistryDefinition.serializer(), this)
 }
 
 @Serializable

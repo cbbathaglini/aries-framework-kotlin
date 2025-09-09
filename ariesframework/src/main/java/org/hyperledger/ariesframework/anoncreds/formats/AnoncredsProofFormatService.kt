@@ -45,6 +45,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicat
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistries
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryEntry
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistriesForRequestResult
@@ -67,6 +68,7 @@ import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
 import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
+import uniffi.indy_besu_vdr.RevocationStatusList
 import java.util.UUID
 
 class AnoncredsProofFormatService(
@@ -624,6 +626,7 @@ class AnoncredsProofFormatService(
         val updatedSelectedCredentials =
             revocationRegistriesForRequestResult.updatedSelectedCredentials
         val revocationRegistries = revocationRegistriesForRequestResult.revocationRegistries
+
         val anonCredsRevocationRegistries: MutableMap<String, AnonCredsRevocationRegistryEntry> =
             mutableMapOf()
 
@@ -640,11 +643,19 @@ class AnoncredsProofFormatService(
                 value = revRegValue
             )
 
+            val revocationStatusListsAnoncreds: MutableMap<Long, AnonCredsRevocationStatusList> =
+                value.revocationStatusLists
+                    ?.mapValues { (_, v) -> AnonCredsRevocationStatusList.toAnonCreds(v) }
+                    ?.toMutableMap()
+                    ?: mutableMapOf()
+
             anonCredsRevocationRegistries.put(
                 key,
                 AnonCredsRevocationRegistryEntry(
                     tailsFilePath = agent.ledgerService.getTailsPath(),
-                    definition = anonCredsRevocationRegistryDefinition
+                    tailsHash = value.tailsHash,
+                    definition = anonCredsRevocationRegistryDefinition,
+                    revocationStatusLists = revocationStatusListsAnoncreds
                 )
             )
         }

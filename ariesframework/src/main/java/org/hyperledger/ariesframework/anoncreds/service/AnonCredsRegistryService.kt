@@ -17,7 +17,7 @@ class AnonCredsRegistryService(val agent: Agent) {
 
     fun getRegistryForIdentifier(identifier: String): AnonCredsRegistry {
         val registries = agent.anoncredsmodulesconfig.registries
-        logger.info("registries: ${registries.toString()}")
+        logger.info("registries: ${registries.toString()}") // only the "ethr"
 
         val registry = registries.find { it.supportedIdentifier.matches(identifier) }
         logger.info("registry: ${registry.toString()}")

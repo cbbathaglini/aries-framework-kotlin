@@ -16,8 +16,8 @@ class AnonCredsModuleConfig(
     val tailsFileService: TailsFileService
         get() = options?.tailsFileService ?: BasicTailsFileService(agent)
 
-//    val anoncreds: Any //AnonCredsLibrary
-//        get() = options?.anoncreds
+    val anoncreds: Any? //AnonCredsLibrary
+        get() = options?.anoncreds
 
     val autoCreateLinkSecret: Boolean
         get() = options?.autoCreateLinkSecret ?: true

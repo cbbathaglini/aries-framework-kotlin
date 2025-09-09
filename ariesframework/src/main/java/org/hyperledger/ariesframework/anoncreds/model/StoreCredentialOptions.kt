@@ -5,6 +5,7 @@ data class StoreCredentialOptions(
     val credentialRequestMetadata: AnonCredsCredentialRequestMetadata,
     val credentialDefinition: AnonCredsCredentialDefinition,
     val schema: AnonCredsSchema,
+    val schemaId: String? = null,
     val credentialDefinitionId: String,
     val credentialId: String? = null,
     val revocationRegistry: RevocationRegistryInfo? = null

@@ -57,6 +57,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistr
 import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
+import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
@@ -550,16 +551,18 @@ class AnoncredsCredentialFormatService(
             credentialRequestMetadata = anonCredsCredentialRequestMetadata,
             credentialDefinition = anoncredscredentialDefinition,
             schema = fetchSchemaReturn.schema,
+            schemaId = anonCredsCredential.schemaId,
             credentialDefinitionId = anonCredsCredential.credDefId,
             credentialId = BaseRecord.generateId(),
             revocationRegistry = revocationRegistryInfo
         )
+
+
         logger.info("storeCredential: ${storeCredential.toString()}")
         logger.info("fetchSchemaReturn: ${fetchSchemaReturn.toString()}")
 
         val storeCredentialOptions = StoreCredential.getStoreCredentialOptions(
-            options =  storeCredential,
-            indyNamespace = "von:local" //fetchSchemaReturn.indyNamespace
+            options =  storeCredential
         )
         logger.info("storeCredentialOptions: ${storeCredentialOptions.toString()}")
 
@@ -593,25 +596,11 @@ class AnoncredsCredentialFormatService(
             }
         }
 
-        logger.info("credentialExchangeRecord: ${credentialExchangeRecord.toString()}")
-
-
-//        agent.credentialRepository.save(
-//            CredentialRecord(
-//                credentialId = credentialId,
-//                credentialRevocationId = processedCredential.revRegIndex()?.toString(),
-//                revocationRegistryId = processedCredential.revRegId(),
-//                linkSecretId = agent.wallet.linkSecretId!!,
-//                credentialObject = processedCredential,
-//                schemaId = processedCredential.schemaId(),
-//                schemaName = schema.name(),
-//                schemaVersion = schema.version(),
-//                schemaIssuerId = schema.issuerId(),
-//                issuerId = credentialDefinition.issuerId(),
-//                credentialDefinitionId = processedCredential.credDefId(),
-//                revocationNotification = null,
-//            ),
-//        )
+        try {
+            agent.credentialExchangeRepository.save(credentialExchangeRecord)
+        }catch (e:Throwable){
+            logger.error("${e.message}") // duplicate entry, but saved
+        }
 
         credentialExchangeRecord.credentials.add(CredentialRecordBinding(
             credentialRecordType= this.credentialRecordType,

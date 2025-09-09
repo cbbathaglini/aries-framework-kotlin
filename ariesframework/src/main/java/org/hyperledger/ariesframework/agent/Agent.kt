@@ -7,6 +7,9 @@ import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
+import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.EthrAnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsModuleConfigOptions
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
@@ -107,7 +110,10 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
     val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
-        agent = this
+        agent = this,
+        options = AnonCredsModuleConfigOptions(
+            registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry())
+        )
     )
 
 //    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(

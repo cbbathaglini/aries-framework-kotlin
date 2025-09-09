@@ -95,13 +95,14 @@ class StoreCredential {
             }
 
 
-            val options = StoreCredentialOptions(
+            val newOptions = StoreCredentialOptions(
                 credentialId = UUID.randomUUID().toString(),
                 credentialRequestMetadata = credentialRequestMetadata,
                 credential = credential,
                 credentialDefinitionId = credDefId,
                 credentialDefinition = credDef,
                 schema = schemaParam,
+                schemaId = options.schemaId,
                 revocationRegistry = revocationRegistry
             )
 

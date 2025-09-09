@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.ProcessPresentationReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateProposalOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
+import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestProofRequestParams
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -208,9 +209,11 @@ class ProofFormatCoordinator(
                 attachments = message.requestAttachment
             )
 
-            formatService.processProposal(
-                attachment = attachment,
-                proofRecord = proofRecord
+            formatService.processRequest(
+                options = ProofFormatProcessOptions(
+                    attachment = attachment,
+                    proofRecord = proofRecord
+                )
             )
         }
 

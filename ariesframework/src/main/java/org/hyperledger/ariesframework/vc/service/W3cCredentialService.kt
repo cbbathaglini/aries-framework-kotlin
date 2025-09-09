@@ -31,6 +31,7 @@ class W3cCredentialService(
     suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
         val expandedTypes2: Map<String, String> =  w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
         PrintLongLine.print("verifiable: ${jsonLdVerifiableCredential.toString()}")
+
         val expandedTypes: Map<String, String> = mapOf("type" to "https://www.w3.org/2018/credentials#VerifiableCredential")
         logger.info("expandedTypes: ${expandedTypes.toString()}")
 

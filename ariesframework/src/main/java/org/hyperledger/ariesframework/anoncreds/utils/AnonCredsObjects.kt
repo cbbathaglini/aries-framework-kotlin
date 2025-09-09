@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 class AnonCredsObjects {
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(AnonCredsObjects::class.java)
 
         suspend fun fetchCredentialDefinition(
@@ -18,8 +18,9 @@ class AnonCredsObjects {
             credentialDefinitionId: String
         ): CredentialDefinitionResult {
 
-            val registry = agent.anonCredsRegistryService.getRegistryForIdentifier(credentialDefinitionId)
-            val result = registry.getCredentialDefinition(credentialDefinitionId)
+            val registry =
+                agent.anonCredsRegistryService.getRegistryForIdentifier(credentialDefinitionId)
+            val result = registry.getCredentialDefinition(agent, credentialDefinitionId)
 
             val credentialDefinition = result.credentialDefinition
             val metadata = result.credentialDefinitionMetadata
@@ -47,12 +48,13 @@ class AnonCredsObjects {
             timestamp: Long
         ): AnonCredsRevocationStatusList {
 
-            val registry = agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
+            val registry =
+                agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
 
-            val result = registry.getRevocationStatusList(revocationRegistryId, timestamp)
+            val result = registry.getRevocationStatusList(agent, revocationRegistryId, timestamp)
             val resolutionMetadata = result.resolutionMetadata
 
-            return  result.revocationStatusList ?: throw CredoError(
+            return result.revocationStatusList ?: throw CredoError(
                 "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata?.message}"
             )
         }
@@ -71,7 +73,8 @@ class AnonCredsObjects {
                 throw CredoError("RevocationRegistryDefinition not found for id $revocationRegistryDefinitionId: $message")
             }
 
-            val indyNamespace = result.revocationRegistryDefinitionMetadata["didIndyNamespace"] as? String
+            val indyNamespace =
+                result.revocationRegistryDefinitionMetadata["didIndyNamespace"] as? String
 
             return FetchRevocationRegistryDefinitionResult(
                 revocationRegistryDefinition = result.revocationRegistryDefinition,

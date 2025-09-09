@@ -24,8 +24,8 @@ class RevocationInterval {
                 )
             }
 
-            // Se passou pelas validações, tratamos como BestPracticeNonRevokedInterval
-            return revocationInterval as BestPracticeNonRevokedInterval
+            val bestPracticeNonRevokedInterval = BestPracticeNonRevokedInterval(revocationInterval.from!!.toInt(), revocationInterval.to.toInt())
+            return bestPracticeNonRevokedInterval
         }
     }
 }

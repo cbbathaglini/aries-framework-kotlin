@@ -29,7 +29,10 @@ import kotlin.math.log
 
 class CredentialFormatCoordinator(
     val agent: Agent,
-    val formatServices: List<CredentialFormatService<*>> = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent= agent), LegacyIndyCredentialFormatService(agent= agent))
+    val formatServices: List<CredentialFormatService<*>> = listOf<CredentialFormatService<*>>(
+        AnoncredsCredentialFormatService(agent = agent),
+        LegacyIndyCredentialFormatService(agent = agent)
+    )
 ) {
     private val logger = LoggerFactory.getLogger(CredentialFormatCoordinator::class.java)
 
@@ -77,12 +80,17 @@ class CredentialFormatCoordinator(
         agent.didCommMessageRepository.saveAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
-            associatedRecordId = credentialRecord.id)
+            associatedRecordId = credentialRecord.id
+        )
         return message
 
     }
 
-    suspend fun processProposal(credentialExchangeRecord: CredentialExchangeRecord, message: ProposeCredentialMessageV2, formatServices: List<CredentialFormatService<*>>) {
+    suspend fun processProposal(
+        credentialExchangeRecord: CredentialExchangeRecord,
+        message: ProposeCredentialMessageV2,
+        formatServices: List<CredentialFormatService<*>>
+    ) {
 
         for (formatService in formatServices) {
             val attachment = getAttachmentForService(
@@ -112,13 +120,15 @@ class CredentialFormatCoordinator(
         val offerAttachments = mutableListOf<Attachment>()
         var credentialPreview: CredentialPreviewV2? = null
 
-        val proposalMessage = agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
-            associatedRecordId = credentialExchangeRecord.id,
-            messageType = ProposeCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
-        ) ?: throw CredoError("Proposal message not found")
+        val proposalMessage =
+            agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
+                associatedRecordId = credentialExchangeRecord.id,
+                messageType = ProposeCredentialMessageV2.type,
+                role = DidCommMessageRole.Receiver
+            ) ?: throw CredoError("Proposal message not found")
 
-        credentialExchangeRecord.credentialAttributes = proposalMessage.credentialPreview?.attributes
+        credentialExchangeRecord.credentialAttributes =
+            proposalMessage.credentialPreview?.attributes
 
         for (formatService in formatServices) {
             val proposalAttachment = getAttachmentForService(
@@ -133,7 +143,7 @@ class CredentialFormatCoordinator(
                 proposalAttachments = proposalAttachment
             )
 
-            if(credentialFormatCreateOffer.previewAttributes != null && credentialFormatCreateOffer.previewAttributes != null){
+            if (credentialFormatCreateOffer.previewAttributes != null && credentialFormatCreateOffer.previewAttributes != null) {
                 credentialPreview = CredentialPreviewV2(
                     attributes = credentialFormatCreateOffer.previewAttributes
                 )
@@ -145,17 +155,17 @@ class CredentialFormatCoordinator(
 
         credentialExchangeRecord.credentialAttributes = credentialPreview?.attributes
 
-        if (credentialPreview==null){
+        if (credentialPreview == null) {
             credentialPreview = CredentialPreviewV2(attributes = emptyList())
         }
 
-        val message =  OfferCredentialMessageV2(
-                formats = formats,
-                offerAttachments = offerAttachments,
-                credentialPreview = credentialPreview,
-                comment = acceptProposalParams.comment,
-                goalCode = acceptProposalParams.goalCode,
-                goal = acceptProposalParams.goal,
+        val message = OfferCredentialMessageV2(
+            formats = formats,
+            offerAttachments = offerAttachments,
+            credentialPreview = credentialPreview,
+            comment = acceptProposalParams.comment,
+            goalCode = acceptProposalParams.goalCode,
+            goal = acceptProposalParams.goal,
         )
 
         message.setThread(
@@ -166,7 +176,7 @@ class CredentialFormatCoordinator(
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
-            associatedRecordId= credentialExchangeRecord.id
+            associatedRecordId = credentialExchangeRecord.id
         )
 
         return message
@@ -192,7 +202,7 @@ class CredentialFormatCoordinator(
         for (formatService in formatServices) {
             val offerCreated = formatService.createOffer(credentialFormat, credentialExchangeRecord)
 
-            if (offerCreated.previewAttributes == null){
+            if (offerCreated.previewAttributes != null) {
                 credentialPreview = CredentialPreviewV2(
                     attributes = offerCreated.previewAttributes
                 )
@@ -204,13 +214,13 @@ class CredentialFormatCoordinator(
 
         credentialExchangeRecord.credentialAttributes = credentialPreview?.attributes
 
-        if (credentialPreview == null){
+        if (credentialPreview == null) {
             credentialPreview = CredentialPreviewV2(
                 attributes = emptyList()
             )
         }
 
-        val message =  OfferCredentialMessageV2(
+        val message = OfferCredentialMessageV2(
             formats = formats,
             offerAttachments = offerAttachments,
             credentialPreview = credentialPreview,
@@ -227,7 +237,7 @@ class CredentialFormatCoordinator(
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
-            associatedRecordId= credentialExchangeRecord.id
+            associatedRecordId = credentialExchangeRecord.id
         )
 
         return message
@@ -240,20 +250,21 @@ class CredentialFormatCoordinator(
         val message = processOfferParams.message
 
         for (formatService in formatServices) {
-            val attachment = getAttachmentForService(formatService, message.formats, message.offerAttachments)
+            val attachment =
+                getAttachmentForService(formatService, message.formats, message.offerAttachments)
             formatService.processOffer(attachment, credentialExchangeRecord)
         }
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             role = DidCommMessageRole.Receiver,
             agentMessage = message,
-            associatedRecordId= credentialExchangeRecord.id
+            associatedRecordId = credentialExchangeRecord.id
         )
         logger.info("savedOrUpdatedAgentMessage")
 
     }
 
-    suspend fun acceptOffer(params: AcceptOfferParams) : RequestCredentialMessageV2 {
+    suspend fun acceptOffer(params: AcceptOfferParams): RequestCredentialMessageV2 {
 
         val credentialExchangeRecord = params.credentialRecord
         logger.info("credentialExchangeRecord: ${credentialExchangeRecord.toString()}")
@@ -262,15 +273,16 @@ class CredentialFormatCoordinator(
         val requestAttachment = mutableListOf<Attachment>()
         val requestAppendAttachments = mutableListOf<Attachment>()
 
-        val offerMessage = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
-            associatedRecordId = credentialExchangeRecord.id,
-            messageType = OfferCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
-        ) ?: throw CredoError("Offer message not found")
+        val offerMessage =
+            agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
+                associatedRecordId = credentialExchangeRecord.id,
+                messageType = OfferCredentialMessageV2.type,
+                role = DidCommMessageRole.Receiver
+            ) ?: throw CredoError("Offer message not found")
 
         logger.info("formatServices: ${formatServices.toString()}")
 
-        var service : CredentialFormatService<*>? = null
+        var service: CredentialFormatService<*>? = null
         for (format in offerMessage.formats) {
             service = findFormatService(format.attachId)
             if (service != null) {
@@ -334,7 +346,7 @@ class CredentialFormatCoordinator(
      * @returns The created {@link RequestCredentialMessageV2}
      *
      */
-    suspend fun createRequest(params: RequestCredentialParams) : RequestCredentialMessageV2 {
+    suspend fun createRequest(params: RequestCredentialParams): RequestCredentialMessageV2 {
 
         val credentialExchangeRecord = params.credentialRecord
         val formats = mutableListOf<Format>()
@@ -380,7 +392,11 @@ class CredentialFormatCoordinator(
         val requestMessage = params.message
 
         for (formatService in formatServices) {
-            val attachment = getAttachmentForService(formatService, requestMessage.formats, requestMessage.requestAttachments)
+            val attachment = getAttachmentForService(
+                formatService,
+                requestMessage.formats,
+                requestMessage.requestAttachments
+            )
             formatService.processRequest(
                 attachment = attachment,
                 credentialExchangeRecord = credentialExchangeRecord
@@ -394,22 +410,24 @@ class CredentialFormatCoordinator(
         )
     }
 
-    suspend fun acceptRequest(params: AcceptRequestParams) : IssueCredentialMessageV2 {
+    suspend fun acceptRequest(params: AcceptRequestParams): IssueCredentialMessageV2 {
 
         val credentialExchangeRecord = params.credentialExchangeRecord
         val credentialFormats = params.credentialFormat
 
-        val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
-            associatedRecordId = credentialExchangeRecord.id,
-            messageType = RequestCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
-        ) ?: throw CredoError("Request message not found")
+        val requestMessage =
+            agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
+                associatedRecordId = credentialExchangeRecord.id,
+                messageType = RequestCredentialMessageV2.type,
+                role = DidCommMessageRole.Receiver
+            ) ?: throw CredoError("Request message not found")
 
-        val offerMessage = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
-            associatedRecordId = credentialExchangeRecord.id,
-            messageType = OfferCredentialMessageV2.type,
-            role = DidCommMessageRole.Sender
-        ) ?: throw CredoError("Offer message not found")
+        val offerMessage =
+            agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
+                associatedRecordId = credentialExchangeRecord.id,
+                messageType = OfferCredentialMessageV2.type,
+                role = DidCommMessageRole.Sender
+            ) ?: throw CredoError("Offer message not found")
 
         val formats = mutableListOf<Format>()
         val credentialAttachments = mutableListOf<Attachment>()
@@ -422,7 +440,7 @@ class CredentialFormatCoordinator(
                 attachments = requestMessage.requestAttachments
             )
 
-            val offerAttachment =  getAttachmentForService(
+            val offerAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = offerMessage.formats,
                 attachments = offerMessage.offerAttachments
@@ -486,16 +504,23 @@ class CredentialFormatCoordinator(
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
 
-        logger.info("credentialExchange AnonCredsCredentialRequestMetadataKey => ${credentialExchangeRecord.metadata.get( MetadataKeys.AnonCredsCredentialRequestMetadataKey)}")
+        logger.info(
+            "credentialExchange AnonCredsCredentialRequestMetadataKey => ${
+                credentialExchangeRecord.metadata.get(
+                    MetadataKeys.AnonCredsCredentialRequestMetadataKey
+                )
+            }"
+        )
 
-        val offerMessage = agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
-            associatedRecordId = credentialExchangeRecord.id,
-            messageType = OfferCredentialMessageV2.type,
-            role = DidCommMessageRole.Receiver
-        ) ?: throw CredoError("Offer message not found")
+        val offerMessage =
+            agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
+                associatedRecordId = credentialExchangeRecord.id,
+                messageType = OfferCredentialMessageV2.type,
+                role = DidCommMessageRole.Receiver
+            ) ?: throw CredoError("Offer message not found")
 
 
-        for (formatService in formatServices){
+        for (formatService in formatServices) {
             val offerAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = offerMessage.formats,

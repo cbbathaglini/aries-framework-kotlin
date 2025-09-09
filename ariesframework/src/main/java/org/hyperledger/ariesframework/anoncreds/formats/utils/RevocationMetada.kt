@@ -12,7 +12,6 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import anoncreds_uniffi.RevocationRegistryDefinition
 import kotlinx.serialization.json.Json
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.CreateRevocationStateOptions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 
 class RevocationMetada {

@@ -337,11 +337,6 @@ class ProofServiceV2(val agent: Agent) {
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
         logger.debug("Processing proof request with id ${requestMessage.id}")
 
-
-        logger.info("conn proof: ${connection?.id}")
-        logger.info("thread proof: ${requestMessage.threadId}")
-        logger.info("role: prover")
-
         val proofRecord : ProofExchangeRecord? = agent.proofRepository.getByThreadAndConnectionIdAndRole(
                 role = ProofRole.Prover.name,
                 connectionId = connection?.id,
@@ -353,8 +348,6 @@ class ProofServiceV2(val agent: Agent) {
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to process request. No supported formats")
         }
-
-        logger.info("formatServices: ${formatServices.toString()}")
 
         if (proofRecord != null) {
             val lastSentMessage =

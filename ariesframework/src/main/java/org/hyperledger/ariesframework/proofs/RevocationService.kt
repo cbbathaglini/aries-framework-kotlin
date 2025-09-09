@@ -95,14 +95,17 @@ class RevocationService(val agent: Agent) {
         revocationRegistryId: String,
         revocationInterval: RevocationInterval,
     ): Pair<Boolean, Int> {
+
         val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
             revocationRegistryId,
             revocationInterval.to!!,
             0,
         )
+
         val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)
         val credentialRevocationIdInt = credentialRevocationId.toInt()
         val revoked = revocationRegistryDelta.revoked?.contains(credentialRevocationIdInt) ?: false
+
         return Pair(revoked, deltaTimestamp)
     }
 
@@ -111,10 +114,11 @@ class RevocationService(val agent: Agent) {
         revocationRegistryId: String,
         revocationInterval: AnonCredsNonRevokedInterval,
     ): Pair<Boolean, Int> {
+
         val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
             revocationRegistryId,
             revocationInterval.to!!.toInt(),
-            0,
+            revocationInterval.from!!.toInt(),
         )
         val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)
         val credentialRevocationIdInt = credentialRevocationId.toInt()

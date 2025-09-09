@@ -9,6 +9,7 @@ data class StoreCredentialW3cOptions (
     val credential: @Contextual W3cJsonLdVerifiableCredential,
     val credentialDefinitionId: String,
     val schema: AnonCredsSchema,
+    val schemaId: String? = null,
     val credentialDefinition: AnonCredsCredentialDefinition,
     val revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition? = null,
     val revocationRegistryId: String? = null,

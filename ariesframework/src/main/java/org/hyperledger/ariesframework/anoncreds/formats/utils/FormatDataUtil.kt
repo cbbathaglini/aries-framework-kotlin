@@ -67,7 +67,7 @@ class FormatDataUtil {
 
             val result = agent.anonCredsRegistryService
                 .getRegistryForIdentifier(schemaId)
-                .getSchema(schemaId)
+                .getSchema(agent, schemaId)
 
             if (result.schema == null) {
                 throw CredoError("Schema not found for id $schemaId: ${result.resolutionMetadata?.message}")

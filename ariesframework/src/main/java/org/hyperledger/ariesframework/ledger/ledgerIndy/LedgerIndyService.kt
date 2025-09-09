@@ -35,6 +35,7 @@ import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.slf4j.LoggerFactory
+import kotlin.math.E
 import kotlin.math.log
 
 class LedgerIndyService(val agent: Agent) : ILedgerService {
@@ -180,6 +181,10 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         )
 
         return Json.encodeToString(credDef)
+    }
+
+    override suspend fun getCredentialDefinitionvVdr(id: String): uniffi.indy_besu_vdr.CredentialDefinition {
+        throw Exception("not implemented for indy")
     }
 
     override suspend fun registerRevocationRegistryDefinition(
