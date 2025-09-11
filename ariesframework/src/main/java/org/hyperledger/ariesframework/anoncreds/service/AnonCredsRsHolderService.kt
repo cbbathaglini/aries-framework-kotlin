@@ -353,27 +353,38 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     tailsDirPath = registryData.tailsFilePath
                 )
 
-                val revocationStatusListAnoncreds = Issuer().createRevocationStatusList(
-                    revRegDefId = revocationStatusList.revRegDefId,
-                    timestamp = revocationStatusList.timestamp.toULong(),
-                    credDef = credentialDefinitionUniffi,
-                    revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
-                    revRegPriv = revocationRegistryDefinitionAnoncreds.revRegDefPriv,
-                    issuanceByDefault = true
-                )
+                var revocationStatusListAnoncreds : RevocationStatusList? = null
 
+                try {
+                    revocationStatusListAnoncreds = Issuer().createRevocationStatusList(
+                        revRegDefId = revocationStatusList.revRegDefId,
+                        timestamp = revocationStatusList.timestamp.toULong(),
+                        credDef = credentialDefinitionUniffi,
+                        revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
+                        revRegPriv = revocationRegistryDefinitionAnoncreds.revRegDefPriv,
+                        issuanceByDefault = true
+                    )
+                    logger.info("revocationStatusListAnoncreds: ${revocationStatusListAnoncreds.toJson()}")
+                }catch (e: Exception){
+                    logger.error("revocationStatusListAnoncreds error: ${e.message}")
+                }
 
                 val tailsFile = File(registryData.tailsFilePath, "${registryData.tailsHash}") // ou + ".tails" se for esse o padrão
                 require(tailsFile.exists()) { "Tails file not found at ${tailsFile.absolutePath}" }
+                logger.info("tails file: ${tailsFile.absolutePath}")
 
+                try {
                 revocationState = Prover().createOrUpdateRevocationState(
                     revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
-                    revStatusList = revocationStatusListAnoncreds,
+                    revStatusList = revocationStatusListAnoncreds!!,
                     revRegIdx = info.credentialRevocationId.toUInt(),
                     tailsPath = tailsFile.absolutePath,
                     revState = null,
                     oldRevStatusList = null,
                 )
+                }catch (e: Exception){
+                    logger.error("error prover: ${e.message}")
+                }
 
             }
 
@@ -678,229 +689,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             credentials = credentialWithMetadata + legacyCredentialWithMetadata
         )
     }
-
-//    override suspend fun createProof(options: CreateProofOptions): AnonCredsProof {
-//        val (proofRequest, selectedCredentials, schemas, credentialDefinitions, revocationRegistries, useUnqualifiedIdentifiers) = options
-//
-//        var presentation: Presentation? = null
-//        try {
-//
-//            val rsCredentialDefinitions: MutableMap<String, JsonObject> =
-//                credentialDefinitions.credentialDefinitions.mapValues { it.value as JsonObject }
-//                    .toMutableMap()
-//
-//            val rsSchemas: MutableMap<String, JsonObject> =
-//                schemas.schemas.mapValues { it.value as JsonObject }.toMutableMap()
-//
-//            val retrievedCredentials =
-//                mutableMapOf<String, Any /* W3cCredentialRecord | AnonCredsCredentialRecord */>()
-//
-//            suspend fun credentialEntryFromAttribute(
-//                attr: Any //AnonCredsRequestedAttributeMatch /* ou AnonCredsRequestedPredicateMatch */
-//            ): Triple<String, CredentialEntry, String> {
-//
-//                val credentialId = when (attr) {
-//                    is AnonCredsRequestedAttributeMatch -> attr.credentialId
-//                    is AnonCredsRequestedPredicateMatch -> attr.credentialId
-//                    else -> throw IllegalArgumentException("Tipo inválido: ${attr::class}")
-//                }
-//                val timestampAttr = when (attr) {
-//                    is AnonCredsRequestedAttributeMatch -> attr.timestamp
-//                    is AnonCredsRequestedPredicateMatch -> attr.timestamp
-//                    else -> throw IllegalArgumentException("Tipo inválido: ${attr::class}")
-//                }
-//
-//                var credentialRecord = retrievedCredentials[credentialId]
-//                    ?: error("Credential não encontrado para $credentialId")
-//
-//                if (credentialRecord == null) {
-//                    val w3cRecord = agent.w3cCredentialRepository.findById(credentialId)
-//                    credentialRecord = if (w3cRecord != null) {
-//                        retrievedCredentials[credentialId] = w3cRecord
-//                        w3cRecord
-//                    } else {
-//                        val legacy =
-//                            agent.anonCredsCredentialRepository.getByCredentialId(credentialId)
-//                        logger.warn(
-//                            """
-//                        Creating AnonCreds proof with legacy credential ${credentialId}.
-//                        Please run the migration script to migrate credentials to the new w3c format.
-//                        See https://credo.js.org/guides/updating/versions/0.4-to-0.5
-//                        """.trimIndent()
-//                        )
-//                        legacy
-//                    }
-//                }
-//
-//                val usesUnqualified =
-//                    ProofRequest.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
-//                val info = getAnoncredsCredentialInfoFromRecord(credentialRecord, usesUnqualified)
-//                val linkSecretId = info.linkSecretId
-//                val schemaId = info.schemaId
-//                val credentialDefinitionId = info.credentialDefinitionId
-//                val revocationRegistryId = info.revocationRegistryId
-//                val credentialRevocationId = info.credentialRevocationId
-//                val timestamp = timestampAttr
-//
-//                var revocationState: CredentialRevocationState? = null
-//                var revocationRegistryDefinition: RevocationRegistryDefinition? = null
-//
-//                try {
-//                    if (timestamp != null && credentialRevocationId != null && revocationRegistryId != null) {
-//                        val revRegs = options.revocationRegistries
-//                        val regEntry = revRegs[revocationRegistryId]
-//                            ?: throw AnonCredsRsError("Revocation Registry $revocationRegistryId not found")
-//
-//                        val definitionAny = regEntry.definition
-//                        val statusLists = regEntry.revocationStatusLists
-//                        val tailsFilePath = regEntry.tailsFilePath
-//
-//                        val statusListAny = statusLists[timestamp]
-//                            ?: throw CredoError(
-//                                "Revocation status list for revocation registry $revocationRegistryId and timestamp " +
-//                                        "$timestamp not found in revocation status lists. All revocation status lists must be present."
-//                            )
-//
-//
-//                        revocationRegistryDefinition =
-//                            RevocationRegistryDefinition(json = toJsonObject(definitionAny).toString())
-//
-//                        val createRevocationStateOptions = CreateRevocationStateOptions(
-//                            revocationRegistryIndex = credentialRevocationId.toInt(),
-//                            revocationRegistryDefinition = revocationRegistryDefinition!!,
-//                            tailsPath = tailsFilePath,
-//                            revocationStatusList = RevocationStatusList(
-//                                json = toJsonObject(
-//                                    statusListAny
-//                                ).toString()
-//                            )
-//                        )
-//
-//                        revocationState = CredentialRevocationState(
-//                            json = toJsonObject(createRevocationStateOptions).toString()
-//
-//                        )
-//                    }
-//
-//                    val credential: AnonCredsCredential =
-//                        when (credentialRecord) {
-//                            is W3cCredentialRecord -> {
-//                                val legacy = w3cToLegacyCredential(
-//                                    credential = credentialRecord.credential as W3cJsonLdVerifiableCredential
-//                                )
-//                                legacy.credential as AnonCredsCredential
-//                            }
-//
-//                            is AnonCredsCredentialRecord -> credentialRecord.credencial as AnonCredsCredential
-//                            else -> error("Unsupported credential record type: ${credentialRecord::class}")
-//                        }
-//
-//                    val credential: AnonCredsCredential = if (credentialRecord is W3cCredentialRecord) {
-//                        w3cToLegacyCredential(credential = credentialRecord.credential as W3cJsonLdVerifiableCredential)
-//                    } else {
-//                        credentialRecord.credential as AnonCredsCredential
-//                    }
-//
-//                    if (usesUnqualified) {
-//                        credential.schemaId = schemaId
-//                        credential.credDefId = credentialDefinitionId
-//                        credential.revRegId = revocationRegistryId
-//                    }
-//
-//                    val credentialEntry = CredentialEntry(
-//                        credential = toJsonObject(credential),                // em TS: credential as unknown as JsonObject
-//                        revocationState = revocationState?.toJson(),
-//                        timestamp = timestamp
-//                    )
-//
-//                    return Triple(linkSecretId, credentialEntry, attribute.credentialId)
-//                } finally {
-//                    revocationState?.handle?.clear()
-//                    revocationRegistryDefinition?.handle?.clear()
-//                }
-//            }
-//
-//            // ---- Montar listas de credentials/credentialsProve, coalescendo por (credentialId,timestamp) ----
-//            val credentialsProve = mutableListOf<CredentialProve>()
-//            val credentials =
-//                mutableListOf<Triple<String, CredentialEntry, String>>() // (linkSecretId, entry, credentialId)
-//
-//            var entryIndex = 0
-//
-//            for ((referent, attribute) in selectedCredentials.attributes) {
-//                val existingIdx = credentials.indexOfFirst { (ls, entry, credId) ->
-//                    credId == attribute.credentialId && entry.timestamp == attribute.timestamp
-//                }
-//
-//                if (existingIdx != -1) {
-//                    credentialsProve += CredentialProve(
-//                        entryIndex = existingIdx,
-//                        isPredicate = false,
-//                        referent = referent,
-//                        reveal = attribute.revealed
-//                    )
-//                } else {
-//                    val triple = credentialEntryFromAttribute(attribute)
-//                    credentials += triple
-//                    credentialsProve += CredentialProve(
-//                        entryIndex = entryIndex,
-//                        isPredicate = false,
-//                        referent = referent,
-//                        reveal = attribute.revealed
-//                    )
-//                    entryIndex++
-//                }
-//            }
-//
-//            for ((referent, predicate) in selectedCredentials.predicates) {
-//                val existingIdx = credentials.indexOfFirst { (_, entry, credId) ->
-//                    credId == predicate.credentialId && entry.timestamp == predicate.timestamp
-//                }
-//
-//                if (existingIdx != -1) {
-//                    credentialsProve += CredentialProve(
-//                        entryIndex = existingIdx,
-//                        isPredicate = true,
-//                        referent = referent,
-//                        reveal = true
-//                    )
-//                } else {
-//                    val triple = credentialEntryFromAttribute(predicate)
-//                    credentials += triple
-//                    credentialsProve += CredentialProve(
-//                        entryIndex = entryIndex,
-//                        isPredicate = true,
-//                        referent = referent,
-//                        reveal = true
-//                    )
-//                    entryIndex++
-//                }
-//            }
-//
-//            val linkSecretIds = credentials.map { it.first }
-//            val linkSecretId = assertLinkSecretsMatch(agentContext, linkSecretIds)
-//            val linkSecret = getLinkSecret(agentContext, linkSecretId)
-//
-//            presentation = Presentation.create(
-//                CreatePresentationOptions(
-//                    credentialDefinitions = rsCredentialDefinitions,
-//                    schemas = rsSchemas,
-//                    presentationRequest = toJsonObject(proofRequest),
-//                    credentials = credentials.map { it.second },
-//                    credentialsProve = credentialsProve,
-//                    selfAttest = selectedCredentials.selfAttestedAttributes,
-//                    linkSecret = linkSecret
-//                )
-//            )
-//
-//            // toJson() -> JsonObject -> AnonCredsProof
-//            val json = presentation!!.toJson()
-//            Json.decodeFromJsonElement<AnonCredsProof>(json)
-//        } finally {
-//            presentation?.handle?.clear()
-//        }
-//
-//    }
 
     private fun convertToW3cJsonLd(
         w3cCredential: W3cCredential,
@@ -1263,36 +1051,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         return jsonElement.jsonObject
     }
 
-//    private suspend fun w3cToLegacyCredential(
-//        credential: W3cJsonLdVerifiableCredential
-//    ): AnonCredsCredential {
-//        val credentialJson = toJsonObject(credential)
-//        val w3cAnonCredsCredentialObj = W3cCredential(credentialJson.toString())
-//        val credential: Credential =
-//            CredentialConversions().credentialFromW3cJson(w3cAnonCredsCredentialObj.toString())
-//
-//        val anoncredsCredential = AnonCredsCredential(
-//            schemaId = credential.schemaId(),
-//            credDefId = credential.credDefId(),
-//            revRegId = credential.revRegId(),
-//            values = credential.values()
-//        )
-//
-//        return anoncredsCredential
-//    }
-
-//    private fun queryFromRestrictions(restrictions: List<AttributeFilter>): Map<String, String> {
-//        val tags = mutableMapOf<String, String>()
-//        for (restriction in restrictions) {
-//            restriction.schemaId?.let { tags["schemaId"] = it }
-//            restriction.schemaName?.let { tags["schemaName"] = it }
-//            restriction.schemaVersion?.let { tags["schemaVersion"] = it }
-//            restriction.schemaIssuerDid?.let { tags["schemaIssuerDid"] = it }
-//            restriction.issuerDid?.let { tags["issuerDid"] = it }
-//            restriction.credentialDefinitionId?.let { tags["credentialDefinitionId"] = it }
-//        }
-//        return tags
-//    }
 
     private fun queryFromRestrictions(
         restrictions: List<AnonCredsProofRequestRestriction>

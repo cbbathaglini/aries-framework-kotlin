@@ -61,7 +61,6 @@ class CredentialServiceV2(val agent: Agent) {
 
     private val credentialExchangeRepository = agent.credentialExchangeRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
-    private val ledgerService = agent.ledgerService
     private val credentialFormats = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent= agent), LegacyIndyCredentialFormatService(agent= agent))
     private val credentialFormatCoordinator = CredentialFormatCoordinator(agent,credentialFormats)
 
