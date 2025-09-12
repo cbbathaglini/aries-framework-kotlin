@@ -630,6 +630,7 @@ class AnoncredsProofFormatService(
         val anonCredsRevocationRegistries: MutableMap<String, AnonCredsRevocationRegistryEntry> =
             mutableMapOf()
 
+
         revocationRegistries.mapValues { (key, value) ->
 
             val revRegValue: RevocationRegistryValue =

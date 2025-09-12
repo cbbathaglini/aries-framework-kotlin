@@ -127,7 +127,7 @@ data class RevocationRegistries (val agent: Agent){
 
             val timestampToFetch = timestamp ?: nonRevoked.to
 
-            if (revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
+            if (revocationRegistryId != null && revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
                 val revocationStatusList : RevocationStatusList =
                     agent.ledgerService
                         .getRevocationStatusList(

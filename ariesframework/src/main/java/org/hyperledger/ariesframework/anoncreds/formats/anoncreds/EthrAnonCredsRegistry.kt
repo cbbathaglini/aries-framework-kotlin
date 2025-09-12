@@ -29,7 +29,11 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
         Regex("""^did:ethr:[^/]+/anoncreds/v0/(SCHEMA|CRED_DEF|REV_REG_DEF|REV_REG)/[^/]+/[0-9]+(?:\.[0-9]+)*$""", RegexOption.IGNORE_CASE)*/
 
     //val ETHR_ANONCREDS_REGEX = Regex("""^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/[0-9]+(?:\.[0-9]+)*|CRED_DEF/[^/]+|REV_REG_DEF/.+?/(?:CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+)$""".trimIndent().replace(Regex("""\s+"""), ""), RegexOption.IGNORE_CASE)
-    val ETHR_ANONCREDS_REGEX = Regex("^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/\\d+|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)\$", RegexOption.IGNORE_CASE)
+    //val ETHR_ANONCREDS_REGEX = Regex("^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/\\d+|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)\$", RegexOption.IGNORE_CASE)
+    val ETHR_ANONCREDS_REGEX = Regex(
+        "^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/(?:\\d+|CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)\$",
+        RegexOption.IGNORE_CASE
+    )
 
     override val supportedIdentifier: Regex = ETHR_ANONCREDS_REGEX
 
