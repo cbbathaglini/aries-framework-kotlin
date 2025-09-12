@@ -1,7 +1,9 @@
 package org.hyperledger.ariesframework.proofs.models
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 @Serializable
 data class RevocationStatusList(
@@ -11,7 +13,11 @@ data class RevocationStatusList(
     val revocationList: List<Int>,
     val timestamp: Int,
 ) {
-    fun toJsonString(): String {
-        return Json.encodeToString(serializer(), this)
-    }
+//    fun toJsonString(): String {
+//        return Json.encodeToString(serializer(), this)
+//    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    fun toJsonString(): String =
+        Json.encodeToString(serializer<RevocationStatusList>(), this)
 }

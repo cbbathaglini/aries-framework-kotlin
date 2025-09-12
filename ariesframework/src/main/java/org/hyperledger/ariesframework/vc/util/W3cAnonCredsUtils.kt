@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.vc.util
 
 import W3cCredentialSubject
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsClaimRecord
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
@@ -103,7 +104,8 @@ class W3cAnonCredsUtils {
             val w3cAnonCredsCredentialMetadataElement = w3cCredentialRecord.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey)
                 ?:  throw CredoError("AnonCreds metadata not found on credential record.")
 
-            val w3cAnonCredsCredentialMetadata = Json.decodeFromJsonElement<W3cAnonCredsCredentialMetadata>(W3cAnonCredsCredentialMetadata.serializer(), w3cAnonCredsCredentialMetadataElement)
+            val w3cAnonCredsCredentialMetadata = Json.decodeFromJsonElement<W3cAnonCredsCredentialMetadata>(
+                serializer<W3cAnonCredsCredentialMetadata>(), w3cAnonCredsCredentialMetadataElement)
             logger.info("w3cAnonCredsCredentialMetadata: ${w3cAnonCredsCredentialMetadata.toString()}")
 
             val credentialDefinitionId = anonCredsTags.unqualifiedCredentialDefinitionId

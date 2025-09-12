@@ -109,10 +109,14 @@ data class RevocationRegistries (val agent: Agent){
                     throw Exception("Could not retrieve revocation registry definition for revocation registry ${revocationRegistryId}")
                 }
 
-                val revRegValue: RevocationRegistryValue = Json.decodeFromString(
-                    RevocationRegistryValue.serializer(),
-                    revocationRegistry.value
-                )
+//                val revRegValue: RevocationRegistryValue = Json.decodeFromString(
+//                    RevocationRegistryValue.serializer(),
+//                    revocationRegistry.value
+//                )
+
+                val revRegValue: RevocationRegistryValue =
+                    Json.decodeFromString(revocationRegistry.value)
+
 
                 revocationRegistries.put(
                     key=revocationRegistryId,

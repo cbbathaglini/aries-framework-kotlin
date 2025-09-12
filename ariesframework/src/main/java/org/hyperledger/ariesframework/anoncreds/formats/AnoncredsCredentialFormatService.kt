@@ -20,6 +20,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
@@ -127,7 +128,10 @@ class AnoncredsCredentialFormatService(
             throw CredoError("Invalid proposal supplied: ${proposal} in AnonCredsFormatService")
         }
 
-        val jsonElement = Json.encodeToJsonElement(AnonCredsCredentialProposal.serializer(), proposal)
+        val jsonElement = Json.encodeToJsonElement(
+            serializer<AnonCredsCredentialProposal>(),
+            proposal
+        )
         val attachment = FormatDataUtil.getFormatData(jsonElement, format.attachId)
 
         val credentialLinkedAttachmentsResult = FormatDataUtil.getCredentialLinkedAttachments(

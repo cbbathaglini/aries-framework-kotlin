@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
@@ -36,6 +37,7 @@ import org.hyperledger.ariesframework.credentials.formats.anoncreds.MessageValid
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateCredentialRequestReturn
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialReturn
 import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
@@ -88,7 +90,10 @@ class LegacyIndyCredentialFormatService(
             throw CredoError("Invalid proposal supplied: ${indyCredentialProposal} in Indy Format Service")
         }
 
-        val jsonElement = Json.encodeToJsonElement(AnonCredsCredentialProposal.serializer(), indyCredentialProposal)
+        val jsonElement = Json.encodeToJsonElement(
+            serializer<AnonCredsCredentialProposal>(),
+            indyCredentialProposal
+        )
         val attachment = FormatDataUtil.getFormatData(jsonElement, format.attachId)
 
         val credentialLinkedAttachmentsResult =  FormatDataUtil.getCredentialLinkedAttachments(

@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.agent.decorators.AttachmentData
@@ -53,6 +54,7 @@ import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
+import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCredentialProposal
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
@@ -220,7 +222,10 @@ class AnoncredsProofFormatService(
 
         val proof = createProof(requestMessage, requestJson, anoncredsSelected, proofFormats)
 
-        val anonCredsProofjsonElement = Json.encodeToJsonElement(AnonCredsProof.serializer(), proof)
+        val anonCredsProofjsonElement = Json.encodeToJsonElement(
+            serializer<AnonCredsProof>(),
+            proof
+        )
 //        val json = Json.encodeToString(anonCredsProofjsonElement)
 //        val base64 = Base64.getEncoder().encodeToString(json.toByteArray())
         val attachment = Attachment(

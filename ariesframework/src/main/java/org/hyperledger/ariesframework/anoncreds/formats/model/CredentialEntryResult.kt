@@ -1,8 +1,10 @@
 package org.hyperledger.ariesframework.anoncreds.formats.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
@@ -11,10 +13,16 @@ data class CredentialEntryResult (
     val credentialEntry: CredentialEntry,
     val credentialId: String
 ){
+//    fun toJson(): String = Json {
+//        prettyPrint = true
+//        encodeDefaults = true
+//    }.encodeToString(CredentialEntryResult.serializer(), this)
+
+    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true
-    }.encodeToString(CredentialEntryResult.serializer(), this)
+    }.encodeToString(serializer<CredentialEntryResult>(), this)
 }
 
 @Serializable
@@ -23,8 +31,9 @@ data class CredentialEntry(
     val timestamp: Long? = null,
     val revocationState: JsonElement? = null
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true
-    }.encodeToString(CredentialEntry.serializer(), this)
+    }.encodeToString(serializer<CredentialEntry>(), this)
 }

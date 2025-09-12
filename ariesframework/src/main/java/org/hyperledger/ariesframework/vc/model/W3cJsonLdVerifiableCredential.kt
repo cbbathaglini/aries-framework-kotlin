@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
@@ -33,7 +34,7 @@ data class W3cJsonLdVerifiableCredential(
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true
-    }.encodeToString(W3cJsonLdVerifiableCredential.serializer(), this)
+    }.encodeToString(serializer<W3cJsonLdVerifiableCredential>(), this)
 
     val encoded: Map<String, Any?>
         get() = mapOf( // simulate JSON for now; use kotlinx.serialization to generate full JSON
@@ -54,8 +55,8 @@ data class W3cJsonLdVerifiableCredential(
         fun fromJson(json: String): W3cJsonLdVerifiableCredential {
             val module = SerializersModule {
                 polymorphic(LinkedDataProofBase::class) {
-                    subclass(LinkedDataProof::class, LinkedDataProof.serializer())
-                    subclass(DataIntegrityProof::class, DataIntegrityProof.serializer())
+                    subclass(LinkedDataProof::class, serializer<LinkedDataProof>())
+                    subclass(DataIntegrityProof::class, serializer<DataIntegrityProof>())
                 }
             }
 
@@ -67,7 +68,7 @@ data class W3cJsonLdVerifiableCredential(
 
             }
 
-            return jsonParser.decodeFromString(W3cJsonLdVerifiableCredential.serializer(), json)
+            return jsonParser.decodeFromString(serializer<W3cJsonLdVerifiableCredential>(), json)
         }
     }
 }

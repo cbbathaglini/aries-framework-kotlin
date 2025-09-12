@@ -1,9 +1,11 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 
 @Serializable
@@ -26,7 +28,11 @@ data class AnonCredsCredentialRequest(
     @SerialName("nonce")
     val nonce: String
 ){
-    fun toJsonString(): String = Json.encodeToString(AnonCredsCredentialRequest.serializer(), this)
+
+    @OptIn(ExperimentalSerializationApi::class)
+    fun toJsonString(): String =
+        Json.encodeToString(serializer<AnonCredsCredentialRequest>(), this)
+
     override fun toString(): String {
         return "AnonCredsCredentialRequest(proverDid=$proverDid, entropy=$entropy, credDefId='$credDefId', blindedMs=$blindedMs, blindedMsCorrectnessProof=$blindedMsCorrectnessProof, nonce='$nonce')"
     }

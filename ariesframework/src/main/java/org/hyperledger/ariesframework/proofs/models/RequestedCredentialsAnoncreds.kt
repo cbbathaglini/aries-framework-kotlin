@@ -15,6 +15,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
@@ -47,7 +48,7 @@ data class RequestedCredentialsAnoncreds(
             }
 
             val obj = JsonObject(root)
-            return json.decodeFromJsonElement(RequestedCredentialsAnoncreds.serializer(), obj)
+            return json.decodeFromJsonElement<RequestedCredentialsAnoncreds>(obj)
         }
     }
 
@@ -66,7 +67,7 @@ data class RequestedCredentialsAnoncreds(
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true
-    }.encodeToString(RequestedCredentialsAnoncreds.serializer(), this)
+    }.encodeToString(serializer<RequestedCredentialsAnoncreds>(), this)
 
     fun toMap(): Map<String, JsonElement> {
         return mapOf(

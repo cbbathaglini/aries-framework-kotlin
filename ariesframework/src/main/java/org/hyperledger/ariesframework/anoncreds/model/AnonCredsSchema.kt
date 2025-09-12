@@ -1,7 +1,9 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 @Serializable
 data class AnonCredsSchema(
@@ -10,8 +12,12 @@ data class AnonCredsSchema(
     val version: String,
     val attrNames: List<String>
 ){
-    fun toJson(): String = Json {
-        prettyPrint = true
-        encodeDefaults = true
-    }.encodeToString(AnonCredsSchema.serializer(), this)
+    @OptIn(ExperimentalSerializationApi::class)
+    fun toJson(): String {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        return json.encodeToString(serializer<AnonCredsSchema>(), this)
+    }
 }

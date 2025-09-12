@@ -8,6 +8,7 @@ import anoncreds_uniffi.CredentialRevocationConfig
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.RevocationRegistryDefinitionPrivate
 import anoncreds_uniffi.RevocationStatusList
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import org.hyperledger.ariesframework.agent.Agent
@@ -18,6 +19,7 @@ import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialRet
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredential
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
@@ -58,7 +60,9 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
                 keyProof = keyCorrectnessProofRecord.value
             )
 
-            val json = Json.encodeToString(CredentialOfferJson.serializer(), credentialOfferJson)
+        @OptIn(ExperimentalSerializationApi::class)
+        val json = Json.encodeToString(serializer<CredentialOfferJson>(), credentialOfferJson)
+
             credentialOffer = CredentialOffer(json)
             return credentialOffer.toJson() as AnonCredsCredentialOffer
 
@@ -125,7 +129,7 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
                 revDefPrivateRecord.state = AnonCredsRevocationRegistryState.Full
             }
 
-            val revocationRegistryDefinitionJson = Json.encodeToString(AnonCredsRevocationRegistryDefinition.serializer(),  revocationRegistryDefinitionRecord.revocationRegistryDefinition)
+            val revocationRegistryDefinitionJson = Json.encodeToString(serializer<AnonCredsRevocationRegistryDefinition>(),  revocationRegistryDefinitionRecord.revocationRegistryDefinition)
             val revocationRegistryDefinitionAnonCreds = RevocationRegistryDefinition(revocationRegistryDefinitionJson)
 
             val revocationRegistryDefinitionPrivateJson = revDefPrivateRecord.value as Map<String, String>
@@ -133,7 +137,7 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
             val revocationRegistryDefinitionPrivate = RevocationRegistryDefinitionPrivate(revocationRegistryDefinitionPrivateAnonCreds)
 
 
-            val revocationStatusListAnoncredsJson = Json.encodeToString(AnonCredsRevocationStatusList.serializer(), revocationStatusList)
+            val revocationStatusListAnoncredsJson = Json.encodeToString(serializer<AnonCredsRevocationStatusList>(), revocationStatusList)
             revocationStatusListAnoncredsUniffi = RevocationStatusList(revocationStatusListAnoncredsJson)
 
             revocationConfiguration = CredentialRevocationConfig(
@@ -144,13 +148,13 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
             )
         }
 
-        val credentialDefinitionJson = Json.encodeToString(AnonCredsCredentialDefinition.serializer(), credentialDefinition)
+        val credentialDefinitionJson = Json.encodeToString(serializer<AnonCredsCredentialDefinition>(), credentialDefinition)
         val credentialDefinitionUniffi = CredentialDefinition(credentialDefinitionJson)
 
         val credentialOfferJson = credentialOffer.toJsonString()  //Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
         val credentialOfferUniffi = CredentialOffer(credentialOfferJson)
 
-        val credentialRequestJson = Json.encodeToString(AnonCredsCredentialRequest.serializer(), credentialRequest)
+        val credentialRequestJson = Json.encodeToString(serializer<AnonCredsCredentialRequest>(), credentialRequest)
         val credentialRequestUniffi = CredentialRequest(credentialRequestJson)
 
         val json = buildJsonObject {

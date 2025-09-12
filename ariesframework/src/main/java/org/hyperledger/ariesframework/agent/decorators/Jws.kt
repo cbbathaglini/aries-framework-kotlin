@@ -1,9 +1,12 @@
 package org.hyperledger.ariesframework.agent.decorators
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.serializer
 
 @Serializable
 class JwsGeneralFormat(
@@ -18,9 +21,11 @@ class JwsFlattenedFormat(val signatures: ArrayList<JwsGeneralFormat>) : Jws()
 @Serializable(with = JwsSerializer::class)
 abstract class Jws
 
+@OptIn(ExperimentalSerializationApi::class)
 object JwsSerializer : JsonContentPolymorphicSerializer<Jws>(Jws::class) {
-    override fun selectDeserializer(element: JsonElement) = when (element.jsonObject.size) {
-        1 -> JwsFlattenedFormat.serializer()
-        else -> JwsGeneralFormat.serializer()
-    }
+    override fun selectDeserializer(element: JsonElement): KSerializer<out Jws> =
+        when (element.jsonObject.size) {
+            1 -> serializer<JwsFlattenedFormat>()  // em vez de JwsFlattenedFormat.serializer()
+            else -> serializer<JwsGeneralFormat>() // em vez de JwsGeneralFormat.serializer()
+        }
 }
