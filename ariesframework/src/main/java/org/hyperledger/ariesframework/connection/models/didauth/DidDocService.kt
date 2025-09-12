@@ -26,6 +26,6 @@ val didDocServiceModule = SerializersModule {
         subclass(DidCommV2Service::class)
         subclass(IndyAgentService::class)
         subclass(DidDocumentService::class)
-        defaultDeserializer { serializer<DidDocumentService>() }
+        defaultDeserializer { DidDocumentService.serializer() }
     }
 }
