@@ -37,7 +37,9 @@ import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusListFull
 import uniffi.indy_besu_vdr.resolveSchema
 import uniffi.indy_besu_vdr.revocationStatusListFromString
 import java.io.File
+import java.io.FileInputStream
 import java.net.URL
+import java.util.Properties
 
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
@@ -49,14 +51,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-    private val path = "/serproabi/";
-
-    //cpqd
-//    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1";
-//    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09";
-//    private val credentialDefinitionRegistryConfigAddress =
-//        "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0";
-//    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5";
+    private val path = "/abi/";
 
     //serpro
     private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888";

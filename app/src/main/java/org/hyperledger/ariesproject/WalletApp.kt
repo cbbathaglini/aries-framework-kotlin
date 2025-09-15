@@ -48,15 +48,14 @@ class WalletApp : Application() {
         // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
         val agentLabel = "SimpleApp-1X$androidId"
 
-//        val besuLedgerContig = BesuLedgerConfig(
-//            chainId= 381660001u,
-//            nodeAddress= "https://staging-id.cpqd.com.br/api/vdr-rpc-proxy"
-//        )
+        val chainId= properties.getProperty("besu_chainId").toULong()
+        val nodeAddress= properties.getProperty("besu_nodeAddress")
 
         val besuLedgerContig = BesuLedgerConfig(
-            chainId= 1337u,
-            nodeAddress =  "http://10.139.76.166:8000" //"http://161.148.156.253:8545" // "http://10.139.76.166:8000", //""http://idd.serpro.gov.br/besu",
+            chainId= chainId,
+            nodeAddress = nodeAddress
         )
+
 
         val config = AgentConfig(
             walletKey = key,
