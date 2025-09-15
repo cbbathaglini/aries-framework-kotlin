@@ -64,7 +64,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 context: Context,
                 address: String,
                 specPath: String,
-            ): uniffi.indy_besu_vdr.ContractConfig {
+            ): ContractConfig {
                 // Usando o contexto para acessar o arquivo dentro da pasta assets
                 val inputStream =
                     context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
@@ -74,7 +74,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                     .substringBeforeLast(".")
                 val abi = jsonObject.getJSONArray("abi").toString()
 
-                return uniffi.indy_besu_vdr.ContractConfig(
+                return ContractConfig(
                     address = address,
                     specPath = null,
                     spec = ContractSpec(name, abi),

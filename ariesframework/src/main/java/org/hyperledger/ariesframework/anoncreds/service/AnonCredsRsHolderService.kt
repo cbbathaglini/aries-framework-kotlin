@@ -232,7 +232,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         }
 
         suspend fun credentialEntryFromAttribute(
-            attribute: Any, /* pode ser AnonCredsRequestedAttributeMatch ou AnonCredsRequestedPredicateMatch */
+            attribute: Any,
         ): CredentialEntryResult {
             val credentialId = when (attribute) {
                 is AnonCredsRequestedAttributeMatch -> attribute.credentialId
