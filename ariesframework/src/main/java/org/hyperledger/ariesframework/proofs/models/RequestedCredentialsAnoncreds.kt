@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.proofs.models
 
-
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,14 +8,9 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
 data class RequestedCredentialsAnoncreds(
@@ -36,7 +30,7 @@ data class RequestedCredentialsAnoncreds(
     companion object {
 
         fun mapToRequestedCredentialsWithKotlinx(
-            root: Map<String, JsonElement>?
+            root: Map<String, JsonElement>?,
         ): RequestedCredentialsAnoncreds {
             if (root == null) return RequestedCredentialsAnoncreds()
 
@@ -63,7 +57,6 @@ data class RequestedCredentialsAnoncreds(
         return credIds.toList()
     }
 
-
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true
@@ -80,7 +73,7 @@ data class RequestedCredentialsAnoncreds(
                         put("revoked", v.revoked?.let { JsonPrimitive(it) } ?: JsonNull)
                         put("revealed", JsonPrimitive(v.revealed))
                     }
-                }
+                },
             ),
             "requested_predicates" to JsonObject(
                 requestedPredicates.mapValues { (_, v) ->
@@ -90,14 +83,13 @@ data class RequestedCredentialsAnoncreds(
                         put("credentialInfo", v.credentialInfo?.toJsonElement() ?: JsonNull)
                         put("revoked", v.revoked?.let { JsonPrimitive(it) } ?: JsonNull)
                     }
-                }
+                },
             ),
             "self_attested_attributes" to JsonObject(
                 selfAttestedAttributes.mapValues { (_, v) ->
                     JsonPrimitive(v) // assumindo que é String, se não ajusta
-                }
-            )
+                },
+            ),
         )
     }
-
 }

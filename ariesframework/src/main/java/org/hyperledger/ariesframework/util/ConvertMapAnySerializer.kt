@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
 class ConvertMapAnySerializer {
-    companion object{
+    companion object {
         fun mapAnyToJsonElement(map: Map<String, Any?>): JsonElement {
             return buildJsonObject {
                 for ((key, value) in map) {

@@ -1,27 +1,12 @@
 package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 
-import jnr.ffi.annotations.In
-import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
-import org.hyperledger.ariesframework.anoncreds.GetRevocationRegistryDefinitionReturn
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsResolutionMetadata
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
-import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionReturn
-import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
-import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
-import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
-
-//class InMemoryAnonCredsRegistry(override val methodName: String = "inMemory",
+// class InMemoryAnonCredsRegistry(override val methodName: String = "inMemory",
 //                                override val supportedIdentifier: Regex = Regex(".+"),
 //                                existingSchemas: MutableMap<String, AnonCredsSchema> = mutableMapOf(),
 //                                existingCredentialDefinitions: MutableMap<String, AnonCredsCredentialDefinition> = mutableMapOf(),
 //                                existingRevocationRegistryDefinitions: MutableMap<String, AnonCredsRevocationRegistryDefinition> = mutableMapOf(),
 //                                existingRevocationStatusLists: MutableMap<String, MutableMap<String, AnonCredsRevocationStatusList>> = mutableMapOf()
-//) : AnonCredsRegistry{
+// ) : AnonCredsRegistry{
 //
 //    private val schemas: MutableMap<String, AnonCredsSchema> = existingSchemas
 //    private val credentialDefinitions: MutableMap<String, AnonCredsCredentialDefinition> = existingCredentialDefinitions
@@ -188,4 +173,4 @@ import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 //            revocationStatusListMetadata = emptyMap()
 //        )
 //    }
-//}
+// }

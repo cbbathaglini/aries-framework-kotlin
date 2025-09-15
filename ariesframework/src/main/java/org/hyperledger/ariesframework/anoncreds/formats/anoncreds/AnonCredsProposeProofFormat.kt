@@ -11,5 +11,5 @@ data class AnonCredsProposeProofFormat(
     val attributes: List<AnonCredsPresentationPreviewAttribute>? = null,
     val predicates: List<AnonCredsPresentationPreviewPredicate>? = null,
     @SerialName("nonRevokedInterval")
-    val nonRevokedInterval: AnonCredsNonRevokedInterval? = null
+    val nonRevokedInterval: AnonCredsNonRevokedInterval? = null,
 )

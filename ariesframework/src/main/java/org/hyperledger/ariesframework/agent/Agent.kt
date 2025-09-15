@@ -32,23 +32,23 @@ import org.hyperledger.ariesframework.connection.JwsService
 import org.hyperledger.ariesframework.connection.PeerDIDService
 import org.hyperledger.ariesframework.connection.repository.ConnectionRepository
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRepository
-import org.hyperledger.ariesframework.ledger.ledgerBesu.LedgerBesuService
-import org.hyperledger.ariesframework.ledger.ledgerIndy.LedgerIndyService
 import org.hyperledger.ariesframework.credentials.v1.CredentialService
 import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
 import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
 import org.hyperledger.ariesframework.history.repository.HistoryRepository
+import org.hyperledger.ariesframework.ledger.ledgerBesu.LedgerBesuService
+import org.hyperledger.ariesframework.ledger.ledgerIndy.LedgerIndyService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
 import org.hyperledger.ariesframework.problemreports.ProblemReportsCommand
-import org.hyperledger.ariesframework.proofs.v1.ProofCommand
-import org.hyperledger.ariesframework.proofs.v1.ProofService
-import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
+import org.hyperledger.ariesframework.proofs.v1.ProofCommand
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.hyperledger.ariesframework.proofs.v2.ProofCommandV2
+import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
 import org.hyperledger.ariesframework.proofs.verifier.AnonCredsRsVerifierService
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
@@ -112,8 +112,8 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
         agent = this,
         options = AnonCredsModuleConfigOptions(
-            registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry())
-        )
+            registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry()),
+        ),
     )
 
 //    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
@@ -123,7 +123,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig, context)
     val w3cJwtCredentialService = W3cJwtCredentialService(this)
     val w3cCredentialRepository = W3cCredentialRepository(this)
-    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository,w3cJsonLdCredentialService, w3cJwtCredentialService)
+    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository, w3cJsonLdCredentialService, w3cJwtCredentialService)
 
     val proofs = ProofCommand(this, dispatcher)
     val proofCommandV2 = ProofCommandV2(this, dispatcher)

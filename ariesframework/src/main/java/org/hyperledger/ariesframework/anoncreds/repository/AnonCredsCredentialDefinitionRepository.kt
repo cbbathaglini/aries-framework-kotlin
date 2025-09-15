@@ -11,5 +11,4 @@ class AnonCredsCredentialDefinitionRepository(agent: Agent) : Repository<AnonCre
     suspend fun getByCredentialDefinitionId(credentialDefinitionId: String): AnonCredsCredentialDefinitionRecord {
         return getSingleByQuery("{\"credentialDefinitionId\": \"$credentialDefinitionId\"}")
     }
-
 }

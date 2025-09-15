@@ -4,7 +4,7 @@ import org.hyperledger.ariesframework.util.Base58
 import java.util.UUID
 
 class ProverDid {
-    companion object{
+    companion object {
         fun generateLegacyProverDidLikeString(): String {
             val uuidBytes = UUID.randomUUID().toString().toByteArray()
             val sliced = uuidBytes.copyOfRange(0, 16)

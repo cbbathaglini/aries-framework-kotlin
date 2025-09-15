@@ -9,7 +9,7 @@ import kotlinx.serialization.serializer
 data class AnonCredsCredentialRequestMetadata(
     val link_secret_blinding_data: AnonCredsLinkSecretBlindingData,
     val link_secret_name: String,
-    val nonce: String
+    val nonce: String,
 ) {
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -29,6 +29,4 @@ data class AnonCredsCredentialRequestMetadata(
         fun fromJsonString(json: String): AnonCredsCredentialRequestMetadata =
             Json.decodeFromString(json)
     }
-
-
 }

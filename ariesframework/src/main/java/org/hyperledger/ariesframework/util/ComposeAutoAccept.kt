@@ -14,7 +14,7 @@ import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
  */
 fun composeAutoAccept(
     recordConfig: AutoAcceptCredential?,
-    agentConfig: AutoAcceptCredential?
+    agentConfig: AutoAcceptCredential?,
 ): AutoAcceptCredential {
     return recordConfig ?: agentConfig ?: AutoAcceptCredential.Never
 }

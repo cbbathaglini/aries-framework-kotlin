@@ -14,11 +14,11 @@ data class VerifyProofOptions(
     val proof: AnonCredsProof,
     val schemas: AnonCredsSchemas,
     val credentialDefinitions: AnonCredsCredentialDefinitions,
-    val revocationRegistries: Map<String, RevocationRegistryEntry>
+    val revocationRegistries: Map<String, RevocationRegistryEntry>,
 )
 
 @Serializable
 data class RevocationRegistryEntry(
     val definition: AnonCredsRevocationRegistryDefinition,
-    val revocationStatusLists: MutableMap<Long, AnonCredsRevocationStatusList>? = mutableMapOf<Long, AnonCredsRevocationStatusList>()
+    val revocationStatusLists: MutableMap<Long, AnonCredsRevocationStatusList>? = mutableMapOf<Long, AnonCredsRevocationStatusList>(),
 )

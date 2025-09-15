@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.vc.model
 
-import W3cCredentialSubject
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -14,14 +13,12 @@ data class W3cUniffipattern(
     val type: List<String>,
     val issuer: JsonElement,
     val issuanceDate: String,
-    val credentialSubject:  Map<String, String>,
+    val credentialSubject: Map<String, String>,
     val expirationDate: String? = null,
     val credentialSchema: List<W3cCredentialSchema>? = null,
     val credentialStatus: W3cCredentialStatus? = null,
 
     @SerialName("proof")
-    val proofs: List<LinkedDataProofBase> // polymorphic base type
+    val proofs: List<LinkedDataProofBase>, // polymorphic base type
 
-)  {
-
-}
+)

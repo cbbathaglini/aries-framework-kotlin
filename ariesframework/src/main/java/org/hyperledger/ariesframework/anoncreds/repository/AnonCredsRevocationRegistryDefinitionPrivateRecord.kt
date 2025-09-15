@@ -16,8 +16,8 @@ class AnonCredsRevocationRegistryDefinitionPrivateRecord(
     val revocationRegistryDefinitionId: String,
     val credentialDefinitionId: String,
     val value: Map<String, @Contextual Any>,
-    var state: AnonCredsRevocationRegistryState
-) : BaseRecord(){
+    var state: AnonCredsRevocationRegistryState,
+) : BaseRecord() {
 
     companion object {
         const val type = "AnonCredsRevocationRegistryDefinitionPrivateRecord"
@@ -28,7 +28,7 @@ class AnonCredsRevocationRegistryDefinitionPrivateRecord(
         credentialDefinitionId: String,
         revocationRegistryDefinitionId: String,
         state: AnonCredsRevocationRegistryState,
-        value: Map<String, Any>
+        value: Map<String, Any>,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
@@ -37,7 +37,7 @@ class AnonCredsRevocationRegistryDefinitionPrivateRecord(
         revocationRegistryDefinitionId = revocationRegistryDefinitionId,
         credentialDefinitionId = credentialDefinitionId,
         value = value,
-        state = state
+        state = state,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap

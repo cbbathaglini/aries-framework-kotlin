@@ -1,15 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.formats
 
-import android.util.Log
-import anoncreds_uniffi.Credential
 import anoncreds_uniffi.CredentialDefinition
-import anoncreds_uniffi.Presentation
-import anoncreds_uniffi.PresentationRequest
-import anoncreds_uniffi.Prover
-import anoncreds_uniffi.RequestedCredential
 import anoncreds_uniffi.RevocationRegistryDefinition
-import anoncreds_uniffi.Schema
-import anoncreds_uniffi.Verifier
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -17,7 +9,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.decorators.Attachment
@@ -37,13 +28,11 @@ import org.hyperledger.ariesframework.anoncreds.formats.utils.GetCredentialsForP
 import org.hyperledger.ariesframework.anoncreds.formats.utils.RevocationRegistries
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinitions
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistries
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryEntry
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
@@ -54,7 +43,6 @@ import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
-import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCredentialProposal
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
@@ -70,12 +58,11 @@ import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
 import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.RevocationStatusList
 import java.util.UUID
 
 class AnoncredsProofFormatService(
     override val formatKey: String = "anoncreds",
-    val agent: Agent
+    val agent: Agent,
 ) : ProofFormatService<AnoncredsProofFormat> {
 
     private val logger = LoggerFactory.getLogger(AnoncredsCredentialFormatService::class.java)
@@ -89,11 +76,11 @@ class AnoncredsProofFormatService(
     override suspend fun createProposal(
         profRecord: ProofExchangeRecord,
         attachmentId: String?,
-        proofFormats: Map<String, JsonElement>
+        proofFormats: Map<String, JsonElement>,
     ): ProofFormatCreateReturn {
         val format = ProofFormatSpec(
             attachmentId = attachmentId!!,
-            format = ANONCREDS_PRESENTATION_PROPOSAL
+            format = ANONCREDS_PRESENTATION_PROPOSAL,
         )
 
         val anoncredsFormat =
@@ -102,7 +89,7 @@ class AnoncredsProofFormatService(
         val proofRequest = createRequestFromPreview(
             name = anoncredsFormat.name ?: "Proof request",
             version = anoncredsFormat.version ?: "1.0",
-            nonce = agent.anonCredsHolderService.generateNonce(), //revisar implementacao
+            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
             attributes = anoncredsFormat.attributes ?: emptyList(),
             predicates = anoncredsFormat.predicates ?: emptyList(),
             nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
@@ -112,7 +99,7 @@ class AnoncredsProofFormatService(
 
         return ProofFormatCreateReturn(
             format = format,
-            attachment = attachment
+            attachment = attachment,
         )
     }
 
@@ -127,46 +114,44 @@ class AnoncredsProofFormatService(
         proofRecord: ProofExchangeRecord,
         attachmentId: String?,
         proposalAttachment: Attachment,
-        proofFormats: Map<String, JsonElement>?
+        proofFormats: Map<String, JsonElement>?,
     ): ProofFormatCreateReturn {
         val format = ProofFormatSpec(
             attachmentId = attachmentId!!,
-            format = ANONCREDS_PRESENTATION_REQUEST
+            format = ANONCREDS_PRESENTATION_REQUEST,
         )
         val proposalJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
 
         val request = proposalJson.copy(
-            nonce = agent.anonCredsHolderService.generateNonce()
+            nonce = agent.anonCredsHolderService.generateNonce(),
         )
 
         val attachment = this.getFormatData(request, format.attachmentId!!)
 
         return ProofFormatCreateReturn(
             format = format,
-            attachment = attachment
+            attachment = attachment,
         )
-
     }
 
     override suspend fun createRequest(
         proofRecord: ProofExchangeRecord,
         attachmentId: String?,
-        proofFormats: Map<String, JsonElement>?
+        proofFormats: Map<String, JsonElement>?,
     ): ProofFormatCreateReturn {
-
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION_REQUEST,
-            attachmentId = attachmentId!!
+            attachmentId = attachmentId!!,
         )
 
         val anoncredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
 
         val request: AnonCredsProofRequest = createRequestFromPreview(
-            name = anoncredsFormat.name ?: "Proof request", //else eu coloquei
-            version = anoncredsFormat.version ?: "1.0", //else eu coloquei
-            nonce = agent.anonCredsHolderService.generateNonce(), //revisar implementacao
+            name = anoncredsFormat.name ?: "Proof request", // else eu coloquei
+            version = anoncredsFormat.version ?: "1.0", // else eu coloquei
+            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
             attributes = anoncredsFormat.attributes ?: emptyList(),
             predicates = anoncredsFormat.predicates ?: emptyList(),
             nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
@@ -179,7 +164,7 @@ class AnoncredsProofFormatService(
 
         return ProofFormatCreateReturn(
             attachment = attachment,
-            format = format
+            format = format,
         )
     }
 
@@ -190,24 +175,22 @@ class AnoncredsProofFormatService(
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(requestJson)
     }
 
-
     override suspend fun acceptRequest(
         requestMessage: RequestPresentationMessageV2,
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>?,
         attachmentId: String,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment?
+        proposalAttachment: Attachment?,
     ): ProofFormatCreateReturn {
-
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
         val anoncredsSelected: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
             proofRequest = requestJson,
             options = AnonCredsGetCredentialsForProofRequestOptions(
-                filterByNonRevocationRequirements = true
-            )
+                filterByNonRevocationRequirements = true,
+            ),
         )
 
         val anoncredsFormat = AnonCredsSelectedCredentials.convert(proofFormats)
@@ -216,15 +199,14 @@ class AnoncredsProofFormatService(
 
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION,
-            attachmentId = attachmentId
+            attachmentId = attachmentId,
         )
-
 
         val proof = createProof(requestMessage, requestJson, anoncredsSelected, proofFormats)
 
         val anonCredsProofjsonElement = Json.encodeToJsonElement(
             serializer<AnonCredsProof>(),
-            proof
+            proof,
         )
 //        val json = Json.encodeToString(anonCredsProofjsonElement)
 //        val base64 = Base64.getEncoder().encodeToString(json.toByteArray())
@@ -232,23 +214,21 @@ class AnoncredsProofFormatService(
             id = attachmentId,
             mimetype = "application/json",
             data = AttachmentData(
-                base64 = JsonEncoder.toBase64(anonCredsProofjsonElement)
-            )
+                base64 = JsonEncoder.toBase64(anonCredsProofjsonElement),
+            ),
         )
-
 
         return ProofFormatCreateReturn(
             attachment = attachment,
-            format = format
+            format = format,
         )
     }
 
     override suspend fun processPresentation(
         requestAttachment: Attachment,
         attachment: Attachment,
-        proofRecord: ProofExchangeRecord
+        proofRecord: ProofExchangeRecord,
     ): Boolean {
-
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
         val anonCredsProof: AnonCredsProof =
@@ -258,8 +238,8 @@ class AnoncredsProofFormatService(
             if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
                 throw CredoError(
                     "The encoded value for '$referent' is invalid. " +
-                            "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
-                            "Actual '${attribute.encoded}'"
+                        "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
+                        "Actual '${attribute.encoded}'",
                 )
             }
         }
@@ -269,8 +249,8 @@ class AnoncredsProofFormatService(
                 if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
                     throw CredoError(
                         "The encoded value for '$attributeName' is invalid. " +
-                                "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
-                                "Actual '${attribute.encoded}'"
+                            "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
+                            "Actual '${attribute.encoded}'",
                     )
                 }
             }
@@ -283,7 +263,7 @@ class AnoncredsProofFormatService(
         val credentialDefinitionsMap: Map<String, AnonCredsCredentialDefinition> =
             ProofUtils.getCredentialDefinitions(
                 agent,
-                anonCredsProof.identifiers.map { it.credDefId }.toSet()
+                anonCredsProof.identifiers.map { it.credDefId }.toSet(),
             )
 
         val credentialDefinitionUniffiMap: Map<String, CredentialDefinition> =
@@ -292,7 +272,7 @@ class AnoncredsProofFormatService(
             RevocationRegistries(agent).getRevocationRegistriesForProof(anonCredsProof)
 
         val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
-            credentialDefinitions = credentialDefinitionsMap
+            credentialDefinitions = credentialDefinitionsMap,
         )
         proofRecord.isVerified = agent.anoncredsVerifierService.verifyProof(
             options = VerifyProofOptions(
@@ -300,24 +280,23 @@ class AnoncredsProofFormatService(
                 proof = anonCredsProof,
                 schemas = schemas,
                 credentialDefinitions = anonCredsCredentialDefinitions,
-                revocationRegistries = revocationRegistries
-            )
+                revocationRegistries = revocationRegistries,
+            ),
         )
 
-        //proofRecord.isVerified = verifyProof(requestAttachment.getDataAsJson(), anoncredsProofJson)
+        // proofRecord.isVerified = verifyProof(requestAttachment.getDataAsJson(), anoncredsProofJson)
 
         return false
-
     }
 
     fun convert(
-        input: Map<String, AnonCredsCredentialDefinition>
+        input: Map<String, AnonCredsCredentialDefinition>,
     ): Map<String, CredentialDefinition> {
         return input.mapValues { (credDefId, def) ->
             val credDefMap = mapOf(
                 "credDefId" to credDefId,
                 "issuerId" to def.issuerId,
-                "schemaId" to def.schemaId
+                "schemaId" to def.schemaId,
             )
 
             CredentialDefinition(credDefMap.toJsonString())
@@ -380,12 +359,12 @@ class AnoncredsProofFormatService(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>?,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment?
+        proposalAttachment: Attachment?,
     ): AnonCredsCredentialsForProofRequest {
         val proofRequestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
-        //TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
+        // TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
         // um filterByNonRevocationRequirements
         val anoncredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsSelectedCredentials>(proofFormats)
@@ -395,8 +374,8 @@ class AnoncredsProofFormatService(
                 agent = agent,
                 proofRequest = proofRequestJson,
                 options = AnonCredsGetCredentialsForProofRequestOptions(
-                    filterByNonRevocationRequirements = true
-                )
+                    filterByNonRevocationRequirements = true,
+                ),
             )
 
         return anonCredsCredentialsForProofRequest
@@ -406,12 +385,12 @@ class AnoncredsProofFormatService(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>?,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment?
+        proposalAttachment: Attachment?,
     ): AnonCredsSelectedCredentials {
         val proofRequestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
-        //TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
+        // TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
         // um filterByNonRevocationRequirements
         val anoncredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsSelectedCredentials>(proofFormats)
@@ -419,8 +398,8 @@ class AnoncredsProofFormatService(
         val selectedCredentials: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
             proofRequest = proofRequestJson,
             options = AnonCredsGetCredentialsForProofRequestOptions(
-                filterByNonRevocationRequirements = true
-            )
+                filterByNonRevocationRequirements = true,
+            ),
         )
 
         return selectedCredentials
@@ -429,7 +408,7 @@ class AnoncredsProofFormatService(
     override suspend fun shouldAutoRespondToProposal(
         proofRecord: ProofExchangeRecord,
         proposalAttachment: Attachment,
-        requestAttachment: Attachment
+        requestAttachment: Attachment,
     ): Boolean {
         val proposalJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
@@ -439,15 +418,14 @@ class AnoncredsProofFormatService(
         val areRequestsEquals =
             RequestsEquals.areAnonCredsProofRequestsEqual(proposalJson, requestJson)
 
-        logger.debug("AnonCreds request and proposal are are equal: ${areRequestsEquals} > proposal: ${proposalJson} || request: ${requestJson}")
+        logger.debug("AnonCreds request and proposal are are equal: $areRequestsEquals > proposal: $proposalJson || request: $requestJson")
         return areRequestsEquals
-
     }
 
     override suspend fun shouldAutoRespondToRequest(
         proofRecord: ProofExchangeRecord,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val proposalJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
@@ -461,7 +439,7 @@ class AnoncredsProofFormatService(
         proofRecord: ProofExchangeRecord,
         proposalAttachment: Attachment?,
         requestAttachment: Attachment,
-        presentationAttachment: Attachment
+        presentationAttachment: Attachment,
     ): Boolean {
         return true
     }
@@ -470,7 +448,7 @@ class AnoncredsProofFormatService(
         val supportedFormats = listOf(
             ANONCREDS_PRESENTATION_PROPOSAL,
             ANONCREDS_PRESENTATION_REQUEST,
-            ANONCREDS_PRESENTATION
+            ANONCREDS_PRESENTATION,
         )
         return formatIdentifier in supportedFormats
     }
@@ -481,9 +459,8 @@ class AnoncredsProofFormatService(
         nonce: String,
         attributes: List<AnonCredsPresentationPreviewAttribute> = emptyList(),
         predicates: List<AnonCredsPresentationPreviewPredicate> = emptyList(),
-        nonRevokedInterval: AnonCredsNonRevokedInterval? = null
+        nonRevokedInterval: AnonCredsNonRevokedInterval? = null,
     ): AnonCredsProofRequest {
-
         // Agrupa atributos por referent (gerando um se faltar)
         val attributesByReferent =
             mutableMapOf<String, MutableList<AnonCredsPresentationPreviewAttribute>>()
@@ -503,10 +480,10 @@ class AnoncredsProofFormatService(
                 names = attributeNames,
                 restrictions = listOf(
                     AnonCredsProofRequestRestriction(
-                        credDefId = props.first().credentialDefinitionId
-                    )
+                        credDefId = props.first().credentialDefinitionId,
+                    ),
                 ),
-                nonRevoked = null
+                nonRevoked = null,
             )
         }
 
@@ -519,10 +496,10 @@ class AnoncredsProofFormatService(
                 pValue = pred.threshold, // ajuste para .toLong() se seu tipo for Long
                 restrictions = listOf(
                     AnonCredsProofRequestRestriction(
-                        credDefId = pred.credentialDefinitionId
-                    )
+                        credDefId = pred.credentialDefinitionId,
+                    ),
                 ),
-                nonRevoked = null
+                nonRevoked = null,
             )
         }
 
@@ -533,7 +510,7 @@ class AnoncredsProofFormatService(
             nonce = nonce,
             requestedAttributes = requestedAttributes,
             requestedPredicates = requestedPredicates,
-            nonRevoked = nonRevokedInterval
+            nonRevoked = nonRevokedInterval,
         )
     }
 
@@ -542,20 +519,20 @@ class AnoncredsProofFormatService(
             id = id,
             mimetype = "application/json",
             data = AttachmentData(
-                base64 = JsonEncoder.toBase64(data)
-            )
+                base64 = JsonEncoder.toBase64(data),
+            ),
         )
     }
 
     private suspend fun _selectCredentialsForRequest(
         proofRequest: AnonCredsProofRequest,
-        options: AnonCredsGetCredentialsForProofRequestOptions
+        options: AnonCredsGetCredentialsForProofRequestOptions,
     ): AnonCredsSelectedCredentials {
         val credentialsForRequest =
             GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
                 agent = agent,
                 proofRequest = proofRequest,
-                options = options
+                options = options,
             )
 
         val selectedAttributes = mutableMapOf<String, AnonCredsRequestedAttributeMatch>()
@@ -578,18 +555,16 @@ class AnoncredsProofFormatService(
         return AnonCredsSelectedCredentials(
             attributes = selectedAttributes,
             predicates = selectedPredicates,
-            selfAttestedAttributes = emptyMap()
+            selfAttestedAttributes = emptyMap(),
         )
     }
-
 
     suspend fun createProof(
         requestMessage: RequestPresentationMessageV2,
         proofRequest: AnonCredsProofRequest,
         selectedCredentials: AnonCredsSelectedCredentials,
-        proofFormats: Map<String, JsonElement>?
+        proofFormats: Map<String, JsonElement>?,
     ): AnonCredsProof = coroutineScope {
-
         // attributes + predicates -> lista única
         val selectedEntries = buildList {
             addAll(selectedCredentials.attributes.values)
@@ -606,7 +581,7 @@ class AnoncredsProofFormatService(
                 agent.anonCredsHolderService.getCredential(
                     credentialId = id,
                     useUnqualifiedIdentifiersIfPresent =
-                        ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
+                    ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest),
                 )
             }
         }.awaitAll()
@@ -625,7 +600,7 @@ class AnoncredsProofFormatService(
         val revocationRegistriesForRequestResult: RevocationRegistriesForRequestResult =
             RevocationRegistries(agent).getRevocationRegistriesForRequest(
                 proofRequest,
-                selectedCredentials
+                selectedCredentials,
             )
 
         val updatedSelectedCredentials =
@@ -634,7 +609,6 @@ class AnoncredsProofFormatService(
 
         val anonCredsRevocationRegistries: MutableMap<String, AnonCredsRevocationRegistryEntry> =
             mutableMapOf()
-
 
         revocationRegistries.mapValues { (key, value) ->
 
@@ -646,7 +620,7 @@ class AnoncredsProofFormatService(
                 revocDefType = value.definition.revocDefType,
                 credDefId = value.definition.credDefId,
                 tag = value.definition.tag,
-                value = revRegValue
+                value = revRegValue,
             )
 
             val revocationStatusListsAnoncreds: MutableMap<Long, AnonCredsRevocationStatusList> =
@@ -661,19 +635,18 @@ class AnoncredsProofFormatService(
                     tailsFilePath = agent.ledgerService.getTailsPath(),
                     tailsHash = value.tailsHash,
                     definition = anonCredsRevocationRegistryDefinition,
-                    revocationStatusLists = revocationStatusListsAnoncreds
-                )
+                    revocationStatusLists = revocationStatusListsAnoncreds,
+                ),
             )
         }
 
         val anonCredsSchema = AnonCredsSchemas(
-            schemas = schemas
+            schemas = schemas,
         )
 
         val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
-            credentialDefinitions = credentialDefinitions
+            credentialDefinitions = credentialDefinitions,
         )
-
 
         // Criar a prova
         agent.anonCredsHolderService.createProof(
@@ -684,11 +657,10 @@ class AnoncredsProofFormatService(
                 schemas = anonCredsSchema,
                 credentialDefinitions = anonCredsCredentialDefinitions,
                 revocationRegistries = anonCredsRevocationRegistries,
-                proofFormats = proofFormats
-            )
+                proofFormats = proofFormats,
+            ),
         )
     }
-
 
 //    private suspend fun getCredentialDefinitions(
 //        credentialDefinitionIds: Set<String>
@@ -706,5 +678,4 @@ class AnoncredsProofFormatService(
     private fun checkValidCredentialValueEncoding(raw: Any, encoded: String): Boolean {
         return encoded === AnonCredsEncoder.encodeCredentialValue(raw)
     }
-
 }

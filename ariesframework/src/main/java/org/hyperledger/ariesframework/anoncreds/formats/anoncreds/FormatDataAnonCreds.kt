@@ -9,5 +9,5 @@ data class FormatDataAnonCreds(
     override val proposal: AnonCredsCredentialProposalFormat,
     override val offer: AnonCredsCredentialOffer,
     override val request: AnonCredsCredentialRequest,
-    override val credential: AnonCredsCredential
+    override val credential: AnonCredsCredential,
 ) : FormatData(proposal, offer, request, credential)

@@ -11,13 +11,12 @@ import kotlinx.serialization.serializer
 @Serializable(with = AuthenticationSerializer::class)
 abstract class Authentication
 
-//object AuthenticationSerializer : JsonContentPolymorphicSerializer<Authentication>(Authentication::class) {
+// object AuthenticationSerializer : JsonContentPolymorphicSerializer<Authentication>(Authentication::class) {
 //    override fun selectDeserializer(element: JsonElement) = when (element.jsonObject.size) {
 //        2 -> ReferencedAuthentication.serializer()
 //        else -> EmbeddedAuthentication.serializer()
 //    }
-//}
-
+// }
 
 @OptIn(ExperimentalSerializationApi::class)
 object AuthenticationSerializer :
@@ -25,7 +24,7 @@ object AuthenticationSerializer :
 
     override fun selectDeserializer(element: JsonElement): KSerializer<out Authentication> =
         when (element.jsonObject.size) {
-            2 -> serializer<ReferencedAuthentication>()   // antes: ReferencedAuthentication.serializer()
-            else -> serializer<EmbeddedAuthentication>()  // antes: EmbeddedAuthentication.serializer()
+            2 -> serializer<ReferencedAuthentication>() // antes: ReferencedAuthentication.serializer()
+            else -> serializer<EmbeddedAuthentication>() // antes: EmbeddedAuthentication.serializer()
         }
 }

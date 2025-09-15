@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnonCredsSelectCredentialsForRequest(
     val input: AnonCredsGetCredentialsForProofRequestOptions,
-    val output: AnonCredsSelectedCredentials
+    val output: AnonCredsSelectedCredentials,
 )

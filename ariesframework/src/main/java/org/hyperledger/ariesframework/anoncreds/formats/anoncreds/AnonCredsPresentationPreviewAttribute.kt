@@ -11,5 +11,5 @@ data class AnonCredsPresentationPreviewAttribute(
     @SerialName("mimeType")
     val mimeType: String? = null,
     val value: String? = null,
-    val referent: String? = null
+    val referent: String? = null,
 )

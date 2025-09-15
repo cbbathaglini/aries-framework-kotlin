@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.anoncreds.repository
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.storage.Repository
 
-class AnonCredsKeyCorrectnessProofRepository (agent: Agent) : Repository<AnonCredsKeyCorrectnessProofRecord>(
+class AnonCredsKeyCorrectnessProofRepository(agent: Agent) : Repository<AnonCredsKeyCorrectnessProofRecord>(
     AnonCredsKeyCorrectnessProofRecord::class,
     agent,
 ) {
@@ -15,5 +15,4 @@ class AnonCredsKeyCorrectnessProofRepository (agent: Agent) : Repository<AnonCre
     suspend fun findByCredentialDefinitionId(credentialDefinitionId: String): AnonCredsKeyCorrectnessProofRecord? {
         return findSingleByQuery("{\"credentialDefinitionId\": \"$credentialDefinitionId\"}")
     }
-
 }

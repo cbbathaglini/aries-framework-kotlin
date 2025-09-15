@@ -23,5 +23,5 @@ data class LegacyIndyCredentialProposalFormat(
     val attributes: List<CredentialPreviewAttribute>? = null,
 
     @SerialName("linked_attachments")
-    val linkedAttachments: List<LinkedAttachment>? = null
+    val linkedAttachments: List<LinkedAttachment>? = null,
 )

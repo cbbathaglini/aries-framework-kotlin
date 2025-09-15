@@ -5,7 +5,7 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevoked
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 
 @Serializable
-data class CredentialWithRevocationMetadata (
+data class CredentialWithRevocationMetadata(
     var credential: W3cJsonLdVerifiableCredential,
-    var nonRevoked: AnonCredsNonRevokedInterval? = null
+    var nonRevoked: AnonCredsNonRevokedInterval? = null,
 )

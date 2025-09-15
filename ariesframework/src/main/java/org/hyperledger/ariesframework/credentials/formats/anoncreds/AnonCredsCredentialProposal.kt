@@ -27,5 +27,5 @@ data class AnonCredsCredentialProposal(
     val issuerDid: String? = null,
 
     @SerialName("issuer_id")
-    val issuerId: String? = null
+    val issuerId: String? = null,
 )

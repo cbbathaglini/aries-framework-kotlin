@@ -7,5 +7,5 @@ import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 @Serializable
 data class ProofFormatProcessOptions(
     val attachment: Attachment,
-    val proofRecord: ProofExchangeRecord
+    val proofRecord: ProofExchangeRecord,
 )

@@ -13,7 +13,7 @@ object W3cTypeExpander {
 
     data class ContextSpec(
         val contexts: List<Any?>, // Strings (URLs) e/ou Map<String, Any>
-        val additionalTermMap: Map<String, String> = emptyMap()
+        val additionalTermMap: Map<String, String> = emptyMap(),
     )
 
     private val ABSOLUTE_IRI_REGEX =
@@ -27,7 +27,7 @@ object W3cTypeExpander {
         "CredentialSubject" to "https://www.w3.org/2018/credentials#CredentialSubject",
         "issuer" to "https://www.w3.org/2018/credentials#issuer",
         "issuanceDate" to "https://www.w3.org/2018/credentials#issuanceDate",
-        "expirationDate" to "https://www.w3.org/2018/credentials#expirationDate"
+        "expirationDate" to "https://www.w3.org/2018/credentials#expirationDate",
         // add more
     )
 
@@ -53,12 +53,12 @@ object W3cTypeExpander {
     private data class ResolutionMaps(
         val termMap: Map<String, String>,
         val prefixMap: Map<String, String>,
-        val vocab: String?
+        val vocab: String?,
     )
 
     private fun buildResolutionMaps(
         contexts: List<Any?>,
-        additionalTermMap: Map<String, String>
+        additionalTermMap: Map<String, String>,
     ): ResolutionMaps {
         val termMap = mutableMapOf<String, String>()
         val prefixMap = mutableMapOf<String, String>()

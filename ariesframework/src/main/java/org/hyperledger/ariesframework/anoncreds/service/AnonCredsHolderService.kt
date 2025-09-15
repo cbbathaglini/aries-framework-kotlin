@@ -1,8 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.service
 
-import anoncreds_uniffi.CredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentialsForProofRequestOptions
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.CreateCredentialRequestOptions
@@ -19,33 +17,33 @@ interface AnonCredsHolderService {
 
     suspend fun storeCredential(
         options: StoreCredentialOptions,
-        metadata: Map<String, Any>? = null
+        metadata: Map<String, Any>? = null,
     ): String
 
     suspend fun getCredential(
         credentialId: String,
-        useUnqualifiedIdentifiersIfPresent: Boolean? = null
+        useUnqualifiedIdentifiersIfPresent: Boolean? = null,
     ): AnonCredsCredentialInfo
 
     suspend fun createCredentialRequest(
-        options: CreateCredentialRequestOptions
+        options: CreateCredentialRequestOptions,
     ): CreateCredentialRequestReturn
 
     suspend fun deleteCredential(
-        credentialId: String
+        credentialId: String,
     )
 
     suspend fun createLinkSecret(
-        options: CreateLinkSecretOptions? = null
+        options: CreateLinkSecretOptions? = null,
     ): CreateLinkSecretReturn
 
     suspend fun legacyToW3cCredential(
-        options: LegacyToW3cCredentialOptions
+        options: LegacyToW3cCredentialOptions,
     ): W3cJsonLdVerifiableCredential
 
     suspend fun createProof(
-        options: CreateProofOptions
-    ): AnonCredsProof? //remover ?
+        options: CreateProofOptions,
+    ): AnonCredsProof? // remover ?
 
     //
 //    suspend fun getCredentials(
@@ -53,9 +51,8 @@ interface AnonCredsHolderService {
 //    ): List<AnonCredsCredentialInfo>
 
     suspend fun getCredentialsForProofRequest(
-        options: GetCredentialsForProofRequestOptions
+        options: GetCredentialsForProofRequestOptions,
     ): GetCredentialsForProofRequestReturn
-
 
 //    suspend fun createW3cPresentation(
 //        options: CreateW3cPresentationOptions
@@ -65,5 +62,4 @@ interface AnonCredsHolderService {
 //        options: W3cToLegacyCredentialOptions
 //    ): AnonCredsCredential
 //
-
 }

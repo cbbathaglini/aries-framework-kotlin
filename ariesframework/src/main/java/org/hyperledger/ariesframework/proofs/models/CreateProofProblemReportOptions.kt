@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 @Serializable
-data class CreateProofProblemReportOptions (
+data class CreateProofProblemReportOptions(
     val proofRecord: ProofExchangeRecord,
-    val description: String
+    val description: String,
 )

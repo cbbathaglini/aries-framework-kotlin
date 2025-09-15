@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class AnonCredsResolutionMetadata(
     val error: String? = null,
     val message: String? = null,
-    val extensible: Map<String, @Contextual Any> = emptyMap()
+    val extensible: Map<String, @Contextual Any> = emptyMap(),
 )

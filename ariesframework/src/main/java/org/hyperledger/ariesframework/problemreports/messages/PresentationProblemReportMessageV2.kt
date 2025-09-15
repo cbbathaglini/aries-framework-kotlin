@@ -22,7 +22,6 @@ class PresentationProblemReportMessageV2 private constructor() : BaseProblemRepo
         description = descriptionOptions
     }
 
-
     companion object {
         const val type = "https://didcomm.org/present-proof/2.0/problem-report"
     }

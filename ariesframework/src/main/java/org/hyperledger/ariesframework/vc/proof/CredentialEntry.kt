@@ -5,7 +5,7 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class CredentialEntry(
-    val credential: JsonObject, //CredentialOrJson,
+    val credential: JsonObject, // CredentialOrJson,
     val timestamp: Long? = null,
-    val revocationState: JsonObject? = null//CredentialRevocationStateOrJson? = null
+    val revocationState: JsonObject? = null, // CredentialRevocationStateOrJson? = null
 )

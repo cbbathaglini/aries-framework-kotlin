@@ -6,9 +6,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-
 
 object RevocationStatusListSerializer :
     KSerializer<uniffi.indy_besu_vdr.RevocationStatusList> {
@@ -22,16 +20,13 @@ object RevocationStatusListSerializer :
             revRegDefId = value.revRegDefId,
             revocationList = value.revocationList.map { it.toInt() },
             currentAccumulator = value.currentAccumulator,
-            timestamp = value.timestamp.toLong()
+            timestamp = value.timestamp.toLong(),
         )
-        //encoder.encodeSerializableValue(AnonCredsRevocationStatusList.serializer(), dto)
+        // encoder.encodeSerializableValue(AnonCredsRevocationStatusList.serializer(), dto)
         encoder.encodeSerializableValue(serializer<AnonCredsRevocationStatusList>(), dto)
-
     }
 
     override fun deserialize(decoder: Decoder): uniffi.indy_besu_vdr.RevocationStatusList {
         throw NotImplementedError("Only serialization is supported")
     }
 }
-
-

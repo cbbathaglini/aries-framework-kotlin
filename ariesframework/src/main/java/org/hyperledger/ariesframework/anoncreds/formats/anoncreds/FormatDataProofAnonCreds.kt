@@ -8,6 +8,5 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 data class FormatDataProofAnonCreds(
     val proposal: AnonCredsProofRequest,
     val request: AnonCredsProofRequest,
-    val presentation: AnonCredsProof
-) {
-}
+    val presentation: AnonCredsProof,
+)

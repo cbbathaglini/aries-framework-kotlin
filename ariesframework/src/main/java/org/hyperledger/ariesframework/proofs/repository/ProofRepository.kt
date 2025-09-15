@@ -10,7 +10,7 @@ class ProofRepository(agent: Agent) :
     Repository<ProofExchangeRecord>(ProofExchangeRecord::class, agent) {
     suspend fun getByThreadAndConnectionId(
         threadId: String,
-        connectionId: String?
+        connectionId: String?,
     ): ProofExchangeRecord {
         return if (connectionId != null) {
             getSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")
@@ -26,7 +26,7 @@ class ProofRepository(agent: Agent) :
     suspend fun findByThreadRoleAndConnection(
         threadId: String? = null,
         role: ProofRole? = null,
-        connectionId: String? = null
+        connectionId: String? = null,
     ): ProofExchangeRecord? {
         val queryObj = buildJsonObject {
             threadId?.takeIf { it.isNotBlank() }?.let { put("threadId", JsonPrimitive(it)) }
@@ -41,10 +41,8 @@ class ProofRepository(agent: Agent) :
     suspend fun getByThreadAndConnectionIdAndRole(
         threadId: String?,
         connectionId: String?,
-        role: String
-    ): ProofExchangeRecord?{
+        role: String,
+    ): ProofExchangeRecord? {
         return findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\", \"role\": \"$role\"}")
-
     }
-
 }

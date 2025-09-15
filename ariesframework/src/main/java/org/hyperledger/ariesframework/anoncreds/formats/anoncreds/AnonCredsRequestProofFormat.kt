@@ -15,5 +15,5 @@ data class AnonCredsRequestProofFormat(
     @SerialName("requested_attributes")
     val requestedAttributes: Map<String, AnonCredsRequestedAttribute>? = null,
     @SerialName("requested_predicates")
-    val requestedPredicates: Map<String, AnonCredsRequestedPredicate>? = null
+    val requestedPredicates: Map<String, AnonCredsRequestedPredicate>? = null,
 )

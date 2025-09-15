@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.anoncreds.model
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectnessProofRecord
 
 @Serializable
 data class CredentialOfferJson(
@@ -12,5 +11,5 @@ data class CredentialOfferJson(
     @SerialName("cred_def_id")
     val credDefId: String,
     @SerialName("key_proof")
-    @Contextual val keyProof: Map<String, @Contextual Any>
+    @Contextual val keyProof: Map<String, @Contextual Any>,
 )

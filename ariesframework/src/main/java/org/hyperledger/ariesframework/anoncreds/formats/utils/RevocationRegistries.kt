@@ -1,41 +1,38 @@
 package org.hyperledger.ariesframework.anoncreds.formats.utils
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedAttributeMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedPredicateMatch
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryEntry
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistriesForRequestResult
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryBucket
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.error.CredoError
-import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
+import org.hyperledger.ariesframework.proofs.verifier.RevocationRegistryEntry
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.RevocationStatusList
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
-import org.hyperledger.ariesframework.proofs.verifier.RevocationRegistryEntry
 import java.util.Collections
 
-data class RevocationRegistries (val agent: Agent){
+data class RevocationRegistries(val agent: Agent) {
 
     private val logger = LoggerFactory.getLogger(RevocationRegistries::class.java)
 
     suspend fun getRevocationRegistriesForRequest(
         proofRequest: AnonCredsProofRequest,
-        selectedCredentials: AnonCredsSelectedCredentials
-    ): RevocationRegistriesForRequestResult  {
+        selectedCredentials: AnonCredsSelectedCredentials,
+    ): RevocationRegistriesForRequestResult {
         val updatedSelectedCredentials = selectedCredentials
-        val revocationRegistries : MutableMap<String, RevocationRegistryBucket> = mutableMapOf()
+        val revocationRegistries: MutableMap<String, RevocationRegistryBucket> = mutableMapOf()
 
-        logger.debug("Retrieving revocation registries for proof request ${proofRequest} ${selectedCredentials}")
+        logger.debug("Retrieving revocation registries for proof request $proofRequest $selectedCredentials")
         val referentCredentials = mutableListOf<Map<String, Any?>>()
 
         for ((referent, selectedCredential) in selectedCredentials.attributes) {
@@ -44,9 +41,11 @@ data class RevocationRegistries (val agent: Agent){
                     "type" to "attributes",
                     "referent" to referent,
                     "selectedCredential" to selectedCredential,
-                    "nonRevoked" to (proofRequest.requestedAttributes[referent]?.nonRevoked
-                        ?: proofRequest.nonRevoked)
-                )
+                    "nonRevoked" to (
+                        proofRequest.requestedAttributes[referent]?.nonRevoked
+                            ?: proofRequest.nonRevoked
+                        ),
+                ),
             )
         }
 
@@ -56,9 +55,11 @@ data class RevocationRegistries (val agent: Agent){
                     "type" to "predicates",
                     "referent" to referent,
                     "selectedCredential" to selectedCredential,
-                    "nonRevoked" to (proofRequest.requestedPredicates[referent]?.nonRevoked
-                        ?: proofRequest.nonRevoked)
-                )
+                    "nonRevoked" to (
+                        proofRequest.requestedPredicates[referent]?.nonRevoked
+                            ?: proofRequest.nonRevoked
+                        ),
+                ),
             )
         }
 
@@ -75,13 +76,13 @@ data class RevocationRegistries (val agent: Agent){
                 is AnonCredsRequestedPredicateMatch -> selected.credentialInfo
                 is AnonCredsRequestedAttributeMatch -> selected.credentialInfo
                 else -> throw CredoError(
-                    "selectedCredential inválido para referent '$referent': ${selected?.javaClass?.name}"
+                    "selectedCredential inválido para referent '$referent': ${selected?.javaClass?.name}",
                 )
             }
 
             if (info == null) {
                 throw CredoError(
-                    "Credential para referent '$referent' não possui credentialInfo para criar revocation state"
+                    "Credential para referent '$referent' não possui credentialInfo para criar revocation state",
                 )
             }
 
@@ -91,22 +92,22 @@ data class RevocationRegistries (val agent: Agent){
                 is AnonCredsRequestedPredicateMatch -> selected.timestamp
                 is AnonCredsRequestedAttributeMatch -> selected.timestamp
                 else -> throw CredoError(
-                    "timestamp inválido para referent '$referent': ${selected?.javaClass?.name}"
+                    "timestamp inválido para referent '$referent': ${selected?.javaClass?.name}",
                 )
             }
 
             if (nonRevoked != null && credentialRevocationId != null && revocationRegistryId != null) {
                 logger.trace(
                     "Presentation is requesting proof of non revocation for referent '$referent', creating revocation state for credential: " +
-                            "nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp"
+                        "nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
                 )
 
                 RevocationInterval.assertBestPracticeRevocationInterval(nonRevoked)
 
-                val revocationRegistry : RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
+                val revocationRegistry: RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 
-                if(revocationRegistry == null){
-                    throw Exception("Could not retrieve revocation registry definition for revocation registry ${revocationRegistryId}")
+                if (revocationRegistry == null) {
+                    throw Exception("Could not retrieve revocation registry definition for revocation registry $revocationRegistryId")
                 }
 
 //                val revRegValue: RevocationRegistryValue = Json.decodeFromString(
@@ -117,48 +118,47 @@ data class RevocationRegistries (val agent: Agent){
                 val revRegValue: RevocationRegistryValue =
                     Json.decodeFromString(revocationRegistry.value)
 
-
                 revocationRegistries.put(
-                    key=revocationRegistryId,
+                    key = revocationRegistryId,
                     value = RevocationRegistryBucket(
                         tailsFilePath = agent.ledgerService.getTailsPath(),
                         tailsHash = revRegValue.tailsHash,
-                        definition = revocationRegistry
-                    )
+                        definition = revocationRegistry,
+                    ),
                 )
-
             }
 
             val timestampToFetch = timestamp ?: nonRevoked.to
 
             if (revocationRegistryId != null && revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
-                val revocationStatusList : RevocationStatusList =
+                val revocationStatusList: RevocationStatusList =
                     agent.ledgerService
                         .getRevocationStatusList(
                             id = revocationRegistryId!!,
-                            timestamp = timestampToFetch!!.toInt())
+                            timestamp = timestampToFetch!!.toInt(),
+                        )
 
                 if (revocationStatusList == null) {
                     throw CredoError(
                         "Could not retrieve revocation status list for revocation registry " +
-                                "$revocationRegistryId"
+                            "$revocationRegistryId",
                     )
                 }
 
-                val revocationStatusMap : MutableMap<Long, RevocationStatusList> = mutableMapOf(
-                    revocationStatusList.timestamp.toLong() to revocationStatusList
+                val revocationStatusMap: MutableMap<Long, RevocationStatusList> = mutableMapOf(
+                    revocationStatusList.timestamp.toLong() to revocationStatusList,
                 )
 
                 val revocationRegistryEntry = RevocationRegistryBucket(
                     definition = revocationRegistries.get(revocationRegistryId)!!.definition,
                     tailsFilePath = revocationRegistries.get(revocationRegistryId)!!.tailsFilePath,
                     tailsHash = revocationRegistries.get(revocationRegistryId)!!.tailsHash,
-                    revocationStatusLists =  revocationStatusMap
+                    revocationStatusLists = revocationStatusMap,
                 )
 
                 revocationRegistries.put(
                     key = revocationRegistryId,
-                    value = revocationRegistryEntry
+                    value = revocationRegistryEntry,
                 )
 
 //                if (timestamp == null) {
@@ -172,27 +172,21 @@ data class RevocationRegistries (val agent: Agent){
 //                    updatedType[type] = credsOfType
 //
 //                    updatedSelectedCredentials = updatedType
-                }
-
+            }
         }
 
-
-
         logger.debug(
-            "Retrieved revocation registries for proof request: $revocationRegistries"
+            "Retrieved revocation registries for proof request: $revocationRegistries",
         )
-
 
         return RevocationRegistriesForRequestResult(
             revocationRegistries = revocationRegistries,
-            updatedSelectedCredentials = selectedCredentials
+            updatedSelectedCredentials = selectedCredentials,
         )
-
     }
 
-
     suspend fun getRevocationRegistriesForProof(
-        proof: AnonCredsProof
+        proof: AnonCredsProof,
     ): Map<String, RevocationRegistryEntry> = coroutineScope {
         // Cache compartilhado entre coroutines
         val revocationRegistries: MutableMap<String, RevocationRegistryEntry> =
@@ -217,7 +211,7 @@ data class RevocationRegistries (val agent: Agent){
                         if (revocationRegistryDefinition == null) {
                             throw CredoError(
                                 "Could not retrieve revocation registry definition for revocation registry " +
-                                        "$revocationRegistryId"
+                                    "$revocationRegistryId",
                             )
                         }
 
@@ -234,7 +228,7 @@ data class RevocationRegistries (val agent: Agent){
                         if (revocationStatusList == null) {
                             throw CredoError(
                                 "Could not retrieve revocation status list for revocation registry " +
-                                        "$revocationRegistryId}"
+                                    "$revocationRegistryId}",
                             )
                         }
 

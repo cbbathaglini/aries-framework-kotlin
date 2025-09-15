@@ -4,5 +4,5 @@ import org.hyperledger.ariesframework.error.CredoError
 
 open class AnonCredsError(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : CredoError(message, cause)

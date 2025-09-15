@@ -1,12 +1,8 @@
 package org.hyperledger.ariesframework.vc.jwt
 
-import W3cCredentialSubject
-import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.vc.model.ClaimFormat
-
-//class W3cJwtVerifiableCredential(
+// class W3cJwtVerifiableCredential(
 //    val jwt: Jwt
-//) {
+// ) {
 //    private val _credential: W3cCredential = getCredentialFromJwtPayload(jwt.payload)
 //
 //    companion object {
@@ -69,4 +65,4 @@ import org.hyperledger.ariesframework.vc.model.ClaimFormat
 //
 //    val jsonCredential: W3cJsonCredential
 //        get() = JsonTransformer.toJSON(credential) as W3cJsonCredential
-//}
+// }

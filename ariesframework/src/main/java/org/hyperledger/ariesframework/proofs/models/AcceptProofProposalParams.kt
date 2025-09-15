@@ -13,6 +13,6 @@ data class AcceptProofProposalParams(
     val comment: String? = null,
     val goalCode: String? = null,
     val goal: String? = null,
-    val presentMultiple : Boolean? = null,
-    val willConfirm : Boolean? = null
+    val presentMultiple: Boolean? = null,
+    val willConfirm: Boolean? = null,
 )

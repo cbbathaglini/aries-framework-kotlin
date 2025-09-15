@@ -1,74 +1,70 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
-import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import kotlin.math.log
 
 class StoreCredential {
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(StoreCredential::class.java)
         fun getStoreCredentialOptions(
             options: StoreCredentialOptions,
-            indyNamespace: String? = null
+            indyNamespace: String? = null,
         ): StoreCredentialOptions {
             val credentialRequestMetadata = options.credentialRequestMetadata
             val credentialDefinitionId = options.credentialDefinitionId
             val schema = options.schema
             val credential = options.credential
             val credentialDefinition = options.credentialDefinition
-            var revocationRegistry : RevocationRegistryInfo? = options.revocationRegistry
+            var revocationRegistry: RevocationRegistryInfo? = options.revocationRegistry
 
-            logger.info("revocationRegistry>> ${revocationRegistry.toString()}")
-            logger.info("credentialDefinition>> ${credentialDefinition.toString()}")
-            logger.info("schema>> ${schema.toString()}")
+            logger.info("revocationRegistry>> $revocationRegistry")
+            logger.info("credentialDefinition>> $credentialDefinition")
+            logger.info("schema>> $schema")
 
             val credDefId =
                 if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
                     Indyidentifiers.getQualifiedDidIndyDid(
                         credentialDefinitionId,
-                        indyNamespace ?: ""
+                        indyNamespace ?: "",
                     )
                 } else {
                     credentialDefinitionId
                 }
 
-
             val credDef =
                 if (Indyidentifiers.isUnqualifiedDidIndyCredentialDefinition(credentialDefinition)) {
                     Indyidentifiers.getQualifiedDidIndyCredentialDefinition(
                         credentialDefinition,
-                        indyNamespace ?: ""
+                        indyNamespace ?: "",
                     )
                 } else {
                     credentialDefinition
                 }
-            logger.info("credDef>> ${credDef.toString()}")
+            logger.info("credDef>> $credDef")
             val schemaParam = if (Indyidentifiers.isUnqualifiedDidIndySchema(schema)) {
                 Indyidentifiers.getQualifiedDidIndySchema(schema, indyNamespace ?: "")
             } else {
                 schema
             }
 
-            logger.info("schemaParam>> ${schemaParam.toString()}")
-            //logger.info("revocationRegistry?.definition?: ${revocationRegistry?.definition?.toString()} ")
-            //logger.info("Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)>> ${Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(revocationRegistry?.definition!!)}")
-
+            logger.info("schemaParam>> $schemaParam")
+            // logger.info("revocationRegistry?.definition?: ${revocationRegistry?.definition?.toString()} ")
+            // logger.info("Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)>> ${Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(revocationRegistry?.definition!!)}")
 
             if (revocationRegistry != null) {
-                logger.info("revocationRegistry>> ${revocationRegistry.toString()}")
-                val a  = revocationRegistry.definition
+                logger.info("revocationRegistry>> $revocationRegistry")
+                val a = revocationRegistry.definition
 
                 if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(a)) {
                     logger.info("getQualifiedDidIndyRevocationRegistryDefinition(1) ${Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(a, indyNamespace ?: "")}")
                 } else {
-                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(2) ${a}")
+                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(2) $a")
                 }
 
                 if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
-                    logger.info("getQualifiedDidIndyDid(1) ${Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")}");
+                    logger.info("getQualifiedDidIndyDid(1) ${Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")}")
                 } else {
                     logger.info("getQualifiedDidIndyDid(2) ${revocationRegistry.id}")
                 }
@@ -77,7 +73,7 @@ class StoreCredential {
                         definition = if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)) {
                             Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(
                                 it,
-                                indyNamespace ?: ""
+                                indyNamespace ?: "",
                             )
                         } else {
                             it
@@ -85,15 +81,14 @@ class StoreCredential {
                         id = if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
                             Indyidentifiers.getQualifiedDidIndyDid(
                                 revocationRegistry.id,
-                                indyNamespace ?: ""
+                                indyNamespace ?: "",
                             )
                         } else {
                             revocationRegistry.id
-                        }
+                        },
                     )
                 }
             }
-
 
             val newOptions = StoreCredentialOptions(
                 credentialId = UUID.randomUUID().toString(),
@@ -103,10 +98,10 @@ class StoreCredential {
                 credentialDefinition = credDef,
                 schema = schemaParam,
                 schemaId = options.schemaId,
-                revocationRegistry = revocationRegistry
+                revocationRegistry = revocationRegistry,
             )
 
-            logger.info("sotore: ${options.toString()}")
+            logger.info("sotore: $options")
             return options
         }
     }

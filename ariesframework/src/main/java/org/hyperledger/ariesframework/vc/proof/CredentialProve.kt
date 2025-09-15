@@ -7,5 +7,5 @@ data class CredentialProve(
     val entryIndex: Int,
     val referent: String,
     val isPredicate: Boolean,
-    val reveal: Boolean
+    val reveal: Boolean,
 )

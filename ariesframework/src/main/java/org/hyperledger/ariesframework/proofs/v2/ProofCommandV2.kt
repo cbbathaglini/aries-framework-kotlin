@@ -8,23 +8,14 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
-import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
-import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.v1.RequestPresentationHandler
 import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.handlers.v2.RequestPresentationHandlerV2
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
-import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
-import org.hyperledger.ariesframework.proofs.models.ProofRequest
-import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
@@ -49,11 +40,11 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         MessageSerializer.registerMessage(PresentationMessageV2.type, PresentationMessageV2::class)
         MessageSerializer.registerMessage(
             RequestPresentationMessageV2.type,
-            RequestPresentationMessageV2::class
+            RequestPresentationMessageV2::class,
         )
         MessageSerializer.registerMessage(
             PresentationAckMessageV2.type,
-            PresentationAckMessageV2::class
+            PresentationAckMessageV2::class,
         )
     }
 
@@ -99,7 +90,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         proofRecordId: String,
         comment: String? = null,
     ): ProofExchangeRecord {
-
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
             getRequestedCredentialsForProofRequest(proofRecordId)
         val requestedCredentials: RequestedCredentialsAnoncreds =
@@ -107,7 +97,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,
-            RequestPresentationMessageV2.type
+            RequestPresentationMessageV2.type,
         )
 
         val record = agent.proofRepository.getById(proofRecordId)
@@ -117,7 +107,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofRecord = record,
             proofFormats = record.formats!!,
             comment = comment,
-            requestedCredentials = requestedCredentialsMap
+            requestedCredentials = requestedCredentialsMap,
         )
 
         val (message, proofRecord) = agent.proofServiceV2.acceptRequest(params)
@@ -125,7 +115,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val connection = agent.connectionRepository.getById(record.connectionId)
 
         try {
-
             agent.historyRepository.save(
                 HistoryRecord(
                     historyType = HistoryType.ProofRequestAccepted.name,
@@ -141,9 +130,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.messageSender.send(OutboundMessage(message, connection))
         return proofRecord
-
     }
-
 
     /**
      * Decline a presentation request as prover (by sending a problem report message) to the connection
@@ -217,7 +204,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
 
         return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
-
     }
 
     private suspend fun checkIfMessageTypeIsCorrect(proofRecordId: String) {
@@ -231,7 +217,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
     private suspend fun updateProofFormat(
         record: ProofExchangeRecord,
-        formats: List<ProofFormatSpec>
+        formats: List<ProofFormatSpec>,
     ) {
         record.formats = formats
         agent.proofRepository.update(record)

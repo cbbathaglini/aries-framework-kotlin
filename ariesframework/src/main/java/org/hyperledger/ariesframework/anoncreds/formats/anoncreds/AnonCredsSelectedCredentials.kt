@@ -15,14 +15,13 @@ data class AnonCredsSelectedCredentials(
     val predicates: Map<String, AnonCredsRequestedPredicateMatch>,
 
     @SerialName("self_attested_attributes")
-    val selfAttestedAttributes: Map<String, String>
-){
+    val selfAttestedAttributes: Map<String, String>,
+) {
     companion object {
         fun convert(proofFormats: Map<String, JsonElement>?): AnonCredsSelectedCredentials {
             val json = Json { ignoreUnknownKeys = true } // ignora campos extras no JSON
 
             val attributes = proofFormats?.get("requested_attributes")?.let {
-
                 json.decodeFromJsonElement<Map<String, AnonCredsRequestedAttributeMatch>>(it)
             } ?: emptyMap()
 
@@ -37,7 +36,7 @@ data class AnonCredsSelectedCredentials(
             return AnonCredsSelectedCredentials(
                 attributes = attributes,
                 predicates = predicates,
-                selfAttestedAttributes = selfAttested
+                selfAttestedAttributes = selfAttested,
             )
         }
     }

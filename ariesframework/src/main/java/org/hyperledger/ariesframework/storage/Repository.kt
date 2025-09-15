@@ -89,7 +89,7 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun findByQuery(query: String): List<T> {
         return try {
-            logger.info("find by query: ${query}")
+            logger.info("find by query: $query")
             val scan = wallet.store!!.scan(null, type.simpleName!!, query, null, null)
             val records = scan.fetchAll()
             records.map { recordToInstance(it) }

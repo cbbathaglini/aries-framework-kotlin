@@ -15,5 +15,5 @@ data class CreateProofRequestOptions(
     val goalCode: String? = null,
     val goal: String? = null,
     val autoAcceptProof: AutoAcceptProof,
-    val willConfirm : Boolean? = true
+    val willConfirm: Boolean? = true,
 )

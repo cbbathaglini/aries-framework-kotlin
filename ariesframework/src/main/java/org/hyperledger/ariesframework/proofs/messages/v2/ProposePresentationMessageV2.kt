@@ -18,7 +18,7 @@ class ProposePresentationMessageV2(
     @SerialName("proposals~attach")
     val proposalAttachments: MutableList<Attachment> = mutableListOf(),
 
-    val formats : MutableList<ProofFormatSpec> = mutableListOf()
+    val formats: MutableList<ProofFormatSpec> = mutableListOf(),
 ) : AgentMessage(generateId(), type) {
 
     companion object {
@@ -28,5 +28,4 @@ class ProposePresentationMessageV2(
     fun getProposalAttachmentById(id: String): Attachment? {
         return proposalAttachments.find { it.id == id }
     }
-
 }

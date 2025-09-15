@@ -20,12 +20,12 @@ abstract class OutOfBandDidCommService {
     abstract fun asDidCommService(): DidCommService?
 }
 
-//object OutOfBandDidCommServiceSerializer : JsonContentPolymorphicSerializer<OutOfBandDidCommService>(OutOfBandDidCommService::class) {
+// object OutOfBandDidCommServiceSerializer : JsonContentPolymorphicSerializer<OutOfBandDidCommService>(OutOfBandDidCommService::class) {
 //    override fun selectDeserializer(element: JsonElement) = when (element is JsonPrimitive) {
 //        true -> PublicDidService.serializer()
 //        false -> OutOfBandDidDocumentService.serializer()
 //    }
-//}
+// }
 
 @OptIn(ExperimentalSerializationApi::class)
 object OutOfBandDidCommServiceSerializer :
@@ -33,7 +33,7 @@ object OutOfBandDidCommServiceSerializer :
 
     override fun selectDeserializer(element: JsonElement): KSerializer<out OutOfBandDidCommService> =
         if (element is JsonPrimitive) {
-            serializer<PublicDidService>()          // antes: PublicDidService.serializer()
+            serializer<PublicDidService>() // antes: PublicDidService.serializer()
         } else {
             serializer<OutOfBandDidDocumentService>() // antes: OutOfBandDidDocumentService.serializer()
         }

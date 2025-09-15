@@ -7,7 +7,7 @@ import org.hyperledger.ariesframework.problemreports.messages.PresentationProble
 class PresentationProblemReportErrorV2(
     message: String,
     problemCode: String,
-    threadId: String
+    threadId: String,
 ) : ProblemReportError(message, problemCode) {
 
     val problemReportError: PresentationProblemReportMessageV2 =
@@ -15,7 +15,7 @@ class PresentationProblemReportErrorV2(
             threadId = threadId,
             descriptionOptions = DescriptionOptions(
                 en = message,
-                code = problemCode
-            )
+                code = problemCode,
+            ),
         )
 }

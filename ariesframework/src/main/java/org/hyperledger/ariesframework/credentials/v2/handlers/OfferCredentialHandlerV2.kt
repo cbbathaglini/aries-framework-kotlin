@@ -18,15 +18,15 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.debug("OfferCredentialHandlerV2 init")
-        PrintLongLine.print("OfferCredentialHandlerV2 init: ${messageContext.plaintextMessage.toString()}")
+        PrintLongLine.print("OfferCredentialHandlerV2 init: ${messageContext.plaintextMessage}")
         val credentialRecord = agent.credentialServiceV2.processOffer(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToOffer(
-            credentialRecord= credentialRecord,
-            messageContext= messageContext
+            credentialRecord = credentialRecord,
+            messageContext = messageContext,
         )
 
-        if (shouldAutoRespond){
+        if (shouldAutoRespond) {
             val message = this.acceptOffer(credentialRecord)
             logger.info("accept offer message =>> $message")
             return OutboundMessage(message, messageContext.connection!!)
@@ -35,14 +35,14 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
         return null
     }
 
-    private suspend fun acceptOffer(credentialRecord: CredentialExchangeRecord) : RequestCredentialMessageV2 {
+    private suspend fun acceptOffer(credentialRecord: CredentialExchangeRecord): RequestCredentialMessageV2 {
         logger.info("Automatically sending request with autoAccept")
 
         val acceptCredentialOfferOptions = AcceptCredentialOfferOptionsV2(
-            credentialExchangeRecord = credentialRecord
+            credentialExchangeRecord = credentialRecord,
         )
-        val ( credentialExchange, requestCredentialMessageV2 ) = agent.credentialServiceV2.acceptOffer( acceptCredentialOfferOptions )
-        logger.info("requestCredentialMessageV2 =>> ${requestCredentialMessageV2.toString()}")
+        val (credentialExchange, requestCredentialMessageV2) = agent.credentialServiceV2.acceptOffer(acceptCredentialOfferOptions)
+        logger.info("requestCredentialMessageV2 =>> $requestCredentialMessageV2")
 
         return requestCredentialMessageV2
     }

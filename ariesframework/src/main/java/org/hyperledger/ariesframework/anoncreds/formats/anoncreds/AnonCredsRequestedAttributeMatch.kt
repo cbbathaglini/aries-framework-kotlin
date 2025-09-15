@@ -9,5 +9,5 @@ data class AnonCredsRequestedAttributeMatch(
     val timestamp: Long? = null,
     val revealed: Boolean,
     val credentialInfo: AnonCredsCredentialInfo,
-    val revoked: Boolean? = null
+    val revoked: Boolean? = null,
 )

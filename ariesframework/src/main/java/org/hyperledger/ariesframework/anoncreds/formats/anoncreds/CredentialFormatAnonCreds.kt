@@ -8,5 +8,5 @@ data class CredentialFormatAnonCreds(
     override val createOffer: AnonCredsOfferCredentialFormat,
     override val acceptOffer: AnonCredsAcceptOfferFormat,
     override val createRequest: Nothing? = null,
-    override val acceptRequest: AnonCredsAcceptRequestFormat
-) : CredentialFormatOperations( createProposal, acceptProposal, createOffer, acceptOffer, createRequest, acceptRequest)
+    override val acceptRequest: AnonCredsAcceptRequestFormat,
+) : CredentialFormatOperations(createProposal, acceptProposal, createOffer, acceptOffer, createRequest, acceptRequest)

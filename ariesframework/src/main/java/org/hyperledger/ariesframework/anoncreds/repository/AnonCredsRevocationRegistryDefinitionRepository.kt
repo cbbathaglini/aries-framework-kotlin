@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.anoncreds.repository
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.storage.Repository
 
-class AnonCredsRevocationRegistryDefinitionRepository (agent: Agent) : Repository<AnonCredsRevocationRegistryDefinitionRecord>(
+class AnonCredsRevocationRegistryDefinitionRepository(agent: Agent) : Repository<AnonCredsRevocationRegistryDefinitionRecord>(
     AnonCredsRevocationRegistryDefinitionRecord::class,
     agent,
 ) {

@@ -15,7 +15,7 @@ class EmbeddedAuthentication(
 
 // https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/serializers.md#delegating-serializers
 class EmbeddedAuthenticationSerializer : KSerializer<EmbeddedAuthentication> {
-    private val delegateSerializer : KSerializer<PublicKey> = serializer()
+    private val delegateSerializer: KSerializer<PublicKey> = serializer()
     override val descriptor = SerialDescriptor("EmbeddedAuthentication", delegateSerializer.descriptor)
 
     override fun serialize(encoder: Encoder, value: EmbeddedAuthentication) {

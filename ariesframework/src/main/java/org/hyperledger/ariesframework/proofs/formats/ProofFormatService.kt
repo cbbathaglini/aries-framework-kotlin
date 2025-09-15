@@ -15,29 +15,29 @@ interface ProofFormatService<CF : ProofFormat> {
     suspend fun createProposal(
         profRecord: ProofExchangeRecord,
         attachmentId: String? = null,
-        proofFormats: Map<String, JsonElement> = emptyMap()
+        proofFormats: Map<String, JsonElement> = emptyMap(),
     ): ProofFormatCreateReturn
 
     suspend fun processProposal(
         attachment: Attachment,
-        proofRecord: ProofExchangeRecord
+        proofRecord: ProofExchangeRecord,
     )
 
     suspend fun acceptProposal(
         proofRecord: ProofExchangeRecord,
         attachmentId: String? = null,
         proposalAttachment: Attachment,
-        proofFormats: Map<String, JsonElement>? = emptyMap()
+        proofFormats: Map<String, JsonElement>? = emptyMap(),
     ): ProofFormatCreateReturn
 
     suspend fun createRequest(
         proofRecord: ProofExchangeRecord,
-        attachmentId : String? = null,
-        proofFormats: Map<String, JsonElement>? = emptyMap()
+        attachmentId: String? = null,
+        proofFormats: Map<String, JsonElement>? = emptyMap(),
     ): ProofFormatCreateReturn
 
     suspend fun processRequest(
-        options: ProofFormatProcessOptions
+        options: ProofFormatProcessOptions,
     )
 
     suspend fun acceptRequest(
@@ -46,47 +46,46 @@ interface ProofFormatService<CF : ProofFormat> {
         proofFormats: Map<String, JsonElement>?,
         attachmentId: String,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment? = null
+        proposalAttachment: Attachment? = null,
     ): ProofFormatCreateReturn
 
     suspend fun processPresentation(
         requestAttachment: Attachment,
         attachment: Attachment,
-        proofRecord: ProofExchangeRecord
+        proofRecord: ProofExchangeRecord,
     ): Boolean
 
     suspend fun getCredentialsForRequest(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>? = emptyMap(),
         requestAttachment: Attachment,
-        proposalAttachment: Attachment?
+        proposalAttachment: Attachment?,
     ): AnonCredsCredentialsForProofRequest
 
     suspend fun selectCredentialsForRequest(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement>? = emptyMap(),
         requestAttachment: Attachment,
-        proposalAttachment: Attachment? = null
+        proposalAttachment: Attachment? = null,
     ): AnonCredsSelectedCredentials
-
 
     suspend fun shouldAutoRespondToProposal(
         proofRecord: ProofExchangeRecord,
         proposalAttachment: Attachment,
-        requestAttachment: Attachment
+        requestAttachment: Attachment,
     ): Boolean
 
     suspend fun shouldAutoRespondToRequest(
         proofRecord: ProofExchangeRecord,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean
 
     suspend fun shouldAutoRespondToPresentation(
         proofRecord: ProofExchangeRecord,
         proposalAttachment: Attachment?,
         requestAttachment: Attachment,
-        presentationAttachment: Attachment
+        presentationAttachment: Attachment,
     ): Boolean
 
     fun supportsFormat(formatIdentifier: String): Boolean

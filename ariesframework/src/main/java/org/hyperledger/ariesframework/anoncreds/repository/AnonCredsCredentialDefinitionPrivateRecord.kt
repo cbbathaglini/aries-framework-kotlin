@@ -13,8 +13,8 @@ class AnonCredsCredentialDefinitionPrivateRecord(
     override var _tags: Tags?,
     override val createdAt: Instant,
     override var updatedAt: Instant?,
-    val credentialDefinitionId : String,
-    val value : Map<String, @Contextual Any>
+    val credentialDefinitionId: String,
+    val value: Map<String, @Contextual Any>,
 ) : BaseRecord() {
 
     companion object {
@@ -24,7 +24,7 @@ class AnonCredsCredentialDefinitionPrivateRecord(
     constructor(
         tags: Tags? = null,
         credentialDefinitionId: String,
-        value: Map<String, Any>
+        value: Map<String, Any>,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
@@ -36,7 +36,6 @@ class AnonCredsCredentialDefinitionPrivateRecord(
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap
     }
-
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

@@ -47,5 +47,5 @@ data class AnonCredsCredentialTags(
     @SerialName("anonCredsUnqualifiedRevocationRegistryId")
     val unqualifiedRevocationRegistryId: String? = null,
 
-    val dynamicAttributes: Map<String, String?> = emptyMap()
+    val dynamicAttributes: Map<String, String?> = emptyMap(),
 )

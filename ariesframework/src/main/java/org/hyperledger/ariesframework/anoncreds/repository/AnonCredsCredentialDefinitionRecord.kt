@@ -8,7 +8,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinit
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.storage.BaseRecord
 
-
 @Serializable
 class AnonCredsCredentialDefinitionRecord(
     override var id: String,
@@ -28,7 +27,7 @@ class AnonCredsCredentialDefinitionRecord(
         tags: Tags? = null,
         credentialDefinitionId: String,
         credentialDefinition: AnonCredsCredentialDefinition,
-        methodName: String
+        methodName: String,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,
@@ -36,7 +35,7 @@ class AnonCredsCredentialDefinitionRecord(
         updatedAt = null,
         credentialDefinition = credentialDefinition,
         credentialDefinitionId = credentialDefinitionId,
-        methodName = methodName
+        methodName = methodName,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
         _tags = tagMap
@@ -45,9 +44,9 @@ class AnonCredsCredentialDefinitionRecord(
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
-        var unqualifiedCredentialDefinitionId : String?  = null
-        if(Indyidentifiers.isDidIndyCredentialDefinitionId(credentialDefinitionId)){
-            val (namespaceIdentifier, schemaSeqNo, tag ) = Indyidentifiers.parseIndyCredentialDefinitionId(credentialDefinitionId)
+        var unqualifiedCredentialDefinitionId: String? = null
+        if (Indyidentifiers.isDidIndyCredentialDefinitionId(credentialDefinitionId)) {
+            val (namespaceIdentifier, schemaSeqNo, tag) = Indyidentifiers.parseIndyCredentialDefinitionId(credentialDefinitionId)
             unqualifiedCredentialDefinitionId = Indyidentifiers.getUnqualifiedCredentialDefinitionId(namespaceIdentifier, schemaSeqNo, tag)
         }
 
@@ -60,6 +59,4 @@ class AnonCredsCredentialDefinitionRecord(
         tags["unqualifiedCredentialDefinitionId"] = unqualifiedCredentialDefinitionId ?: ""
         return tags
     }
-
-
 }

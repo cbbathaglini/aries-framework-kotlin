@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.agent.decorators
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -8,10 +9,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.decodeBase64
 import org.hyperledger.ariesframework.encodeBase64
-import org.hyperledger.ariesframework.error.CredoError
-import android.util.Base64
-import kotlinx.serialization.DeserializationStrategy
-import java.math.BigInteger
 import java.util.UUID
 
 @Serializable

@@ -4,7 +4,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialEntryResult
 
 @Serializable
 data class AnonCredsRevocationRegistryDefinition(
@@ -12,8 +11,8 @@ data class AnonCredsRevocationRegistryDefinition(
     val revocDefType: String = "CL_ACCUM",
     val credDefId: String,
     val tag: String,
-    val value: RevocationRegistryValue
-){
+    val value: RevocationRegistryValue,
+) {
 
     @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String {
@@ -31,15 +30,15 @@ data class RevocationRegistryValue(
     val maxCredNum: Int,
     val tailsLocation: String,
     val tailsHash: String,
-    val issuanceType: String? = null //indy
+    val issuanceType: String? = null, // indy
 )
 
 @Serializable
 data class PublicKeys(
-    val accumKey: AccumKey
+    val accumKey: AccumKey,
 )
 
 @Serializable
 data class AccumKey(
-    val z: String
+    val z: String,
 )

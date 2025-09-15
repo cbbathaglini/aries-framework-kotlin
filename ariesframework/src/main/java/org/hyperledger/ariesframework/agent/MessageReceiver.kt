@@ -26,7 +26,6 @@ class MessageReceiver(val agent: Agent) {
             )
 
             agent.dispatcher.dispatch(messageContext)
-
         } catch (e: Exception) {
             logger.error("failed to receive message: $e")
         }
@@ -91,15 +90,15 @@ class MessageReceiver(val agent: Agent) {
 
     private suspend fun findConnectionByMessageKeys(decryptedMessage: DecryptedMessageContext): ConnectionRecord? {
         logger.info("findConnectionByMessageKeys method")
-        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey.toString()}")
-        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey.toString()}")
+        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey}")
+        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey}")
 
-        val conn =  agent.connectionService.findByKeys(
+        val conn = agent.connectionService.findByKeys(
             decryptedMessage.senderKey ?: "",
             decryptedMessage.recipientKey ?: "",
         )
-        logger.info("conn: ${conn.toString()}")
+        logger.info("conn: $conn")
 
-        return conn;
+        return conn
     }
 }

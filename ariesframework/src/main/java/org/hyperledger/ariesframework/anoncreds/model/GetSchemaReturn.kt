@@ -5,5 +5,5 @@ data class GetSchemaReturn(
     val schemaId: String,
     val resolutionMetadata: AnonCredsResolutionMetadata? = null,
     val schemaMetadata: Map<String, Any> = emptyMap(),
-    val issuerId: String? = null
+    val issuerId: String? = null,
 )

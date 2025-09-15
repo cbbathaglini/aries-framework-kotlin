@@ -11,14 +11,9 @@ import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
 import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationHandler
 import org.hyperledger.ariesframework.proofs.handlers.v1.RequestPresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
-import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationHandlerV2
-import org.hyperledger.ariesframework.proofs.handlers.v2.RequestPresentationHandlerV2
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
@@ -26,7 +21,6 @@ import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(ProofCommand::class.java)
@@ -129,7 +123,6 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             val connection = agent.connectionRepository.getById(record.connectionId)
             agent.messageSender.send(OutboundMessage(message, connection))
 
-
             agent.historyRepository.save(
                 HistoryRecord(
                     historyType = HistoryType.ProofRequestAccepted.name,
@@ -199,7 +192,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         val record = agent.proofRepository.getById(proofRecordId)
         // Select protocol version
         val recordMessageType = agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
-        if(recordMessageType.message.contains("/2.0/")){
+        if (recordMessageType.message.contains("/2.0/")) {
             throw Exception("Version of proof protocol is incorrect")
         }
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(

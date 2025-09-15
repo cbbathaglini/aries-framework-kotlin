@@ -6,12 +6,12 @@ import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttrib
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 @Serializable
-data class CreateAnoncredsOffer (
+data class CreateAnoncredsOffer(
     val credentialExchangeRecord: CredentialExchangeRecord,
-    val attachmentId : String?,
+    val attachmentId: String?,
     val attributes: List<CredentialPreviewAttribute>,
-    val credentialDefinitionId: String ,
+    val credentialDefinitionId: String,
     val revocationRegistryDefinitionId: String?,
     val revocationRegistryIndex: Long?,
-    val linkedAttachments: List<LinkedAttachment>?
+    val linkedAttachments: List<LinkedAttachment>?,
 )

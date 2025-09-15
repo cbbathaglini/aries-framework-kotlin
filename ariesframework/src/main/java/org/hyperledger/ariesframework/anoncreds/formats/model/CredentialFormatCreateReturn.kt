@@ -5,8 +5,8 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
-data class CredentialFormatCreateReturn (
+data class CredentialFormatCreateReturn(
     val attachment: Attachment,
     val format: Format,
-    val appendAttachment: List<Attachment>? = emptyList()
+    val appendAttachment: List<Attachment>? = emptyList(),
 )

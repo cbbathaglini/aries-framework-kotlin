@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class W3cJsonLdVerifiablePresentation
 //
-//) : W3cPresentation {
+// ) : W3cPresentation {
 //
 //    var proof: List<Proof>
 //
@@ -42,4 +42,4 @@ class W3cJsonLdVerifiablePresentation
 //     */
 //    val encoded: String
 //        get() = toJson()
-//}
+// }

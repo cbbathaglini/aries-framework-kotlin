@@ -11,12 +11,12 @@ import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMess
 
 @Serializable
 data class CreateProofOptions(
-    val requestMessage : RequestPresentationMessageV2,
+    val requestMessage: RequestPresentationMessageV2,
     val proofRequest: AnonCredsProofRequest,
     val selectedCredentials: AnonCredsSelectedCredentials,
     val schemas: AnonCredsSchemas,
     val credentialDefinitions: AnonCredsCredentialDefinitions,
     val revocationRegistries: AnonCredsRevocationRegistries,
     val useUnqualifiedIdentifiers: Boolean? = null,
-    val proofFormats : Map<String, JsonElement>? = emptyMap()
+    val proofFormats: Map<String, JsonElement>? = emptyMap(),
 )

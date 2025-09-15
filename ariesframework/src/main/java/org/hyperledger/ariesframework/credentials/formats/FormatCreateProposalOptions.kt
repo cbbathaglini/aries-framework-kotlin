@@ -5,5 +5,5 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 
 data class FormatCreateProposalOptions(
     val credentialFormats: Map<String, JsonElement>,
-    val credentialRecord: CredentialExchangeRecord
+    val credentialRecord: CredentialExchangeRecord,
 )

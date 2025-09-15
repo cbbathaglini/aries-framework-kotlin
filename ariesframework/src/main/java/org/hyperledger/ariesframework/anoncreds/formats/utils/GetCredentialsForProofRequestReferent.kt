@@ -17,7 +17,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusL
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.slf4j.LoggerFactory
 import java.util.Date
 
@@ -32,18 +31,16 @@ class GetCredentialsForProofRequestReferent {
         private val logger =
             LoggerFactory.getLogger(GetCredentialsForProofRequestReferent::class.java)
 
-
         suspend fun getCredentialsForProofRequestReferent(
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
-            attributeReferent: String
+            attributeReferent: String,
         ): GetCredentialsForProofRequestReturn {
-
             return agent.anonCredsHolderService.getCredentialsForProofRequest(
                 options = GetCredentialsForProofRequestOptions(
                     proofRequest = proofRequest,
-                    attributeReferent = attributeReferent
-                )
+                    attributeReferent = attributeReferent,
+                ),
             )
         }
 
@@ -51,8 +48,8 @@ class GetCredentialsForProofRequestReferent {
          * Resultado da checagem de revogação.
          */
         data class RevocationStatusResult(
-            val isRevoked: Boolean?,  // null/undefined quando não aplicável
-            val timestamp: Long?      // epoch time conforme seu formato
+            val isRevoked: Boolean?, // null/undefined quando não aplicável
+            val timestamp: Long?, // epoch time conforme seu formato
         )
 
         /**
@@ -62,14 +59,16 @@ class GetCredentialsForProofRequestReferent {
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
             requestedItem: Any, // AnonCredsRequestedAttribute | AnonCredsRequestedPredicate
-            credentialInfo: AnonCredsCredentialInfo
+            credentialInfo: AnonCredsCredentialInfo,
         ): RevocationStatusResult {
             val requestNonRevoked: AnonCredsNonRevokedInterval? = when (requestedItem) {
-                is AnonCredsRequestedAttribute -> requestedItem.nonRevoked
-                    ?: proofRequest.nonRevoked
+                is AnonCredsRequestedAttribute ->
+                    requestedItem.nonRevoked
+                        ?: proofRequest.nonRevoked
 
-                is AnonCredsRequestedPredicate -> requestedItem.nonRevoked
-                    ?: proofRequest.nonRevoked
+                is AnonCredsRequestedPredicate ->
+                    requestedItem.nonRevoked
+                        ?: proofRequest.nonRevoked
 
                 else -> proofRequest.nonRevoked
             }
@@ -83,7 +82,7 @@ class GetCredentialsForProofRequestReferent {
 
             logger.trace(
                 "Fetching credential revocation status for credential revocation id '$credentialRevocationId' " +
-                        "with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
+                    "with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'",
             )
 
             // Boas práticas (Aries RFC 0441)
@@ -94,30 +93,28 @@ class GetCredentialsForProofRequestReferent {
                 AnonCredsObjects.fetchRevocationStatusList(
                     agent = agent,
                     revocationRegistryId = revocationRegistryId,
-                    timestamp = toTs
+                    timestamp = toTs,
                 )
-
 
             val index = credentialRevocationId.toInt()
             val isRevoked = revocationStatusList.revocationList[index] == 1
 
             logger.trace(
                 "Credential with credential revocation index '$credentialRevocationId' is " +
-                        (if (isRevoked) "" else "not ") +
-                        "revoked with revocation interval to '${requestNonRevoked.to}' & from '${requestNonRevoked.from}'"
+                    (if (isRevoked) "" else "not ") +
+                    "revoked with revocation interval to '${requestNonRevoked.to}' & from '${requestNonRevoked.from}'",
             )
 
             return RevocationStatusResult(
                 isRevoked = isRevoked,
-                timestamp = revocationStatusList.timestamp
+                timestamp = revocationStatusList.timestamp,
             )
         }
-
 
         suspend fun getCredentialsForAnonCredsProofRequest(
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
-            options: AnonCredsGetCredentialsForProofRequestOptions
+            options: AnonCredsGetCredentialsForProofRequestOptions,
         ): AnonCredsCredentialsForProofRequest = coroutineScope {
             val attributesMap = mutableMapOf<String, List<AnonCredsRequestedAttributeMatch>>()
             val predicatesMap = mutableMapOf<String, List<AnonCredsRequestedPredicateMatch>>()
@@ -128,7 +125,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
-                        attributeReferent = referent
+                        attributeReferent = referent,
                     )
 
                 val matches = getCredentialsForProofRequestReferentReturn.credentials
@@ -138,14 +135,14 @@ class GetCredentialsForProofRequestReferent {
                                 agent = agent,
                                 proofRequest = proofRequest,
                                 requestedItem = requestedAttribute,
-                                credentialInfo = credential.credentialInfo
+                                credentialInfo = credential.credentialInfo,
                             )
                             AnonCredsRequestedAttributeMatch(
                                 credentialId = credential.credentialInfo.credentialId,
                                 revealed = true,
                                 credentialInfo = credential.credentialInfo,
                                 timestamp = rev.timestamp,
-                                revoked = rev.isRevoked
+                                revoked = rev.isRevoked,
                             )
                         }
                     }
@@ -154,7 +151,9 @@ class GetCredentialsForProofRequestReferent {
 
                 val filtered = if (options.filterByNonRevocationRequirements == true) {
                     matches.filter { it.revoked != true }
-                } else matches
+                } else {
+                    matches
+                }
 
                 attributesMap[referent] = filtered
             }
@@ -165,7 +164,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
-                        attributeReferent = referent
+                        attributeReferent = referent,
                     )
 
                 val matches = getCredentialsForProofRequestReferentReturn.credentials
@@ -175,13 +174,13 @@ class GetCredentialsForProofRequestReferent {
                                 agent = agent,
                                 proofRequest = proofRequest,
                                 requestedItem = requestedPredicate,
-                                credentialInfo = credential.credentialInfo
+                                credentialInfo = credential.credentialInfo,
                             )
                             AnonCredsRequestedPredicateMatch(
                                 credentialId = credential.credentialInfo.credentialId,
                                 credentialInfo = credential.credentialInfo,
                                 timestamp = rev.timestamp,
-                                revoked = rev.isRevoked
+                                revoked = rev.isRevoked,
                             )
                         }
                     }
@@ -190,23 +189,21 @@ class GetCredentialsForProofRequestReferent {
 
                 val filtered = if (options.filterByNonRevocationRequirements == true) {
                     matches.filter { it.revoked != true }
-                } else matches
+                } else {
+                    matches
+                }
 
                 predicatesMap[referent] = filtered
             }
 
             AnonCredsCredentialsForProofRequest(
                 attributes = attributesMap,
-                predicates = predicatesMap
+                predicates = predicatesMap,
             )
-
         }
 
         private fun dateToTimestamp(date: Date): Long {
             return date.time / 1000
         }
     }
-
-
 }
-

@@ -5,15 +5,15 @@ import org.hyperledger.ariesframework.error.CredoError
 
 class DuplicateNames {
 
-    companion object{
-         fun assertNoDuplicateGroupsNamesInProofRequest(proofRequest: AnonCredsProofRequest) {
+    companion object {
+        fun assertNoDuplicateGroupsNamesInProofRequest(proofRequest: AnonCredsProofRequest) {
             val attributes = attributeNamesToArray(proofRequest)
             val predicates = predicateNamesToArray(proofRequest)
 
             val duplicates = predicates.filter { attributes.contains(it) }
             if (duplicates.isNotEmpty()) {
                 throw CredoError(
-                    "The proof request contains duplicate predicates and attributes: ${duplicates.joinToString(",")}"
+                    "The proof request contains duplicate predicates and attributes: ${duplicates.joinToString(",")}",
                 )
             }
         }

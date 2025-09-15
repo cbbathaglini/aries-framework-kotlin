@@ -3,22 +3,17 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
-import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.CredentialRole
-import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
-import org.hyperledger.ariesframework.revocationnotificationv2.RevocationNotificationConstants
 import org.hyperledger.ariesframework.revocationnotificationv2.handler.RevocationNotificationHandlerV2
 import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
-import java.util.UUID
 
 class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(RevocationNotificationServiceV2::class.java)
@@ -63,12 +58,11 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             )
         }
 
-
         val credentialIdGroups =
             RevocationIdentifier.v2IndyRevocationIdentifierRegex.find(credentialId)?.groupValues
                 ?: RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.find(credentialId)?.groupValues
 
-        val anoncredsType : Boolean = RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.containsMatchIn(credentialId) ?: false;
+        val anoncredsType: Boolean = RevocationIdentifier.v2AnonCredsRevocationIdentifierRegex.containsMatchIn(credentialId) ?: false
 
         if (credentialIdGroups == null || credentialIdGroups.size < 2) {
             throw CredoError(
@@ -89,7 +83,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
             credentialRevocationId = anonCredsCredentialRevocationId,
             connection = connection,
             comment = comment,
-            anoncredsType = anoncredsType
+            anoncredsType = anoncredsType,
         )
     }
 
@@ -99,15 +93,16 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         connection: ConnectionRecord,
         comment: String? = null,
         threadId: String? = null,
-        anoncredsType: Boolean = false
+        anoncredsType: Boolean = false,
     ) {
         lateinit var credentialRecord: CredentialExchangeRecord
         var error = false
         try {
             credentialRecord =
-                    credentialRepository.getByCredentialRevocationIdAndRevocationRegistryId(
+                credentialRepository.getByCredentialRevocationIdAndRevocationRegistryId(
                     credentialRevocationId,
-                    revocationRegistryId, anoncredsType
+                    revocationRegistryId,
+                    anoncredsType,
                 )
         } catch (e: Exception) {
             logger.warn("Not found credential record by CredentialRevocationId and RevocationRegistryId")

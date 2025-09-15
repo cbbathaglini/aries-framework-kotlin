@@ -8,10 +8,10 @@ data class StoreCredentialOptions(
     val schemaId: String? = null,
     val credentialDefinitionId: String,
     val credentialId: String? = null,
-    val revocationRegistry: RevocationRegistryInfo? = null
+    val revocationRegistry: RevocationRegistryInfo? = null,
 )
 
 data class RevocationRegistryInfo(
     val id: String,
-    val definition: AnonCredsRevocationRegistryDefinition
+    val definition: AnonCredsRevocationRegistryDefinition,
 )

@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 
 @Serializable
-data class W3cCredential (
+data class W3cCredential(
     @SerialName("@context")
     val context: List<JsonElement>,
     val id: String?,
@@ -21,7 +21,7 @@ data class W3cCredential (
     val credentialStatus: W3cCredentialStatus?,
 
     @SerialName("proof")
-    val proofs: List<LinkedDataProofBase>?  = emptyList() // add by me
+    val proofs: List<LinkedDataProofBase>? = emptyList(), // add by me
 
 ) {
 
@@ -30,7 +30,7 @@ data class W3cCredential (
         encodeDefaults = true
     }.encodeToString(serializer<W3cCredential>(), this)
 
-    companion object{
+    companion object {
 //        private val json = Json {
 //            prettyPrint = true
 //            ignoreUnknownKeys = true
@@ -51,7 +51,7 @@ data class W3cCredential (
     }
 }
 
-//abstract class W3cCredential {
+// abstract class W3cCredential {
 //
 //    @SerialName("@context")
 //    open var context: List<JsonElement> = emptyList()
@@ -82,4 +82,4 @@ data class W3cCredential (
 //    val contexts: List<Any>
 //        get() = context // ou `context.map(JsonElement::toString)` se desejar
 //
-//}
+// }

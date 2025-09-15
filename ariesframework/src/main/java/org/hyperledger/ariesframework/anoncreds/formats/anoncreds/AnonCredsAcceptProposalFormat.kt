@@ -20,5 +20,5 @@ data class AnonCredsAcceptProposalFormat(
     val attributes: List<CredentialPreviewAttribute>? = null,
 
     @SerialName("linkedAttachments")
-    val linkedAttachments: List<LinkedAttachment>? = null
+    val linkedAttachments: List<LinkedAttachment>? = null,
 )

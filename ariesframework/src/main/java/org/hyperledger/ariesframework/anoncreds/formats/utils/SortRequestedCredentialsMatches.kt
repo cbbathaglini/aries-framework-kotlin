@@ -5,12 +5,12 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsReque
 import java.util.Date
 
 class SortRequestedCredentialsMatches {
-    companion object{
+    companion object {
         // Genérica: você informa como extrair revoked e updatedAt
         fun <T> sortRequestedCredentialsMatches(
             credentials: List<T>,
             revokedOf: (T) -> Boolean?,
-            updatedAtOf: (T) -> Date
+            updatedAtOf: (T) -> Date,
         ): List<T> {
             // rank: null -> 0, false -> 1, true -> 2
             fun rank(revoked: Boolean?): Int = when (revoked) {
@@ -36,22 +36,22 @@ class SortRequestedCredentialsMatches {
 
         // Atalho: atributos
         fun sortRequestedCredentialsAttrMatches(
-            credentials: List<AnonCredsRequestedAttributeMatch>
+            credentials: List<AnonCredsRequestedAttributeMatch>,
         ): List<AnonCredsRequestedAttributeMatch> =
             sortRequestedCredentialsMatches(
                 credentials,
                 revokedOf = { it.revoked },
-                updatedAtOf = { Date(it.credentialInfo.updatedAt.toEpochMilliseconds())}
+                updatedAtOf = { Date(it.credentialInfo.updatedAt.toEpochMilliseconds()) },
             )
 
         // Atalho: predicados
         fun sortRequestedCredentialsPredicatesMatches(
-            credentials: List<AnonCredsRequestedPredicateMatch>
+            credentials: List<AnonCredsRequestedPredicateMatch>,
         ): List<AnonCredsRequestedPredicateMatch> =
             sortRequestedCredentialsMatches(
                 credentials,
                 revokedOf = { it.revoked },
-                updatedAtOf = { Date(it.credentialInfo.updatedAt.toEpochMilliseconds())}
+                updatedAtOf = { Date(it.credentialInfo.updatedAt.toEpochMilliseconds()) },
             )
     }
 }

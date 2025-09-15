@@ -25,7 +25,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @returns Credential exchange record associated with the sent proposal message
      */
     suspend fun proposeCredential(options: CreateProposalOptionsV2): CredentialExchangeRecord {
-
         val connectionRecord = agent.connectionService.getById(options.connection.id)
         connectionRecord.assertReady()
 
@@ -33,7 +32,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         agent.messageSender.send(OutboundMessage(message, options.connection))
         return credentialRecord
     }
-
 
     /**
      * Negotiate a credential proposal as issuer (by sending a credential offer message) to the connection
@@ -51,7 +49,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         }
 
         val (credentialExchange, offerCredentialMessageV2) = agent.credentialServiceV2.negotiateProposal(
-            options = options
+            options = options,
         )
 
         val connectionRecord = agent.connectionService.getById(credentialExchangeRecord.connectionId!!)
@@ -77,16 +75,14 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
                 comment = options.comment,
                 goal = options.goal,
                 goalCode = options.goalCode,
-                connectionRecord = connectionRecord
+                connectionRecord = connectionRecord,
             )
         val (credentialExchangeRecord, offerCredentialMessageV2) = agent.credentialServiceV2.createOffer(createOfferCredentialOptions)
-        logger.debug("Offer Message successfully created; message= ${offerCredentialMessageV2}")
+        logger.debug("Offer Message successfully created; message= $offerCredentialMessageV2")
 
         agent.messageSender.send(OutboundMessage(offerCredentialMessageV2, connectionRecord))
         return credentialExchangeRecord
     }
-
-
 
     suspend fun negotiateOffer(options: NegotiateCredentialOfferOptions): CredentialExchangeRecord {
         val credentialExchangeRecord = getById(options.credentialExchangeRecord.id)
@@ -99,13 +95,12 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         connectionRecord.assertReady()
 
         val (credentialExchange, proposeCredentialMessageV2) = agent.credentialServiceV2.negotiateOffer(
-            options = options
+            options = options,
         )
 
         agent.messageSender.send(OutboundMessage(proposeCredentialMessageV2, connectionRecord))
         return credentialExchangeRecord
     }
-
 
     /**
      * Retrieve a credential record by id
@@ -120,16 +115,15 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): CredentialExchangeRecord {
-
         logger.info("acceptOffer init")
-        //val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
+        // val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
         val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
         logger.info("acceptOffer : $message")
         logger.info("credentialExchange : $credentialExchange")
 
         val connectionRecord =
             agent.connectionRepository.getById(credentialExchange.connectionId!!)
-        logger.info("connectionRecord : ${connectionRecord.toString()}")
+        logger.info("connectionRecord : $connectionRecord")
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
         logger.info("after send message")
@@ -176,8 +170,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
         return credentialRecord
     }
-
-
 
 //    suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
 //        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessage(options)
@@ -279,7 +271,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 //        }
 //    }
 }
-
 
 //    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
 //        logger.info("acceptOffer init")

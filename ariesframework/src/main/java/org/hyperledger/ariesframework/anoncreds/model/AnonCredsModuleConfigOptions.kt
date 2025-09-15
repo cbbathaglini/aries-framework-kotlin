@@ -7,6 +7,6 @@ import org.hyperledger.ariesframework.anoncreds.service.tails.TailsFileService
 data class AnonCredsModuleConfigOptions(
     val registries: List<AnonCredsRegistry> = listOf(EthrAnonCredsRegistry()),
     val tailsFileService: TailsFileService? = null,
-    val anoncreds: Any? = null, //[todo]Anoncreds from uniffi
-    val autoCreateLinkSecret: Boolean? = true
+    val anoncreds: Any? = null, // [todo]Anoncreds from uniffi
+    val autoCreateLinkSecret: Boolean? = true,
 )

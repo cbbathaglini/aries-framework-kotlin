@@ -7,11 +7,6 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
-import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
-import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
-import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
-import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
-import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.ProposePresentationMessageV2
@@ -20,21 +15,19 @@ import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.ProcessPresentationReturn
-import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateProposalOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestProofRequestParams
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
-
 import org.slf4j.LoggerFactory
 
 class ProofFormatCoordinator(
     val agent: Agent,
     val formatServices: List<ProofFormatService<*>> = listOf<ProofFormatService<*>>(
-        AnoncredsProofFormatService(agent = agent)
-    )
+        AnoncredsProofFormatService(agent = agent),
+    ),
 ) {
     private val logger = LoggerFactory.getLogger(ProofFormatCoordinator::class.java)
 
@@ -45,10 +38,9 @@ class ProofFormatCoordinator(
         val proposalAttachments = mutableListOf<Attachment>()
 
         for (formatService in formatServices) {
-
             val proofFormatCreateProposalReturn = formatService.createProposal(
                 proofFormats = proofFormats,
-                profRecord = proofRecord
+                profRecord = proofRecord,
             )
 
             proposalAttachments.add(proofFormatCreateProposalReturn.attachment)
@@ -60,18 +52,18 @@ class ProofFormatCoordinator(
             proposalAttachments = proposalAttachments,
             comment = comment,
             goalCode = goalCode,
-            goal = goal
+            goal = goal,
         )
         message.id = proofRecord.threadId
         message.setThread(
             threadId = proofRecord.threadId,
-            parentThreadId = proofRecord.parentThreadId
+            parentThreadId = proofRecord.parentThreadId,
         )
 
         agent.didCommMessageRepository.saveAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
 
         return message
@@ -80,25 +72,25 @@ class ProofFormatCoordinator(
     suspend fun processProposal(
         proofRecord: ProofExchangeRecord,
         message: ProposePresentationMessageV2,
-        formatServices: List<ProofFormatService<*>>
+        formatServices: List<ProofFormatService<*>>,
     ) {
         for (formatService in formatServices) {
             val attachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = message.formats,
-                attachments = message.proposalAttachments
+                attachments = message.proposalAttachments,
             )
 
             formatService.processProposal(
                 attachment = attachment,
-                proofRecord = proofRecord
+                proofRecord = proofRecord,
             )
         }
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             agentMessage = message,
             role = DidCommMessageRole.Receiver,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
     }
 
@@ -112,20 +104,20 @@ class ProofFormatCoordinator(
             agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = ProposePresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Proposal message not found")
 
         for (formatService in formatServices) {
             val proposalAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = proposalMessage.formats,
-                attachments = proposalMessage.proposalAttachments
+                attachments = proposalMessage.proposalAttachments,
             )
 
             val proofAccepted = formatService.acceptProposal(
                 proofFormats = proofFormats,
                 proofRecord = proofRecord,
-                proposalAttachment = proposalAttachment
+                proposalAttachment = proposalAttachment,
             )
 
             requestAttachments.add(proofAccepted.attachment)
@@ -144,13 +136,13 @@ class ProofFormatCoordinator(
 
         message.setThread(
             threadId = proofRecord.threadId,
-            parentThreadId = proofRecord.parentThreadId
+            parentThreadId = proofRecord.parentThreadId,
         )
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             agentMessage = message,
             role = DidCommMessageRole.Sender,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
 
         return message
@@ -163,10 +155,9 @@ class ProofFormatCoordinator(
         val requestAttachments = mutableListOf<Attachment>()
 
         for (formatService in formatServices) {
-
             val proofFormatCreateProposalReturn = formatService.createRequest(
                 proofFormats = proofFormats,
-                proofRecord = proofRecord
+                proofRecord = proofRecord,
             )
 
             requestAttachments.add(proofFormatCreateProposalReturn.attachment)
@@ -180,47 +171,46 @@ class ProofFormatCoordinator(
             goalCode = goalCode,
             goal = goal,
             presentMultiple = presentMultiple,
-            willConfirm = willConfirm
+            willConfirm = willConfirm,
         )
         message.setThread(
             threadId = proofRecord.threadId,
-            parentThreadId = proofRecord.parentThreadId
+            parentThreadId = proofRecord.parentThreadId,
         )
 
         agent.didCommMessageRepository.saveAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
 
         return message
-
     }
 
     suspend fun processRequest(
         proofRecord: ProofExchangeRecord,
         message: RequestPresentationMessageV2,
-        formatServices: List<ProofFormatService<*>>
+        formatServices: List<ProofFormatService<*>>,
     ) {
         for (formatService in formatServices) {
             val attachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = message.formats,
-                attachments = message.requestAttachment
+                attachments = message.requestAttachment,
             )
 
             formatService.processRequest(
                 options = ProofFormatProcessOptions(
                     attachment = attachment,
-                    proofRecord = proofRecord
-                )
+                    proofRecord = proofRecord,
+                ),
             )
         }
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             agentMessage = message,
             role = DidCommMessageRole.Receiver,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
     }
 
@@ -231,18 +221,20 @@ class ProofFormatCoordinator(
             agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = RequestPresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Request message not found")
 
         val proposal =
             agent.didCommMessageRepository.findAgentMessage(
                 associatedRecordId = proofRecord.id,
-                messageType = ProposePresentationMessageV2.type
+                messageType = ProposePresentationMessageV2.type,
             )
 
-        val proposalMessage = if (proposal != null)
-            MessageSerializer.decodeFromString(proposal) as ProposePresentationMessageV2 else null
-
+        val proposalMessage = if (proposal != null) {
+            MessageSerializer.decodeFromString(proposal) as ProposePresentationMessageV2
+        } else {
+            null
+        }
 
         val formats = mutableListOf<ProofFormatSpec>()
         val presentationAttachments = mutableListOf<Attachment>()
@@ -251,23 +243,26 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment
+                attachments = requestMessage.requestAttachment,
             )
 
-            val proposalAttachment = if(proposalMessage != null) getAttachmentForService(
-                proofFormatService = formatService,
-                formats = proposalMessage.formats,
-                attachments = proposalMessage.proposalAttachments
-            ) else null
+            val proposalAttachment = if (proposalMessage != null) {
+                getAttachmentForService(
+                    proofFormatService = formatService,
+                    formats = proposalMessage.formats,
+                    attachments = proposalMessage.proposalAttachments,
+                )
+            } else {
+                null
+            }
 
-
-            val proofAccepted : ProofFormatCreateReturn= formatService.acceptRequest(
+            val proofAccepted: ProofFormatCreateReturn = formatService.acceptRequest(
                 requestMessage = requestMessage,
                 proofFormats = proofFormats,
                 proofRecord = proofRecord,
                 proposalAttachment = proposalAttachment,
                 requestAttachment = requestAttachment,
-                attachmentId = formatService.formatKey
+                attachmentId = formatService.formatKey,
             )
 
             presentationAttachments.add(proofAccepted.attachment)
@@ -280,19 +275,19 @@ class ProofFormatCoordinator(
             comment = comment,
             goalCode = goalCode,
             goal = goal,
-            lastPresentation = lastPresentation
+            lastPresentation = lastPresentation,
         )
 
         message.setThread(
             threadId = proofRecord.threadId,
-            parentThreadId = proofRecord.parentThreadId
+            parentThreadId = proofRecord.parentThreadId,
         )
         message.setPleaseAck()
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             agentMessage = message,
             role = DidCommMessageRole.Sender,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
 
         return message
@@ -301,23 +296,21 @@ class ProofFormatCoordinator(
     suspend fun getCredentialsForRequest(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement> = emptyMap(),
-        formatServices: List<ProofFormatService<*>>
+        formatServices: List<ProofFormatService<*>>,
     ): AnonCredsCredentialsForProofRequest {
-
         val requestMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = RequestPresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Request message not found")
 
         val proposalMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = ProposePresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Proposal message not found")
-
 
         val credentialsForRequest: MutableMap<String, Any?> = mutableMapOf()
 
@@ -325,13 +318,13 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment
+                attachments = requestMessage.requestAttachment,
             )
 
             val proposalAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = proposalMessage.formats,
-                attachments = proposalMessage.proposalAttachments
+                attachments = proposalMessage.proposalAttachments,
             )
 
             val proofFormat: AnonCredsCredentialsForProofRequest =
@@ -345,35 +338,31 @@ class ProofFormatCoordinator(
             credentialsForRequest[formatService.formatKey] = proofFormat
         }
 
-        //TODO
+        // TODO
         return AnonCredsCredentialsForProofRequest(
             attributes = emptyMap(),
-            predicates = emptyMap()
+            predicates = emptyMap(),
         )
-
     }
-
 
     suspend fun selectCredentialsForRequest(
         proofRecord: ProofExchangeRecord,
         proofFormats: Map<String, JsonElement> = emptyMap(),
-        formatServices: List<ProofFormatService<*>>
+        formatServices: List<ProofFormatService<*>>,
     ): AnonCredsSelectedCredentials {
-
         val requestMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = RequestPresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Request message not found")
 
         val proposalMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
                 messageType = ProposePresentationMessageV2.type,
-                role = DidCommMessageRole.Receiver
+                role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Proposal message not found")
-
 
         val credentialsForRequest: MutableMap<String, Any?> = mutableMapOf()
 
@@ -381,13 +370,13 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment
+                attachments = requestMessage.requestAttachment,
             )
 
             val proposalAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = proposalMessage.formats,
-                attachments = proposalMessage.proposalAttachments
+                attachments = proposalMessage.proposalAttachments,
             )
 
             val proofFormat: AnonCredsSelectedCredentials =
@@ -401,22 +390,21 @@ class ProofFormatCoordinator(
             credentialsForRequest[formatService.formatKey] = proofFormat
         }
 
-        //TODO
-        //'selectCredentialsForRequest',
+        // TODO
+        // 'selectCredentialsForRequest',
         //      'output'
         return AnonCredsSelectedCredentials(
             attributes = emptyMap(),
             predicates = emptyMap(),
             selfAttestedAttributes = emptyMap(),
         )
-
     }
 
     suspend fun processPresentation(
         proofRecord: ProofExchangeRecord,
         presentationMessage: PresentationMessageV2,
         message: RequestPresentationMessageV2,
-        formatServices: List<ProofFormatService<*>>
+        formatServices: List<ProofFormatService<*>>,
     ): ProcessPresentationReturn {
         val formatVerificationResults: MutableList<Boolean> = mutableListOf()
 
@@ -424,13 +412,13 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = message.formats,
-                attachments = message.requestAttachment
+                attachments = message.requestAttachment,
             )
 
             val presentationAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = presentationMessage.formats,
-                attachments = presentationMessage.presentationAttachments
+                attachments = presentationMessage.presentationAttachments,
             )
 
             try {
@@ -446,40 +434,39 @@ class ProofFormatCoordinator(
                 logger.error("message error: ${error.message} and isValid: ${false}")
                 return ProcessPresentationReturn(
                     isValid = false,
-                    message = error.message.toString()
+                    message = error.message.toString(),
                 )
-
             }
         }
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
             agentMessage = message,
             role = DidCommMessageRole.Receiver,
-            associatedRecordId = proofRecord.id
+            associatedRecordId = proofRecord.id,
         )
 
         val isValid = formatVerificationResults.all { it == true }
 
         if (isValid) {
             return ProcessPresentationReturn(
-                isValid = isValid
+                isValid = isValid,
             )
         }
 
         return ProcessPresentationReturn(
             isValid = isValid,
-            message = "Not all presentations are valid"
+            message = "Not all presentations are valid",
         )
     }
 
     /*
-    * retrieves the attachment associated with a given ProofFormatService
-    * from a list of attachments, based on the format identifiers
-    * */
+     * retrieves the attachment associated with a given ProofFormatService
+     * from a list of attachments, based on the format identifiers
+     * */
     fun getAttachmentForService(
         proofFormatService: ProofFormatService<*>,
         formats: List<ProofFormatSpec>,
-        attachments: List<Attachment>
+        attachments: List<Attachment>,
     ): Attachment {
         val attachmentId = getAttachmentIdForService(proofFormatService, formats)
         val attachment = attachments.find { it.id == attachmentId }
@@ -488,18 +475,16 @@ class ProofFormatCoordinator(
     }
 
     /*
-   * searches for a Format within the provided list of formats that is supported by the given
-   * ProofFormatService. If found, it returns the associated attachmentId
-   * */
+     * searches for a Format within the provided list of formats that is supported by the given
+     * ProofFormatService. If found, it returns the associated attachmentId
+     * */
     fun getAttachmentIdForService(
         proofFormatService: ProofFormatService<*>,
-        formats: List<ProofFormatSpec>
+        formats: List<ProofFormatSpec>,
     ): String {
-
         val format = formats.find { proofFormatService.supportsFormat(it.format) }
             ?: throw CredoError("No attachment found for service ${proofFormatService.formatKey}")
 
         return format.attachmentId!!
     }
-
 }

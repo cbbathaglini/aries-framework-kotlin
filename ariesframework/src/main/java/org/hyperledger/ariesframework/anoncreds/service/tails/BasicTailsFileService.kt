@@ -1,17 +1,14 @@
 package org.hyperledger.ariesframework.anoncreds.service.tails
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.credentials.formats.TypedArrayEncoder
-import org.hyperledger.ariesframework.credentials.v2.handlers.IssueCredentialHandlerV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.util.Base58
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.math.BigInteger
 import java.net.URL
 import java.security.MessageDigest
 
-class BasicTailsFileService (agent: Agent) : TailsFileService {
+class BasicTailsFileService(agent: Agent) : TailsFileService {
     private val logger = LoggerFactory.getLogger(BasicTailsFileService::class.java)
     private val tailsDirectoryPath: String? = null
 
@@ -42,13 +39,13 @@ class BasicTailsFileService (agent: Agent) : TailsFileService {
     }
 
     override suspend fun uploadTailsFile(
-        options: UploadTailsFileOptions
+        options: UploadTailsFileOptions,
     ): UploadTailsFileResult {
         throw CredoError("BasicTailsFileService only supports tails file downloading")
     }
 
     override suspend fun getTailsFile(
-        options: GetTailsFileOptions
+        options: GetTailsFileOptions,
     ): GetTailsFileResult {
         val (revocationRegistryDefinition) = options
         val tailsLocation = revocationRegistryDefinition.value.tailsLocation
@@ -65,11 +62,11 @@ class BasicTailsFileService (agent: Agent) : TailsFileService {
             if (!tailsExists) {
                 logger.debug("Retrieving tails file from URL $tailsLocation")
 
-                //[TODO] revisar
+                // [TODO] revisar
                 downloadToFileWithSha256Check(
-                    url= tailsLocation,
-                    targetPath= tailsFilePath,
-                    expectedHashBase58= tailsHash
+                    url = tailsLocation,
+                    targetPath = tailsFilePath,
+                    expectedHashBase58 = tailsHash,
                 )
 
                 logger.debug("Saved tails file to FileSystem at path $tailsFilePath")
@@ -85,7 +82,7 @@ class BasicTailsFileService (agent: Agent) : TailsFileService {
     fun downloadToFileWithSha256Check(
         url: String,
         targetPath: String,
-        expectedHashBase58: String
+        expectedHashBase58: String,
     ) {
         val connection = URL(url).openStream()
         val targetFile = File(targetPath)
@@ -146,7 +143,6 @@ class BasicTailsFileService (agent: Agent) : TailsFileService {
         }
     }
 
-
     private suspend fun getTailsFilePath(tailsHash: String): String {
         return "${getTailsBasePath()}/$tailsHash"
     }
@@ -155,6 +151,6 @@ class BasicTailsFileService (agent: Agent) : TailsFileService {
         val tailsFilePath = getTailsFilePath(tailsHash)
         val baseDir = File(tailsFilePath)
 
-       return baseDir.exists()
+        return baseDir.exists()
     }
 }

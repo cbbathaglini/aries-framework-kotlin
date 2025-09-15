@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialInfo
 
@@ -9,5 +8,5 @@ data class AnonCredsRequestedPredicateMatch(
     val credentialId: String,
     val timestamp: Long? = null,
     val credentialInfo: AnonCredsCredentialInfo,
-    val revoked: Boolean? = null
+    val revoked: Boolean? = null,
 )

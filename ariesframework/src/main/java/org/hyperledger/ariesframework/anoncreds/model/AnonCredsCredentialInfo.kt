@@ -3,13 +3,10 @@ package org.hyperledger.ariesframework.anoncreds.model
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.hyperledger.ariesframework.proofs.v2.ProofCommandV2
 import org.slf4j.LoggerFactory
 
 typealias AnonCredsClaimRecord = Map<String, String>
@@ -25,8 +22,8 @@ data class AnonCredsCredentialInfo(
     val methodName: String,
     val createdAt: Instant = Clock.System.now(),
     val updatedAt: Instant,
-    val linkSecretId: String
-){
+    val linkSecretId: String,
+) {
 
     private val logger = LoggerFactory.getLogger(AnonCredsCredentialInfo::class.java)
 
@@ -44,13 +41,12 @@ data class AnonCredsCredentialInfo(
             put("linkSecretId", JsonPrimitive(linkSecretId))
         }
 
-
     fun Map<String, *>.toJsonElementKotlinx(): JsonElement =
-    buildJsonObject {
-        for ((k, v) in this@toJsonElementKotlinx) {
-            put(k, JsonPrimitive(v?.toString() ?: ""))
+        buildJsonObject {
+            for ((k, v) in this@toJsonElementKotlinx) {
+                put(k, JsonPrimitive(v?.toString() ?: ""))
+            }
         }
-    }
 
 //    fun AnonCredsClaimRecord.toJsonElement(): JsonElement? {
 //        try {

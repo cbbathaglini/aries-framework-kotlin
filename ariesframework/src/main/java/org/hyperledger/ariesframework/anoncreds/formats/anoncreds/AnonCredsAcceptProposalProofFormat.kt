@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnonCredsAcceptProposalProofFormat(
     val name: String? = null,
-    val version: String? = null
+    val version: String? = null,
 )

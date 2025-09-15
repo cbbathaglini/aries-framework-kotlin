@@ -7,9 +7,8 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 @Serializable
 data class CreateCredentialRequestReturn(
     var credentialRequest: AnonCredsCredentialRequest,
-    val credentialRequestMetadata: AnonCredsCredentialRequestMetadata
-)
-{
+    val credentialRequestMetadata: AnonCredsCredentialRequestMetadata,
+) {
     override fun toString(): String {
         return "CreateCredentialRequestReturn(credentialRequest=$credentialRequest, credentialRequestMetadata=$credentialRequestMetadata)"
     }

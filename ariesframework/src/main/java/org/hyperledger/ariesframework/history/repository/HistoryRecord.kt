@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
-import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.storage.BaseRecord

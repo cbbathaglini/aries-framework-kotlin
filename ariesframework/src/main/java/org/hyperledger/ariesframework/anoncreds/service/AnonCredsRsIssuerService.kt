@@ -11,60 +11,60 @@ import anoncreds_uniffi.RevocationStatusList
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.exception.AnonCredsError
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialOffer
-import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
-import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialReturn
-import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.serializer
+import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.exception.AnonCredsError
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredential
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialOffer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialOfferJson
+import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
+import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialReturn
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryState
+import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.util.ConvertMapAnySerializer
 
-class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
+class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
     override suspend fun createCredentialOffer(credentialDefinitionId: String): AnonCredsCredentialOffer {
         var credentialOffer: CredentialOffer? = null
 
-        //try {
+        // try {
 
-            val credentialDefinitionRecord = agent.anoncredsCredentialDefinitionRepository
-                .getByCredentialDefinitionId(credentialDefinitionId)
-                ?: throw AnonCredsError("Credential Definition $credentialDefinitionId not found")
+        val credentialDefinitionRecord = agent.anoncredsCredentialDefinitionRepository
+            .getByCredentialDefinitionId(credentialDefinitionId)
+            ?: throw AnonCredsError("Credential Definition $credentialDefinitionId not found")
 
-            val keyCorrectnessProofRecord = agent.anonCredsKeyCorrectnessProofRepository
-                .getByCredentialDefinitionId(credentialDefinitionRecord.credentialDefinitionId)
-                ?: throw AnonCredsError("Credential Definition $credentialDefinitionId not found")
+        val keyCorrectnessProofRecord = agent.anonCredsKeyCorrectnessProofRepository
+            .getByCredentialDefinitionId(credentialDefinitionRecord.credentialDefinitionId)
+            ?: throw AnonCredsError("Credential Definition $credentialDefinitionId not found")
 
-            var schemaId = credentialDefinitionRecord.credentialDefinition.schemaId
+        var schemaId = credentialDefinitionRecord.credentialDefinition.schemaId
 
-            if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
-                val parsed = Indyidentifiers.parseIndySchemaId(schemaId)
-                schemaId = Indyidentifiers.getUnqualifiedSchemaId(
-                    unqualifiedDid = parsed.first,
-                    name = parsed.second,
-                    version = parsed.third
-                )
-            }
-
-            val credentialOfferJson = CredentialOfferJson(
-                schemaId = schemaId,
-                credDefId = credentialDefinitionId,
-                keyProof = keyCorrectnessProofRecord.value
+        if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
+            val parsed = Indyidentifiers.parseIndySchemaId(schemaId)
+            schemaId = Indyidentifiers.getUnqualifiedSchemaId(
+                unqualifiedDid = parsed.first,
+                name = parsed.second,
+                version = parsed.third,
             )
+        }
+
+        val credentialOfferJson = CredentialOfferJson(
+            schemaId = schemaId,
+            credDefId = credentialDefinitionId,
+            keyProof = keyCorrectnessProofRecord.value,
+        )
 
         @OptIn(ExperimentalSerializationApi::class)
         val json = Json.encodeToString(serializer<CredentialOfferJson>(), credentialOfferJson)
 
-            credentialOffer = CredentialOffer(json)
-            return credentialOffer.toJson() as AnonCredsCredentialOffer
+        credentialOffer = CredentialOffer(json)
+        return credentialOffer.toJson() as AnonCredsCredentialOffer
 
 //        } finally {
 //            //credentialOffer?.handle?.clear()
@@ -82,12 +82,12 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
         val revocationParams = listOf(
             revocationRegistryDefinitionId,
             revocationStatusList,
-            revocationRegistryIndex
+            revocationRegistryIndex,
         )
 
         if (revocationParams.filterNotNull().size in 1..2) {
             throw IllegalArgumentException(
-                "Revocation requires all of revocationRegistryDefinitionId, revocationRegistryIndex and revocationStatusList"
+                "Revocation requires all of revocationRegistryDefinitionId, revocationRegistryIndex and revocationStatusList",
             )
         }
 
@@ -112,11 +112,11 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
             val unqualifiedDid = Indyidentifiers.parseIndyDid(credentialDefinition.issuerId).second
             credentialDefinition = credentialDefinition.copy(
                 schemaId = Indyidentifiers.getUnqualifiedSchemaId(namespaceIdentifier, schemaName, schemaVersion),
-                issuerId = unqualifiedDid
+                issuerId = unqualifiedDid,
             )
         }
 
-        lateinit var revocationStatusListAnoncredsUniffi : RevocationStatusList
+        lateinit var revocationStatusListAnoncredsUniffi: RevocationStatusList
         var revocationConfiguration: CredentialRevocationConfig? = null
         if (revocationRegistryDefinitionId != null && revocationStatusList != null && revocationRegistryIndex != null) {
             val revocationRegistryDefinitionRecord = agent.anonCredsRevocationRegistryDefinitionRepository
@@ -129,13 +129,12 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
                 revDefPrivateRecord.state = AnonCredsRevocationRegistryState.Full
             }
 
-            val revocationRegistryDefinitionJson = Json.encodeToString(serializer<AnonCredsRevocationRegistryDefinition>(),  revocationRegistryDefinitionRecord.revocationRegistryDefinition)
+            val revocationRegistryDefinitionJson = Json.encodeToString(serializer<AnonCredsRevocationRegistryDefinition>(), revocationRegistryDefinitionRecord.revocationRegistryDefinition)
             val revocationRegistryDefinitionAnonCreds = RevocationRegistryDefinition(revocationRegistryDefinitionJson)
 
             val revocationRegistryDefinitionPrivateJson = revDefPrivateRecord.value as Map<String, String>
             val revocationRegistryDefinitionPrivateAnonCreds = Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), revocationRegistryDefinitionPrivateJson)
             val revocationRegistryDefinitionPrivate = RevocationRegistryDefinitionPrivate(revocationRegistryDefinitionPrivateAnonCreds)
-
 
             val revocationStatusListAnoncredsJson = Json.encodeToString(serializer<AnonCredsRevocationStatusList>(), revocationStatusList)
             revocationStatusListAnoncredsUniffi = RevocationStatusList(revocationStatusListAnoncredsJson)
@@ -144,14 +143,14 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
                 regDef = revocationRegistryDefinitionAnonCreds,
                 regDefPrivate = revocationRegistryDefinitionPrivate,
                 statusList = revocationStatusListAnoncredsUniffi,
-                registryIndex = revocationRegistryIndex.toUInt()
+                registryIndex = revocationRegistryIndex.toUInt(),
             )
         }
 
         val credentialDefinitionJson = Json.encodeToString(serializer<AnonCredsCredentialDefinition>(), credentialDefinition)
         val credentialDefinitionUniffi = CredentialDefinition(credentialDefinitionJson)
 
-        val credentialOfferJson = credentialOffer.toJsonString()  //Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
+        val credentialOfferJson = credentialOffer.toJsonString() // Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
         val credentialOfferUniffi = CredentialOffer(credentialOfferJson)
 
         val credentialRequestJson = Json.encodeToString(serializer<AnonCredsCredentialRequest>(), credentialRequest)
@@ -182,8 +181,7 @@ class AnonCredsRsIssuerService (val agent: Agent): AnonCredsIssuerService {
 
         return CreateCredentialReturn(
             credential = credential.toJson() as AnonCredsCredential,
-            credentialRevocationId = credential.revRegIndex()?.toString()
+            credentialRevocationId = credential.revRegIndex()?.toString(),
         )
-
     }
 }

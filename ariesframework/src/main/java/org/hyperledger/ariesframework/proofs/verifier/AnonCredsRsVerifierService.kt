@@ -1,34 +1,25 @@
 package org.hyperledger.ariesframework.proofs.verifier
 
 import anoncreds_uniffi.Presentation
-import anoncreds_uniffi.RevocationRegistryDefinition
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedAttributeMatch
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsRequestedPredicateMatch
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetRevocationMetadataParams
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinitions
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
-import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
-import org.hyperledger.ariesframework.vc.proof.CredentialWithRevocationMetadata
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
 
-class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
+class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
     private val logger = LoggerFactory.getLogger(AnonCredsRsVerifierService::class.java)
 
     override suspend fun verifyProof(
-        options: VerifyProofOptions
+        options: VerifyProofOptions,
     ): Boolean {
-
         val (proofRequest, proof, schemas, credentialDefinitions, revocationRegistries) = options
 
         var presentation: Presentation? = null
@@ -40,7 +31,6 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
             logger.debug("Invalid timestamps for provided identifiers")
             return false
         }
-
 
         presentation = Presentation(proof.toString())
 
@@ -62,7 +52,7 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
             revocationRegistryDefinitions[revRegDefId] = definition
 
             val revocationStatusLists = reg.revocationStatusLists?.values
-            if (revocationStatusLists!=null) {
+            if (revocationStatusLists != null) {
                 for (lst in revocationStatusLists) {
                     lists.add(lst as JsonObject)
                 }
@@ -80,7 +70,6 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
 //            )
 //        )
         return false
-
     }
 
     override suspend fun verifyW3cPresentation(options: VerifyW3cPresentationOptions): Boolean {
@@ -89,7 +78,7 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
 
     private suspend fun verifyTimestamps(
         proof: AnonCredsProof,
-        proofRequest: AnonCredsProofRequest
+        proofRequest: AnonCredsProofRequest,
     ): TimestampVerificationResult {
         val nonRevokedIntervalOverrides = mutableListOf<NonRevokedIntervalOverride>()
 
@@ -112,20 +101,19 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
             }
 
             if (nonRevokedInterval != null) {
-
                 val restrictions = when (value) {
                     is AnonCredsRequestedAttribute -> value.restrictions
                     is AnonCredsRequestedPredicate -> value.restrictions
                     else -> emptyList<AnonCredsProofRequestRestriction>()
                 }
 
-                if (restrictions!=null){
+                if (restrictions != null) {
                     for (restriction in restrictions) {
                         requestedNonRevokedRestrictions += RequestedItem(
                             nonRevokedInterval = nonRevokedInterval,
                             schemaId = restriction.schemaId,
                             credentialDefinitionId = restriction.credDefId,
-                            revocationRegistryDefinitionId = restriction.revRegId
+                            revocationRegistryDefinitionId = restriction.revRegId,
                         )
                     }
                 }
@@ -139,16 +127,16 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
 
             val related = requestedNonRevokedRestrictions.firstOrNull { item ->
                 item.revocationRegistryDefinitionId == revRegId ||
-                        item.credentialDefinitionId == identifier.credDefId ||
-                        item.schemaId == identifier.schemaId
+                    item.credentialDefinitionId == identifier.credDefId ||
+                    item.schemaId == identifier.schemaId
             }
 
             val requestedFrom = related?.nonRevokedInterval?.from
             if (requestedFrom != null && requestedFrom > timestamp) {
                 // Consulta VDR para checar se a lista ativa em requestedFrom equivale ao timestamp informado
-                val revocationStatusList : RevocationStatusList = agent.ledgerService.getRevocationStatusList(
+                val revocationStatusList: RevocationStatusList = agent.ledgerService.getRevocationStatusList(
                     id = revRegId,
-                    timestamp = requestedFrom.toInt()
+                    timestamp = requestedFrom.toInt(),
                 )
 
                 val vdrTimestamp = revocationStatusList.timestamp
@@ -156,12 +144,12 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
                     nonRevokedIntervalOverrides += NonRevokedIntervalOverride(
                         overrideRevocationStatusListTimestamp = timestamp,
                         requestedFromTimestamp = requestedFrom,
-                        revocationRegistryDefinitionId = revRegId
+                        revocationRegistryDefinitionId = revRegId,
                     )
                 } else {
                     logger.debug(
                         "VDR timestamp for $requestedFrom does not correspond to the one provided in proof identifiers. " +
-                                "Expected: $timestamp and received $vdrTimestamp"
+                            "Expected: $timestamp and received $vdrTimestamp",
                     )
                     return TimestampVerificationResult(verified = false)
                 }
@@ -170,7 +158,7 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
 
         return TimestampVerificationResult(
             verified = true,
-            nonRevokedIntervalOverrides = nonRevokedIntervalOverrides.takeIf { it.isNotEmpty() }
+            nonRevokedIntervalOverrides = nonRevokedIntervalOverrides.takeIf { it.isNotEmpty() },
         )
     }
 
@@ -233,5 +221,4 @@ class AnonCredsRsVerifierService (val agent: Agent) : AnonCredsVerifierService {
 //        }
 //        result
 //    }
-
 }

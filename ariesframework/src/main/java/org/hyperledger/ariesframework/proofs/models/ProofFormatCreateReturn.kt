@@ -6,5 +6,5 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 @Serializable
 data class ProofFormatCreateReturn(
     val format: ProofFormatSpec,
-    val attachment: Attachment
+    val attachment: Attachment,
 )

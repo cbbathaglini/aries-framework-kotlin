@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 
 class PrintLongLine {
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(PrintLongLine::class.java)
         fun print(message: String) {
             val maxLogSize = 4000

@@ -10,5 +10,5 @@ data class CreateProposalParams(
     val credentialRecord: CredentialExchangeRecord,
     val comment: String? = null,
     val goalCode: String? = null,
-    val goal: String? = null
+    val goal: String? = null,
 )

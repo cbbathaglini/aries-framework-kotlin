@@ -3,12 +3,9 @@ package org.hyperledger.ariesframework.storage
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.Tags
-import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import kotlin.math.log
 
 @Serializable
 abstract class BaseRecord {
@@ -18,7 +15,7 @@ abstract class BaseRecord {
     protected abstract var _tags: Tags?
     abstract val createdAt: Instant
     abstract var updatedAt: Instant?
-    //var metadata: MutableMap<String, Any> = mutableMapOf()
+    // var metadata: MutableMap<String, Any> = mutableMapOf()
 
     var metadata: MutableMap<String, JsonElement> = mutableMapOf()
 

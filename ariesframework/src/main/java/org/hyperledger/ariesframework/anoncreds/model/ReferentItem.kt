@@ -6,7 +6,7 @@ data class ReferentItem(
     val type: Type,
     val referent: String,
     val selectedCredential: Any, // AnonCredsRequestedAttributeMatch | AnonCredsRequestedPredicateMatch
-    val nonRevoked: AnonCredsNonRevokedInterval?
+    val nonRevoked: AnonCredsNonRevokedInterval?,
 ) {
     enum class Type { ATTRIBUTES, PREDICATES }
 }

@@ -1,9 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.formats.legacyindy
 
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormat
-import org.hyperledger.ariesframework.anoncreds.formats.CredentialFormatOperations
 import org.hyperledger.ariesframework.credentials.formats.LinkedAttachment
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 
@@ -26,5 +24,5 @@ class LegacyIndyCredentialFormat(
     val revocationRegistryIndex: Long? = null,
     val attributes: List<CredentialPreviewAttribute>,
     val linkedAttachments: List<LinkedAttachment>? = emptyList(),
-    val linkSecretId: String //[TODO] Added for me
+    val linkSecretId: String, // [TODO] Added for me
 ) : CredentialFormat

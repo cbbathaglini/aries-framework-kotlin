@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.history.models
 
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 enum class HistoryType {
     @SerialName("basic-message-received")

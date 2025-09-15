@@ -5,7 +5,7 @@ import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 
 @Serializable
-data class CreateProposalProofOptionsV2 (
+data class CreateProposalProofOptionsV2(
     val connectionRecord: ConnectionRecord,
     val proofFormats: Map<String, JsonElement> = emptyMap(),
     val comment: String,

@@ -1,11 +1,8 @@
 package org.hyperledger.ariesframework.credentials.repository
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
-import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.storage.Repository
-import org.json.JSONObject
 
 class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchangeRecord>(
     CredentialExchangeRecord::class,
@@ -33,14 +30,12 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
     }
 
     suspend fun getByThreadAndRole(threadId: String, role: CredentialRole?): CredentialExchangeRecord? {
-        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role.toString()}\"}")
-
+        return getSingleByQuery("{\"threadId\": \"$threadId\",\"role\": \"${role}\"}")
     }
 
     suspend fun getByThreadAndRoleAndConnectionId(threadId: String, role: String?, connectionId: String?): CredentialExchangeRecord {
         return getSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\", \"role\": \"$role\"}")
     }
-
 
     suspend fun findByThreadRoleAndConnectionId(
         threadId: String,
@@ -73,20 +68,19 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
     }
 
     suspend fun getByRevocationRegistryId(revocationRegistryId: String, anoncredsType: Boolean): CredentialExchangeRecord {
-        if (!anoncredsType) return  getSingleByQuery("{\"revocationRegistryId\": \"$revocationRegistryId\"}")
+        if (!anoncredsType) return getSingleByQuery("{\"revocationRegistryId\": \"$revocationRegistryId\"}")
         return getSingleByQuery("{\"anonCredsRevocationRegistryId\": \"$revocationRegistryId\"}")
     }
 
     suspend fun getByCredentialRevocationId(credentialRevocationId: String, anoncredsType: Boolean): CredentialExchangeRecord {
-       if (!anoncredsType) return getSingleByQuery("{\"credentialRevocationId\": \"$credentialRevocationId\"}")
+        if (!anoncredsType) return getSingleByQuery("{\"credentialRevocationId\": \"$credentialRevocationId\"}")
         return getSingleByQuery("{\"anonCredsCredentialRevocationId\": \"$credentialRevocationId\"}")
     }
 
-    suspend fun getByCredentialRevocationIdAndRevocationRegistryId(credentialRevocationId: String, revocationRegistryId: String, anoncredsType:  Boolean): CredentialExchangeRecord {
-        if( !anoncredsType) {
+    suspend fun getByCredentialRevocationIdAndRevocationRegistryId(credentialRevocationId: String, revocationRegistryId: String, anoncredsType: Boolean): CredentialExchangeRecord {
+        if (!anoncredsType) {
             return getSingleByQuery("{\"credentialRevocationId\": \"$credentialRevocationId\", \"revocationRegistryId\": \"$revocationRegistryId\"}")
         }
         return getSingleByQuery("{\"anonCredsCredentialRevocationId\": \"$credentialRevocationId\", \"anonCredsRevocationRegistryId\": \"$revocationRegistryId\"}")
-
     }
 }

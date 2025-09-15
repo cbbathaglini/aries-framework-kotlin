@@ -8,11 +8,10 @@ import org.hyperledger.ariesframework.vc.proof.CredentialWithRevocationMetadata
 import org.hyperledger.ariesframework.vc.proof.W3cJsonLdVerifiablePresentation
 
 @Serializable
-data class VerifyW3cPresentationOptions (
+data class VerifyW3cPresentationOptions(
     val proofRequest: AnonCredsProofRequest,
     val presentation: W3cJsonLdVerifiablePresentation,
     val schemas: AnonCredsSchemas,
     val credentialDefinitions: AnonCredsCredentialDefinitions,
-    val credentialsWithRevocationMetadata: List<CredentialWithRevocationMetadata>
+    val credentialsWithRevocationMetadata: List<CredentialWithRevocationMetadata>,
 )
-

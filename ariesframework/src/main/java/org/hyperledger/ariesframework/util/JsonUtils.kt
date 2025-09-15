@@ -21,7 +21,7 @@ class JsonUtils {
                         is JsonElement -> v
                         else -> Json.encodeToJsonElement(v) // usa kotlinx.serialization se o tipo for @Serializable
                     }
-                }
+                },
             )
             return jsonObject
         }
@@ -35,24 +35,25 @@ class JsonUtils {
                     is Number -> JsonPrimitive(value)
                     is Boolean -> JsonPrimitive(value)
                     is Map<*, *> -> mapToJson(value as Map<String, Any?>) // recursão
-                    is List<*> -> JsonArray(value.map { v ->
-                        when (v) {
-                            null -> JsonNull
-                            is JsonElement -> v
-                            is String -> JsonPrimitive(v)
-                            is Number -> JsonPrimitive(v)
-                            is Boolean -> JsonPrimitive(v)
-                            is Map<*, *> -> mapToJson(v as Map<String, Any?>)
-                            else -> JsonPrimitive(v.toString()) // fallback
-                        }
-                    })
+                    is List<*> -> JsonArray(
+                        value.map { v ->
+                            when (v) {
+                                null -> JsonNull
+                                is JsonElement -> v
+                                is String -> JsonPrimitive(v)
+                                is Number -> JsonPrimitive(v)
+                                is Boolean -> JsonPrimitive(v)
+                                is Map<*, *> -> mapToJson(v as Map<String, Any?>)
+                                else -> JsonPrimitive(v.toString()) // fallback
+                            }
+                        },
+                    )
 
                     else -> JsonPrimitive(value.toString()) // fallback pra tipos desconhecidos
                 }
             }
             return JsonObject(content)
         }
-
 
         fun elementToJson(value: Any?): JsonElement = when (value) {
             null -> JsonNull

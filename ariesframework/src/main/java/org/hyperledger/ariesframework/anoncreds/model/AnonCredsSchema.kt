@@ -10,8 +10,8 @@ data class AnonCredsSchema(
     val issuerId: String,
     val name: String,
     val version: String,
-    val attrNames: List<String>
-){
+    val attrNames: List<String>,
+) {
     @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String {
         val json = Json {

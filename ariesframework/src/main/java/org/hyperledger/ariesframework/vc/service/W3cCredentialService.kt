@@ -1,27 +1,21 @@
 package org.hyperledger.ariesframework.vc.service
 
-import kotlinx.serialization.json.Json
-import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
-import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
+import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.model.W3cCredential
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
-import org.hyperledger.ariesframework.vc.model.W3cVerifiableCredential
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.slf4j.LoggerFactory
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import org.hyperledger.ariesframework.util.PrintLongLine
-
 
 class W3cCredentialService(
     private val w3cCredentialRepository: W3cCredentialRepository,
     private val w3cJsonLdCredentialService: W3cJsonLdCredentialService,
-    private val w3cJwtCredentialService: W3cJwtCredentialService)
-{
+    private val w3cJwtCredentialService: W3cJwtCredentialService,
+) {
 
     private val logger = LoggerFactory.getLogger(W3cCredentialService::class.java)
+
     /**
      * Writes a credential to storage
      *
@@ -29,8 +23,8 @@ class W3cCredentialService(
      * @returns the credential record that was written to storage
      */
     suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
-        val expandedTypes: Map<String, List<String>> =  w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
-        PrintLongLine.print("verifiable: ${jsonLdVerifiableCredential.toString()}")
+        val expandedTypes: Map<String, List<String>> = w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
+        PrintLongLine.print("verifiable: $jsonLdVerifiableCredential")
 
 //        val expandedTypes: Map<String, String> = mapOf("type" to "https://www.w3.org/2018/credentials#VerifiableCredential")
 //        logger.info("expandedTypes: ${expandedTypes.toString()}")
@@ -45,18 +39,17 @@ class W3cCredentialService(
             expirationDate = jsonLdVerifiableCredential.expirationDate,
             credentialSchema = jsonLdVerifiableCredential.credentialSchema,
             credentialStatus = jsonLdVerifiableCredential.credentialStatus,
-            proofs= jsonLdVerifiableCredential.proofs
+            proofs = jsonLdVerifiableCredential.proofs,
         )
 
         val expandedTypesStr: Map<String, String> = expandedTypes.mapValues { (_, v) -> v.joinToString(",") }
         val w3cCredentialRecord = W3cCredentialRecord(
             tags = expandedTypesStr,
-            credential = w3cCredential
+            credential = w3cCredential,
         )
 
-        logger.info("w3cCredentialRecord =====> ${w3cCredentialRecord.toString()}")
+        logger.info("w3cCredentialRecord =====> $w3cCredentialRecord")
         w3cCredentialRepository.save(w3cCredentialRecord)
         return w3cCredentialRecord
     }
-
 }

@@ -7,10 +7,10 @@ import org.hyperledger.ariesframework.credentials.v2.models.Format
 
 @Serializable
 data class RequestCredentialParams(
-    val credentialFormats : List<Format>, //Map<String, JsonElement>,
-    val formatServices : List<CredentialFormatService<*>>,
+    val credentialFormats: List<Format>, // Map<String, JsonElement>,
+    val formatServices: List<CredentialFormatService<*>>,
     val credentialRecord: CredentialExchangeRecord,
     val comment: String?,
     val goalCode: String?,
-    val goal: String?
+    val goal: String?,
 )

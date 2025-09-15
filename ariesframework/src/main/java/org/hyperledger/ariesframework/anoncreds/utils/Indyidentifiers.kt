@@ -3,10 +3,8 @@ package org.hyperledger.ariesframework.anoncreds.utils
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
-import org.hyperledger.ariesframework.anoncreds.model.StoreCredential
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
-import kotlin.math.log
 
 object Indyidentifiers {
     private val logger = LoggerFactory.getLogger(Indyidentifiers::class.java)
@@ -94,22 +92,21 @@ object Indyidentifiers {
     }
 
     fun isUnqualifiedDidIndyRevocationRegistryDefinition(
-        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
     ): Boolean {
         return isUnqualifiedIndyDid(revocationRegistryDefinition.issuerId) &&
-                isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
+            isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
     }
-
 
     fun isUnqualifiedDidIndyCredentialDefinition(credentialDefinition: AnonCredsCredentialDefinition): Boolean {
         return isUnqualifiedIndyDid(credentialDefinition.issuerId) &&
-                isUnqualifiedSchemaId(credentialDefinition.schemaId)
+            isUnqualifiedSchemaId(credentialDefinition.schemaId)
     }
 
     fun getQualifiedDidIndyDid(identifier: String, namespace: String): String {
         if (isIndyDid(identifier)) return identifier
 
-        //adicionar pq nao ta funfando
+        // adicionar pq nao ta funfando
         if (namespace.isBlank()) {
             throw IllegalArgumentException("Missing required indy namespace")
         }
@@ -170,10 +167,10 @@ object Indyidentifiers {
     }
 
     fun isQualifiedDidIndyCredentialDefinition(
-        credentialDefinition: AnonCredsCredentialDefinition
+        credentialDefinition: AnonCredsCredentialDefinition,
     ): Boolean {
         return !isUnqualifiedIndyDid(credentialDefinition.issuerId) &&
-                !isUnqualifiedSchemaId(credentialDefinition.schemaId)
+            !isUnqualifiedSchemaId(credentialDefinition.schemaId)
     }
 
     fun isUnqualifiedDidIndySchema(schema: AnonCredsSchema): Boolean {
@@ -182,7 +179,7 @@ object Indyidentifiers {
 
     fun getQualifiedDidIndyCredentialDefinition(
         credentialDefinition: AnonCredsCredentialDefinition,
-        namespace: String
+        namespace: String,
     ): AnonCredsCredentialDefinition {
         if (isQualifiedDidIndyCredentialDefinition(credentialDefinition)) {
             return credentialDefinition.copy()
@@ -190,29 +187,29 @@ object Indyidentifiers {
 
         return credentialDefinition.copy(
             issuerId = getQualifiedDidIndyDid(credentialDefinition.issuerId, namespace),
-            schemaId = getQualifiedDidIndyDid(credentialDefinition.schemaId, namespace)
+            schemaId = getQualifiedDidIndyDid(credentialDefinition.schemaId, namespace),
         )
     }
 
     fun getQualifiedDidIndyRevocationRegistryDefinition(
         revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
-        namespace: String
+        namespace: String,
     ): AnonCredsRevocationRegistryDefinition {
         return if (isQualifiedRevocationRegistryDefinition(revocationRegistryDefinition)) {
             revocationRegistryDefinition
         } else {
             revocationRegistryDefinition.copy(
                 issuerId = getQualifiedDidIndyDid(revocationRegistryDefinition.issuerId, namespace),
-                credDefId = getQualifiedDidIndyDid(revocationRegistryDefinition.credDefId, namespace)
+                credDefId = getQualifiedDidIndyDid(revocationRegistryDefinition.credDefId, namespace),
             )
         }
     }
 
     fun isQualifiedRevocationRegistryDefinition(
-        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition
+        revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
     ): Boolean {
         return !isUnqualifiedIndyDid(revocationRegistryDefinition.issuerId) &&
-                !isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
+            !isUnqualifiedCredentialDefinitionId(revocationRegistryDefinition.credDefId)
     }
 
     fun isQualifiedDidIndySchema(schema: AnonCredsSchema): Boolean {
@@ -224,7 +221,7 @@ object Indyidentifiers {
             schema
         } else {
             schema.copy(
-                issuerId = getQualifiedDidIndyDid(schema.issuerId, namespace)
+                issuerId = getQualifiedDidIndyDid(schema.issuerId, namespace),
             )
         }
     }
@@ -232,10 +229,9 @@ object Indyidentifiers {
     fun parseIndyRevocationRegistryId(revocationRegistryId: String): ParsedIndyRevocationRegistryId {
         logger.info("parseIndyRevocationRegistryId:::: $revocationRegistryId")
         val didIndyMatch = didIndyRevocationRegistryIdRegex.matcher(revocationRegistryId)
-        logger.info("didIndyMatch1:::: ${didIndyMatch.toString()}")
+        logger.info("didIndyMatch1:::: $didIndyMatch")
 
         if (didIndyMatch != null) {
-
             val did = didIndyMatch.group(1)
             val namespace = didIndyMatch.group(2)
             val namespaceIdentifier = didIndyMatch.group(3)
@@ -250,12 +246,12 @@ object Indyidentifiers {
                 schemaSeqNo = schemaSeqNo!!,
                 credentialDefinitionTag = credentialDefinitionTag!!,
                 revocationRegistryTag = revocationRegistryTag!!,
-                namespace = namespace
+                namespace = namespace,
             )
         }
 
         val legacyMatch = unqualifiedRevocationRegistryIdRegex.matcher(revocationRegistryId)
-        logger.info("legacyMatch:::: ${legacyMatch.toString()}")
+        logger.info("legacyMatch:::: $legacyMatch")
         if (legacyMatch != null) {
             logger.info("legacyMatch gorup 1:::: ${legacyMatch.group(1)}")
 
@@ -269,7 +265,7 @@ object Indyidentifiers {
                 namespaceIdentifier = did,
                 schemaSeqNo = schemaSeqNo,
                 credentialDefinitionTag = credentialDefinitionTag,
-                revocationRegistryTag = revocationRegistryTag
+                revocationRegistryTag = revocationRegistryTag,
             )
         }
 
@@ -297,7 +293,7 @@ object Indyidentifiers {
                     namespaceIdentifier,
                     schemaSeqNo,
                     credentialDefinitionTag,
-                    revocationRegistryTag
+                    revocationRegistryTag,
                 )
             }
 

@@ -46,7 +46,6 @@ import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import kotlin.math.log
 
 class CredentialService(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(CredentialService::class.java)
@@ -190,7 +189,7 @@ class CredentialService(val agent: Agent) {
             )
             credentialExchangeRepository.save(credentialRecord)
 
-            if (credentialRecord.connectionId == null){
+            if (credentialRecord.connectionId == null) {
                 throw CredoError("Connection id not found")
             }
 
@@ -224,7 +223,7 @@ class CredentialService(val agent: Agent) {
         val offerMessageJson = agent.didCommMessageRepository.getAgentMessage(
             credentialRecord.id,
             OfferCredentialMessage.type,
-            //faltou passar o role receiver
+            // faltou passar o role receiver
         )
         logger.info("[IDD]offerMessageJson: $offerMessageJson")
         val offerMessage =
@@ -242,7 +241,7 @@ class CredentialService(val agent: Agent) {
 
         val credentialDefinition =
             ledgerService.getCredentialDefinition(credentialOffer.credDefId())
-        logger.info("cred def: ${credentialDefinition.toString()}")
+        logger.info("cred def: $credentialDefinition")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val credReqTuple = Prover().createCredentialRequest(
@@ -529,7 +528,7 @@ class CredentialService(val agent: Agent) {
     }
 
     private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
-        if (credentialRecord.connectionId == null){
+        if (credentialRecord.connectionId == null) {
             throw CredoError("Connection id not found")
         }
         val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)

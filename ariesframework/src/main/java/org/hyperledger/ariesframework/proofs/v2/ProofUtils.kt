@@ -6,7 +6,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.util.concurrentForEach
@@ -46,7 +45,7 @@ class ProofUtils {
 
         suspend fun getCredentialDefinitionsUniffi(
             agent: Agent,
-            credentialDefinitionIds: Set<String>
+            credentialDefinitionIds: Set<String>,
         ): Map<String, CredentialDefinition> {
             val credentialDefinitions = mutableMapOf<String, CredentialDefinition>()
             val lock = Mutex()
@@ -65,7 +64,7 @@ class ProofUtils {
 
         suspend fun getCredentialDefinitions(
             agent: Agent,
-            credentialDefinitionIds: Set<String>
+            credentialDefinitionIds: Set<String>,
         ): Map<String, AnonCredsCredentialDefinition> {
             val credentialDefinitions = mutableMapOf<String, AnonCredsCredentialDefinition>()
             val lock = Mutex()

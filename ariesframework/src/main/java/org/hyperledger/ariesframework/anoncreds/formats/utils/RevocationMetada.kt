@@ -1,21 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.formats.utils
 
-import anoncreds_uniffi.CredentialRevocationState
-import uniffi.indy_besu_vdr.RevocationStatusList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonObject
-import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetRevocationMetadataParams
-import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.RevocationMetadataResult
-import org.hyperledger.ariesframework.error.CredoError
-import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
-import anoncreds_uniffi.RevocationRegistryDefinition
-import kotlinx.serialization.json.Json
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
-
 class RevocationMetada {
-  //  companion object{
+    //  companion object{
 //        suspend fun getRevocationMetadata(
 //            agent: Agent,
 //            credentialRevocationMetadata: GetRevocationMetadataParams,
@@ -43,20 +29,20 @@ class RevocationMetada {
 //
 //            val tailsFile = agent.revocationService.downloadTails(revocationRegistryDefinition)
 //
-////            // Baixar tails
-////            val tailsFileService = agentContext
-////                .dependencyManager
-////                .resolve(AnonCredsModuleConfig::class.java)
-////                .tailsFileService
-////
-////            val tailsFilePath = tailsFileService.getTailsFile(
-////                agentContext,
-////                TailsFileService.TailsRequest(
-////                    revocationRegistryDefinition = RevocationRegistryDefinition.fromJson(
-////                        anonCredsRevocationRegistryDefinitionJson
-////                    )
-////                )
-////            ).tailsFilePath
+// //            // Baixar tails
+// //            val tailsFileService = agentContext
+// //                .dependencyManager
+// //                .resolve(AnonCredsModuleConfig::class.java)
+// //                .tailsFileService
+// //
+// //            val tailsFilePath = tailsFileService.getTailsFile(
+// //                agentContext,
+// //                TailsFileService.TailsRequest(
+// //                    revocationRegistryDefinition = RevocationRegistryDefinition.fromJson(
+// //                        anonCredsRevocationRegistryDefinitionJson
+// //                    )
+// //                )
+// //            ).tailsFilePath
 //
 //            // Timestamp a buscar
 //            val timestampToFetch = providedTimestamp ?: nonRevokedInterval.to

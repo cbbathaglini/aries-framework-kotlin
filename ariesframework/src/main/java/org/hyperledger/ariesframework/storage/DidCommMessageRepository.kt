@@ -66,7 +66,6 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
         return record?.message
     }
 
-
 //    suspend fun findAgentMessage(associatedRecordId: String, messageType: String, role: DidCommMessageRole): String {
 //        var type = messageType
 //        if (agent.agentConfig.useLegacyDidSovPrefix) {
@@ -87,7 +86,7 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
     suspend inline fun <reified T> getTypedAgentMessage(
         associatedRecordId: String,
         messageType: String,
-        role: DidCommMessageRole
+        role: DidCommMessageRole,
     ): T? {
         val actualType = if (agent.agentConfig.useLegacyDidSovPrefix) {
             Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
@@ -100,17 +99,17 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
             "associatedRecordId": "$associatedRecordId",
             "messageType": "$actualType",
             "role": "$role"
-        }""".trimIndent()
+        }
+            """.trimIndent(),
         )
 
         return record?.message?.let {
             runCatching {
                 MessageSerializer.decodeFromString(it) as T
             }.getOrElse { error ->
-                //logger.warn("Failed to deserialize ${T::class.simpleName} for record ID $associatedRecordId: ${error.message}")
+                // logger.warn("Failed to deserialize ${T::class.simpleName} for record ID $associatedRecordId: ${error.message}")
                 null
             }
         }
     }
-
 }

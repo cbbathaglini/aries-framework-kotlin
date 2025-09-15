@@ -67,8 +67,6 @@ class AnoncredsService(val agent: Agent) {
         }
     }
 
-
-
     private fun queryFromRestrictions(restrictions: List<AttributeFilter>): Map<String, String> {
         val tags = mutableMapOf<String, String>()
         for (restriction in restrictions) {
@@ -81,5 +79,4 @@ class AnoncredsService(val agent: Agent) {
         }
         return tags
     }
-
 }

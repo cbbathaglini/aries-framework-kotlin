@@ -6,5 +6,5 @@ data class RequestedItem(
     val nonRevokedInterval: AnonCredsNonRevokedInterval,
     val schemaId: String? = null,
     val credentialDefinitionId: String? = null,
-    val revocationRegistryDefinitionId: String? = null
+    val revocationRegistryDefinitionId: String? = null,
 )

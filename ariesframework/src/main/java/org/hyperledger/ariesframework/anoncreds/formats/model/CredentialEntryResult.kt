@@ -5,14 +5,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
-data class CredentialEntryResult (
+data class CredentialEntryResult(
     val linkSecretId: String,
     val credentialEntry: CredentialEntry,
-    val credentialId: String
-){
+    val credentialId: String,
+) {
 //    fun toJson(): String = Json {
 //        prettyPrint = true
 //        encodeDefaults = true
@@ -27,9 +26,9 @@ data class CredentialEntryResult (
 
 @Serializable
 data class CredentialEntry(
-    val credential: JsonElement,                // aceita tanto Credential serializado quanto JsonObject
+    val credential: JsonElement, // aceita tanto Credential serializado quanto JsonObject
     val timestamp: Long? = null,
-    val revocationState: JsonElement? = null
+    val revocationState: JsonElement? = null,
 ) {
     @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {

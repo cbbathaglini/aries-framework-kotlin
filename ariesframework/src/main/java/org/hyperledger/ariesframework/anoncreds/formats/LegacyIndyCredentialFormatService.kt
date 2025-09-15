@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.anoncreds.formats
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
@@ -14,6 +13,7 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsPropo
 import org.hyperledger.ariesframework.anoncreds.formats.legacyindy.CreateIndyOfferOptions
 import org.hyperledger.ariesframework.anoncreds.formats.legacyindy.LegacyIndyCredentialFormat
 import org.hyperledger.ariesframework.anoncreds.formats.legacyindy.LegacyIndyCredentialProposalFormat
+import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateProposalReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateReturn
 import org.hyperledger.ariesframework.anoncreds.formats.utils.Credential
@@ -27,6 +27,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 import org.hyperledger.ariesframework.anoncreds.model.CreateCredentialRequestOptions
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
+import org.hyperledger.ariesframework.anoncreds.model.holder.CreateCredentialRequestReturn
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
@@ -35,11 +36,6 @@ import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCre
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCredentialProposal
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MessageValidator
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
-import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
-import org.hyperledger.ariesframework.anoncreds.model.holder.CreateCredentialRequestReturn
-import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialReturn
 import org.hyperledger.ariesframework.credentials.models.problemreport.CredentialProblemReportReason
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.repository.CredentialRecordBinding
@@ -53,7 +49,7 @@ import org.slf4j.LoggerFactory
 class LegacyIndyCredentialFormatService(
     override val formatKey: String = "indy",
     override val credentialRecordType: String = "w3c",
-    val agent: Agent
+    val agent: Agent,
 ) : CredentialFormatService<LegacyIndyCredentialFormat> {
 
     private val logger = LoggerFactory.getLogger(LegacyIndyCredentialFormatService::class.java)
@@ -67,10 +63,9 @@ class LegacyIndyCredentialFormatService(
 
     override suspend fun createProposal(
         credentialFormats: Map<String, JsonElement>?,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ): CredentialFormatCreateProposalReturn {
-
-        val format = Format(format= INDY_CRED_FILTER)
+        val format = Format(format = INDY_CRED_FILTER)
         val indyFormat = FormatGeneric.getLegacyIndyFormatGeneric<AnonCredsProposeCredentialFormat>(credentialFormats)
 
         val indyCredentialProposal = AnonCredsCredentialProposal(
@@ -81,59 +76,60 @@ class LegacyIndyCredentialFormatService(
             schemaVersion = indyFormat.schemaVersion,
             credentialDefinitionId = indyFormat.credentialDefinitionId,
             issuerDid = indyFormat.issuerDid,
-            issuerId = indyFormat.issuerId
+            issuerId = indyFormat.issuerId,
         )
 
         try {
             MessageValidator.validateSync(indyCredentialProposal)
-        } catch (error:Exception) {
-            throw CredoError("Invalid proposal supplied: ${indyCredentialProposal} in Indy Format Service")
+        } catch (error: Exception) {
+            throw CredoError("Invalid proposal supplied: $indyCredentialProposal in Indy Format Service")
         }
 
         val jsonElement = Json.encodeToJsonElement(
             serializer<AnonCredsCredentialProposal>(),
-            indyCredentialProposal
+            indyCredentialProposal,
         )
         val attachment = FormatDataUtil.getFormatData(jsonElement, format.attachId)
 
-        val credentialLinkedAttachmentsResult =  FormatDataUtil.getCredentialLinkedAttachments(
+        val credentialLinkedAttachmentsResult = FormatDataUtil.getCredentialLinkedAttachments(
             attributes = indyFormat.attributes,
-            linkedAttachments = indyFormat.linkedAttachments
+            linkedAttachments = indyFormat.linkedAttachments,
         )
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = indyCredentialProposal.schemaId,
-                credentialDefinitionId = indyCredentialProposal.credentialDefinitionId,
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = indyCredentialProposal.schemaId,
+                    credentialDefinitionId = indyCredentialProposal.credentialDefinitionId,
+                ),
+            ),
         )
 
         return CredentialFormatCreateProposalReturn(
             format = format,
             attachment = attachment,
-            previewAttribute = credentialLinkedAttachmentsResult.previewAttributes
+            previewAttribute = credentialLinkedAttachmentsResult.previewAttributes,
         )
     }
 
     override suspend fun processProposal(
         attachment: Attachment,
-        credentialRecord: CredentialExchangeRecord
+        credentialRecord: CredentialExchangeRecord,
     ) {
         val proposal = FormatDataUtil.parseAttachmentData<AnonCredsCredentialProposal>(attachment)
-        logger.info("Processed proposal ${proposal}")
+        logger.info("Processed proposal $proposal")
     }
 
     override suspend fun acceptProposal(
         attachmentId: String?,
         credentialFormats: Map<String, JsonElement>?,
         credentialRecord: CredentialExchangeRecord,
-        proposalAttachments: Attachment
+        proposalAttachments: Attachment,
     ): CredentialFormatCreateOfferReturn {
-
         val indyFormat = FormatGeneric.getLegacyIndyFormatGeneric<LegacyIndyCredentialProposalFormat>(credentialFormats)
 
-        val proposalJson = proposalAttachments.getDataAsJson()//<AnonCredsCredentialProposalFormat>()
+        val proposalJson = proposalAttachments.getDataAsJson() // <AnonCredsCredentialProposalFormat>()
         val proposalFormat = Json.decodeFromString<AnonCredsCredentialProposalFormat>(proposalJson)
         val credentialDefinitionId = indyFormat.credentialDefinitionId ?: proposalFormat.credDefId
 
@@ -144,7 +140,7 @@ class LegacyIndyCredentialFormatService(
         }
 
         if (!Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
-            throw CredoError("${credentialDefinitionId} is not a valid legacy indy credential definition id")
+            throw CredoError("$credentialDefinitionId is not a valid legacy indy credential definition id")
         }
 
         if (attributes == null) {
@@ -156,7 +152,7 @@ class LegacyIndyCredentialFormatService(
             attachmentId = attachmentId,
             attributes = attributes,
             credentialDefinitionId = credentialDefinitionId,
-            linkedAttachments = indyFormat.linkedAttachments
+            linkedAttachments = indyFormat.linkedAttachments,
         )
 
         return createIndyOffer(createIndyOfferOptions)
@@ -165,9 +161,8 @@ class LegacyIndyCredentialFormatService(
     override suspend fun createOffer(
         credentialFormats: Map<String, JsonElement>?,
         credentialExchangeRecord: CredentialExchangeRecord,
-        attachmentId: String?
+        attachmentId: String?,
     ): CredentialFormatCreateOfferReturn {
-
         val indyFormat = FormatGeneric.getLegacyIndyFormatGeneric<LegacyIndyCredentialFormat>(credentialFormats)
 
         val createIndyOfferOptions = CreateIndyOfferOptions(
@@ -175,16 +170,15 @@ class LegacyIndyCredentialFormatService(
             attachmentId = attachmentId,
             attributes = indyFormat.attributes,
             credentialDefinitionId = indyFormat.credentialDefinitionId,
-            linkedAttachments = indyFormat.linkedAttachments
+            linkedAttachments = indyFormat.linkedAttachments,
         )
 
         return createIndyOffer(createIndyOfferOptions)
     }
 
-
     override suspend fun processOffer(
         attachment: Attachment,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ) {
         logger.info("Processing indy credential offer for credential record ${credentialExchangeRecord.id}")
 
@@ -193,13 +187,12 @@ class LegacyIndyCredentialFormatService(
 //        val offer = Json.decodeFromJsonElement<AnonCredsCredentialOffer>(offerJsonElement)
 
         val offer = AnonCredsCredentialOffer.fromAttachment(attachment)
-        logger.info("credential offer: ${offer.toString()}")
-
+        logger.info("credential offer: $offer")
 
         if (!Indyidentifiers.isUnqualifiedSchemaId(offer.schemaId) || !Indyidentifiers.isUnqualifiedCredentialDefinitionId(offer.credDefId)) {
             throw ProblemReportError(
                 message = "Invalid credential offer",
-                problemCode = CredentialProblemReportReason.IssuanceAbandoned.name
+                problemCode = CredentialProblemReportReason.IssuanceAbandoned.name,
             )
         }
     }
@@ -209,33 +202,32 @@ class LegacyIndyCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord,
         credentialFormats: List<Format>?,
         attachmentId: String?,
-        offerCredentialMessageV2: OfferCredentialMessageV2
+        offerCredentialMessageV2: OfferCredentialMessageV2,
     ): CredentialFormatCreateReturn {
-
-        logger.info("attachment: ${attachment.toString()}")
+        logger.info("attachment: $attachment")
         val credentialOffer = AnonCredsCredentialOffer.fromAttachment(attachment)
-        logger.info("credential offer: ${credentialOffer.toString()}")
+        logger.info("credential offer: $credentialOffer")
 
         if (!Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId)) {
             throw CredoError("${credentialOffer.credDefId} is not a valid legacy indy credential definition id")
         }
 
-        //val fetchedCredentialDefinitionResult  = AnonCredsObjects.fetchCredentialDefinition(agent, credentialOffer.credDefId)
+        // val fetchedCredentialDefinitionResult  = AnonCredsObjects.fetchCredentialDefinition(agent, credentialOffer.credDefId)
 
         val credentialDefinition =
             agent.ledgerService.getCredentialDefinition(credentialOffer.credDefId)
-        logger.info("credentialDefinition : ${credentialDefinition.toString()}")
+        logger.info("credentialDefinition : $credentialDefinition")
 
         val createCredentialRequestOptions = CreateCredentialRequestOptions(
             credentialOffer = credentialOffer,
             credentialDefinition = credentialDefinition,
             linkSecretId = agent.wallet.linkSecretId!!,
-            useLegacyProverDid = true
+            useLegacyProverDid = true,
         )
-        logger.info("createCredentialRequestOptions : ${createCredentialRequestOptions.toString()}")
+        logger.info("createCredentialRequestOptions : $createCredentialRequestOptions")
 
-        val createCredentialRequestReturn : CreateCredentialRequestReturn = agent.anonCredsHolderService.createCredentialRequest(createCredentialRequestOptions)
-        logger.info("createCredentialRequestReturn: ${createCredentialRequestReturn.toString()}")
+        val createCredentialRequestReturn: CreateCredentialRequestReturn = agent.anonCredsHolderService.createCredentialRequest(createCredentialRequestOptions)
+        logger.info("createCredentialRequestReturn: $createCredentialRequestReturn")
 
         val anoncredsCredentialRequest = createCredentialRequestReturn.credentialRequest
         val anoncredsCredentialRequestMetadata = createCredentialRequestReturn.credentialRequestMetadata
@@ -246,38 +238,40 @@ class LegacyIndyCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialRequestMetadataKey,
-            Json.encodeToJsonElement(anoncredsCredentialRequestMetadata)
+            Json.encodeToJsonElement(anoncredsCredentialRequestMetadata),
         )
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = credentialOffer.schemaId,
-                credentialDefinitionId = credentialOffer.credDefId
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = credentialOffer.schemaId,
+                    credentialDefinitionId = credentialOffer.credDefId,
+                ),
+            ),
         )
 
         val format = Format(
             attachId = attachmentId ?: BaseRecord.generateId(),
-            format= INDY_CRED_REQUEST,
+            format = INDY_CRED_REQUEST,
         )
 
         return CredentialFormatCreateReturn(
             attachment = FormatDataUtil.getFormatData(anoncredsCredentialRequest, format.attachId),
-            format = format
+            format = format,
         )
     }
 
     override suspend fun createRequest(
         credentialFormats: List<Format>?,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ): CredentialFormatCreateReturn {
         throw CredoError("Starting from a request is not supported for indy credentials")
     }
 
     override suspend fun processRequest(
         attachment: Attachment,
-        credentialExchangeRecord: CredentialExchangeRecord
+        credentialExchangeRecord: CredentialExchangeRecord,
     ) {
         // not needed for indy
     }
@@ -288,9 +282,8 @@ class LegacyIndyCredentialFormatService(
         credentialExchangeRecord: CredentialExchangeRecord,
         credentialFormats: Map<String, JsonElement>?,
         requestAppendAttachments: List<Attachment>?,
-        attachmentId: String?
+        attachmentId: String?,
     ): CredentialFormatCreateReturn {
-
         val credentialAttributes = credentialExchangeRecord.credentialAttributes
         if (credentialAttributes == null) {
             throw CredoError("Missing required credential attribute values on credential record with id ${credentialExchangeRecord.id}")
@@ -300,11 +293,10 @@ class LegacyIndyCredentialFormatService(
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing indy credential offer in createCredential")
         val credentialRequest = FormatDataUtil.parseAttachmentData<AnonCredsCredentialRequest>(requestAttachment) ?: throw CredoError("Missing indy credential request in createCredential")
 
-
         val createCredentialOptions = CreateCredentialOptions(
             credentialOffer = credentialOffer,
             credentialRequest = credentialRequest,
-            credentialValues = Credential.convertAttributesToCredentialValues(credentialAttributes)
+            credentialValues = Credential.convertAttributesToCredentialValues(credentialAttributes),
         )
         val createCredentialReturn = agent.anonCredsIssuerService.createCredential(createCredentialOptions)
         val credential = createCredentialReturn.credential
@@ -314,16 +306,18 @@ class LegacyIndyCredentialFormatService(
 
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                    revocationRegistryId = credential.revRegId,
-                    credentialRevocationId = createCredentialReturn.credentialRevocationId
-                ))
+                Json.encodeToJsonElement(
+                    AnonCredsCredentialMetadata(
+                        revocationRegistryId = credential.revRegId,
+                        credentialRevocationId = createCredentialReturn.credentialRevocationId,
+                    ),
+                ),
             )
 
             if (credentialRevocationId != null) {
                 val tags: Tags = mapOf(
                     "anonCredsRevocationRegistryId" to credential.revRegId,
-                    "anonCredsCredentialRevocationId" to credentialRevocationId
+                    "anonCredsCredentialRevocationId" to credentialRevocationId,
                 )
                 credentialExchangeRecord.setTags(tags)
             }
@@ -331,13 +325,13 @@ class LegacyIndyCredentialFormatService(
 
         val format = Format(
             attachId = attachmentId ?: BaseRecord.generateId(),
-            format= INDY_CRED,
+            format = INDY_CRED,
         )
 
         val attachment = FormatDataUtil.getFormatData(credential, format.attachId)
         return CredentialFormatCreateReturn(
             attachment = attachment,
-            format = format
+            format = format,
         )
     }
 
@@ -346,9 +340,8 @@ class LegacyIndyCredentialFormatService(
         offerAttachment: Attachment,
         requestAttachment: Attachment,
         credentialExchangeRecord: CredentialExchangeRecord,
-        requestAppendAttachments: List<Attachment>?
+        requestAppendAttachments: List<Attachment>?,
     ) {
-
         val credentialRequestMetadata = credentialExchangeRecord.metadata.get(MetadataKeys.AnonCredsCredentialRequestMetadataKey)
 
         if (credentialRequestMetadata == null) {
@@ -361,21 +354,24 @@ class LegacyIndyCredentialFormatService(
 
         val anonCredsCredential = FormatDataUtil.parseAttachmentData<AnonCredsCredential>(attachment)
 
-        val credentialDefinitionResult = AnonCredsObjects.fetchCredentialDefinition(agent,anonCredsCredential.credDefId)
-        val fetchSchemaReturn =  FormatDataUtil.fetchSchema(agent, anonCredsCredential.schemaId)
-        val revocationRegistryResult = if (anonCredsCredential.revRegId != null) AnonCredsObjects.fetchRevocationRegistryDefinition(agent,anonCredsCredential.revRegId)  else null
+        val credentialDefinitionResult = AnonCredsObjects.fetchCredentialDefinition(agent, anonCredsCredential.credDefId)
+        val fetchSchemaReturn = FormatDataUtil.fetchSchema(agent, anonCredsCredential.schemaId)
+        val revocationRegistryResult = if (anonCredsCredential.revRegId != null) AnonCredsObjects.fetchRevocationRegistryDefinition(agent, anonCredsCredential.revRegId) else null
 
-        val recordCredentialValues = if(credentialExchangeRecord.credentialAttributes != null) Credential.convertAttributesToCredentialValues(credentialExchangeRecord.credentialAttributes!!) else
+        val recordCredentialValues = if (credentialExchangeRecord.credentialAttributes != null) {
+            Credential.convertAttributesToCredentialValues(credentialExchangeRecord.credentialAttributes!!)
+        } else {
             throw CredoError("Missing credential attributes on credential record. Unable to check credential attributes")
+        }
 
         Credential.assertCredentialValuesMatch(anonCredsCredential.values, recordCredentialValues)
 
-        var revocationRegistryInfo : RevocationRegistryInfo? = null
+        var revocationRegistryInfo: RevocationRegistryInfo? = null
 
-        if(revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinition != null) {
+        if (revocationRegistryResult != null && revocationRegistryResult.revocationRegistryDefinition != null) {
             revocationRegistryInfo = RevocationRegistryInfo(
                 id = revocationRegistryResult.revocationRegistryDefinitionId,
-                definition = revocationRegistryResult.revocationRegistryDefinition
+                definition = revocationRegistryResult.revocationRegistryDefinition,
             )
         }
 
@@ -386,7 +382,7 @@ class LegacyIndyCredentialFormatService(
             schema = fetchSchemaReturn.schema,
             credentialDefinitionId = credentialDefinitionResult.credentialDefinitionId,
             credentialId = BaseRecord.generateId(),
-            revocationRegistry = revocationRegistryInfo
+            revocationRegistry = revocationRegistryInfo,
         )
 
         val credentialId = agent.anonCredsHolderService.storeCredential(storeCredentialOptions)
@@ -399,23 +395,25 @@ class LegacyIndyCredentialFormatService(
 
             credentialExchangeRecord.addMetadata(
                 MetadataKeys.AnonCredsCredentialMetadataKey,
-                Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                    credentialRevocationId = credentialRevocationId,
-                    revocationRegistryId = revocationRegistryId
-                ))
+                Json.encodeToJsonElement(
+                    AnonCredsCredentialMetadata(
+                        credentialRevocationId = credentialRevocationId,
+                        revocationRegistryId = revocationRegistryId,
+                    ),
+                ),
             )
 
             if (revocationRegistryId != null && credentialRevocationId != null) {
                 val tags: Tags = mapOf(
                     "anonCredsRevocationRegistryId" to revocationRegistryId,
-                    "anonCredsCredentialRevocationId" to credentialRevocationId
+                    "anonCredsCredentialRevocationId" to credentialRevocationId,
                 )
                 credentialExchangeRecord.setTags(tags)
             }
 
             val credentialRecordBinding = CredentialRecordBinding(
                 credentialRecordType = this.credentialRecordType,
-                credentialRecordId = credentialId
+                credentialRecordId = credentialId,
             )
             credentialExchangeRecord.credentials.add(credentialRecordBinding)
         }
@@ -424,32 +422,32 @@ class LegacyIndyCredentialFormatService(
     override suspend fun shouldAutoRespondToProposal(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val proposal = FormatDataUtil.parseAttachmentData<LegacyIndyCredentialProposalFormat>(proposalAttachment) ?: throw CredoError("Missing anoncreds credential proposal in shouldAutoRespondToProposal")
-        return  proposal.credentialDefinitionId == credentialOffer.credDefId
+        return proposal.credentialDefinitionId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToOffer(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val proposal = FormatDataUtil.parseAttachmentData<LegacyIndyCredentialProposalFormat>(proposalAttachment) ?: throw CredoError("Missing anoncreds credential proposal in shouldAutoRespondToProposal")
-        return  proposal.credentialDefinitionId == credentialOffer.credDefId
+        return proposal.credentialDefinitionId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToRequest(
         credentialRecord: CredentialExchangeRecord,
         offerAttachment: Attachment,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credentialOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val requestOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialRequest>(requestAttachment) ?: throw CredoError("Missing anoncreds credential request in shouldAutoRespondToProposal")
-        return  requestOffer.credDefId == credentialOffer.credDefId
+        return requestOffer.credDefId == credentialOffer.credDefId
     }
 
     override suspend fun shouldAutoRespondToCredential(
@@ -457,7 +455,7 @@ class LegacyIndyCredentialFormatService(
         offerAttachment: Attachment,
         issueAttachment: Attachment,
         requestAttachment: Attachment,
-        proposalAttachment: Attachment
+        proposalAttachment: Attachment,
     ): Boolean {
         val credential = FormatDataUtil.parseAttachmentData<AnonCredsCredential>(offerAttachment) ?: throw CredoError("Missing anoncreds credential offer in shouldAutoRespondToProposal")
         val requestOffer = FormatDataUtil.parseAttachmentData<AnonCredsCredentialRequest>(requestAttachment) ?: throw CredoError("Missing anoncreds credential request in shouldAutoRespondToProposal")
@@ -477,12 +475,12 @@ class LegacyIndyCredentialFormatService(
             INDY_CRED_ABSTRACT,
             INDY_CRED_REQUEST,
             INDY_CRED_FILTER,
-            INDY_CRED
+            INDY_CRED,
         )
         return formatIdentifier in supportedFormats
     }
 
-    private suspend fun createIndyOffer(options: CreateIndyOfferOptions) : CredentialFormatCreateOfferReturn {
+    private suspend fun createIndyOffer(options: CreateIndyOfferOptions): CredentialFormatCreateOfferReturn {
         val attachmentId = options.attachmentId
         val credentialDefinitionId = options.credentialDefinitionId
         val attributes = options.attributes
@@ -490,15 +488,16 @@ class LegacyIndyCredentialFormatService(
         val credentialExchangeRecord = options.credentialExchangeRecord
 
         val format = Format(
-            attachId= attachmentId ?: BaseRecord.generateId(),
-            format= INDY_CRED_ABSTRACT,
+            attachId = attachmentId ?: BaseRecord.generateId(),
+            format = INDY_CRED_ABSTRACT,
         )
 
         val offer = agent.anonCredsIssuerService.createCredentialOffer(credentialDefinitionId)
 
-        val ( attachments, previewAttributes ) = FormatDataUtil.getCredentialLinkedAttachments(
+        val (attachments, previewAttributes) = FormatDataUtil.getCredentialLinkedAttachments(
             attributes = attributes,
-            linkedAttachments = linkedAttachments)
+            linkedAttachments = linkedAttachments,
+        )
 
         if (previewAttributes == null) {
             throw CredoError("Missing required preview attributes for anoncreds offer")
@@ -508,10 +507,12 @@ class LegacyIndyCredentialFormatService(
 
         credentialExchangeRecord.metadata.set(
             MetadataKeys.AnonCredsCredentialMetadataKey,
-            Json.encodeToJsonElement(AnonCredsCredentialMetadata(
-                schemaId = offer.schemaId,
-                credentialDefinitionId = offer.credDefId,
-            ))
+            Json.encodeToJsonElement(
+                AnonCredsCredentialMetadata(
+                    schemaId = offer.schemaId,
+                    credentialDefinitionId = offer.credDefId,
+                ),
+            ),
         )
 
         val attachment = FormatDataUtil.getFormatData(offer, format.attachId)
@@ -519,10 +520,7 @@ class LegacyIndyCredentialFormatService(
         return CredentialFormatCreateOfferReturn(
             format = format,
             attachment = attachment,
-            previewAttributes = previewAttributes
+            previewAttributes = previewAttributes,
         )
     }
-
-
-
 }

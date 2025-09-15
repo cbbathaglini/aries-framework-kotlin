@@ -2,16 +2,14 @@ package org.hyperledger.ariesframework.vc.model
 
 import W3cCredentialSubject
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.Gson
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 
 @Serializable
 data class W3cJsonLdVerifiableCredential(
@@ -27,9 +25,9 @@ data class W3cJsonLdVerifiableCredential(
     var credentialStatus: W3cCredentialStatus? = null,
 
     @SerialName("proof")
-    val proofs: List<LinkedDataProofBase>?  = emptyList(),// polymorphic base type
+    val proofs: List<LinkedDataProofBase>? = emptyList(), // polymorphic base type
 
-) { //: W3cCredential {
+) { // : W3cCredential {
 
     fun toJson(): String = Json {
         prettyPrint = true
@@ -43,12 +41,11 @@ data class W3cJsonLdVerifiableCredential(
             "issuer" to issuer,
             "issuanceDate" to issuanceDate,
             "credentialSubject" to credentialSubject,
-            "proof" to proofs
+            "proof" to proofs,
         )
 
     val claimFormat: String
         get() = "ldp_vc"
-
 
     companion object {
 
@@ -65,7 +62,6 @@ data class W3cJsonLdVerifiableCredential(
                 ignoreUnknownKeys = true
                 prettyPrint = true
                 isLenient = true
-
             }
 
             return jsonParser.decodeFromString(serializer<W3cJsonLdVerifiableCredential>(), json)
@@ -85,8 +81,8 @@ data class LinkedDataProof(
     val created: String,
     val proofPurpose: String,
     val verificationMethod: String,
-    val jws: String? = null
-) : LinkedDataProofBase(){
+    val jws: String? = null,
+) : LinkedDataProofBase() {
     override val type: String
         get() = "LinkedDataProof"
 }
@@ -98,8 +94,8 @@ data class DataIntegrityProof(
     val created: String? = null,
     val proofPurpose: String,
     val verificationMethod: String,
-    val proofValue: String? = null
-) : LinkedDataProofBase(){
+    val proofValue: String? = null,
+) : LinkedDataProofBase() {
     override val type: String
         get() = "DataIntegrityProof"
 }

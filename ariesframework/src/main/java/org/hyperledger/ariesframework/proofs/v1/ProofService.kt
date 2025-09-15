@@ -22,16 +22,12 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.agent.decorators.ProofFormat
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.history.models.HistoryType
-import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
@@ -46,7 +42,6 @@ import org.hyperledger.ariesframework.proofs.models.RequestedPredicate
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.hyperledger.ariesframework.util.concurrentMap
@@ -87,7 +82,7 @@ class ProofService(val agent: Agent) {
         val proofRequestJson = Json.encodeToString(proofRequest)
         val attachment = Attachment.fromData(
             proofRequestJson.toByteArray(),
-            RequestPresentationMessageV2.INDY_PROOF_REQUEST_ATTACHMENT_ID
+            RequestPresentationMessageV2.INDY_PROOF_REQUEST_ATTACHMENT_ID,
         )
         val message =
             RequestPresentationMessageV2(comment = comment, requestAttachment = listOf(attachment))
@@ -104,7 +99,7 @@ class ProofService(val agent: Agent) {
         agent.didCommMessageRepository.saveAgentMessage(
             DidCommMessageRole.Sender,
             message,
-            proofRecord.id
+            proofRecord.id,
         )
         agent.proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
@@ -137,7 +132,7 @@ class ProofService(val agent: Agent) {
         agent.didCommMessageRepository.saveAgentMessage(
             DidCommMessageRole.Receiver,
             proofRequestMessage,
-            proofRecord.id
+            proofRecord.id,
         )
 
         agent.proofRepository.save(proofRecord)
@@ -157,7 +152,6 @@ class ProofService(val agent: Agent) {
         return proofRecord
     }
 
-
     /**
      * Create a ``PresentationMessage Protocol Version 1.0`` as response to a received presentation request.
      *
@@ -175,7 +169,7 @@ class ProofService(val agent: Agent) {
 
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             proofRecord.id,
-            RequestPresentationMessage.type
+            RequestPresentationMessage.type,
         )
         val proofRequestMessage =
             MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessage
@@ -189,7 +183,7 @@ class ProofService(val agent: Agent) {
         agent.didCommMessageRepository.saveAgentMessage(
             DidCommMessageRole.Sender,
             presentationMessage,
-            proofRecord.id
+            proofRecord.id,
         )
         updateState(proofRecord, ProofState.PresentationSent)
 
@@ -216,7 +210,7 @@ class ProofService(val agent: Agent) {
         val indyProofJson = presentationMessage.indyProof()
         val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             proofRecord.id,
-            RequestPresentationMessage.type
+            RequestPresentationMessage.type,
         )
         val requestMessage =
             MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
@@ -227,7 +221,7 @@ class ProofService(val agent: Agent) {
         agent.didCommMessageRepository.saveAgentMessage(
             DidCommMessageRole.Receiver,
             presentationMessage,
-            proofRecord.id
+            proofRecord.id,
         )
         updateState(proofRecord, ProofState.PresentationReceived)
 
@@ -339,7 +333,7 @@ class ProofService(val agent: Agent) {
                     deltaTimestamp,
                     true,
                     credentialInfo,
-                    revoked
+                    revoked,
                 )
             }
             lock.withLock {
@@ -424,17 +418,21 @@ class ProofService(val agent: Agent) {
         val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
         val schemas = async { getSchemas(partialProof.identifiers.map { it.schemaId }.toSet()) }
         val credentialDefinitions = async {
-            getCredentialDefinitions(partialProof.identifiers.map { it.credentialDefinitionId }
-                .toSet())
+            getCredentialDefinitions(
+                partialProof.identifiers.map { it.credentialDefinitionId }
+                    .toSet(),
+            )
         }
         val revocationRegistryDefinitions =
             async {
-                getRevocationRegistryDefinitions(partialProof.identifiers.mapNotNull { it.revocationRegistryId }
-                    .toSet())
+                getRevocationRegistryDefinitions(
+                    partialProof.identifiers.mapNotNull { it.revocationRegistryId }
+                        .toSet(),
+                )
             }
         val revocationStatusLists = agent.revocationService.getRevocationStatusLists(
             partialProof,
-            revocationRegistryDefinitions.await()
+            revocationRegistryDefinitions.await(),
         )
 
         return@coroutineScope try {
@@ -472,13 +470,13 @@ class ProofService(val agent: Agent) {
         return agent.revocationService.getRevocationStatus(
             credentialRevocationId,
             revocationRegistryId,
-            requestNonRevoked
+            requestNonRevoked,
         )
     }
 
     suspend fun createProof(
         proofRequest: String,
-        requestedCredentials: RequestedCredentials
+        requestedCredentials: RequestedCredentials,
     ): ByteArray {
         logger.debug("Creating proof with requestedCredentials: ${requestedCredentials.toJsonString()}")
         val anoncredsCreds = mutableListOf<RequestedCredential>()

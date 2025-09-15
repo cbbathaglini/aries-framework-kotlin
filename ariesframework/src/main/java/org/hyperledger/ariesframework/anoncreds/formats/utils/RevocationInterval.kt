@@ -7,11 +7,11 @@ import org.hyperledger.ariesframework.error.CredoError
 class RevocationInterval {
     companion object {
         fun assertBestPracticeRevocationInterval(
-            revocationInterval: AnonCredsNonRevokedInterval
+            revocationInterval: AnonCredsNonRevokedInterval,
         ): BestPracticeNonRevokedInterval {
             if (revocationInterval.to == null) {
                 throw CredoError(
-                    "Presentation requests proof of non-revocation with no 'to' value specified"
+                    "Presentation requests proof of non-revocation with no 'to' value specified",
                 )
             }
 
@@ -20,7 +20,7 @@ class RevocationInterval {
             ) {
                 throw CredoError(
                     "Presentation requests proof of non-revocation with an interval from: '${revocationInterval.from}' " +
-                            "that does not match the interval to: '${revocationInterval.to}', as specified in Aries RFC 0441"
+                        "that does not match the interval to: '${revocationInterval.to}', as specified in Aries RFC 0441",
                 )
             }
 
@@ -33,5 +33,5 @@ class RevocationInterval {
 @Serializable
 data class BestPracticeNonRevokedInterval(
     val from: Int? = null,
-    val to: Int
+    val to: Int,
 )

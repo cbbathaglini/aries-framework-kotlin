@@ -14,8 +14,8 @@ data class AnonCredsCredentialDefinition(
     @SerialName("type")
     val type: String = "CL", // pode-se usar enum se quiser restringir a valores válidos
     val tag: String,
-    val value: CredentialDefinitionValue
-){
+    val value: CredentialDefinitionValue,
+) {
 
     @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {
@@ -27,12 +27,12 @@ data class AnonCredsCredentialDefinition(
 @Serializable
 data class CredentialDefinitionValue(
     val primary: Map<String, JsonElement>,
-    val revocation: JsonElement? = null
+    val revocation: JsonElement? = null,
 )
 
-//data class CredentialDefinitionValue(
+// data class CredentialDefinitionValue(
 //    @Serializable(with = AnyMapSerializer::class)
 //    val primary: Map<String, Any>,
 //    @Serializable(with = AnyValueSerializer::class)
 //    val revocation: Any? = null
-//)
+// )

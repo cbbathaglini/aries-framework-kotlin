@@ -29,7 +29,6 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
-import org.hyperledger.ariesframework.oob.models.OutOfBandRole
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.routing.Routing
 import org.slf4j.LoggerFactory
@@ -475,8 +474,6 @@ class ConnectionService(val agent: Agent) {
         )
     }
 
-
-
     /**
      * Assert that an inbound message either has a connection associated with it,
      * or has everything correctly set up for connection-less exchange (optionally with out of band)
@@ -487,10 +484,10 @@ class ConnectionService(val agent: Agent) {
         messageContext: InboundMessageContext,
         lastReceivedMessage: AgentMessage? = null,
         lastSentMessage: AgentMessage? = null,
-        expectedConnectionId: String? = null
+        expectedConnectionId: String? = null,
     ) {
         val connection = messageContext.connection
-        val message : AgentMessage = messageContext.message
+        val message: AgentMessage = messageContext.message
         val senderVerkey = messageContext.senderVerkey
         val recipientVerkey = messageContext.recipientVerkey
 
@@ -511,7 +508,7 @@ class ConnectionService(val agent: Agent) {
             val recipientKey = recipientVerkey
             val senderKey = senderVerkey
 
-            //[TODO] verificar de onde veio o service
+            // [TODO] verificar de onde veio o service
             // set theirService to the value of lastReceivedMessage.service
 //            var theirService = message.service?.resolvedDidCommService ?: lastReceivedMessage?.service?.resolvedDidCommService
 //            var ourService = lastSentMessage?.service?.resolvedDidCommService
@@ -559,7 +556,6 @@ class ConnectionService(val agent: Agent) {
 //                }
 //            }
         }
-
     }
 
     /**
@@ -571,15 +567,14 @@ class ConnectionService(val agent: Agent) {
      */
     suspend fun matchIncomingMessageToRequestMessageInOutOfBandExchange(
         messageContext: InboundMessageContext,
-        expectedConnectionId: String? = null
+        expectedConnectionId: String? = null,
     ) {
         val actualConnectionId = messageContext.connection?.id
 
         if (expectedConnectionId != null && actualConnectionId != expectedConnectionId) {
             throw CredoError(
-                "Expecting incoming message to have connection $expectedConnectionId, but incoming connection is ${actualConnectionId ?: "undefined"}"
+                "Expecting incoming message to have connection $expectedConnectionId, but incoming connection is ${actualConnectionId ?: "undefined"}",
             )
         }
     }
-
 }

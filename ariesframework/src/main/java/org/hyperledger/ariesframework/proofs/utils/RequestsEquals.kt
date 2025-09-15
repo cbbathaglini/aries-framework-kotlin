@@ -3,9 +3,8 @@ package org.hyperledger.ariesframework.proofs.utils
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 
-
 class RequestsEquals {
-    companion object{
+    companion object {
         // ---- Deep equality para estruturas "JSON-like" ----
         fun areObjectsEqual(a: Any?, b: Any?): Boolean {
             if (a === b) return true
@@ -51,15 +50,16 @@ class RequestsEquals {
             return namesA.all { it in namesB }
         }
 
-
         fun isNonRevokedEqual(
             nonRevokedA: AnonCredsNonRevokedInterval?,
-            nonRevokedB: AnonCredsNonRevokedInterval?
+            nonRevokedB: AnonCredsNonRevokedInterval?,
         ): Boolean {
-            if (nonRevokedA == null)
+            if (nonRevokedA == null) {
                 return nonRevokedB == null || (nonRevokedB.from == null && nonRevokedB.to == null)
-            if (nonRevokedB == null)
+            }
+            if (nonRevokedB == null) {
                 return nonRevokedA.from == null && nonRevokedA.to == null
+            }
 
             return nonRevokedA.from == nonRevokedB.from && nonRevokedA.to == nonRevokedB.to
         }
@@ -71,7 +71,7 @@ class RequestsEquals {
          */
         fun <T> areRestrictionsEqual(
             restrictionsA: List<T>?,
-            restrictionsB: List<T>?
+            restrictionsB: List<T>?,
         ): Boolean {
             if (restrictionsA == null) return restrictionsB == null || restrictionsB.isEmpty()
             if (restrictionsB == null) return restrictionsA.isEmpty()
@@ -89,10 +89,9 @@ class RequestsEquals {
             }
         }
 
-
         fun areAnonCredsProofRequestsEqual(
             requestA: AnonCredsProofRequest,
-            requestB: AnonCredsProofRequest
+            requestB: AnonCredsProofRequest,
         ): Boolean {
             // Top-level non-revoked
             if (!isNonRevokedEqual(requestA.nonRevoked, requestB.nonRevoked)) return false
@@ -106,9 +105,9 @@ class RequestsEquals {
             val attributesMatch = attributeAList.all { a ->
                 val bIndex = attributeBList.indexOfFirst { b ->
                     (b.name == a.name) &&
-                            areNamesEqual(a.names, b.names) &&
-                            isNonRevokedEqual(a.nonRevoked, b.nonRevoked) &&
-                            areRestrictionsEqual(a.restrictions, b.restrictions)
+                        areNamesEqual(a.names, b.names) &&
+                        isNonRevokedEqual(a.nonRevoked, b.nonRevoked) &&
+                        areRestrictionsEqual(a.restrictions, b.restrictions)
                 }
                 if (bIndex != -1) {
                     attributeBList.removeAt(bIndex)
@@ -128,10 +127,10 @@ class RequestsEquals {
             val predicatesMatch = predicatesA.all { a ->
                 val bIndex = predicatesB.indexOfFirst { b ->
                     a.name == b.name &&
-                            a.pType == b.pType &&
-                            a.pValue == b.pValue &&
-                            isNonRevokedEqual(a.nonRevoked, b.nonRevoked) &&
-                            areRestrictionsEqual(a.restrictions, b.restrictions)
+                        a.pType == b.pType &&
+                        a.pValue == b.pValue &&
+                        isNonRevokedEqual(a.nonRevoked, b.nonRevoked) &&
+                        areRestrictionsEqual(a.restrictions, b.restrictions)
                 }
                 if (bIndex != -1) {
                     predicatesB.removeAt(bIndex)
@@ -144,5 +143,4 @@ class RequestsEquals {
             return predicatesMatch
         }
     }
-
 }

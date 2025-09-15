@@ -14,7 +14,7 @@ interface TailsFileService {
      * Returns the published tail file URL.
      */
     suspend fun uploadTailsFile(
-        options: UploadTailsFileOptions
+        options: UploadTailsFileOptions,
     ): UploadTailsFileResult
 
     /**
@@ -22,6 +22,6 @@ interface TailsFileService {
      * from the tailsLocation URL if not present in internal cache.
      */
     suspend fun getTailsFile(
-        options: GetTailsFileOptions
+        options: GetTailsFileOptions,
     ): GetTailsFileResult
 }

@@ -2,15 +2,10 @@ package org.hyperledger.ariesframework.proofs.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.Tags
-import org.hyperledger.ariesframework.agent.decorators.Attachment
-import org.hyperledger.ariesframework.agent.decorators.ProofFormat
-import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.ProofRole
@@ -38,14 +33,14 @@ data class ProofExchangeRecord(
     var protocolVersion: String,
 
     var formats: List<ProofFormatSpec>? = emptyList(),
-    var datas: Map<String, JsonElement>? = emptyMap()
+    var datas: Map<String, JsonElement>? = emptyMap(),
 
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
         tags["threadId"] = threadId
-        if(parentThreadId!=null) tags["parentThreadId"] = parentThreadId!!
+        if (parentThreadId != null) tags["parentThreadId"] = parentThreadId!!
         tags["connectionId"] = connectionId
         tags["state"] = state.name
 

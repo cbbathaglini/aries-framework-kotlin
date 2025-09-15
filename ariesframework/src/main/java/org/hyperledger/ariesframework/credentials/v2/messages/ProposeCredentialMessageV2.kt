@@ -7,7 +7,6 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
-import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 
 @Serializable
 class ProposeCredentialMessageV2(

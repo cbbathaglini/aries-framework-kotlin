@@ -1,9 +1,7 @@
 package org.hyperledger.ariesframework.agent
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -12,6 +10,7 @@ import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.agent.decorators.TransportDecorator
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
@@ -38,7 +37,7 @@ open class AgentMessage(
     fun setThread(threadId: String, parentThreadId: String?) {
         this.thread = ThreadDecorator(
             threadId = threadId,
-            parentThreadId = parentThreadId
+            parentThreadId = parentThreadId,
         )
     }
 
@@ -94,12 +93,12 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     @OptIn(ExperimentalSerializationApi::class)
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
-        logger.info(" ==>>>> serializers: ${serializers.toString()}")
+        logger.info(" ==>>>> serializers: $serializers")
         logger.info("type: $type")
 
         return serializers[type] ?: run {
             logger.error("Message type $type is not registered for JSON decoding")
-            serializer<AgentMessage>()   // <- em vez de AgentMessage.serializer()
+            serializer<AgentMessage>() // <- em vez de AgentMessage.serializer()
         }
     }
 

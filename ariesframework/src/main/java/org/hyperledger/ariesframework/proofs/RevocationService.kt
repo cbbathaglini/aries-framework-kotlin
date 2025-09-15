@@ -20,7 +20,6 @@ import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
-import kotlin.math.log
 
 private enum class ReferentType {
     Attribute,
@@ -95,7 +94,6 @@ class RevocationService(val agent: Agent) {
         revocationRegistryId: String,
         revocationInterval: RevocationInterval,
     ): Pair<Boolean, Int> {
-
         val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
             revocationRegistryId,
             revocationInterval.to!!,
@@ -114,7 +112,6 @@ class RevocationService(val agent: Agent) {
         revocationRegistryId: String,
         revocationInterval: AnonCredsNonRevokedInterval,
     ): Pair<Boolean, Int> {
-
         val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
             revocationRegistryId,
             revocationInterval.to!!.toInt(),
@@ -228,7 +225,6 @@ class RevocationService(val agent: Agent) {
         val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
 
         if (!tailsFile.exists()) {
-
             val tailsLocation = revocationRegistryDefinition.tailsLocation()
             val url = if (tailsLocation.startsWith("http")) {
                 URL(tailsLocation)

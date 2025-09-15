@@ -2,5 +2,5 @@ package org.hyperledger.ariesframework.anoncreds.exception
 
 class AnonCredsRsError(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : AnonCredsError(message, cause)

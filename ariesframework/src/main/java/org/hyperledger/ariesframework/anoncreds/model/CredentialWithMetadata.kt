@@ -4,5 +4,5 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevoked
 
 data class CredentialWithMetadata(
     val credentialInfo: AnonCredsCredentialInfo,
-    val interval: AnonCredsNonRevokedInterval?
+    val interval: AnonCredsNonRevokedInterval?,
 )

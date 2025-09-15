@@ -6,7 +6,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 class ConvertFromAny {
-    companion object{
+    companion object {
         inline fun <reified T> convertAnyToSerializable(anyValue: Any): T {
             val json = Json { ignoreUnknownKeys = true }
 

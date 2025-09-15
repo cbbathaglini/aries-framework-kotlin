@@ -1,10 +1,9 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsCredentialFormatService
-import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialDefinitionResult
+import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.error.CredoError
 import org.slf4j.LoggerFactory
 
@@ -15,9 +14,8 @@ class AnonCredsObjects {
 
         suspend fun fetchCredentialDefinition(
             agent: Agent,
-            credentialDefinitionId: String
+            credentialDefinitionId: String,
         ): CredentialDefinitionResult {
-
             val registry =
                 agent.anonCredsRegistryService.getRegistryForIdentifier(credentialDefinitionId)
             val result = registry.getCredentialDefinition(agent, credentialDefinitionId)
@@ -28,7 +26,7 @@ class AnonCredsObjects {
 
             if (credentialDefinition == null) {
                 throw CredoError(
-                    "Credential definition not found for id $credentialDefinitionId: ${resolutionMetadata?.message}"
+                    "Credential definition not found for id $credentialDefinitionId: ${resolutionMetadata?.message}",
                 )
             }
 
@@ -38,16 +36,15 @@ class AnonCredsObjects {
             return CredentialDefinitionResult(
                 credentialDefinition = credentialDefinition,
                 credentialDefinitionId = credentialDefinitionId,
-                indyNamespace = namespace
+                indyNamespace = namespace,
             )
         }
 
         suspend fun fetchRevocationStatusList(
             agent: Agent,
             revocationRegistryId: String,
-            timestamp: Long
+            timestamp: Long,
         ): AnonCredsRevocationStatusList {
-
             val registry =
                 agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
 
@@ -55,15 +52,14 @@ class AnonCredsObjects {
             val resolutionMetadata = result.resolutionMetadata
 
             return result.revocationStatusList ?: throw CredoError(
-                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata?.message}"
+                "Could not retrieve revocation status list for revocation registry $revocationRegistryId: ${resolutionMetadata?.message}",
             )
         }
 
         suspend fun fetchRevocationRegistryDefinition(
             agent: Agent,
-            revocationRegistryDefinitionId: String
+            revocationRegistryDefinitionId: String,
         ): FetchRevocationRegistryDefinitionResult {
-
             val result = agent.anonCredsRegistryService
                 .getRegistryForIdentifier(revocationRegistryDefinitionId)
                 .getRevocationRegistryDefinition(revocationRegistryDefinitionId)
@@ -79,7 +75,7 @@ class AnonCredsObjects {
             return FetchRevocationRegistryDefinitionResult(
                 revocationRegistryDefinition = result.revocationRegistryDefinition,
                 revocationRegistryDefinitionId = revocationRegistryDefinitionId,
-                indyNamespace = indyNamespace
+                indyNamespace = indyNamespace,
             )
         }
     }
