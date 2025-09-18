@@ -4,11 +4,8 @@ import ILedgerService
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Issuer
-import anoncreds_uniffi.RevocationStatusList
 import indy_vdr_uniffi.Pool
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -59,6 +56,9 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         var spec: ContractSpec? = null,
     ) {
         companion object {
+
+            private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
+
             // Modificar o método para aceitar um Context
             fun loadFromFile(
                 context: Context,
@@ -69,11 +69,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 val inputStream =
                     context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
                 val content = inputStream.bufferedReader().use { it.readText() }
+                logger.info("content abi: $content")
                 val jsonObject = JSONObject(content)
                 val name = jsonObject.getString("sourceName").substringAfterLast("/")
                     .substringBeforeLast(".")
                 val abi = jsonObject.getJSONArray("abi").toString()
-
+                logger.info("ABI: $abi")
+                logger.info("contract spec: $name")
                 return ContractConfig(
                     address = address,
                     specPath = null,
@@ -85,6 +87,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     // Criando configurações individuais para cada contrato
     val didRegistryConfig: ContractConfig by lazy {
+        logger.info("appcontex: ${appContext.fileList()}")
         ContractConfigBesu.loadFromFile(
             context = appContext,
             address = didRegistryConfigAddress,
