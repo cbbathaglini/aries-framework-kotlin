@@ -12,8 +12,6 @@ local.properties
 
 # Gradle
 gradle-app.setting
-gradlew
-gradlew.bat
 *.lock
 
 # APKs
