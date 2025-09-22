@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 import com.google.gson.annotations.SerializedName
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -36,7 +35,6 @@ data class AnonCredsCredential(
     val witness: JsonElement? = null,
 ) {
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true

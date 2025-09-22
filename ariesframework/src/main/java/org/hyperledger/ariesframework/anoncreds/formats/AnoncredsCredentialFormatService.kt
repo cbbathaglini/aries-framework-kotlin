@@ -471,6 +471,7 @@ class AnoncredsCredentialFormatService(
             val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)
             revocationRegistryResult = Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocation)
             revocationRegistryResult.revocationRegistryDefinitionId = anonCredsCredential.revRegId
+            credentialExchangeRecord.updateRevocationInfos(anonCredsCredential.revRegId, revocationRegistryResult.revocationRegistryDefinitionId)
         }
 
         val revocationRegistryJson =
@@ -539,6 +540,8 @@ class AnoncredsCredentialFormatService(
             revocationRegistry = revocationRegistryInfo,
         )
 
+        credentialExchangeRecord.updateSchema(anonCredsCredential.schemaId, fetchSchemaReturn.schema)
+
         logger.info("storeCredential: $storeCredential")
         logger.info("fetchSchemaReturn: $fetchSchemaReturn")
 
@@ -579,18 +582,18 @@ class AnoncredsCredentialFormatService(
             }
         }
 
-        try {
-            agent.credentialExchangeRepository.save(credentialExchangeRecord)
-        } catch (e: Throwable) {
-            logger.error("${e.message}") // duplicate entry, but saved
-        }
-
         credentialExchangeRecord.credentials.add(
             CredentialRecordBinding(
                 credentialRecordType = this.credentialRecordType,
                 credentialRecordId = credentialId,
             ),
         )
+
+        try {
+            agent.credentialExchangeRepository.save(credentialExchangeRecord)
+        } catch (e: Throwable) {
+            logger.error("${e.message}") // duplicate entry, but saved
+        }
     }
 
     override suspend fun shouldAutoRespondToProposal(

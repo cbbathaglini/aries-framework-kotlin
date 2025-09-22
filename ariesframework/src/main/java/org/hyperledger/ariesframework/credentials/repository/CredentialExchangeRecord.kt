@@ -5,6 +5,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
@@ -41,7 +42,12 @@ data class CredentialExchangeRecord(
     var credentialAttributes: List<CredentialPreviewAttribute>? = null,
     var indyRequestMetadata: String? = null,
     var credentialDefinitionId: String? = null,
-
+    var schemaId: String? = null,
+    var schemaName: String? = null,
+    var schemaVersion: String? = null,
+    var schemaIssuerId: String? = null,
+    var revRegId: String? = null,
+    var revRegDefId: String? = null,
     var role: CredentialRole? = null,
     var revocationNotification: RevocationNotification? = null,
     var formats: List<Format>? = emptyList(),
@@ -86,6 +92,17 @@ data class CredentialExchangeRecord(
 
     fun setToState(newState: CredentialState) {
         this.state = newState
+    }
+
+    fun updateSchema(schemaId: String, schema: AnonCredsSchema) {
+        this.schemaId = schemaId
+        this.schemaName = schema.name
+        this.schemaIssuerId = schema.issuerId
+        this.schemaVersion = schemaVersion
+    }
+    fun updateRevocationInfos(revRegId: String, revRegDefId: String?) {
+        this.revRegDefId = revRegDefId
+        this.revRegId = revRegId
     }
 
     fun setToProtocolVersionV1() {

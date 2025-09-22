@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 
 @Serializable
@@ -20,7 +21,7 @@ data class AnonCredsCredentialOffer(
     val keyCorrectnessProof: KeyCorrectnessProof? = null,
 ) {
 
-    fun toJsonString(): String = "retorno de teste aqui" // Json.encodeToString(serializer(),this)
+    fun toJsonString(): String = Json.encodeToString(this) // TODO
 
     override fun toString(): String {
         return "AnonCredsCredentialOffer(schemaId='$schemaId', credDefId='$credDefId', nonce='$nonce', keyCorrectnessProof=$keyCorrectnessProof)"

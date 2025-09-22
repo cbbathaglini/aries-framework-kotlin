@@ -231,8 +231,13 @@ class RevocationService(val agent: Agent) {
             } else {
                 File(tailsLocation).toURI().toURL()
             }
-            val tailsData = url.readBytes()
-            tailsFile.writeBytes(tailsData)
+
+            try {
+                val tailsData = url.readBytes()
+                tailsFile.writeBytes(tailsData)
+            } catch (e: Exception) {
+                throw Exception("cannot read tails data from url $url")
+            }
         }
 
         return tailsFile
