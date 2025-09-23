@@ -12,6 +12,7 @@ local.properties
 
 # Gradle
 .gradle
+.gradle/
 gradle-app.setting
 *.lock
 /.gradle/
@@ -39,3 +40,4 @@ build/
 **/build/
 /.gradle/
 local.properties
+.kotlin

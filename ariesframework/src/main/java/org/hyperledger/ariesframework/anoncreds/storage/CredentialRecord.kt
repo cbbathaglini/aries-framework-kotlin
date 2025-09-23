@@ -6,7 +6,6 @@ import com.google.gson.JsonParser
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.credentials.models.CredentialRole

@@ -12,7 +12,6 @@ data class AnonCredsSchema(
     val version: String,
     val attrNames: List<String>,
 ) {
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String {
         val json = Json {
             prettyPrint = true
