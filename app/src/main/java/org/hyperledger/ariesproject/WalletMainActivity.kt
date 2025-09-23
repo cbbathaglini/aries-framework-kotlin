@@ -144,7 +144,7 @@ class WalletMainActivity : AppCompatActivity() {
                     runOnConfirm("Accept proof request?", action = {
                         sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
                     }, negAction = {
-                        declineProof(it.record.id)
+                        declineProofV2(it.record.id)
                     })
                 } else if (it.record.state == ProofState.Done) {//3
                     proofProgress?.dismiss()
@@ -400,6 +400,20 @@ class WalletMainActivity : AppCompatActivity() {
         }
     }
 
+    private fun declineProofV2(id: String) {
+        val app = application as WalletApp
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                app.agent.proofCommandV2.declineRequest(id)
+            } catch (e: Exception) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    Log.d("demo", e.localizedMessage)
+                    showAlert("Failed to decline a proof (v2).")
+                }
+            }
+        }
+    }
     private fun declineProof(id: String) {
         val app = application as WalletApp
 

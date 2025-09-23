@@ -3,6 +3,8 @@ package org.hyperledger.ariesframework.proofs.models
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -10,22 +12,65 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.serializer
+import org.hyperledger.ariesframework.agent.MessageSerializer
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 
 @Serializable
 data class RequestedCredentialsAnoncreds(
-    @EncodeDefault
+
     @SerialName("requested_attributes")
     var requestedAttributes: MutableMap<String, RequestedAttributeAnonCreds> = mutableMapOf(),
 
-    @EncodeDefault
     @SerialName("requested_predicates")
     var requestedPredicates: MutableMap<String, RequestedPredicateAnonCreds> = mutableMapOf(),
 
-    @EncodeDefault
     @SerialName("self_attested_attributes")
     val selfAttestedAttributes: MutableMap<String, String> = mutableMapOf(),
 ) {
+
+    fun toJsonString(): String {
+        val json = Json { encodeDefaults = true }
+
+        val attrEl = buildJsonObject {
+            for ((key, value) in requestedAttributes) {
+                put(key, value.toJsonElement())
+            }
+        }
+
+        val predsEl = buildJsonObject {
+            for ((key, value) in requestedPredicates) {
+                put(key, value.toJsonElement())
+            }
+        }
+
+        val selfObj = buildJsonObject {
+            for ((key, value) in selfAttestedAttributes) {
+                put(key, JsonPrimitive(value))
+            }
+        }
+
+        val root = buildJsonObject {
+            put("requested_attributes", attrEl)
+            put("requested_predicates", predsEl)
+            put("self_attested_attributes", selfObj)
+        }
+
+        return json.encodeToString(root)
+    }
+
+    fun requestedAttributesToJsonString(
+        json: Json,
+        requestedAttributes: Map<String, RequestedAttributeAnonCreds>
+    ): String {
+        val obj = buildJsonObject {
+            for ((key, value) in requestedAttributes) {
+                put(key, json.encodeToJsonElement(RequestedAttributeAnonCreds.serializer(), value))
+            }
+        }
+        return json.encodeToString(obj)
+    }
 
     companion object {
 

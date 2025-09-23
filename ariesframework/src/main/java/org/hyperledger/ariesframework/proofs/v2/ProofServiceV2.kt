@@ -19,6 +19,9 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofR
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
+import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatCoordinator
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
@@ -398,8 +401,34 @@ class ProofServiceV2(val agent: Agent) {
 
         // save new registry and emit an event
         agent.proofRepository.save(record)
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestReceived.name,
+                connectionId = proofRecord?.connectionId ?: "",
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecord?.id ?: "",
+                content = requestMessage.toJsonString(),
+            ),
+        )
+
         agent.eventBus.publish(AgentEvents.ProofEventV2(record.copy()))
         return record
+    }
+
+    /**
+     * Create a ``PresentationProblemReportV2`` as response to a received presentation request.
+     *
+     * @param proofRecord the proof record for which to create the presentation acknowledgement.
+     * @return the presentation problem report message and an associated proof record.
+     */
+    suspend fun createPresentationDeclinedProblemReport(proofRecord: ProofExchangeRecord): Pair<PresentationProblemReportMessageV2, ProofExchangeRecord> {
+        proofRecord.assertState(ProofState.RequestReceived)
+
+        val probMessage = PresentationProblemReportMessageV2(proofRecord.threadId)
+        updateState(proofRecord, ProofState.Declined)
+
+        return Pair(probMessage, proofRecord)
     }
 
     suspend fun acceptRequest(params: AcceptProofRequestOptions): Pair<PresentationMessageV2, ProofExchangeRecord> {

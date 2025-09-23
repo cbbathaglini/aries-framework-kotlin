@@ -21,6 +21,7 @@ import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(ProofCommandV2::class.java)
@@ -114,19 +115,17 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val connection = agent.connectionRepository.getById(record.connectionId)
 
-        try {
-            agent.historyRepository.save(
-                HistoryRecord(
-                    historyType = HistoryType.ProofRequestAccepted.name,
-                    connectionId = connection.id,
-                    theirLabel = connection.theirLabel,
-                    associatedRecordId = proofRecordId,
-                    proofRequestedCredentialsAnoncreds = requestedCredentials,
-                ),
-            )
-        } catch (e: Exception) {
-            logger.error("error: ${e.message}")
-        }
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestAccepted.name,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecordId,
+                content = requestedCredentials.toJsonString(),
+            ),
+        )
+
 
         agent.messageSender.send(OutboundMessage(message, connection))
         return proofRecord
@@ -139,28 +138,28 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      * @param proofRecordId the id of the proof record for which to decline the request.
      * @return proof record associated with the sent presentation request message.
      */
-//    suspend fun declineRequest(
-//        proofRecordId: String,
-//    ): ProofExchangeRecord {
-//        val record = agent.proofRepository.getById(proofRecordId)
-//        val (message, proofRecord) = agent.proofServiceV2.createPresentationDeclinedProblemReport(
-//            record
-//        )
-//
-//        val connection = agent.connectionRepository.getById(record.connectionId)
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        agent.historyRepository.save(
-//            HistoryRecord(
-//                historyType = HistoryType.ProofRequestDeclined,
-//                connectionId = connection.id,
-//                theirLabel = connection.theirLabel,
-//                associatedRecordId = proofRecordId,
-//            ),
-//        )
-//
-//        return proofRecord
-//    }
+    suspend fun declineRequest(
+        proofRecordId: String,
+    ): ProofExchangeRecord {
+        val record = agent.proofRepository.getById(proofRecordId)
+        val (message, proofRecord) = agent.proofServiceV2.createPresentationDeclinedProblemReport(
+            record
+        )
+
+        val connection = agent.connectionRepository.getById(record.connectionId)
+        agent.messageSender.send(OutboundMessage(message, connection))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.ProofRequestDeclined.name,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = proofRecordId,
+            ),
+        )
+
+        return proofRecord
+    }
 
     /**
      * Accept a presentation as verifier (by sending a presentation acknowledgement message) to the connection

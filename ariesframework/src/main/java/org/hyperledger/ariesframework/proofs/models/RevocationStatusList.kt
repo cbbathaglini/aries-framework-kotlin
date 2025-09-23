@@ -17,7 +17,6 @@ data class RevocationStatusList(
 //        return Json.encodeToString(serializer(), this)
 //    }
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJsonString(): String =
         Json.encodeToString(serializer<RevocationStatusList>(), this)
 }
