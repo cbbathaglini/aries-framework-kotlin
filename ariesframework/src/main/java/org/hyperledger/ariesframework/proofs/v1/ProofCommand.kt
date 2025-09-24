@@ -96,9 +96,6 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             )
 
             val connection = agent.connectionRepository.getById(record.connectionId)
-            Log.d("MAIN_MESSAGE", "acceptRequest")
-            Log.d("MAIN_MESSAGE", "acceptRequest " + connection.toString())
-            Log.d("MAIN_MESSAGE", "acceptRequest " + message.toJsonString())
             agent.messageSender.send(OutboundMessage(message, connection))
 
             agent.historyRepository.save(

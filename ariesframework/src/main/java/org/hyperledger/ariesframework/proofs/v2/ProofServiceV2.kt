@@ -21,7 +21,6 @@ import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
-import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatCoordinator
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
@@ -238,7 +237,6 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun negotiateProposal(params: NegotiateProofProposalOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        logger.info("NEGOTIATE PROPOSAL -------------------------")
         val (proofRecord, proofFormats, autoAcceptProof, comment, goalCode, goal, willConfirm) = params
 
         // Assert
@@ -281,7 +279,6 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        logger.info("CREATE REQUEST -------------------------")
         val (proofRecord, proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
         val formatServices = getFormatServices(proofFormats)
@@ -439,19 +436,15 @@ class ProofServiceV2(val agent: Agent) {
 
         var formatServices = getFormatServicesByList(proofFormats ?: emptyList<ProofFormatSpec>())
         if (formatServices.isEmpty()) {
-            try {
-                val requestMessage =
-                    agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
-                        associatedRecordId = proofRecord.id,
-                        messageType = RequestPresentationMessageV2.type,
-                        role = DidCommMessageRole.Receiver,
-                    )
+            val requestMessage =
+                agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
+                    associatedRecordId = proofRecord.id,
+                    messageType = RequestPresentationMessageV2.type,
+                    role = DidCommMessageRole.Receiver,
+                )
 
-                formatServices =
-                    if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()
-            } catch (e: Exception) {
-                logger.error("msg error: ${e.message}")
-            }
+            formatServices =
+                if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()
         }
 
         if (formatServices.isEmpty()) {

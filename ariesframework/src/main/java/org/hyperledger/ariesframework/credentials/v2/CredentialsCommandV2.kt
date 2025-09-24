@@ -115,18 +115,12 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): CredentialExchangeRecord {
-        logger.info("acceptOffer init")
-        // val (credentialExchange, message) = agent.credentialServiceV2.createRequest(options)
         val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
-        logger.info("acceptOffer : $message")
-        logger.info("credentialExchange : $credentialExchange")
-
         val connectionRecord =
             agent.connectionRepository.getById(credentialExchange.connectionId!!)
-        logger.info("connectionRecord : $connectionRecord")
+
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
-        logger.info("after send message HERE")
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.CredentialOfferAccepted.name,
@@ -137,10 +131,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
                 credentials = credentialExchange.credentials,
             ),
         )
-
-//        for (historyRecord in agent.historyRepository.getAll()) {
-//            logger.info(" --HISTORY--> ${historyRecord.toString()}")
-//        }
 
         return credentialExchange
     }
@@ -170,130 +160,4 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
         return credentialRecord
     }
-
-//    suspend fun offerCredential(options: CreateCredentialOfferOptionsV2): CredentialExchangeRecord {
-//        val (message, credentialRecord) = agent.credentialServiceV2.createOfferCredentialMessage(options)
-//        val connection = options.connection ?: throw Exception("Connection is required for sending credential offer")
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//        return credentialRecord
-//    }
-//
-
-//
-//    /*
-//     * helper method to show the attributes
-//     */
-//    private fun printAttributesOfCredential(credentialAttributes: List<CredentialPreviewAttribute>?) {
-//        if (credentialAttributes != null) {
-//            credentialAttributes.forEach { attribute ->
-//                logger.info("[IDD] Attribute name: ${attribute.name}, Value: ${attribute.value}")
-//            }
-//        }
-//    }
-//
-
-//
-//    /**
-//     * Accept a credential request as issuer (by sending a credential message) to the connection
-//     * associated with the credential record.
-//     *
-//     * @param options options to accept the request.
-//     * @return credential record associated with the sent credential message (IssueCredentialMessageV2).
-//     */
-//    suspend fun acceptRequest(options: AcceptRequestOptions): CredentialExchangeRecord {
-//        val message = agent.credentialServiceV2.createIssueCredentialMessage(options)
-//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        return credentialRecord
-//    }
-//
-//    /**
-//     * Accept a credential as holder (by sending a credential acknowledgement message) to the connection
-//     * associated with the credential record.
-//     *
-//     * @param options options to accept the credential.
-//     * @return credential record associated with the sent credential acknowledgement message.
-//     */
-//    suspend fun acceptCredential(options: AcceptCredentialOptions): CredentialExchangeRecord {
-//        val message = agent.credentialServiceV2.createCredentialAckMessage(options)
-//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//        return credentialRecord
-//    }
-//
-//    /**
-//     * Find a ``OfferCredentialMessageV2`` by credential record id.
-//     *
-//     * @param credentialRecordId: the id of the credential record.
-//     * @return the offer message associated with the credential record.
-//     */
-//    suspend fun findOfferMessage(credentialRecordId: String): OfferCredentialMessageV2? {
-//        val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, OfferCredentialMessageV2.type)
-//
-//        return if (messageJson != null) {
-//            Json.decodeFromString<OfferCredentialMessageV2>(messageJson)
-//        } else {
-//            null
-//        }
-//    }
-//
-//    /**
-//     * Find a ``RequestCredentialMessageV2`` by credential record id.
-//     *
-//     * @param credentialRecordId: the id of the credential record.
-//     * @return the request message associated with the credential record.
-//     */
-//    suspend fun findRequestMessage(credentialRecordId: String): RequestCredentialMessageV2? {
-//        val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, RequestCredentialMessageV2.type)
-//
-//        return if (messageJson != null) {
-//            Json.decodeFromString<RequestCredentialMessageV2>(messageJson)
-//        } else {
-//            null
-//        }
-//    }
-//
-//    /**
-//     * Find a ``IssueCredentialMessageV2`` by credential record id.
-//     *
-//     * @param credentialRecordId: the id of the credential record.
-//     * @return the credential message associated with the credential record.
-//     */
-//    suspend fun findCredentialMessage(credentialRecordId: String): IssueCredentialMessageV2? {
-//        val messageJson = agent.didCommMessageRepository.findAgentMessage(credentialRecordId, IssueCredentialMessageV2.type)
-//        return if (messageJson != null) {
-//            Json.decodeFromString<IssueCredentialMessageV2>(messageJson)
-//        } else {
-//            null
-//        }
-//    }
 }
-
-//    suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
-//        logger.info("acceptOffer init")
-//
-//        val message = agent.credentialServiceV2.createRequestCredentialMessage(options)
-//        val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-//
-//        // printAttributesOfCredential(credentialRecord.credentialAttributes);
-//
-//        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
-//
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        agent.historyRepository.save(
-//            HistoryRecord(
-//                historyType = HistoryType.CredentialOfferAccepted,
-//                connectionId = connection.id,
-//                theirLabel = connection.theirLabel,
-//                associatedRecordId = options.credentialRecordId,
-//                credentialPreviewAttr = credentialRecord.credentialAttributes,
-//                credentials = credentialRecord.credentials,
-//            ),
-//        )
-//
-//        return credentialRecord
-//    }

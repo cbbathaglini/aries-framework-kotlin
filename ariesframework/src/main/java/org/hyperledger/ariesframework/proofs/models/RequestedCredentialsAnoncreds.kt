@@ -1,9 +1,7 @@
 package org.hyperledger.ariesframework.proofs.models
 
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -12,10 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.serializer
-import org.hyperledger.ariesframework.agent.MessageSerializer
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 
 @Serializable
 data class RequestedCredentialsAnoncreds(
@@ -56,20 +51,7 @@ data class RequestedCredentialsAnoncreds(
             put("requested_predicates", predsEl)
             put("self_attested_attributes", selfObj)
         }
-
         return json.encodeToString(root)
-    }
-
-    fun requestedAttributesToJsonString(
-        json: Json,
-        requestedAttributes: Map<String, RequestedAttributeAnonCreds>
-    ): String {
-        val obj = buildJsonObject {
-            for ((key, value) in requestedAttributes) {
-                put(key, json.encodeToJsonElement(RequestedAttributeAnonCreds.serializer(), value))
-            }
-        }
-        return json.encodeToString(obj)
     }
 
     companion object {

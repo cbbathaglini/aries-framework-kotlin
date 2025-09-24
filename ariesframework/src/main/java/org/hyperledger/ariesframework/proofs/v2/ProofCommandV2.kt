@@ -21,7 +21,6 @@ import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     private val logger = LoggerFactory.getLogger(ProofCommandV2::class.java)
@@ -115,7 +114,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val connection = agent.connectionRepository.getById(record.connectionId)
 
-
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.ProofRequestAccepted.name,
@@ -125,7 +123,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 content = requestedCredentials.toJsonString(),
             ),
         )
-
 
         agent.messageSender.send(OutboundMessage(message, connection))
         return proofRecord
@@ -143,7 +140,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     ): ProofExchangeRecord {
         val record = agent.proofRepository.getById(proofRecordId)
         val (message, proofRecord) = agent.proofServiceV2.createPresentationDeclinedProblemReport(
-            record
+            record,
         )
 
         val connection = agent.connectionRepository.getById(record.connectionId)
