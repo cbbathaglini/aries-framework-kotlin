@@ -30,7 +30,9 @@ data class WalletRecordList(
 open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Agent) {
     private val wallet = agent.wallet
     private val logger = LoggerFactory.getLogger(Repository::class.java)
-    private val jsonFormat = Json { serializersModule = didDocServiceModule }
+    private val jsonFormat = Json {
+        serializersModule = didDocServiceModule
+    }
 
     private val DEFAULT_QUERY_OPTIONS = """
     {
@@ -53,7 +55,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         return instance
     }
 
-    @OptIn(InternalSerializationApi::class)
     open suspend fun save(record: T) {
         val value = jsonFormat.encodeToString(type.serializer(), record).toByteArray()
         val tags = record.getTags().toJsonString()

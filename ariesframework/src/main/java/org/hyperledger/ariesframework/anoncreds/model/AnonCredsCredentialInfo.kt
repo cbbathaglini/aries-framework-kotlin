@@ -7,25 +7,47 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.slf4j.LoggerFactory
 
 typealias AnonCredsClaimRecord = Map<String, String>
 
 @Serializable
-data class AnonCredsCredentialInfo(
-    val credentialId: String,
-    val attributes: AnonCredsClaimRecord,
-    val schemaId: String,
-    val credentialDefinitionId: String,
-    val revocationRegistryId: String? = null,
-    val credentialRevocationId: String? = null,
-    val methodName: String,
-    val createdAt: Instant = Clock.System.now(),
-    val updatedAt: Instant,
-    val linkSecretId: String,
-) {
+class AnonCredsCredentialInfo() {
+    var credentialId: String = ""
+    var attributes: AnonCredsClaimRecord = emptyMap()
+    var schemaId: String = ""
+    var credentialDefinitionId: String = ""
+    var revocationRegistryId: String? = null
+    var credentialRevocationId: String? = null
+    var methodName: String = ""
+    var createdAt: Instant = Clock.System.now()
+    var updatedAt: Instant = Clock.System.now()
+    var linkSecretId: String = ""
 
-    private val logger = LoggerFactory.getLogger(AnonCredsCredentialInfo::class.java)
+    constructor(
+        credentialId: String,
+        attributes: AnonCredsClaimRecord,
+        schemaId: String,
+        credentialDefinitionId: String,
+        revocationRegistryId: String? = null,
+        credentialRevocationId: String? = null,
+        methodName: String,
+        createdAt: Instant = Clock.System.now(),
+        updatedAt: Instant = Clock.System.now(),
+        linkSecretId: String,
+    ) : this() {
+        this.credentialId = credentialId
+        this.attributes = attributes
+        this.schemaId = schemaId
+        this.credentialDefinitionId = credentialDefinitionId
+        this.revocationRegistryId = revocationRegistryId
+        this.credentialRevocationId = credentialRevocationId
+        this.methodName = methodName
+        this.createdAt = createdAt
+        this.updatedAt = updatedAt
+        this.linkSecretId = linkSecretId
+    }
+
+    // private val logger = LoggerFactory.getLogger(AnonCredsCredentialInfo::class.java)
 
     fun toJsonElement(): JsonElement =
         buildJsonObject {
@@ -48,15 +70,9 @@ data class AnonCredsCredentialInfo(
             }
         }
 
-//    fun AnonCredsClaimRecord.toJsonElement(): JsonElement? {
-//        try {
-//            return JsonObject(
-//                this.map { (k, v) -> k to JsonPrimitive(v) }.toMap()
-//            )
-//        }catch (e:Exception){
-//            logger.error("execptionssss : ${e.message} ${e.cause}")
-//        }
-//
-//        return null
-//    }
+    override fun toString(): String {
+        return "AnonCredsCredentialInfo(credentialId='$credentialId', attributes=$attributes, schemaId='$schemaId', credentialDefinitionId='$credentialDefinitionId', revocationRegistryId=$revocationRegistryId, credentialRevocationId=$credentialRevocationId, methodName='$methodName', createdAt=$createdAt, updatedAt=$updatedAt, linkSecretId='$linkSecretId')"
+    }
+
+
 }

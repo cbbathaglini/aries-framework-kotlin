@@ -377,7 +377,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     revocationState = Prover().createOrUpdateRevocationState(
                         revRegDef = revocationRegistryDefinitionAnoncreds.revRegDef,
                         revStatusList = revocationStatusListAnoncreds!!,
-                        revRegIdx = info.credentialRevocationId.toUInt(),
+                        revRegIdx = info.credentialRevocationId!!.toUInt(),
                         tailsPath = tailsFile.absolutePath,
                         revState = null,
                         oldRevStatusList = null,

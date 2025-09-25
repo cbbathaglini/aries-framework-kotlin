@@ -114,13 +114,15 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val connection = agent.connectionRepository.getById(record.connectionId)
 
+        requestedCredentials.normalizeAllAttributes()
+
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.ProofRequestAccepted.name,
                 connectionId = connection.id,
                 theirLabel = connection.theirLabel,
                 associatedRecordId = proofRecordId,
-                content = requestedCredentials.toJsonString(),
+                proofRequestedCredentialsAnoncreds = requestedCredentials,
             ),
         )
 
