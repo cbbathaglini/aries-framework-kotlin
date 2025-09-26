@@ -2,13 +2,11 @@ package org.hyperledger.ariesframework.proofs.v1
 
 import android.util.Log
 import anoncreds_uniffi.Credential
-import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Presentation
 import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.Prover
 import anoncreds_uniffi.RequestedCredential
 import anoncreds_uniffi.RevocationRegistryDefinition
-import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -44,6 +42,7 @@ import org.hyperledger.ariesframework.proofs.models.RequestedPredicate
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.hyperledger.ariesframework.util.concurrentMap
@@ -418,11 +417,12 @@ class ProofService(val agent: Agent) {
     suspend fun verifyProof(proofRequest: String, proof: String): Boolean = coroutineScope {
         logger.debug("verifying proof: $proof")
         val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
-        val schemas = async { getSchemas(partialProof.identifiers.map { it.schemaId }.toSet()) }
+        val schemas = async { RecoverFromLedger.getSchemas(partialProof.identifiers.map { it.schemaId }.toSet(), agent) }
         val credentialDefinitions = async {
-            getCredentialDefinitions(
+            RecoverFromLedger.getCredentialDefinitions(
                 partialProof.identifiers.map { it.credentialDefinitionId }
                     .toSet(),
+                agent,
             )
         }
         val revocationRegistryDefinitions =
@@ -526,8 +526,8 @@ class ProofService(val agent: Agent) {
             anoncredsCreds.add(requestedCredential)
         }
 
-        val schemas = getSchemas(schemaIds)
-        val credentialDefinitions = getCredentialDefinitions(credentialDefinitionIds)
+        val schemas = RecoverFromLedger.getSchemas(schemaIds, agent)
+        val credentialDefinitions = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
 
         try {
@@ -544,36 +544,6 @@ class ProofService(val agent: Agent) {
         } catch (e: Exception) {
             throw Exception("Cannot create a proof using the provided credentials. $e")
         }
-    }
-
-    suspend fun getSchemas(schemaIds: Set<String>): Map<String, Schema> {
-        val schemas = mutableMapOf<String, Schema>()
-        val lock = Mutex()
-
-        schemaIds.concurrentForEach { schemaId ->
-            val (schema, _) = agent.ledgerService.getSchema(schemaId)
-            lock.withLock {
-                schemas[schemaId] = Schema(schema)
-            }
-        }
-
-        return schemas
-    }
-
-    suspend fun getCredentialDefinitions(credentialDefinitionIds: Set<String>): Map<String, CredentialDefinition> {
-        val credentialDefinitions = mutableMapOf<String, CredentialDefinition>()
-        val lock = Mutex()
-
-        credentialDefinitionIds.concurrentForEach { credentialDefinitionId ->
-            val credentialDefinition =
-                agent.ledgerService.getCredentialDefinition(credentialDefinitionId)
-            lock.withLock {
-                credentialDefinitions[credentialDefinitionId] =
-                    CredentialDefinition(credentialDefinition)
-            }
-        }
-
-        return credentialDefinitions
     }
 
     suspend fun getRevocationRegistryDefinitions(revocationRegistryIds: Set<String>): Map<String, RevocationRegistryDefinition> {

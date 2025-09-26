@@ -1,5 +1,9 @@
 package org.hyperledger.ariesframework.proofs.v2
 
+import android.util.Log
+import anoncreds_uniffi.PresentationRequest
+import anoncreds_uniffi.Prover
+import anoncreds_uniffi.RequestedCredential
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -56,10 +60,16 @@ import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestOptions
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
+import org.hyperledger.ariesframework.proofs.utils.W3cUtils
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
+import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import java.util.UUID
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.math.max
 
 class ProofServiceV2(val agent: Agent) {
     private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
@@ -1105,5 +1115,63 @@ class ProofServiceV2(val agent: Agent) {
             revocationRegistryId,
             requestNonRevoked,
         )
+    }
+
+    suspend fun createProofFlutter(
+        proofRequest: String,
+        requestedCredentials: RequestedCredentialsAnoncreds,
+    ): ByteArray {
+        logger.debug("Validating predicates of credentials: ${requestedCredentials.toJsonString()}")
+        val anoncredsCreds = mutableListOf<RequestedCredential>()
+        val credentialIds = requestedCredentials.getCredentialIdentifiers()
+        val schemaIds = mutableSetOf<String>()
+        val credentialDefinitionIds = mutableSetOf<String>()
+
+        credentialIds.concurrentForEach { credId ->
+            val credentialRecord = agent.w3cCredentialRepository.getById(credId)
+            val credential = W3cUtils.getCredentialUniffiByW3cCredentialRecord(credentialRecord)
+            schemaIds.add(credential.schemaId())
+            credentialDefinitionIds.add(credential.credDefId())
+
+            val requestedPredicates = mutableListOf<String>()
+            var timestamp: Int? = null
+
+            requestedCredentials.requestedPredicates.forEach { (referent, pred) ->
+                if (pred.credentialId == credId) {
+                    requestedPredicates.add(referent)
+                    if (pred.timestamp != null) {
+                        timestamp = max(pred.timestamp, timestamp ?: 0)
+                    }
+                }
+            }
+
+            val requestedCredential = RequestedCredential(
+                credential,
+                timestamp?.toULong(),
+                revState = null,
+                mutableMapOf<String, Boolean>(),
+                requestedPredicates,
+            )
+            anoncredsCreds.add(requestedCredential)
+        }
+
+        val schemas = RecoverFromLedger.getSchemas(schemaIds, agent)
+        val credentialDefinitions = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
+        val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
+
+        try {
+            val presentation = Prover().createPresentation(
+                PresentationRequest(proofRequest),
+                anoncredsCreds,
+                emptyMap(),
+                linkSecret,
+                schemas,
+                credentialDefinitions,
+            )
+            Log.d("validating for flutter", presentation.toJson().toString())
+            return presentation.toJson().toByteArray()
+        } catch (e: Exception) {
+            throw Exception("Cannot create a proof using the provided credentials. $e")
+        }
     }
 }

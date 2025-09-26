@@ -73,6 +73,4 @@ class AnonCredsCredentialInfo() {
     override fun toString(): String {
         return "AnonCredsCredentialInfo(credentialId='$credentialId', attributes=$attributes, schemaId='$schemaId', credentialDefinitionId='$credentialDefinitionId', revocationRegistryId=$revocationRegistryId, credentialRevocationId=$credentialRevocationId, methodName='$methodName', createdAt=$createdAt, updatedAt=$updatedAt, linkSecretId='$linkSecretId')"
     }
-
-
 }

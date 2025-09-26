@@ -66,6 +66,7 @@ import org.hyperledger.ariesframework.credentials.formats.anoncreds.MetadataKeys
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
+import org.hyperledger.ariesframework.proofs.utils.W3cUtils
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.toJsonString
@@ -182,7 +183,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         return w3cJsonLdVC
     }
 
-    // todo
     override suspend fun createProof(
         options: CreateProofOptions,
     ): AnonCredsProof { // AnonCredsProof {
@@ -210,26 +210,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         // Cache para minimizar chamadas de storage
         val retrievedCredentials: MutableMap<String, Any> = mutableMapOf()
-
-        fun getCredentialUniffiByW3cCredentialRecord(credentialRecord: W3cCredentialRecord): Credential {
-            val cred = credentialRecord.credential.toJson()
-
-            val jsonld: W3cJsonLdVerifiableCredential = W3cJsonLdVerifiableCredential.fromJson(cred)
-            val w3cJsonLdVerifiableCredentialStr = Json.encodeToString(jsonld)
-            var w3cJsonLdVerifiableCredentialStrClean =
-                w3cJsonLdVerifiableCredentialStr.replace("\\\"", "")
-            w3cJsonLdVerifiableCredentialStrClean =
-                Regex("\"credentialSubject\"\\s*:\\s*\\[(\\{.*?\\})\\]")
-                    .replace(w3cJsonLdVerifiableCredentialStrClean) { matchResult ->
-                        val inner = matchResult.groupValues[1]
-                        "\"credentialSubject\": $inner"
-                    }
-
-            logger.info("w3cJsonLdVerifiableCredentialStr PROOF: $w3cJsonLdVerifiableCredentialStrClean ")
-            return CredentialConversions().credentialFromW3cJson(
-                w3cJsonLdVerifiableCredentialStrClean,
-            )
-        }
 
         suspend fun credentialEntryFromAttribute(
             attribute: Any,
@@ -389,7 +369,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
             // can be Credential or AnoncredsCredential
             val credential: Any = if (credentialRecord is W3cCredentialRecord) {
-                getCredentialUniffiByW3cCredentialRecord(credentialRecord)
+                W3cUtils.getCredentialUniffiByW3cCredentialRecord(credentialRecord)
             } else {
                 (credentialRecord as AnonCredsCredentialRecord).credencial
             }
@@ -524,18 +504,9 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         credentialIds.concurrentForEach { credId ->
             logger.info("id: $credId")
-            val w3cs = agent.w3cCredentialRepository.getAll()
-            w3cs.forEach { cred ->
-                logger.error("w3c --> $cred")
-            }
-
-            val credex = agent.credentialExchangeRepository.getAll()
-            credex.forEach { cred ->
-                logger.error("credex --> $cred")
-            }
 
             val credentialRecord = agent.w3cCredentialRepository.getById(credId)
-            val credential = getCredentialUniffiByW3cCredentialRecord(credentialRecord)
+            val credential = W3cUtils.getCredentialUniffiByW3cCredentialRecord(credentialRecord)
             schemaIds.add(credential.schemaId())
             credentialDefinitionIds.add(credential.credDefId())
 

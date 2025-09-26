@@ -77,7 +77,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         logger.error("deleted $id")
     }
 
-    @OptIn(InternalSerializationApi::class)
     suspend fun getById(id: String): T {
         val record = wallet.session!!.fetch(type.simpleName!!, id, false)
             ?: throw ErrorCode.NotFound("Record not found")
