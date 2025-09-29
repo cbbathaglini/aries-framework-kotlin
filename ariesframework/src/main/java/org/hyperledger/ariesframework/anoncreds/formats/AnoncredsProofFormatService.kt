@@ -138,7 +138,7 @@ class AnoncredsProofFormatService(
     override suspend fun createRequest(
         proofRecord: ProofExchangeRecord,
         attachmentId: String?,
-        proofFormats: Map<String, JsonElement>?,
+        proofFormats: List<ProofFormatSpec>?,
     ): ProofFormatCreateReturn {
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION_REQUEST,

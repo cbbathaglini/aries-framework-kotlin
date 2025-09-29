@@ -45,7 +45,6 @@ import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.CreateProposalProofOptionsV2
 import org.hyperledger.ariesframework.proofs.models.GetCredentialsForRequestOptions
-import org.hyperledger.ariesframework.proofs.models.NegotiateProofProposalOptions
 import org.hyperledger.ariesframework.proofs.models.NegotiateProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.ProofConstants
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
@@ -246,40 +245,40 @@ class ProofServiceV2(val agent: Agent) {
         return Pair(message, proofRecord)
     }
 
-    suspend fun negotiateProposal(params: NegotiateProofProposalOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        val (proofRecord, proofFormats, autoAcceptProof, comment, goalCode, goal, willConfirm) = params
-
-        // Assert
-        proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
-        proofRecord.assertState(ProofState.ProposalReceived)
-
-        if (proofRecord.connectionId.isNullOrBlank()) {
-            throw CredoError("No connectionId found for proof record '${proofRecord.id}'. Connection-less verification does not support negotiation.")
-        }
-
-        var formatServices = getFormatServices(proofFormats ?: emptyMap())
-        if (formatServices.isEmpty()) {
-            throw CredoError("Unable to create request. No supported formats.")
-        }
-
-        val requestProofRequestParams = RequestProofRequestParams(
-            proofRecord = proofRecord,
-            proofFormats = proofFormats,
-            formatServices = formatServices,
-            comment = comment,
-            goalCode = goalCode,
-            goal = goal,
-            presentMultiple = false, // Not supported at the moment
-            willConfirm = willConfirm,
-        )
-
-        val requestMessage = proofFormatCoordinator.createRequest(requestProofRequestParams)
-
-        proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
-        updateState(proofRecord, ProofState.RequestSent)
-
-        return Pair(requestMessage, proofRecord)
-    }
+//    suspend fun negotiateProposal(params: NegotiateProofProposalOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
+//        val (proofRecord, proofFormats, autoAcceptProof, comment, goalCode, goal, willConfirm) = params
+//
+//        // Assert
+//        proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
+//        proofRecord.assertState(ProofState.ProposalReceived)
+//
+//        if (proofRecord.connectionId.isNullOrBlank()) {
+//            throw CredoError("No connectionId found for proof record '${proofRecord.id}'. Connection-less verification does not support negotiation.")
+//        }
+//
+//        var formatServices = getFormatServices(proofFormats ?: emptyMap())
+//        if (formatServices.isEmpty()) {
+//            throw CredoError("Unable to create request. No supported formats.")
+//        }
+//
+//        val requestProofRequestParams = RequestProofRequestParams(
+//            proofRecord = proofRecord,
+//            proofFormats = proofFormats,
+//            formatServices = formatServices,
+//            comment = comment,
+//            goalCode = goalCode,
+//            goal = goal,
+//            presentMultiple = false, // Not supported at the moment
+//            willConfirm = willConfirm,
+//        )
+//
+//        val requestMessage = proofFormatCoordinator.createRequest(requestProofRequestParams)
+//
+//        proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
+//        updateState(proofRecord, ProofState.RequestSent)
+//
+//        return Pair(requestMessage, proofRecord)
+//    }
 
     /**
      * Create and initialize a verifiable proof request using the DIDComm Present Proof protocol v2.
@@ -291,7 +290,7 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
         val (proofRequest, proofFormats, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
-        val formatServices = getFormatServices(proofFormats)
+        val formatServices = getFormatServicesByList(proofFormats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats")
         }
