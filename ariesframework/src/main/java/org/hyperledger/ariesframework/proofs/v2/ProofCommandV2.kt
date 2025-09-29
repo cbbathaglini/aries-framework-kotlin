@@ -102,7 +102,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         comment: String? = null,
     ): ProofExchangeRecord {
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
-            getRequestedCredentialsForProofRequest(proofRecordId)
+            ProofUtils.getRequestedCredentialsForProofRequest(proofRecordId,agent)
         val requestedCredentials: RequestedCredentialsAnoncreds =
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
@@ -187,48 +187,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 //        return proofRecord
 //    }
 
-    /**
-     * Create a [RetrievedCredentials] object. Given input proof request,
-     * use credentials in the wallet to build indy requested credentials object for proof creation.
-     *
-     * @param proofRecordId the id of the proof request to get the matching credentials for.
-     * @return [RetrievedCredentials] object.
-     */
-    suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentialsAnonCreds {
-        val record = agent.proofRepository.getById(proofRecordId)
 
-        checkIfMessageTypeIsCorrect(proofRecordId)
 
-        val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
-            record.id,
-            RequestPresentationMessageV2.type,
-        )
 
-        val proofRequestMessage =
-            MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
-        updateProofFormat(record, proofRequestMessage.formats)
-
-        val proofRequestJson = proofRequestMessage.anoncredsProofRequest()
-        logger.debug("Proof request json: $proofRequestJson")
-        val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
-
-        return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
-    }
-
-    private suspend fun checkIfMessageTypeIsCorrect(proofRecordId: String) {
-        val recordMessageType =
-            agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
-
-        if (!recordMessageType.message.contains("/2.0/")) {
-            throw Exception("Version of proof protocol is incorrect")
-        }
-    }
-
-    private suspend fun updateProofFormat(
-        record: ProofExchangeRecord,
-        formats: List<ProofFormatSpec>,
-    ) {
-        record.formats = formats
-        agent.proofRepository.update(record)
-    }
 }

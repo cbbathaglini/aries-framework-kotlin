@@ -34,7 +34,7 @@ interface ProofFormatService<CF : ProofFormat> {
     suspend fun createRequest(
         proofRecord: ProofExchangeRecord,
         attachmentId: String? = null,
-        proofFormats: List<ProofFormatSpec>? = emptyList(),
+        proofFormats: Map<String, JsonElement>? = emptyMap()
     ): ProofFormatCreateReturn
 
     suspend fun processRequest(

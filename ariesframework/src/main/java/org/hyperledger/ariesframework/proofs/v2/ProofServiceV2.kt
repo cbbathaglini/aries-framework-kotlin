@@ -313,10 +313,17 @@ class ProofServiceV2(val agent: Agent) {
             autoAcceptProof = autoAcceptProof,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
+        val proofRecordSaved = agent.proofRepository.findByThreadRoleAndConnection(message.threadId, ProofRole.Prover,connectionRecord?.id)
+            ?: throw CredoError("Proof record not found")
+        val retrievedCredentials: RetrievedCredentialsAnonCreds =
+            ProofUtils.getRequestedCredentialsForProofRequest(proofRecordSaved.id, agent)
+        val requestedCredentials: RequestedCredentialsAnoncreds =
+            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        val requestedCredentialsMap = requestedCredentials.toMap()
 
         val requestParams = RequestProofRequestParams(
             proofRecord = proofRecord,
-            proofFormats = proofFormats,
+            proofFormats = requestedCredentialsMap,
             formatServices = formatServices,
             comment = comment,
             goalCode = goalCode,
