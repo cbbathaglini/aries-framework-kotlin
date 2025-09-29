@@ -105,6 +105,7 @@ class WalletMainActivity : AppCompatActivity() {
         /* CredentialEvent for version 2.0 */
         app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
+                Log.i("credentialrecord>>>>>>:", "itrecordid: " + it.record)
                 if (it.record.state == CredentialState.OfferReceived) {
                     Log.e("[IDD] state", it.record.toString())
                     runOnConfirm("(2.0) Accept credential?", action = {
@@ -140,8 +141,12 @@ class WalletMainActivity : AppCompatActivity() {
         app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
 
+                Log.i("proofrecord>>>>>>:", "itrecordid: " + it.record)
                 if (it.record.state == ProofState.RequestReceived) { //1
                     runOnConfirm("Accept proof request?", action = {
+
+                        Log.i("proofrecord:", "itrecordid: " + it.record)
+
                         sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
                     }, negAction = {
                         declineProofV2(it.record.id)

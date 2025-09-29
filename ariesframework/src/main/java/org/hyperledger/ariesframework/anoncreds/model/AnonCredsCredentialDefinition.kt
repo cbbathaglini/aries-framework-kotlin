@@ -17,7 +17,6 @@ data class AnonCredsCredentialDefinition(
     val value: CredentialDefinitionValue,
 ) {
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String = Json {
         prettyPrint = true
         encodeDefaults = true

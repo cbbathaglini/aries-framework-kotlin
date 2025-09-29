@@ -263,7 +263,7 @@ class ProofServiceV2(val agent: Agent) {
         }
 
         val requestProofRequestParams = RequestProofRequestParams(
-            proofRecord = proofRecord,
+            proofRecord= proofRecord,
             proofFormats = proofFormats,
             formatServices = formatServices,
             comment = comment,
@@ -289,14 +289,14 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        val (proofRecord, proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
+        val (proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof, willConfirm) = params
 
         val formatServices = getFormatServices(proofFormats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
-        val credentialExchangeRecord = ProofExchangeRecord(
+        val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord!!.id,
             threadId = UUID.randomUUID().toString(),
             state = ProofState.RequestSent,
@@ -307,13 +307,13 @@ class ProofServiceV2(val agent: Agent) {
         )
 
         val requestParams = RequestProofRequestParams(
-            proofRecord = proofRecord,
             proofFormats = proofFormats,
             formatServices = formatServices,
             comment = comment,
             goalCode = goalCode,
             goal = goal,
             willConfirm = willConfirm,
+            proofRecord = proofRecord
         )
         val requestMessage: RequestPresentationMessageV2 =
             proofFormatCoordinator.createRequest(requestParams)

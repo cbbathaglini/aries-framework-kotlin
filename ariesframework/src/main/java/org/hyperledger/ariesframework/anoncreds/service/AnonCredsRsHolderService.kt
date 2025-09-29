@@ -88,11 +88,11 @@ import kotlin.math.max
 
 class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
-    private val logger = LoggerFactory.getLogger(AnonCredsRsHolderService::class.java)
+        private val logger = LoggerFactory.getLogger(AnonCredsRsHolderService::class.java)
 
-    override suspend fun storeCredential(
-        options: StoreCredentialOptions,
-        metadata: Map<String, Any>?,
+        override suspend fun storeCredential(
+            options: StoreCredentialOptions,
+            metadata: Map<String, Any>?,
     ): String {
         val credential = options.credential
         val credentialDefinition = options.credentialDefinition

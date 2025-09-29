@@ -12,7 +12,6 @@ data class AnonCredsCredentialRequestMetadata(
     val nonce: String,
 ) {
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String {
         val json = Json {
             prettyPrint = true

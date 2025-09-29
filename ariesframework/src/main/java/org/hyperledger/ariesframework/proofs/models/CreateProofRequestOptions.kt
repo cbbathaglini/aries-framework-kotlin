@@ -7,13 +7,12 @@ import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 @Serializable
 data class CreateProofRequestOptions(
-    val proofRecord: ProofExchangeRecord,
     val proofFormats: Map<String, JsonElement> = emptyMap(),
     val parentThreadId: String? = null,
     val connectionRecord: ConnectionRecord? = null,
     val comment: String? = null,
     val goalCode: String? = null,
     val goal: String? = null,
-    val autoAcceptProof: AutoAcceptProof,
+    val autoAcceptProof: AutoAcceptProof?,
     val willConfirm: Boolean? = true,
 )

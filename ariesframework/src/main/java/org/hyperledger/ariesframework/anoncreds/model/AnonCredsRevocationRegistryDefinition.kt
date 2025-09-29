@@ -14,7 +14,6 @@ data class AnonCredsRevocationRegistryDefinition(
     val value: RevocationRegistryValue,
 ) {
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun toJson(): String {
         val json = Json {
             prettyPrint = true
