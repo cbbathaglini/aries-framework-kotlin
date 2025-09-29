@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.proofs.v2
 
+import android.util.Log
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
@@ -15,6 +16,8 @@ import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
+import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
@@ -58,24 +61,30 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      * @param autoAcceptProof whether to automatically accept the proof message.
      * @return a new proof record for the proof exchange.
      */
-//    suspend fun requestProof(
-//        connectionId: String,
-//        proofRequest: ProofRequest,
-//        comment: String? = null,
-//        autoAcceptProof: AutoAcceptProof? = null,
-//    ): ProofExchangeRecord {
-//        val connection = agent.connectionRepository.getById(connectionId)
-//        val (message, record) = agent.proofServiceV2.createRequest(
-//            proofRequest,
-//            connection,
-//            comment,
-//            autoAcceptProof,
-//        )
-//        Log.d("MAIN_MESSAGE", "requestProof")
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        return record
-//    }
+    suspend fun requestProof(
+        connectionId: String,
+        proofRequest: AnonCredsProofRequest,
+        comment: String? = null,
+        autoAcceptProof: AutoAcceptProof?,
+        willConfirm: Boolean?,
+    ): ProofExchangeRecord {
+        val connection = agent.connectionRepository.getById(connectionId)
+
+        val (message, record) = agent.proofServiceV2.createRequest(
+            CreateProofRequestOptions(
+                connectionRecord = connection,
+                proofRequest = proofRequest,
+                comment = comment,
+                autoAcceptProof = autoAcceptProof ?: AutoAcceptProof.Never,
+                willConfirm = willConfirm,
+            ),
+        )
+
+        Log.d("MAIN_MESSAGE", "requestProof")
+        agent.messageSender.send(OutboundMessage(message, connection))
+
+        return record
+    }
 
     /**
      * Accept a presentation request as prover (by sending a presentation message) to the connection
