@@ -1,11 +1,13 @@
 package org.hyperledger.ariesframework.proofs.v2
 
-import kotlinx.serialization.json.Json
+import android.util.Log
+import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
@@ -15,9 +17,10 @@ import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
+import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
-import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
@@ -58,24 +61,37 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      * @param autoAcceptProof whether to automatically accept the proof message.
      * @return a new proof record for the proof exchange.
      */
-//    suspend fun requestProof(
-//        connectionId: String,
-//        proofRequest: ProofRequest,
-//        comment: String? = null,
-//        autoAcceptProof: AutoAcceptProof? = null,
-//    ): ProofExchangeRecord {
-//        val connection = agent.connectionRepository.getById(connectionId)
-//        val (message, record) = agent.proofServiceV2.createRequest(
-//            proofRequest,
-//            connection,
-//            comment,
-//            autoAcceptProof,
-//        )
-//        Log.d("MAIN_MESSAGE", "requestProof")
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//
-//        return record
-//    }
+    suspend fun requestProof(
+        connectionId: String,
+        proofRequest: AnonCredsProofRequest,
+        formats: List<ProofFormatSpec> = emptyList(),
+        autoAcceptProof: AutoAcceptProof? = null,
+        willConfirm: Boolean? = null,
+        comment: String? = null,
+    ): ProofExchangeRecord {
+        val connection = agent.connectionRepository.getById(connectionId)
+
+        val format: String = formats.first().attachmentId ?: throw CredoError("Formato de prova não informado")
+
+        val proofFormats: Map<String, JsonElement> = ProofUtils.getProofFormats(proofRequest, format)
+        logger.info("proof formats: $proofFormats")
+        val (message, record) = agent.proofServiceV2.createRequest(
+            CreateProofRequestOptions(
+                connectionRecord = connection,
+                proofRequest = proofRequest,
+                comment = comment,
+                autoAcceptProof = autoAcceptProof ?: AutoAcceptProof.Never,
+                willConfirm = willConfirm,
+                formats = formats,
+                proofFormats = proofFormats,
+            ),
+        )
+
+        Log.d("MAIN_MESSAGE", "requestProof")
+        agent.messageSender.send(OutboundMessage(message, connection))
+
+        return record
+    }
 
     /**
      * Accept a presentation request as prover (by sending a presentation message) to the connection
@@ -91,7 +107,10 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         comment: String? = null,
     ): ProofExchangeRecord {
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
-            getRequestedCredentialsForProofRequest(proofRecordId)
+            ProofUtils.getRequestedCredentialsForProofRequest(
+                proofRecordId = proofRecordId,
+                agent = agent,
+            )
         val requestedCredentials: RequestedCredentialsAnoncreds =
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
@@ -175,49 +194,4 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 //        agent.messageSender.send(OutboundMessage(message, connection))
 //        return proofRecord
 //    }
-
-    /**
-     * Create a [RetrievedCredentials] object. Given input proof request,
-     * use credentials in the wallet to build indy requested credentials object for proof creation.
-     *
-     * @param proofRecordId the id of the proof request to get the matching credentials for.
-     * @return [RetrievedCredentials] object.
-     */
-    suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentialsAnonCreds {
-        val record = agent.proofRepository.getById(proofRecordId)
-
-        checkIfMessageTypeIsCorrect(proofRecordId)
-
-        val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
-            record.id,
-            RequestPresentationMessageV2.type,
-        )
-
-        val proofRequestMessage =
-            MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessageV2
-        updateProofFormat(record, proofRequestMessage.formats)
-
-        val proofRequestJson = proofRequestMessage.anoncredsProofRequest()
-        logger.debug("Proof request json: $proofRequestJson")
-        val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
-
-        return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
-    }
-
-    private suspend fun checkIfMessageTypeIsCorrect(proofRecordId: String) {
-        val recordMessageType =
-            agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$proofRecordId\"}")
-
-        if (!recordMessageType.message.contains("/2.0/")) {
-            throw Exception("Version of proof protocol is incorrect")
-        }
-    }
-
-    private suspend fun updateProofFormat(
-        record: ProofExchangeRecord,
-        formats: List<ProofFormatSpec>,
-    ) {
-        record.formats = formats
-        agent.proofRepository.update(record)
-    }
 }

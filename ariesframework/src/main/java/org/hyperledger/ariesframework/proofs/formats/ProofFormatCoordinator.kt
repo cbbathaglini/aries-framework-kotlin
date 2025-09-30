@@ -149,21 +149,26 @@ class ProofFormatCoordinator(
     }
 
     suspend fun createRequest(params: RequestProofRequestParams): RequestPresentationMessageV2 {
-        val (proofRecord, proofFormats, formatServices, comment, goalCode, goal, presentMultiple, willConfirm) = params
+        logger.info("createRequest in coordinator")
+        val (proofRecord, proofFormats, formatServices, comment, goalCode, goal, presentMultiple, willConfirm, attachmentId) = params
 
+        logger.info("format service: ${formatServices.first().formatKey}")
         val formats = mutableListOf<ProofFormatSpec>()
         val requestAttachments = mutableListOf<Attachment>()
 
+        logger.info("format service: ${formatServices.first().formatKey}")
         for (formatService in formatServices) {
             val proofFormatCreateProposalReturn = formatService.createRequest(
                 proofFormats = proofFormats,
+                attachmentId = attachmentId,
                 proofRecord = proofRecord,
             )
-
+            logger.info("proofFormatCreateProposalReturn: ${proofFormatCreateProposalReturn.attachment.getDataAsJson()}")
             requestAttachments.add(proofFormatCreateProposalReturn.attachment)
             formats.add(proofFormatCreateProposalReturn.format)
         }
 
+        logger.info("createRequest after formtatservice")
         val message = RequestPresentationMessageV2(
             formats = formats,
             requestAttachment = requestAttachments,

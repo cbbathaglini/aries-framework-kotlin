@@ -20,7 +20,6 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentials
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
-import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
@@ -66,7 +65,6 @@ import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
-import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.max
@@ -263,7 +261,7 @@ class ProofServiceV2(val agent: Agent) {
         }
 
         val requestProofRequestParams = RequestProofRequestParams(
-            proofRecord= proofRecord,
+            proofRecord = proofRecord,
             proofFormats = proofFormats,
             formatServices = formatServices,
             comment = comment,
@@ -289,32 +287,33 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        val (proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof, willConfirm) = params
+        val (anoncredsProofRequest, formats, proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
-        val formatServices = getFormatServices(proofFormats)
+        val formatServices = getFormatServicesByList(formats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
         val proofRecord = ProofExchangeRecord(
-            connectionId = connectionRecord!!.id,
-            threadId = UUID.randomUUID().toString(),
+            connectionId = connectionRecord?.id ?: "connectionless-proof-request",
+            threadId = BaseRecord.generateId(),
             state = ProofState.RequestSent,
             role = ProofRole.Verifier,
             autoAcceptProof = autoAcceptProof,
-            protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
-            parentThreadId = parentThreadId,
+            protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
 
         val requestParams = RequestProofRequestParams(
+            proofRecord = proofRecord,
             proofFormats = proofFormats,
             formatServices = formatServices,
             comment = comment,
             goalCode = goalCode,
             goal = goal,
             willConfirm = willConfirm,
-            proofRecord = proofRecord
+            attachmentId = formats.first().attachmentId!!,
         )
+
         val requestMessage: RequestPresentationMessageV2 =
             proofFormatCoordinator.createRequest(requestParams)
 
@@ -931,7 +930,6 @@ class ProofServiceV2(val agent: Agent) {
     private fun getFormatServiceForFormatKey(formatKey: String): ProofFormatService<*>? {
         logger.info("format key: $formatKey")
         val finded = proofFormats.find { formatService -> formatService.formatKey == formatKey }
-        logger.info("finded: $finded")
         return finded
     }
 

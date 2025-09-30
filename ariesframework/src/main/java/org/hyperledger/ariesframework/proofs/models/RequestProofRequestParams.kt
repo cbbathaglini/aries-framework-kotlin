@@ -15,4 +15,5 @@ data class RequestProofRequestParams(
     val goal: String? = null,
     val presentMultiple: Boolean? = null,
     val willConfirm: Boolean? = null,
+    val attachmentId: String? = null,
 )
