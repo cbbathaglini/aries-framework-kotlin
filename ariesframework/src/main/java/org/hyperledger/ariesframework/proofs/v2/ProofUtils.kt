@@ -5,10 +5,16 @@ import anoncreds_uniffi.Schema
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
@@ -17,6 +23,8 @@ import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCred
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 class ProofUtils {
 
@@ -130,10 +138,108 @@ class ProofUtils {
         private suspend fun updateProofFormat(
             record: ProofExchangeRecord,
             formats: List<ProofFormatSpec>,
-            agent: Agent
+            agent: Agent,
         ) {
             record.formats = formats
             agent.proofRepository.update(record)
         }
+
+        fun getProofFormats(proofRequest: AnonCredsProofRequest, format: String): Map<String, JsonElement> {
+            val (name, version, nonce, requestedAttributes, requestedPredicates, nonRevoked, ver) = proofRequest
+            return mapOf(
+                format to buildJsonObject {
+                    put("name", JsonPrimitive(name))
+                    put("version", JsonPrimitive(version))
+
+                    // requested_attributes
+                    put(
+                        "requested_attributes",
+                        buildJsonObject {
+                            requestedAttributes.forEach { (key, attr) ->
+                                put(
+                                    key,
+                                    buildJsonObject {
+                                        attr.name?.let { put("name", JsonPrimitive(it)) }
+                                        attr.names?.let { put("names", buildJsonArray { it.forEach { n -> add(JsonPrimitive(n)) } }) }
+                                        attr.restrictions?.takeIf { it.isNotEmpty() }?.let { restrictions ->
+                                            put(
+                                                "restrictions",
+                                                buildJsonArray {
+                                                    restrictions.forEach { add(restrictionToJson(it)) }
+                                                },
+                                            )
+                                        }
+                                        attr.nonRevoked?.let {
+                                            put(
+                                                "non_revoked",
+                                                buildJsonObject {
+                                                    it.from?.let { f -> put("from", JsonPrimitive(f)) }
+                                                    it.to?.let { t -> put("to", JsonPrimitive(t)) }
+                                                },
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        },
+                    )
+
+                    // requested_predicates
+                    put(
+                        "requested_predicates",
+                        buildJsonObject {
+                            requestedPredicates.forEach { (key, pred) ->
+                                put(
+                                    key,
+                                    buildJsonObject {
+                                        put("name", JsonPrimitive(pred.name))
+                                        put("p_type", JsonPrimitive(pred.pType.toString()))
+                                        put("p_value", JsonPrimitive(pred.pValue))
+                                        pred.restrictions?.takeIf { it.isNotEmpty() }?.let { restrictions ->
+                                            put(
+                                                "restrictions",
+                                                buildJsonArray {
+                                                    restrictions.forEach { add(restrictionToJson(it)) }
+                                                },
+                                            )
+                                        }
+                                        pred.nonRevoked?.let {
+                                            put(
+                                                "non_revoked",
+                                                buildJsonObject {
+                                                    it.from?.let { f -> put("from", JsonPrimitive(f)) }
+                                                    it.to?.let { t -> put("to", JsonPrimitive(t)) }
+                                                },
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        },
+                    )
+                },
+            )
+        }
+
+        private fun restrictionToJson(r: AnonCredsProofRequestRestriction): JsonObject =
+            buildJsonObject {
+                r.schemaId?.let { put("schema_id", JsonPrimitive(it)) }
+                r.schemaIssuerId?.let { put("schema_issuer_id", JsonPrimitive(it)) }
+                r.schemaName?.let { put("schema_name", JsonPrimitive(it)) }
+                r.schemaVersion?.let { put("schema_version", JsonPrimitive(it)) }
+                r.issuerId?.let { put("issuer_id", JsonPrimitive(it)) }
+                r.credDefId?.let { put("cred_def_id", JsonPrimitive(it)) }
+                r.revRegId?.let { put("rev_reg_id", JsonPrimitive(it)) }
+                r.schemaIssuerDid?.let { put("schema_issuer_did", JsonPrimitive(it)) }
+                r.issuerDid?.let { put("issuer_did", JsonPrimitive(it)) }
+
+                // attribute markers e values, se existirem
+                if (r.attributeMarkers.isNotEmpty()) {
+                    r.attributeMarkers.forEach { (k, v) -> put("attr::$k::marker", JsonPrimitive(v)) }
+                }
+                if (r.attributeValues.isNotEmpty()) {
+                    r.attributeValues.forEach { (k, v) -> put("attr::$k::value", JsonPrimitive(v)) }
+                }
+            }
     }
 }

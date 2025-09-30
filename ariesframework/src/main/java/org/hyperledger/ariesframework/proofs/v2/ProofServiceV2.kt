@@ -7,14 +7,12 @@ import anoncreds_uniffi.RequestedCredential
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.MessageSerializer
-import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
@@ -288,49 +286,44 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        val (proofRequest, proofFormats, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
+        val (anoncredsProofRequest, formats, proofFormats, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
-        val formatServices = getFormatServicesByList(proofFormats)
+        val formatServices = getFormatServicesByList(formats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
-        val proofRequestJson = Json.encodeToString(proofRequest)
-
-        val attachment = Attachment.fromData(
-            proofRequestJson.toByteArray(),
-            RequestPresentationMessageV2.ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID,
-        )
-
-        val message =
-            RequestPresentationMessageV2(comment = comment, requestAttachment = listOf(attachment))
+//        val proofRequestJson = Json.encodeToString(anoncredsProofRequest)
+//        logger.info("proff json: $proofRequestJson")
+//
+//        val attachment = Attachment.fromData(
+//            proofRequestJson.toByteArray(),
+//            RequestPresentationMessageV2.ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID,
+//        )
+//        logger.info("attachment:  ${attachment.getDataAsString()}")
+//
+//        val message =
+//            RequestPresentationMessageV2(comment = comment, requestAttachment = listOf(attachment))
+//        logger.info("message:  ${message.formats.first().format}")
 
         val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord?.id ?: "connectionless-proof-request",
-            threadId = message.threadId,
+            threadId = BaseRecord.generateId(),
             state = ProofState.RequestSent,
-            role = ProofRole.Prover,
+            role = ProofRole.Verifier,
             autoAcceptProof = autoAcceptProof,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
-        agent.proofRepository.save(proofRecord)
-        val proofRecordSaved = agent.proofRepository.findByThreadRoleAndConnection(message.threadId, ProofRole.Prover,connectionRecord?.id)
-            ?: throw CredoError("Proof record not found")
-
-        val retrievedCredentials: RetrievedCredentialsAnonCreds =
-            ProofUtils.getRequestedCredentialsForProofRequest(proofRecordSaved.id, agent)
-        val requestedCredentials: RequestedCredentialsAnoncreds =
-            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
-        val requestedCredentialsMap = requestedCredentials.toMap()
 
         val requestParams = RequestProofRequestParams(
             proofRecord = proofRecord,
-            proofFormats = requestedCredentialsMap,
+            proofFormats = proofFormats,
             formatServices = formatServices,
             comment = comment,
             goalCode = goalCode,
             goal = goal,
             willConfirm = willConfirm,
+            attachmentId = formats.first().attachmentId!!,
         )
 
         val requestMessage: RequestPresentationMessageV2 =
@@ -949,7 +942,6 @@ class ProofServiceV2(val agent: Agent) {
     private fun getFormatServiceForFormatKey(formatKey: String): ProofFormatService<*>? {
         logger.info("format key: $formatKey")
         val finded = proofFormats.find { formatService -> formatService.formatKey == formatKey }
-        logger.info("finded: $finded")
         return finded
     }
 

@@ -140,13 +140,17 @@ class AnoncredsProofFormatService(
         attachmentId: String?,
         proofFormats: Map<String, JsonElement>?,
     ): ProofFormatCreateReturn {
+        logger.info("createRequest in anoncredsproof format service")
+
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION_REQUEST,
             attachmentId = attachmentId!!,
         )
 
+        logger.info("format: ${format.format}")
         val anoncredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
+        logger.info("anoncredsFormat: ${anoncredsFormat.name}")
 
         val request: AnonCredsProofRequest = createRequestFromPreview(
             name = anoncredsFormat.name ?: "Proof request", // else eu coloquei
@@ -159,8 +163,13 @@ class AnoncredsProofFormatService(
 
         // Assert attribute and predicate (group) names do not match
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(request)
+        logger.info("after duplicate")
 
-        val attachment = this.getFormatData(request, format.attachmentId!!)
+        val anoncredsRequest: JsonElement = Json.encodeToJsonElement(AnonCredsProofRequest.serializer(), request)
+        logger.info("anoncreds request: $anoncredsRequest")
+
+        logger.info("request: ${format.attachmentId}")
+        val attachment = this.getFormatData(anoncredsRequest, format.attachmentId!!)
 
         return ProofFormatCreateReturn(
             attachment = attachment,

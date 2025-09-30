@@ -1,12 +1,13 @@
 package org.hyperledger.ariesframework.proofs.v2
 
 import android.util.Log
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
@@ -20,7 +21,6 @@ import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
-import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
@@ -64,13 +64,17 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun requestProof(
         connectionId: String,
         proofRequest: AnonCredsProofRequest,
-        proofFormats: List<ProofFormatSpec> = emptyList(),
+        formats: List<ProofFormatSpec> = emptyList(),
         autoAcceptProof: AutoAcceptProof? = null,
         willConfirm: Boolean? = null,
         comment: String? = null,
     ): ProofExchangeRecord {
         val connection = agent.connectionRepository.getById(connectionId)
 
+        val format: String = formats.first().attachmentId ?: throw CredoError("Formato de prova não informado")
+
+        val proofFormats: Map<String, JsonElement> = ProofUtils.getProofFormats(proofRequest, format)
+        logger.info("proof formats: $proofFormats")
         val (message, record) = agent.proofServiceV2.createRequest(
             CreateProofRequestOptions(
                 connectionRecord = connection,
@@ -78,6 +82,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 comment = comment,
                 autoAcceptProof = autoAcceptProof ?: AutoAcceptProof.Never,
                 willConfirm = willConfirm,
+                formats = formats,
                 proofFormats = proofFormats,
             ),
         )
@@ -102,7 +107,10 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         comment: String? = null,
     ): ProofExchangeRecord {
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
-            ProofUtils.getRequestedCredentialsForProofRequest(proofRecordId,agent)
+            ProofUtils.getRequestedCredentialsForProofRequest(
+                proofRecordId = proofRecordId,
+                agent = agent,
+            )
         val requestedCredentials: RequestedCredentialsAnoncreds =
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
@@ -186,8 +194,4 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 //        agent.messageSender.send(OutboundMessage(message, connection))
 //        return proofRecord
 //    }
-
-
-
-
 }

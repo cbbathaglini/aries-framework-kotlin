@@ -7,7 +7,6 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelec
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
-import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 interface ProofFormatService<CF : ProofFormat> {
@@ -34,7 +33,7 @@ interface ProofFormatService<CF : ProofFormat> {
     suspend fun createRequest(
         proofRecord: ProofExchangeRecord,
         attachmentId: String? = null,
-        proofFormats: Map<String, JsonElement>? = emptyMap()
+        proofFormats: Map<String, JsonElement>? = emptyMap(),
     ): ProofFormatCreateReturn
 
     suspend fun processRequest(
