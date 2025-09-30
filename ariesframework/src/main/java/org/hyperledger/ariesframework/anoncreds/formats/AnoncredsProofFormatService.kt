@@ -58,7 +58,6 @@ import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
 import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
-import java.util.UUID
 
 class AnoncredsProofFormatService(
     override val formatKey: String = "anoncreds",
@@ -149,7 +148,8 @@ class AnoncredsProofFormatService(
 
         logger.info("format: ${format.format}")
         val anoncredsFormat =
-            FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
+            FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats).normalizeFields()
+
         logger.info("anoncredsFormat: ${anoncredsFormat.name}")
 
         val request: AnonCredsProofRequest = createRequestFromPreview(
@@ -474,7 +474,7 @@ class AnoncredsProofFormatService(
         val attributesByReferent =
             mutableMapOf<String, MutableList<AnonCredsPresentationPreviewAttribute>>()
         for (attr in attributes) {
-            val referent = attr.referent ?: UUID.randomUUID().toString()
+            val referent = attr.referent ?: attr.name
             attributesByReferent.getOrPut(referent) { mutableListOf() }.add(attr)
         }
 
@@ -499,9 +499,9 @@ class AnoncredsProofFormatService(
         // Converte predicados pro requestedPredicates
         val requestedPredicates = mutableMapOf<String, AnonCredsRequestedPredicate>()
         for (pred in predicates) {
-            requestedPredicates[UUID.randomUUID().toString()] = AnonCredsRequestedPredicate(
+            requestedPredicates[pred.name] = AnonCredsRequestedPredicate(
                 name = pred.name,
-                pType = pred.predicate,
+                pType = PredicateType.fromString(pred.predicateType),
                 pValue = pred.threshold, // ajuste para .toLong() se seu tipo for Long
                 restrictions = listOf(
                     AnonCredsProofRequestRestriction(

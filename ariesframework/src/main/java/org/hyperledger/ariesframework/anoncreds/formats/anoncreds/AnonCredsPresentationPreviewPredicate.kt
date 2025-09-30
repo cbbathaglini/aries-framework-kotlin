@@ -8,7 +8,9 @@ import org.hyperledger.ariesframework.proofs.models.PredicateType
 data class AnonCredsPresentationPreviewPredicate(
     val name: String,
     @SerialName("credentialDefinitionId")
-    val credentialDefinitionId: String,
-    val predicate: PredicateType,
+    val credentialDefinitionId: String? = null,
+    @SerialName("p_type")
+    val predicateType: String,
+    @SerialName("p_value")
     val threshold: Long,
 )
