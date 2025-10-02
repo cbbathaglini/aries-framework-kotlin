@@ -43,6 +43,7 @@ data class ProofExchangeRecord(
         if (parentThreadId != null) tags["parentThreadId"] = parentThreadId!!
         tags["connectionId"] = connectionId
         tags["state"] = state.name
+        tags["role"] = role.name
 
         return tags
     }

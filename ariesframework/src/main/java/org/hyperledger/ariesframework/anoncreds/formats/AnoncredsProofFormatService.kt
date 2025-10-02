@@ -47,6 +47,7 @@ import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
@@ -685,6 +686,6 @@ class AnoncredsProofFormatService(
 //    }
 
     private fun checkValidCredentialValueEncoding(raw: Any, encoded: String): Boolean {
-        return encoded === AnonCredsEncoder.encodeCredentialValue(raw)
+        return encoded == AnonCredsEncoder.encodeCredentialValue(raw)
     }
 }
