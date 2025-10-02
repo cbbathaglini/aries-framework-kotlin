@@ -5,8 +5,12 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.slf4j.LoggerFactory
 
 class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
@@ -27,10 +31,19 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     suspend fun createPresentation(record: ProofExchangeRecord, messageContext: InboundMessageContext): OutboundMessage? {
-        val retrievedCredentials = agent.proofs.getRequestedCredentialsForProofRequest(record.id)
-        val requestedCredentials = agent.proofService.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        val retrievedCredentials: RetrievedCredentialsAnonCreds =
+            ProofUtils.getRequestedCredentialsForProofRequest(
+                proofRecordId = record.id,
+                agent = agent,
+            )
+        val requestedCredentials : RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
-        val (message, _) = agent.proofService.createPresentation(record, requestedCredentials)
+        val params = AcceptProofRequestOptions(
+            proofRecord = record,
+            proofFormats = record.formats!!,
+            requestedCredentials = requestedCredentials.toMap()
+        )
+        val (message, _) = agent.proofServiceV2.acceptRequest(params)
         return OutboundMessage(message, messageContext.connection!!)
     }
 }

@@ -320,7 +320,7 @@ class CredentialServiceV2(val agent: Agent) {
         val goal = options.goal
         val goalCode = options.goalCode
 
-        var formatServices = getFormatServices(credentialFormats)
+        val formatServices = getFormatServices(credentialFormats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to create offer. No supported formats.")
         }
@@ -578,7 +578,7 @@ class CredentialServiceV2(val agent: Agent) {
      * or send a credential. It will only update the existing credential record with
      * the information from the credential request message. Use {@link createCredential}
      * after calling this method to create a credential.
-     *z
+     *
      * @param messageContext The message context containing a v2 credential request message
      * @returns credential record associated with the credential request message
      *

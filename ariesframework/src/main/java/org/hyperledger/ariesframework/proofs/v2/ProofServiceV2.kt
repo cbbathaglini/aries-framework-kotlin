@@ -317,6 +317,7 @@ class ProofServiceV2(val agent: Agent) {
         val requestMessage: RequestPresentationMessageV2 =
             proofFormatCoordinator.createRequest(requestParams)
 
+        logger.info("request message: ${requestMessage.requestAttachment.size}")
         logger.debug("Saving record and emitting state changed for proof exchange record ${proofRecord.id}")
         agent.proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))

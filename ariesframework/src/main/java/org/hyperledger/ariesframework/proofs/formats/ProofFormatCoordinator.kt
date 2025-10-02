@@ -182,13 +182,13 @@ class ProofFormatCoordinator(
             threadId = proofRecord.threadId,
             parentThreadId = proofRecord.parentThreadId,
         )
-
+        logger.info("message: ${message.toJsonString()}")
         agent.didCommMessageRepository.saveAgentMessage(
             role = DidCommMessageRole.Sender,
             agentMessage = message,
             associatedRecordId = proofRecord.id,
         )
-
+        logger.info("save didcomm")
         return message
     }
 
@@ -436,7 +436,7 @@ class ProofFormatCoordinator(
 
                 formatVerificationResults.add(isValid)
             } catch (error: Exception) {
-                logger.error("message error: ${error.message} and isValid: ${false}")
+                logger.error("message error: ${error.message}")
                 return ProcessPresentationReturn(
                     isValid = false,
                     message = error.message.toString(),
