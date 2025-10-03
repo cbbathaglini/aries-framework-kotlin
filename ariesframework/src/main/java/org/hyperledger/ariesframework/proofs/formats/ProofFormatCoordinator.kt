@@ -427,14 +427,18 @@ class ProofFormatCoordinator(
             )
 
             try {
-                // TODO: this should return a more complex object explaining why it is invalid
+                logger.info("presentationAttachment: ${presentationAttachment.getDataAsJson()})")
+                logger.info("requestAttachment: ${presentationAttachment.getDataAsJson()})")
                 val isValid = formatService.processPresentation(
-                    attachment = presentationAttachment,
+                    presentationAttachment = presentationAttachment,
                     requestAttachment = requestAttachment,
                     proofRecord = proofRecord,
+                    presentationMessage = presentationMessage,
+                    requestMessage = message,
                 )
 
                 formatVerificationResults.add(isValid)
+                logger.info("isvalid: ${isValid}")
             } catch (error: Exception) {
                 logger.error("message error: ${error.message}")
                 return ProcessPresentationReturn(

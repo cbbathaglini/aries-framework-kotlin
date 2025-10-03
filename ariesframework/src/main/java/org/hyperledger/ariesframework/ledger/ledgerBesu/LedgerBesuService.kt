@@ -50,6 +50,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         "0x0000000000000000000000000000000000004444"
     private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222"
 
+//    //cpqd
+//    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1"
+//    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09"
+//    private val credentialDefinitionRegistryConfigAddress =
+//        "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0"
+//    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5"
     data class ContractConfigBesu(
         val address: String,
         val specPath: String,
@@ -69,13 +75,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 val inputStream =
                     context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
                 val content = inputStream.bufferedReader().use { it.readText() }
-                logger.info("content abi: $content")
                 val jsonObject = JSONObject(content)
                 val name = jsonObject.getString("sourceName").substringAfterLast("/")
                     .substringBeforeLast(".")
                 val abi = jsonObject.getJSONArray("abi").toString()
-                logger.info("ABI: $abi")
-                logger.info("contract spec: $name")
+//                logger.info("ABI: $abi")
+//                logger.info("contract spec: $name")
                 return ContractConfig(
                     address = address,
                     specPath = null,

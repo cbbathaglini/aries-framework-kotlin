@@ -21,6 +21,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
@@ -87,14 +88,17 @@ class ProofUtils {
             credentialDefinitionIds.concurrentForEach { credentialDefinitionId ->
                 val cd =
                     agent.ledgerService.getCredentialDefinition(credentialDefinitionId)
+                PrintLongLine.print("cd: $cd")
                 val credentialDefinition = cd.replace("\\\"", "\"")
+//                PrintLongLine.print("cd: ${cd.toString()}")
                 val anoncreds =
                     Json.decodeFromString<AnonCredsCredentialDefinition>(credentialDefinition)
+                PrintLongLine.print("anoncreds: $anoncreds")
                 lock.withLock {
                     credentialDefinitions[credentialDefinitionId] = anoncreds
                 }
             }
-
+            PrintLongLine.print("credentialDefinitions utils: $credentialDefinitions")
             return credentialDefinitions
         }
 

@@ -15,7 +15,9 @@ enum class PredicateType {
     GreaterThan,
 
     @SerialName(">=")
-    GreaterThanOrEqualTo;
+    GreaterThanOrEqualTo,
+
+    ;
 
     companion object {
         fun fromString(value: String): PredicateType = when (value) {

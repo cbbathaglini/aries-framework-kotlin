@@ -36,12 +36,12 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
                 proofRecordId = record.id,
                 agent = agent,
             )
-        val requestedCredentials : RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats!!,
-            requestedCredentials = requestedCredentials.toMap()
+            requestedCredentials = requestedCredentials.toMap(),
         )
         val (message, _) = agent.proofServiceV2.acceptRequest(params)
         return OutboundMessage(message, messageContext.connection!!)

@@ -10,7 +10,11 @@ data class AnonCredsProof(
     val requestedProof: RequestedProof,
     val proof: JsonElement?, // TS: any
     val identifiers: List<Identifier>,
-)
+) {
+    override fun toString(): String {
+        return "AnonCredsProof(requestedProof=$requestedProof, proof=$proof, identifiers=$identifiers)"
+    }
+}
 
 @Serializable
 data class RequestedProof(
@@ -27,7 +31,11 @@ data class RequestedProof(
     val selfAttestedAttrs: Map<String, String>,
 
     val predicates: Map<String, SubProofIndexOnly>,
-)
+) {
+    override fun toString(): String {
+        return "RequestedProof(revealedAttrs=$revealedAttrs, revealedAttrGroups=$revealedAttrGroups, unrevealedAttrs=$unrevealedAttrs, selfAttestedAttrs=$selfAttestedAttrs, predicates=$predicates)"
+    }
+}
 
 @Serializable
 data class RevealedAttr(
@@ -35,14 +43,22 @@ data class RevealedAttr(
     val subProofIndex: Int,
     val raw: String,
     val encoded: String,
-)
+) {
+    override fun toString(): String {
+        return "RevealedAttr(subProofIndex=$subProofIndex, raw='$raw', encoded='$encoded')"
+    }
+}
 
 @Serializable
 data class RevealedAttrGroup(
     @SerialName("sub_proof_index")
     val subProofIndex: Int,
     val values: Map<String, AttrValue>,
-)
+) {
+    override fun toString(): String {
+        return "RevealedAttrGroup(subProofIndex=$subProofIndex, values=$values)"
+    }
+}
 
 @Serializable
 data class AttrValue(

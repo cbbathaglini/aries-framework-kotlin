@@ -1,7 +1,16 @@
 package org.hyperledger.ariesframework.proofs.verifier
 
+import anoncreds_uniffi.CredentialDefinition
 import anoncreds_uniffi.Presentation
-import kotlinx.serialization.json.JsonObject
+import anoncreds_uniffi.PresentationRequest
+import anoncreds_uniffi.RevocationRegistryDefinition
+import anoncreds_uniffi.Schema
+import anoncreds_uniffi.Verifier
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
@@ -9,18 +18,24 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestr
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
+import org.hyperledger.ariesframework.proofs.models.PartialProof
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
+import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
+import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
+import kotlin.collections.set
 
 class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
     private val logger = LoggerFactory.getLogger(AnonCredsRsVerifierService::class.java)
 
     override suspend fun verifyProof(
         options: VerifyProofOptions,
-    ): Boolean {
-        val (proofRequest, proof, schemas, credentialDefinitions, revocationRegistries) = options
+    ): Boolean = coroutineScope {
+        val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, revocationRegistries) = options
+        logger.info("oprions: $options")
+        logger.info("proofRequest: $proofRequest")
 
         var presentation: Presentation? = null
 
@@ -29,47 +44,60 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
         if (!verified) {
             logger.debug("Invalid timestamps for provided identifiers")
-            return false
+            return@coroutineScope false
         }
 
-        presentation = Presentation(proof.toString())
+        presentation = Presentation(presentationMessage.anoncredsProof())
+        logger.info("presentation: $presentation")
 
-        val rsCredentialDefinitions = mutableMapOf<String, JsonObject>()
-        for ((credDefId, value) in credentialDefinitions.credentialDefinitions) {
-            rsCredentialDefinitions[credDefId] = value as JsonObject
+        val credentialDefinitionIds: Set<String> = credentialDefinitions.credentialDefinitions.keys
+        val credentialDefinitionAnoncreds : Map<String, CredentialDefinition> = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
+
+        val schemaIds: Set<String> = schemas.schemas.keys
+        val schemasAnoncreds : Map<String, Schema> =  RecoverFromLedger.getSchemas(schemaIds, agent)
+
+        val revRegDefIds: Set<String> = revocationRegistries.keys
+        val revocationRegistryDefinitions: Map<String, RevocationRegistryDefinition> = getRevocationRegistryDefinitions(revRegDefIds)
+
+        val proofAnoncreds = presentationMessage.anoncredsProof()
+        val proofRequestAnoncreds = requestMessage.anoncredsProofRequest()
+        val partialProofObj = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proofAnoncreds)
+        val revocationStatusLists: List<anoncreds_uniffi.RevocationStatusList> =
+            agent.revocationService.getRevocationStatusLists(
+                proof = partialProofObj,
+                revocationRegistryDefinitions = revocationRegistryDefinitions,
+            )
+
+        return@coroutineScope try {
+            Verifier().verifyPresentation(
+                presReq = PresentationRequest(proofRequestAnoncreds),
+                schemas = schemasAnoncreds,
+                credDefs = credentialDefinitionAnoncreds,
+                revRegDefs = revocationRegistryDefinitions,
+                revStatusLists = revocationStatusLists,
+                presentation = presentation,
+                nonrevokeIntervalOverride = null,
+            )
+        } catch (e: Exception) {
+            logger.error("Error verifying proof: $e")
+            false
         }
+    }
 
-        val rsSchemas = mutableMapOf<String, JsonObject>()
-        for ((schemaId, value) in schemas.schemas) {
-            rsSchemas[schemaId] = value as JsonObject
-        }
+    suspend fun getRevocationRegistryDefinitions(revocationRegistryIds: Set<String>): Map<String, RevocationRegistryDefinition> {
+        val revocationRegistryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()
+        val lock = Mutex()
 
-        val revocationRegistryDefinitions = mutableMapOf<String, JsonObject>()
-        val lists = mutableListOf<JsonObject>()
-
-        for ((revRegDefId, reg) in revocationRegistries) {
-            val definition = reg.definition as JsonObject
-            revocationRegistryDefinitions[revRegDefId] = definition
-
-            val revocationStatusLists = reg.revocationStatusLists?.values
-            if (revocationStatusLists != null) {
-                for (lst in revocationStatusLists) {
-                    lists.add(lst as JsonObject)
-                }
+        revocationRegistryIds.concurrentForEach { revocationRegistryId ->
+            val revocationRegistryDefinition =
+                agent.ledgerService.getRevocationRegistryDefinition(revocationRegistryId)
+            lock.withLock {
+                revocationRegistryDefinitions[revocationRegistryId] =
+                    RevocationRegistryDefinition(revocationRegistryDefinition)
             }
         }
 
-//        return presentation.verify(
-//            mapOf(
-//                "presentationRequest" to (proofRequest as JsonObject),
-//                "credentialDefinitions" to rsCredentialDefinitions,
-//                "schemas" to rsSchemas,
-//                "revocationRegistryDefinitions" to revocationRegistryDefinitions,
-//                "revocationStatusLists" to lists,
-//                "nonRevokedIntervalOverrides" to nonRevokedIntervalOverrides
-//            )
-//        )
-        return false
+        return revocationRegistryDefinitions
     }
 
     override suspend fun verifyW3cPresentation(options: VerifyW3cPresentationOptions): Boolean {

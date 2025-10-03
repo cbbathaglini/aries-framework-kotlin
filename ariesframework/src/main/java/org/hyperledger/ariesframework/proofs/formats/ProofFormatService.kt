@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
@@ -51,8 +52,10 @@ interface ProofFormatService<CF : ProofFormat> {
 
     suspend fun processPresentation(
         requestAttachment: Attachment,
-        attachment: Attachment,
+        presentationAttachment: Attachment,
         proofRecord: ProofExchangeRecord,
+        presentationMessage: PresentationMessageV2,
+        requestMessage: RequestPresentationMessageV2,
     ): Boolean
 
     suspend fun getCredentialsForRequest(

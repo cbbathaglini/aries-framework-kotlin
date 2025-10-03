@@ -68,7 +68,7 @@ data class RevocationRegistries(val agent: Agent) {
         for (credential in referentCredentials) {
             val referent = credential["referent"] as String
 
-            val nonRevoked = credential["nonRevoked"] as AnonCredsNonRevokedInterval
+            val nonRevoked = credential["nonRevoked"] as? AnonCredsNonRevokedInterval
             val type = credential["type"] as String
 
             val selected = credential["selectedCredential"]
@@ -128,7 +128,7 @@ data class RevocationRegistries(val agent: Agent) {
                 )
             }
 
-            val timestampToFetch = timestamp ?: nonRevoked.to
+            val timestampToFetch = timestamp ?: nonRevoked?.to
 
             if (revocationRegistryId != null && revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
                 val revocationStatusList: RevocationStatusList =

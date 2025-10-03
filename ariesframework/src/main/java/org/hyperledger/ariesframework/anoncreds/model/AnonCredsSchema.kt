@@ -18,4 +18,8 @@ data class AnonCredsSchema(
         }
         return json.encodeToString(serializer<AnonCredsSchema>(), this)
     }
+
+    override fun toString(): String {
+        return "AnonCredsSchema(issuerId='$issuerId', name='$name', version='$version', attrNames=$attrNames)"
+    }
 }

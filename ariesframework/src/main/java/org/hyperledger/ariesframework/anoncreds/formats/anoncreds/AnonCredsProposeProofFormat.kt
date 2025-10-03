@@ -20,7 +20,7 @@ data class AnonCredsProposeProofFormat(
     fun normalizeFields(): AnonCredsProposeProofFormat {
         return this.copy(
             attributes = this.requestedAttributes?.values?.toList(),
-            predicates = this.requestedPredicates?.values?.toList()
+            predicates = this.requestedPredicates?.values?.toList(),
         )
     }
 }

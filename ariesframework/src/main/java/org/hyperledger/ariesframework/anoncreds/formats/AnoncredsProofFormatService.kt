@@ -46,7 +46,9 @@ import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
+import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
@@ -55,7 +57,6 @@ import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
 import org.hyperledger.ariesframework.proofs.utils.RequestsEquals
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
-import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 
@@ -235,13 +236,18 @@ class AnoncredsProofFormatService(
 
     override suspend fun processPresentation(
         requestAttachment: Attachment,
-        attachment: Attachment,
+        presentationAttachment: Attachment,
         proofRecord: ProofExchangeRecord,
+        presentationMessage: PresentationMessageV2,
+        requestMessage: RequestPresentationMessageV2,
     ): Boolean {
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
+        logger.info("request json: $requestJson")
+
         val anonCredsProof: AnonCredsProof =
-            Json.decodeFromString<AnonCredsProof>(attachment.getDataAsJson())
+            Json.decodeFromString<AnonCredsProof>(presentationAttachment.getDataAsJson())
+        logger.info("anonCredsProof: $anonCredsProof")
 
         for ((referent, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
             if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
@@ -268,6 +274,7 @@ class AnoncredsProofFormatService(
         val schemasMap: Map<String, AnonCredsSchema> =
             agent.ledgerService.getSchemas(anonCredsProof.identifiers.map { it.schemaId }.toSet())
         val schemas = AnonCredsSchemas(schemasMap)
+        logger.info("schemas: $schemas")
 
         val credentialDefinitionsMap: Map<String, AnonCredsCredentialDefinition> =
             ProofUtils.getCredentialDefinitions(
@@ -275,40 +282,39 @@ class AnoncredsProofFormatService(
                 anonCredsProof.identifiers.map { it.credDefId }.toSet(),
             )
 
+        logger.info("credentialDefinitionsMap: $credentialDefinitionsMap")
         val credentialDefinitionUniffiMap: Map<String, CredentialDefinition> =
             convert(credentialDefinitionsMap)
+        logger.info("credentialDefinitionUniffiMap: $credentialDefinitionUniffiMap")
+
         val revocationRegistries =
             RevocationRegistries(agent).getRevocationRegistriesForProof(anonCredsProof)
 
         val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
             credentialDefinitions = credentialDefinitionsMap,
         )
+        logger.info("anonCredsCredentialDefinitions: $anonCredsCredentialDefinitions")
+
         proofRecord.isVerified = agent.anoncredsVerifierService.verifyProof(
             options = VerifyProofOptions(
                 proofRequest = requestJson,
                 proof = anonCredsProof,
+                presentationMessage = presentationMessage,
                 schemas = schemas,
                 credentialDefinitions = anonCredsCredentialDefinitions,
                 revocationRegistries = revocationRegistries,
+                requestMessage = requestMessage,
             ),
         )
-
-        // proofRecord.isVerified = verifyProof(requestAttachment.getDataAsJson(), anoncredsProofJson)
-
-        return false
+        return proofRecord.isVerified!!
     }
 
-    fun convert(
+    suspend fun convert(
         input: Map<String, AnonCredsCredentialDefinition>,
     ): Map<String, CredentialDefinition> {
         return input.mapValues { (credDefId, def) ->
-            val credDefMap = mapOf(
-                "credDefId" to credDefId,
-                "issuerId" to def.issuerId,
-                "schemaId" to def.schemaId,
-            )
-
-            CredentialDefinition(credDefMap.toJsonString())
+            val credDef = agent.ledgerService.getCredentialDefinition(credDefId)
+            CredentialDefinition(credDef)
         }
     }
 
@@ -685,6 +691,6 @@ class AnoncredsProofFormatService(
 //    }
 
     private fun checkValidCredentialValueEncoding(raw: Any, encoded: String): Boolean {
-        return encoded === AnonCredsEncoder.encodeCredentialValue(raw)
+        return encoded == AnonCredsEncoder.encodeCredentialValue(raw)
     }
 }
