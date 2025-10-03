@@ -6,7 +6,6 @@ import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -51,10 +50,10 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         logger.info("presentation: $presentation")
 
         val credentialDefinitionIds: Set<String> = credentialDefinitions.credentialDefinitions.keys
-        val credentialDefinitionAnoncreds : Map<String, CredentialDefinition> = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
+        val credentialDefinitionAnoncreds: Map<String, CredentialDefinition> = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
 
         val schemaIds: Set<String> = schemas.schemas.keys
-        val schemasAnoncreds : Map<String, Schema> =  RecoverFromLedger.getSchemas(schemaIds, agent)
+        val schemasAnoncreds: Map<String, Schema> = RecoverFromLedger.getSchemas(schemaIds, agent)
 
         val revRegDefIds: Set<String> = revocationRegistries.keys
         val revocationRegistryDefinitions: Map<String, RevocationRegistryDefinition> = getRevocationRegistryDefinitions(revRegDefIds)

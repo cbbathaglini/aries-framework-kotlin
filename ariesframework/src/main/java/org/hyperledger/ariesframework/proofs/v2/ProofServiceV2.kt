@@ -27,7 +27,6 @@ import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatCoordinator
 import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationProblemReportErrorV2
@@ -695,10 +694,10 @@ class ProofServiceV2(val agent: Agent) {
         return Pair(message, proofRecord)
     }
 
-    suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessage, ProofExchangeRecord> {
+    suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
         proofRecord.assertState(ProofState.PresentationReceived)
 
-        val ackMessage = PresentationAckMessage(proofRecord.threadId, AckStatus.OK)
+        val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
         updateState(proofRecord, ProofState.Done)
 
         return Pair(ackMessage, proofRecord)

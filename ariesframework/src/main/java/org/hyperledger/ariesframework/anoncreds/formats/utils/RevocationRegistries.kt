@@ -134,7 +134,7 @@ data class RevocationRegistries(val agent: Agent) {
                 val revocationStatusList: RevocationStatusList =
                     agent.ledgerService
                         .getRevocationStatusList(
-                            id = revocationRegistryId!!,
+                            id = revocationRegistryId,
                             timestamp = timestampToFetch!!.toInt(),
                         )
 

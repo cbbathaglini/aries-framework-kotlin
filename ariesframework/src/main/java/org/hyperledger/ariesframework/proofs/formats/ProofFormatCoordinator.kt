@@ -438,7 +438,7 @@ class ProofFormatCoordinator(
                 )
 
                 formatVerificationResults.add(isValid)
-                logger.info("isvalid: ${isValid}")
+                logger.info("isvalid: $isValid")
             } catch (error: Exception) {
                 logger.error("message error: ${error.message}")
                 return ProcessPresentationReturn(
@@ -449,7 +449,7 @@ class ProofFormatCoordinator(
         }
 
         agent.didCommMessageRepository.saveOrUpdateAgentMessage(
-            agentMessage = message,
+            agentMessage = presentationMessage,
             role = DidCommMessageRole.Receiver,
             associatedRecordId = proofRecord.id,
         )
@@ -461,6 +461,10 @@ class ProofFormatCoordinator(
                 isValid = isValid,
             )
         }
+
+        agent.didCommMessageRepository.getAll()
+            .stream()
+            .map { element -> logger.info(element.toString()) }
 
         return ProcessPresentationReturn(
             isValid = isValid,
