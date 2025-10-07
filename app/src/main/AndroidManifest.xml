@@ -17,6 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="DataExtractionRules">
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
         <activity
             android:name=".CredentialListActivity"
             android:label="@string/title_credential_list"
@@ -28,6 +29,16 @@
         </activity>
         <activity
             android:name=".CredentialDetailActivity"
+            android:label="@string/title_credential_detail"
+            android:parentActivityName=".CredentialListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".CredentialListActivity" />
+        </activity>
+
+        <activity
+            android:name=".CredentialW3cDetailActivity"
             android:label="@string/title_credential_detail"
             android:parentActivityName=".CredentialListActivity"
             android:theme="@style/AppTheme.NoActionBar">

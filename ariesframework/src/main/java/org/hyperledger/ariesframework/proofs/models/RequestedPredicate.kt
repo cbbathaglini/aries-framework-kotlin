@@ -7,9 +7,12 @@ import kotlinx.serialization.Serializable
 data class RequestedPredicate(
     @SerialName("cred_id")
     val credentialId: String,
+
     val timestamp: Int? = null,
+
     @Transient
     var credentialInfo: IndyCredentialInfo? = null,
+
     @Transient
     var revoked: Boolean? = null,
 )

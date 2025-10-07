@@ -1,6 +1,7 @@
 package org.hyperledger.ariesproject
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialDetailBinding
 import anoncreds_uniffi.Credential
 
+
 class CredentialDetailFragment : Fragment() {
 
     private var item: Credential? = null
@@ -24,12 +26,13 @@ class CredentialDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
-            if (it.containsKey(ARG_CREDENTIAL)) {
+            if (it.containsKey(ARG_CREDENTIAL) && it.getString(ARG_CREDENTIAL) != null) {
                 item = Credential(it.getString(ARG_CREDENTIAL)!!)
                 credentialId = it.getString(ARG_CREDENTIAL_ID)
-                detailBinding = ActivityCredentialDetailBinding.inflate(layoutInflater)
-                detailBinding.toolbarLayout.title = getString(R.string.title_credential_detail)
             }
+            detailBinding = ActivityCredentialDetailBinding.inflate(layoutInflater)
+            detailBinding.toolbarLayout.title = getString(R.string.title_credential_detail)
+
         }
     }
 
@@ -40,38 +43,41 @@ class CredentialDetailFragment : Fragment() {
     ): View {
         binding = CredentialDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
-        item?.let {
-            val attrs = it.values()
-            binding.credentialDetail.text = attrs.map { attr ->
-                "${attr.key}: ${attr.value}"
-            }.joinToString("\n")
 
-            val activity = activity as CredentialDetailActivity
-            val app = activity.application as WalletApp
+        if (item != null) {
+            item?.let {
+                    val attrs = it.values()
+                    binding.credentialDetail.text = attrs.map { attr ->
+                        "${attr.key}: ${attr.value}"
+                    }.joinToString("\n")
 
-            // Bind the delete button to the delete action
-            binding.deleteCredentialButton.setOnClickListener {
-                // To prevent multiple clicks
-                binding.deleteCredentialButton.isEnabled = false
-                val builder = AlertDialog.Builder(activity)
-                builder.setTitle(R.string.title_delete_cred)
-                    .setMessage(R.string.title_delete_cred_detail)
-                    .setPositiveButton(R.string.ok) { dialog, which ->
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            app.agent.credentialRepository.deleteById(credentialId!!)
-                            activity.runOnUiThread {
-                                dialog.dismiss()
-                                activity.finish()
+                    val activity = activity as CredentialDetailActivity
+                    val app = activity.application as WalletApp
+
+                    // Bind the delete button to the delete action
+                    binding.deleteCredentialButton.setOnClickListener {
+                        // To prevent multiple clicks
+                        binding.deleteCredentialButton.isEnabled = false
+                        val builder = AlertDialog.Builder(activity)
+                        builder.setTitle(R.string.title_delete_cred)
+                            .setMessage(R.string.title_delete_cred_detail)
+                            .setPositiveButton(R.string.ok) { dialog, which ->
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    app.agent.credentialRepository.deleteById(credentialId!!)
+                                    activity.runOnUiThread {
+                                        dialog.dismiss()
+                                        activity.finish()
+                                    }
+                                }
                             }
-                        }
+                            .setNegativeButton(R.string.cancel) { dialog, which ->
+                                binding.deleteCredentialButton.isEnabled = true
+                                dialog.dismiss()
+                            }
+                            .create()
+                            .show()
                     }
-                    .setNegativeButton(R.string.cancel) { dialog, which ->
-                        binding.deleteCredentialButton.isEnabled = true
-                        dialog.dismiss()
-                    }
-                    .create()
-                    .show()
-            }
+                }
         }
         return rootView
     }

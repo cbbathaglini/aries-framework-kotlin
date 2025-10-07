@@ -7,8 +7,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import org.hyperledger.ariesframework.proofs.ProofService
-import org.hyperledger.ariesframework.proofs.models.AttributeFilter
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofAttributeInfo
 import org.hyperledger.ariesframework.proofs.models.ProofPredicateInfo

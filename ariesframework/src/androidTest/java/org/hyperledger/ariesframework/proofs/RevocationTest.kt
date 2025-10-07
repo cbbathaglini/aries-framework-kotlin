@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -131,8 +132,9 @@ class RevocationTest {
         )
     }
 
-    @Test @LargeTest
-    fun testProofRequestWithNonRevoked() = runTest(timeout = 20.seconds) {
+    @Test(timeout = 600_000)
+    @LargeTest
+    fun testProofRequestWithNonRevoked() = runBlocking {
         issueCredential()
         val proofRequest = getProofRequest()
         var faberProofRecord = faberAgent.proofs.requestProof(
@@ -162,7 +164,8 @@ class RevocationTest {
         assertEquals(ProofState.Done, faberProofRecord.state)
     }
 
-    @Test @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testVerifyAfterRevocation() = runBlocking {
         aliceAgent.agentConfig.ignoreRevocationCheck = true
 

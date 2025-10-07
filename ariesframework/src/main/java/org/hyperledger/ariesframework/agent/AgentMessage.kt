@@ -1,6 +1,6 @@
 package org.hyperledger.ariesframework.agent
 
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,6 +17,7 @@ import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceMod
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createType
 
 @Serializable
 open class AgentMessage(
@@ -29,8 +30,16 @@ open class AgentMessage(
     @SerialName("~transport")
     var transport: TransportDecorator? = null,
 ) {
+
     val threadId: String
         get() = thread?.threadId ?: id
+
+    fun setThread(threadId: String, parentThreadId: String?) {
+        this.thread = ThreadDecorator(
+            threadId = threadId,
+            parentThreadId = parentThreadId,
+        )
+    }
 
     open fun requestResponse(): Boolean {
         return true
@@ -61,21 +70,35 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     private val encoder = Json { serializersModule = didDocServiceModule }
     private val decoder = Json { ignoreUnknownKeys = true; serializersModule = didDocServiceModule }
 
-    @OptIn(InternalSerializationApi::class)
+//    @OptIn(InternalSerializationApi::class)
+//    fun <T : AgentMessage> registerMessage(type: String, clazz: KClass<T>) {
+//        serializers[type] = clazz.serializer() as KSerializer<AgentMessage>
+//        logger.debug(type)
+//        serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = clazz.serializer() as KSerializer<AgentMessage>
+//    }
+
+    @OptIn(ExperimentalSerializationApi::class)
     fun <T : AgentMessage> registerMessage(type: String, clazz: KClass<T>) {
-        serializers[type] = clazz.serializer() as KSerializer<AgentMessage>
-        logger.debug(type)
-        serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = clazz.serializer() as KSerializer<AgentMessage>
+        // KClass<T> -> KType
+        val ktype = clazz.createType()
+        val kser = serializer(ktype) // top-level overload aceita KType
+
+        @Suppress("UNCHECKED_CAST")
+        val asAgent = kser as KSerializer<AgentMessage>
+
+        serializers[type] = asAgent
+        serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = asAgent
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
-        logger.debug(type)
-        return if (serializers.containsKey(type)) {
-            serializers[type]!!
-        } else {
+        logger.info(" ==>>>> serializers: $serializers")
+        logger.info("type: $type")
+
+        return serializers[type] ?: run {
             logger.error("Message type $type is not registered for JSON decoding")
-            AgentMessage.serializer()
+            serializer<AgentMessage>() // <- em vez de AgentMessage.serializer()
         }
     }
 

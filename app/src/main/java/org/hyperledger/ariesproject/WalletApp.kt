@@ -9,13 +9,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentConfig
+import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import java.io.File
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
-const val genesisPath = "genesiscpqd.txn"
+const val genesisPath = "von.txn"
 
 class WalletApp : Application() {
     lateinit var agent: Agent
@@ -47,6 +48,15 @@ class WalletApp : Application() {
         // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
         val agentLabel = "SimpleApp-1X$androidId"
 
+        val chainId= properties.getProperty("besu_chainId").toULong()
+        val nodeAddress= properties.getProperty("besu_nodeAddress")
+
+        val besuLedgerContig = BesuLedgerConfig(
+            chainId= chainId,
+            nodeAddress = nodeAddress
+        )
+
+
         val config = AgentConfig(
             walletKey = key,
             genesisPath = File(applicationContext.filesDir.absolutePath, genesisPath).absolutePath,
@@ -55,6 +65,9 @@ class WalletApp : Application() {
             label = agentLabel,
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
+            useLedgerService = false, // indy
+            useBesuLedger =  true, //besu
+            besuLedgerConfig = besuLedgerContig,
         )
         agent = Agent(applicationContext, config)
         agent.initialize()
@@ -65,7 +78,6 @@ class WalletApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         GlobalScope.launch(Dispatchers.IO) {
             openWallet()
         }

@@ -1,5 +1,6 @@
 package org.hyperledger.ariesproject
 
+import android.R
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
@@ -20,7 +21,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
@@ -28,13 +28,18 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.credentials.models.AcceptOfferOptions
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.models.ProofConstants
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
@@ -100,9 +105,12 @@ class WalletMainActivity : AppCompatActivity() {
         /* CredentialEvent for version 2.0 */
         app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
+                Log.i("credentialrecord>>>>>>:", "itrecordid: " + it.record)
                 if (it.record.state == CredentialState.OfferReceived) {
+                    Log.e("[IDD] state", it.record.toString())
                     runOnConfirm("(2.0) Accept credential?", action = {
-                        getCredentialV2(it.record.id)
+                        Log.e("[IDD] CONFIRM", it.record.id)
+                        getCredentialV2(it.record)
                     }, negAction = {
                         declineCredentialV2(it.record.id)
                     })
@@ -117,15 +125,39 @@ class WalletMainActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
                 if (it.record.state == ProofState.RequestReceived) {
                     runOnConfirm("Accept proof request?", action = {
-                        sendProof(it.record.id)
+                        sendProof( it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
                     }, negAction = {
                         declineProof(it.record.id)
                     })
                 } else if (it.record.state == ProofState.Done) {
                     proofProgress?.dismiss()
                     showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived){
+                } else if (it.record.state == ProofState.PresentationReceived) {
                     receivePresentationProof(app, it)
+                }
+            }
+        }
+
+        app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
+            lifecycleScope.launch(Dispatchers.Main) {
+
+                Log.i("proofrecord>>>>>>:", "itrecordid: " + it.record)
+                if (it.record.state == ProofState.RequestReceived) { //1
+                    runOnConfirm("Accept proof request?", action = {
+
+                        Log.i("proofrecord:", "itrecordid: " + it.record)
+
+                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
+                    }, negAction = {
+                        declineProofV2(it.record.id)
+                    })
+                } else if (it.record.state == ProofState.Done) {//3
+                    proofProgress?.dismiss()
+                    showAlert("Proof done")
+                } else if (it.record.state == ProofState.PresentationReceived) {//2
+                    receivePresentationProof(app, it)
+                }else{
+                    showAlert("message: ${it.record.state}")
                 }
             }
         }
@@ -170,12 +202,34 @@ class WalletMainActivity : AppCompatActivity() {
 
     private suspend fun receivePresentationProof(
         app: WalletApp,
+        it: AgentEvents.ProofEventV2
+    ) {
+        val (message, proofRecord) = app.agent.proofServiceV2.createAck(it.record)
+        val connection = app.agent.connectionRepository.getById(it.record.connectionId)
+        app.agent.messageSender.send(OutboundMessage(message, connection))
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            PresentationMessageV2.type
+        )
+        val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
+        // Primeiro, parseia como JsonElement
+        val element = json.decodeFromString<JsonElement>(presentationMessageJson)
+        val type = element.jsonObject["type"]?.jsonPrimitive?.content
+        val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessageV2
+        showProofInfo(presentationMessage.anoncredsProof())
+    }
+
+    private suspend fun receivePresentationProof(
+        app: WalletApp,
         it: AgentEvents.ProofEvent
     ) {
         val (message, proofRecord) = app.agent.proofService.createAck(it.record)
         val connection = app.agent.connectionRepository.getById(it.record.connectionId)
         app.agent.messageSender.send(OutboundMessage(message, connection))
-        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(proofRecord.id, PresentationMessageV2.type)
+        val presentationMessageJson = app.agent.didCommMessageRepository.getAgentMessage(
+            proofRecord.id,
+            PresentationMessageV2.type
+        )
         val json = Json { ignoreUnknownKeys = true } // Permite ignorar campos extras
 
         // Primeiro, parseia como JsonElement
@@ -189,13 +243,13 @@ class WalletMainActivity : AppCompatActivity() {
             PresentationMessage.type
         )*/
 
-        if (type == "https://didcomm.org/present-proof/1.0/presentation") {
-            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessage
-            showProofInfo(presentationMessage.indyProof())
-        } else {
-            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessageV2
-            showProofInfo(presentationMessage.indyProof())
-        }
+//        if (type == "https://didcomm.org/present-proof/1.0/presentation") {
+//            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessage
+//            showProofInfo(presentationMessage.indyProof())
+//        } else {
+//            val presentationMessage = MessageSerializer.decodeFromString(presentationMessageJson) as PresentationMessageV2
+//            showProofInfo(presentationMessage.indyProof())
+//        }
 
     }
 
@@ -257,17 +311,17 @@ class WalletMainActivity : AppCompatActivity() {
     private fun showAlert(message: String) {
         val builder = AlertDialog.Builder(this@WalletMainActivity)
         builder.setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ -> }
+            .setPositiveButton(R.string.ok) { _, _ -> }
         builder.create().show()
     }
 
     private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
         val builder = AlertDialog.Builder(this@WalletMainActivity)
         builder.setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
+            .setPositiveButton(R.string.ok) { _, _ ->
                 action()
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
+            .setNegativeButton(R.string.cancel) { _, _ ->
                 negAction()
             }
         builder.create().show()
@@ -335,11 +389,12 @@ class WalletMainActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val decline = DeclineCredentialOfferOptions(
+                    sendProblemReport = true
+                )
                 app.agent.credentialsV2.declineOffer(
-                    AcceptOfferOptions(
-                        credentialRecordId = id,
-                        autoAcceptCredential = AutoAcceptCredential.Never,
-                    ),
+                    credentialRecordId = id,
+                    options = decline,
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -350,6 +405,20 @@ class WalletMainActivity : AppCompatActivity() {
         }
     }
 
+    private fun declineProofV2(id: String) {
+        val app = application as WalletApp
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                app.agent.proofCommandV2.declineRequest(id)
+            } catch (e: Exception) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    Log.d("demo", e.localizedMessage)
+                    showAlert("Failed to decline a proof (v2).")
+                }
+            }
+        }
+    }
     private fun declineProof(id: String) {
         val app = application as WalletApp
 
@@ -374,7 +443,10 @@ class WalletMainActivity : AppCompatActivity() {
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 app.agent.credentials.acceptOffer(
-                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    AcceptOfferOptions(
+                        credentialRecordId = id,
+                        autoAcceptCredential = AutoAcceptCredential.Always
+                    ),
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -392,17 +464,27 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-    private fun getCredentialV2(id: String) {
+    private fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
+        Log.i("CV2", "HERE")
         val app = application as WalletApp
         val progress = ProgressDialog(this)
         progress.setTitle("Loading")
         progress.setCancelable(true)
 
-
         val job = lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val connectionRecordList = app.agent.connectionRepository.getAll()
+                Log.i("connectionRecordList", connectionRecordList.toString())
+
+                val connectionRecord =
+                    app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
+                Log.i("IDD", connectionRecord.toString())
                 app.agent.credentialsV2.acceptOffer(
-                    AcceptOfferOptions(credentialRecordId = id, autoAcceptCredential = AutoAcceptCredential.Always),
+                    AcceptCredentialOfferOptionsV2(
+                        credentialExchangeRecord = credentialExchangeRecord,
+                        credentialFormats = credentialExchangeRecord.formats,
+                        autoAcceptCredential = AutoAcceptCredential.Always,
+                    )
                 )
             } catch (e: Exception) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -422,44 +504,53 @@ class WalletMainActivity : AppCompatActivity() {
         credentialProgress = progress
     }
 
-    private fun sendProof(id: String) {
-        val app = application as WalletApp
-        val progress = ProgressDialog(this)
-        progress.setTitle("Sending proof")
-        progress.setCancelable(true)
+    private fun sendProof( id: String, version: String) {
 
-        val job = lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val requestedCredentials : RequestedCredentials
-                val message = app.agent.didCommMessageRepository.getSingleByQuery("{\"associatedRecordId\": \"$id\"}")
+        try {
+            val app = application as WalletApp
+            val progress = ProgressDialog(this)
+            progress.setTitle("Sending proof")
+            progress.setCancelable(true)
 
-                val retrievedCredentials = app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                requestedCredentials = app.agent.proofService.autoSelectCredentialsForProofRequest(
-                    retrievedCredentials
-                )
-                app.agent.proofs.acceptRequest(id, requestedCredentials)
+            val job = lifecycleScope.launch(Dispatchers.IO) {
+                try {
 
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    progress.dismiss()
-                    showAlert("Failed to present proof.")
+                    if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
+                        val retrievedCredentials =
+                            app.agent.proofs.getRequestedCredentialsForProofRequest(id)
+                        val requestedCredentials: RequestedCredentials =
+                            app.agent.proofService.autoSelectCredentialsForProofRequest(
+                                retrievedCredentials
+                            )
+                        app.agent.proofs.acceptRequest(id, requestedCredentials)
+                    } else {
+                        app.agent.proofCommandV2.acceptRequest(id)
+                    }
+
+                } catch (e: Exception) {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        Log.i("demo proof", e.localizedMessage)
+                        progress.dismiss()
+                        showAlert("Failed to present proof.")
+                    }
                 }
             }
-        }
 
-        progress.setOnCancelListener {
-            job.cancel()
+            progress.setOnCancelListener {
+                job.cancel()
+            }
+            progress.show()
+            proofProgress = progress
+        }catch (e: Exception){
+            showAlert("Error in proof: ${e.message} | ${e.localizedMessage}")
         }
-        progress.show()
-        proofProgress = progress
     }
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val app = application as WalletApp
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
+        if (resultCode == RESULT_OK) {
             lifecycleScope.launch(Dispatchers.Main) {
                 try {
                     val qrcodeData = data!!.getStringExtra("qrcode")
@@ -475,7 +566,10 @@ class WalletMainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION))
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(
+            this,
+            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION)
+        )
     }
 
     class SimpleItemRecyclerViewAdapter(
@@ -509,7 +603,11 @@ class WalletMainActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuItemHolder {
-            val binding = MenuItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val binding = MenuItemListContentBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
             return MenuItemHolder(binding)
         }
 
@@ -525,7 +623,8 @@ class WalletMainActivity : AppCompatActivity() {
 
         override fun getItemCount() = values.size
 
-        inner class MenuItemHolder(val binding: MenuItemListContentBinding) : RecyclerView.ViewHolder(binding.root) {
+        inner class MenuItemHolder(val binding: MenuItemListContentBinding) :
+            RecyclerView.ViewHolder(binding.root) {
             val contentView: TextView = binding.content
         }
 

@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.agent.decorators
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -24,7 +25,7 @@ class AttachmentData(
 }
 
 @Serializable
-class Attachment(
+data class Attachment(
     @SerialName("@id")
     val id: String,
     val description: String? = null,
@@ -43,6 +44,25 @@ class Attachment(
             data.json != null -> Json.encodeToString(data.json)
             else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
         }
+    }
+
+    fun getDataAsJson(): String {
+        return when {
+            data.base64 != null -> {
+                val decoded = String(data.base64.decodeBase64())
+                decoded // return JSON as string
+            }
+            data.json != null -> {
+                Json.encodeToString(data.json)
+            }
+            else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
+        }
+//        return Json.encodeToString(data.json)
+    }
+
+    fun <T> Attachment.getDataAsJsonByType(deserializer: DeserializationStrategy<T>): T {
+        val jsonString = this.getDataAsJson()
+        return Json.decodeFromString(deserializer, jsonString)
     }
 
     fun addJws(jws: JwsGeneralFormat) {

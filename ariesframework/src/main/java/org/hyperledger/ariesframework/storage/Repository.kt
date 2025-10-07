@@ -30,7 +30,9 @@ data class WalletRecordList(
 open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Agent) {
     private val wallet = agent.wallet
     private val logger = LoggerFactory.getLogger(Repository::class.java)
-    private val jsonFormat = Json { serializersModule = didDocServiceModule }
+    private val jsonFormat = Json {
+        serializersModule = didDocServiceModule
+    }
 
     private val DEFAULT_QUERY_OPTIONS = """
     {
@@ -53,7 +55,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         return instance
     }
 
-    @OptIn(InternalSerializationApi::class)
     open suspend fun save(record: T) {
         val value = jsonFormat.encodeToString(type.serializer(), record).toByteArray()
         val tags = record.getTags().toJsonString()
@@ -76,7 +77,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         logger.error("deleted $id")
     }
 
-    @OptIn(InternalSerializationApi::class)
     suspend fun getById(id: String): T {
         val record = wallet.session!!.fetch(type.simpleName!!, id, false)
             ?: throw ErrorCode.NotFound("Record not found")
@@ -89,6 +89,7 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun findByQuery(query: String): List<T> {
         return try {
+            logger.info("find by query: $query")
             val scan = wallet.store!!.scan(null, type.simpleName!!, query, null, null)
             val records = scan.fetchAll()
             records.map { recordToInstance(it) }

@@ -18,7 +18,7 @@ data class FixHintOptions(
 
 @Serializable
 open class BaseProblemReportMessage(
-    open val description: DescriptionOptions,
+    open var description: DescriptionOptions,
     @SerialName("fix_hint")
     open val fixHint: FixHintOptions? = null,
 ) : AgentMessage(generateId(), type) {

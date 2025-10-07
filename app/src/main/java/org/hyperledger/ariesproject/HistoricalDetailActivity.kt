@@ -3,8 +3,11 @@ package org.hyperledger.ariesproject
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.HistoricalDetailFragment.Companion.ARG_CONNECTION_ID
 import org.hyperledger.ariesproject.HistoricalDetailFragment.Companion.ARG_CONNECTION_RECORD
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
@@ -12,6 +15,7 @@ import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 
 class HistoricalDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHistoricalDetailBinding
+    private lateinit var deleteConnection: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,6 +23,7 @@ class HistoricalDetailActivity : AppCompatActivity() {
         binding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.detailToolbar)
+        deleteConnection = findViewById(R.id.delete_connection)
 
         binding.fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
@@ -47,6 +52,23 @@ class HistoricalDetailActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .add(binding.historicalDetailContainer.id, fragment)
                 .commit()
+        }
+
+
+
+        deleteConnection.setOnClickListener {
+            deleteConnection()
+        }
+
+    }
+
+    private fun deleteConnection(){
+        lifecycleScope.launch {
+            val app = application as WalletApp
+            var connectionId: String? = intent.getStringExtra("CONNECTION_ID")
+            if (connectionId != null) {
+                app.agent.connectionRepository.deleteById(connectionId)
+            }
         }
     }
 

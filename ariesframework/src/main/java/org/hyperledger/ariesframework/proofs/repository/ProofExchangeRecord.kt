@@ -4,8 +4,11 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
+import org.hyperledger.ariesframework.proofs.models.ProofRole
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.storage.BaseRecord
 
@@ -20,18 +23,27 @@ data class ProofExchangeRecord(
 
     var connectionId: String,
     var threadId: String,
+    var parentThreadId: String? = null,
     var isVerified: Boolean? = null,
     var presentationId: String? = null,
     var state: ProofState,
+    var role: ProofRole,
     var autoAcceptProof: AutoAcceptProof? = null,
     var errorMessage: String? = null,
+    var protocolVersion: String,
+
+    var formats: List<ProofFormatSpec>? = emptyList(),
+    var datas: Map<String, JsonElement>? = emptyMap(),
+
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
         tags["threadId"] = threadId
+        if (parentThreadId != null) tags["parentThreadId"] = parentThreadId!!
         tags["connectionId"] = connectionId
         tags["state"] = state.name
+        tags["role"] = role.name
 
         return tags
     }
@@ -48,6 +60,12 @@ data class ProofExchangeRecord(
                 "Proof record is associated with connection '${this.connectionId}'." +
                     " Current connection is '$currentConnectionId'",
             )
+        }
+    }
+
+    fun assertProtocolVersion(version: String) {
+        if (this.protocolVersion != version) {
+            throw Exception("Proof record has invalid protocol version ${this.protocolVersion}. Expected version $version")
         }
     }
 }

@@ -6,17 +6,21 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.slf4j.LoggerFactory
 
 class PresentationHandlerV2(val agent: Agent) : MessageHandler {
+    private val logger = LoggerFactory.getLogger(PresentationAckHandlerV2::class.java)
+
     override val messageType = PresentationMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        val presentationRecord = agent.proofService.processPresentation(messageContext)
-
+        logger.debug("Entering in PresentationHandlerV2")
+        val presentationRecord = agent.proofServiceV2.processPresentation(messageContext)
+        logger.info("prseentarecord: ${presentationRecord.isVerified} $presentationRecord")
         if (presentationRecord.autoAcceptProof == AutoAcceptProof.Always ||
             agent.agentConfig.autoAcceptProof == AutoAcceptProof.Always
         ) {
-            val (message, _) = agent.proofService.createAck(presentationRecord)
+            val (message, _) = agent.proofServiceV2.createAck(presentationRecord)
             return OutboundMessage(message, messageContext.connection!!)
         }
 

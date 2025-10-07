@@ -28,7 +28,7 @@ Aries Framework Kotlin requires Android 7.0+. It is distributed as a Maven packa
 You can add a dependency to your app's build.gradle file:
 ```groovy
 dependencies {
-    implementation("org.hyperledger:aries-framework-kotlin:2.0.0")
+    implementation("org:aries-framework-kotlin:2.0.0")
 }
 ```
 

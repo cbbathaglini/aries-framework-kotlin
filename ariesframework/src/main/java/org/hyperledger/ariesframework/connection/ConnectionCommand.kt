@@ -139,7 +139,7 @@ class ConnectionCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         logger.debug("Accept connection invitation")
         val message = agent.connectionService.createRequest(connectionId, autoAcceptConnection = autoAcceptConnection)
         agent.messageSender.send(message)
-        return message.connection
+        return message.connection!!
     }
 
     /**
@@ -184,6 +184,6 @@ class ConnectionCommand(val agent: Agent, private val dispatcher: Dispatcher) {
             )
         }
         agent.messageSender.send(message)
-        return message.connection
+        return message.connection!!
     }
 }

@@ -63,7 +63,7 @@ class MessageSender(val agent: Agent) {
         // We should not override the parent thread id if it is already set, because it may be
         // a response to a different invitation. For example, a handshake-reuse message sent
         // over an existing connection created from a different out-of-band invitation.
-        message.connection.outOfBandInvitation?.let {
+        message.connection?.outOfBandInvitation?.let {
             val thread = agentMessage.thread ?: ThreadDecorator()
             if (thread.parentThreadId == null) {
                 thread.parentThreadId = it.id
@@ -77,7 +77,7 @@ class MessageSender(val agent: Agent) {
     suspend fun send(message: OutboundMessage, endpointPrefix: String? = null) {
         val agentMessage = decorateMessage(message)
 
-        val services = findDidCommServices(message.connection)
+        val services = findDidCommServices(message.connection!!)
         if (services.isEmpty()) {
             logger.error("Cannot find services for message of type ${agentMessage.type}")
         }
@@ -86,6 +86,7 @@ class MessageSender(val agent: Agent) {
             if (endpointPrefix != null && !service.serviceEndpoint.startsWith(endpointPrefix)) {
                 continue
             }
+            logger.info("agent type:: ${agentMessage.type}")
             logger.debug("Send outbound message of type ${agentMessage.type} to endpoint ${service.serviceEndpoint}")
             logger.debug("Message value ${agentMessage.toJsonString()} to endpoint ${service.serviceEndpoint}")
             if (endpointPrefix == null && outboundTransportForEndpoint(service.serviceEndpoint) == null) {
@@ -96,7 +97,7 @@ class MessageSender(val agent: Agent) {
                 sendMessageToService(agentMessage, service, message.connection.verkey, message.connection.id)
                 return
             } catch (e: Exception) {
-                logger.debug("Sending outbound message to service ${service.serviceEndpoint} failed with the following error: ${e.message}")
+                logger.info("Sending outbound message to service ${service.serviceEndpoint} failed with the following error: ${e.message}")
             }
         }
 
@@ -128,7 +129,6 @@ class MessageSender(val agent: Agent) {
 
     private suspend fun sendMessageToService(message: AgentMessage, service: DidComm, senderKey: String, connectionId: String) {
         val keys = EnvelopeKeys(service.recipientKeys, service.routingKeys ?: emptyList(), senderKey)
-
         val outboundPackage = packMessage(message, keys, service.serviceEndpoint, connectionId)
         val outboundTransport = outboundTransportForEndpoint(service.serviceEndpoint)
             ?: throw Exception("No outbound transport found for endpoint ${service.serviceEndpoint}")
@@ -137,7 +137,6 @@ class MessageSender(val agent: Agent) {
 
     private suspend fun packMessage(message: AgentMessage, keys: EnvelopeKeys, endpoint: String, connectionId: String): OutboundPackage {
         var encryptedMessage = agent.wallet.pack(message, keys.recipientKeys, keys.senderKey)
-
         var recipientKeys = keys.recipientKeys
         for (routingKey in keys.routingKeys) {
             val forwardMessage = ForwardMessage(recipientKeys[0], encryptedMessage)
@@ -147,7 +146,7 @@ class MessageSender(val agent: Agent) {
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }
-
+        logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
         return OutboundPackage(encryptedMessage, message.requestResponse(), endpoint, connectionId)
     }
 

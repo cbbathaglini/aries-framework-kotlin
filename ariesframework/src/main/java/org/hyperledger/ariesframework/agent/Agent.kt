@@ -1,11 +1,26 @@
 package org.hyperledger.ariesframework.agent
 
+import ILedgerService
 import RevocationNotificationService
 import RevocationNotificationServiceV2
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
-import org.hyperledger.ariesframework.anoncreds.AnoncredsService
+import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
+import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.EthrAnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsModuleConfigOptions
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsKeyCorrectnessProofRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsLinkSecretRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionPrivateRepository
+import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryDefinitionRepository
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRegistryService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsHolderService
+import org.hyperledger.ariesframework.anoncreds.service.AnonCredsRsIssuerService
+import org.hyperledger.ariesframework.anoncreds.service.AnoncredsService
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialDefinitionRepository
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRepository
 import org.hyperledger.ariesframework.anoncreds.storage.RevocationRegistryRepository
@@ -22,20 +37,31 @@ import org.hyperledger.ariesframework.credentials.v1.CredentialsCommand
 import org.hyperledger.ariesframework.credentials.v2.CredentialServiceV2
 import org.hyperledger.ariesframework.credentials.v2.CredentialsCommandV2
 import org.hyperledger.ariesframework.history.repository.HistoryRepository
-import org.hyperledger.ariesframework.ledger.LedgerService
+import org.hyperledger.ariesframework.ledger.ledgerBesu.LedgerBesuService
+import org.hyperledger.ariesframework.ledger.ledgerIndy.LedgerIndyService
 import org.hyperledger.ariesframework.oob.OutOfBandCommand
 import org.hyperledger.ariesframework.oob.OutOfBandService
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
 import org.hyperledger.ariesframework.problemreports.ProblemReportsCommand
-import org.hyperledger.ariesframework.proofs.ProofCommand
-import org.hyperledger.ariesframework.proofs.ProofService
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
+import org.hyperledger.ariesframework.proofs.v1.ProofCommand
+import org.hyperledger.ariesframework.proofs.v1.ProofService
+import org.hyperledger.ariesframework.proofs.v2.ProofCommandV2
+import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
+import org.hyperledger.ariesframework.proofs.verifier.AnonCredsRsVerifierService
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
+import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
+import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
+import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
+import org.hyperledger.ariesframework.vc.service.W3cCredentialService
+import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
+import org.slf4j.LoggerFactory
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
+    private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
     val wallet: Wallet = Wallet(this)
     val eventBus = EventBus()
     val dispatcher = Dispatcher(this)
@@ -53,7 +79,9 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val oob = OutOfBandCommand(this, dispatcher)
     val didCommMessageRepository = DidCommMessageRepository(this)
     val credentialExchangeRepository = CredentialExchangeRepository(this)
-    val ledgerService = LedgerService(this)
+    val ledgerService: ILedgerService
+        get() = _ledgerService ?: error("LedgerService was not initialized")
+    private val _ledgerService: ILedgerService? = initializeLedgerService()
     val credentialDefinitionRepository = CredentialDefinitionRepository(this)
     val revocationRegistryRepository = RevocationRegistryRepository(this)
     val anoncredsService = AnoncredsService(this)
@@ -68,22 +96,57 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val revocationNotificationServicev2 = RevocationNotificationServiceV2(this, dispatcher)
     val proofRepository = ProofRepository(this)
     val proofService = ProofService(this)
+    val proofServiceV2 = ProofServiceV2(this)
+    val anoncredsVerifierService = AnonCredsRsVerifierService(this)
 
-    // val proofServiceV2 = ProofServiceV2(this)
+    val anoncredsCredentialDefinitionRepository = AnonCredsCredentialDefinitionRepository(this)
+    val anonCredsHolderService = AnonCredsRsHolderService(this)
+    val anonCredsIssuerService = AnonCredsRsIssuerService(this)
+    val anonCredsRegistryService = AnonCredsRegistryService(this)
+    val anonCredsRevocationRegistryDefinitionPrivateRepository = AnonCredsRevocationRegistryDefinitionPrivateRepository(this)
+    val anonCredsKeyCorrectnessProofRepository = AnonCredsKeyCorrectnessProofRepository(this)
+    val anonCredsCredentialDefinitionPrivateRepository = AnonCredsCredentialDefinitionPrivateRepository(this)
+    val anonCredsRevocationRegistryDefinitionRepository = AnonCredsRevocationRegistryDefinitionRepository(this)
+    val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
+    val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
+    val anoncredsmodulesconfig = AnonCredsModuleConfig(
+        agent = this,
+        options = AnonCredsModuleConfigOptions(
+            registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry()),
+        ),
+    )
+
+//    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
+//        documentLoader = TODO()
+//    )
+    val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
+    val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig, context)
+    val w3cJwtCredentialService = W3cJwtCredentialService(this)
+    val w3cCredentialRepository = W3cCredentialRepository(this)
+    val w3cCredentialService = W3cCredentialService(w3cCredentialRepository, w3cJsonLdCredentialService, w3cJwtCredentialService)
+
     val proofs = ProofCommand(this, dispatcher)
-
-    // val proofsV2 = ProofCommandV2(this, dispatcher)
+    val proofCommandV2 = ProofCommandV2(this, dispatcher)
     val basicMessages = BasicMessageCommand(this, dispatcher)
 
     val problemReports = ProblemReportsCommand(this, dispatcher)
 
     private var _isInitialized = false
 
+    private fun initializeLedgerService(): ILedgerService {
+        return if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
+            LedgerBesuService(this, context)
+        } else {
+            LedgerIndyService(this)
+        }
+    }
+
     /**
      * Initialize the agent. This will create a wallet if necessary and open it.
      * It will also connect to the mediator if configured and connect to the ledger.
      */
     suspend fun initialize() {
+        logger.info("Initializing o LedgerService")
         wallet.initialize()
 
         agentConfig.publicDidSeed?.let {
@@ -91,6 +154,8 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         }
 
         if (agentConfig.useLedgerService) {
+            ledgerService.initialize()
+        } else if (agentConfig.useBesuLedger) {
             ledgerService.initialize()
         }
 

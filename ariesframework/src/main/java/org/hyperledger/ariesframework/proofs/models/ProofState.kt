@@ -28,4 +28,7 @@ enum class ProofState {
 
     @SerialName("done")
     Done,
+
+    @SerialName("abandoned")
+    Abandoned,
 }

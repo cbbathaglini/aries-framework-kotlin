@@ -25,3 +25,6 @@
 -dontwarn java.awt.GraphicsEnvironment
 -dontwarn java.awt.HeadlessException
 -dontwarn java.awt.Window
+# Não remova nada do namespace UniFFI
+-keep class uniffi.** { *; }
+-dontwarn uniffi.**
