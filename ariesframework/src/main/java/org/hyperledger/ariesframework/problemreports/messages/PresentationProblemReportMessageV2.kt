@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.problemreports.messages
 
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
+import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 
 @Serializable
 class PresentationProblemReportMessageV2 private constructor() : BaseProblemReportMessage(
@@ -11,15 +12,22 @@ class PresentationProblemReportMessageV2 private constructor() : BaseProblemRepo
     ),
     null,
 ) {
+    var proofRecord: ProofExchangeRecord? = null
+
     constructor(threadId: String) : this() {
         thread = ThreadDecorator(threadId)
         type = Companion.type
     }
 
-    constructor(threadId: String, descriptionOptions: DescriptionOptions) : this() {
+    constructor(
+        threadId: String,
+        descriptionOptions: DescriptionOptions,
+        proofRecord: ProofExchangeRecord
+    ) : this() {
         thread = ThreadDecorator(threadId)
         type = Companion.type
         description = descriptionOptions
+        this.proofRecord = proofRecord
     }
 
     companion object {
