@@ -51,7 +51,6 @@ data class DidCommMessageRecord private constructor(
         tags["messageId"] = agentMessage.id
         tags["messageType"] = agentMessage.type
 
-        println("Tags geradas: $tags")
         return tags
     }
 

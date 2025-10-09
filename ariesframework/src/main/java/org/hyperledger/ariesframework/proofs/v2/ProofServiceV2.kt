@@ -633,7 +633,7 @@ class ProofServiceV2(val agent: Agent) {
                 message = proofRecord.errorMessage!!,
                 problemCode = "abandoned",
                 threadId = proofRecord.threadId,
-                proofRecord = proofRecord
+                proofRecord = proofRecord,
             )
         }
 
@@ -656,7 +656,7 @@ class ProofServiceV2(val agent: Agent) {
                 message = proofRecord.errorMessage!!,
                 problemCode = "abandoned",
                 threadId = proofRecord.threadId,
-                proofRecord = proofRecord
+                proofRecord = proofRecord,
             )
         }
 

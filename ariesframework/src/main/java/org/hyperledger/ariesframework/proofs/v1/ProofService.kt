@@ -282,7 +282,11 @@ class ProofService(val agent: Agent) {
     suspend fun createPresentationDeclinedProblemReport(proofRecord: ProofExchangeRecord): Pair<PresentationProblemReportMessage, ProofExchangeRecord> {
         proofRecord.assertState(ProofState.RequestReceived)
 
-        val probMessage = PresentationProblemReportMessage(proofRecord.threadId)
+        val probMessage = PresentationProblemReportMessage(
+            threadId = proofRecord.threadId,
+            proofRecord = proofRecord,
+        )
+
         updateState(proofRecord, ProofState.Declined)
 
         return Pair(probMessage, proofRecord)

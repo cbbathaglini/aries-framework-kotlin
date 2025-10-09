@@ -29,4 +29,10 @@ enum class HistoryType {
 
     @SerialName("proof-request-received")
     ProofRequestReceived,
+
+    @SerialName("proof-result-received")
+    ProofResultReceived,
+
+    @SerialName("proof-refusal-received")
+    ProofRefusalReceived,
 }
