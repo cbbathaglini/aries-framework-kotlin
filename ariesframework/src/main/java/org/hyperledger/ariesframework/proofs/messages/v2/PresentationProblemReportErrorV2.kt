@@ -9,7 +9,7 @@ class PresentationProblemReportErrorV2(
     message: String,
     problemCode: String,
     threadId: String,
-    proofRecord: ProofExchangeRecord
+    proofRecord: ProofExchangeRecord,
 ) : ProblemReportError(message, problemCode) {
 
     val problemReportError: PresentationProblemReportMessageV2 =
@@ -19,6 +19,6 @@ class PresentationProblemReportErrorV2(
                 en = message,
                 code = problemCode,
             ),
-            proofRecord = proofRecord
+            proofRecord = proofRecord,
         )
 }

@@ -94,6 +94,7 @@ class AnoncredsProofFormatService(
             predicates = anoncredsFormat.predicates ?: emptyList(),
             nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
         )
+        logger.info("proofRequest: ${proofRequest.toJson()}")
 
         val attachment = this.getFormatData(proofRequest, format.attachmentId!!)
 
@@ -151,7 +152,8 @@ class AnoncredsProofFormatService(
         val anoncredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats).normalizeFields()
 
-        logger.info("anoncredsFormat: ${anoncredsFormat.name}")
+        logger.info("anoncredsFormat:>>>> $anoncredsFormat")
+        logger.info("anoncredsFormat.attributes:>>>> ${anoncredsFormat.attributes}")
 
         val request: AnonCredsProofRequest = createRequestFromPreview(
             name = anoncredsFormat.name ?: "Proof request", // else eu coloquei
@@ -161,6 +163,7 @@ class AnoncredsProofFormatService(
             predicates = anoncredsFormat.predicates ?: emptyList(),
             nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
         )
+        logger.info("AnonCredsProofRequest: ${request.toJson()}")
 
         // Assert attribute and predicate (group) names do not match
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(request)
@@ -193,8 +196,11 @@ class AnoncredsProofFormatService(
         requestAttachment: Attachment,
         proposalAttachment: Attachment?,
     ): ProofFormatCreateReturn {
+        logger.info("requestAttachment: ${requestAttachment.getDataAsJson()}")
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
+        logger.info("AnonCredsProofRequest: $requestJson")
+        logger.info("AnonCredsProofRequest: ${requestJson.toJson()}")
 
         val anoncredsSelected: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
             proofRequest = requestJson,
@@ -204,9 +210,15 @@ class AnoncredsProofFormatService(
         )
 
         val anoncredsFormat = AnonCredsSelectedCredentials.convert(proofFormats)
+        logger.info("anoncredsFormat: $anoncredsFormat")
+        anoncredsFormat.attributes.values.forEach { item ->
+            logger.info("item::::: ${item.credentialId}")
+            logger.info("item::::: ${item.revealed}")
+            logger.info("item::::: ${item.credentialInfo.toJsonElement()}")
+        }
 
         val selectedCredentials: AnonCredsSelectedCredentials = anoncredsFormat ?: anoncredsSelected
-
+        logger.info("selectedCredentials: $selectedCredentials")
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION,
             attachmentId = attachmentId,
@@ -218,6 +230,7 @@ class AnoncredsProofFormatService(
             serializer<AnonCredsProof>(),
             proof,
         )
+        logger.info("anonCredsProofjsonElement: $anonCredsProofjsonElement")
 //        val json = Json.encodeToString(anonCredsProofjsonElement)
 //        val base64 = Base64.getEncoder().encodeToString(json.toByteArray())
         val attachment = Attachment(
@@ -289,6 +302,7 @@ class AnoncredsProofFormatService(
 
         val revocationRegistries =
             RevocationRegistries(agent).getRevocationRegistriesForProof(anonCredsProof)
+        logger.info("revocationRegistries: $revocationRegistries")
 
         val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
             credentialDefinitions = credentialDefinitionsMap,
@@ -585,6 +599,8 @@ class AnoncredsProofFormatService(
             addAll(selectedCredentials.attributes.values)
             addAll(selectedCredentials.predicates.values)
         }
+
+        logger.info("selectedEntries: $selectedEntries")
 
         val credentialObjects = selectedEntries.map { c ->
             async {

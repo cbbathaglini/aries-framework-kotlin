@@ -75,6 +75,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         val proofFormats: Map<String, JsonElement> = ProofUtils.getProofFormats(proofRequest, format)
         logger.info("proof formats: $proofFormats")
+        logger.info("proof request >>> ${proofRequest.toJson()}")
         val (message, record) = agent.proofServiceV2.createRequest(
             CreateProofRequestOptions(
                 connectionRecord = connection,

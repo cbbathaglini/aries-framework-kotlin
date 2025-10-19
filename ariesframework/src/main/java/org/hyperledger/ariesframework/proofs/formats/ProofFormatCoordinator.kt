@@ -222,6 +222,7 @@ class ProofFormatCoordinator(
     suspend fun acceptRequest(params: AcceptProofRequestParams): PresentationMessageV2 {
         val (proofRecord, proofFormats, formatServices, comment, lastPresentation, goalCode, goal) = params
 
+        logger.info("[acceptRequest] proofFormats: $proofFormats")
         val requestMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<RequestPresentationMessageV2>(
                 associatedRecordId = proofRecord.id,
@@ -250,6 +251,7 @@ class ProofFormatCoordinator(
                 formats = requestMessage.formats,
                 attachments = requestMessage.requestAttachment,
             )
+            logger.info("[acceptRequest] requestAttachment: ${requestAttachment.getDataAsJson()}")
 
             val proposalAttachment = if (proposalMessage != null) {
                 getAttachmentForService(

@@ -1,6 +1,6 @@
 package org.hyperledger.ariesproject
 
-import android.R
+import org.hyperledger.ariesproject.R
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
@@ -13,6 +13,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
@@ -55,34 +57,47 @@ class WalletMainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityWalletMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
 
-        setupRecyclerView(binding.menuItemList.itemList)
-        waitForAgentInitialze()
+        // Abre o fragmento inicial (Home)
+        openFragment(HomeFragment())
 
-        binding.invitation.setOnEditorActionListener { _, _, _ ->
-            val invitation = binding.invitation.text.toString()
-            if (invitation.isNotEmpty()) {
-                val app = application as WalletApp
-                lifecycleScope.launch(Dispatchers.Main) {
-                    try {
-                        val (_, connection) = app.agent.oob.receiveInvitationFromUrl(invitation)
-                        showAlert("Connected to ${connection?.theirLabel ?: "unknown agent"}")
-                    } catch (e: Exception) {
-                        showAlert("Unable to connect: ${e.message}")
-                    }
+        // Menu inferior de navegação
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    openFragment(HomeFragment())
+                    updateToolbarAndBackground(R.color.colorPrimary, R.color.white)
+                    true
                 }
+                R.id.nav_notifications -> {
+                    openFragment(NotificationsFragment())
+                    updateToolbarAndBackground(R.color.colorPrimary, R.color.white)
+                    true
+                }
+                else -> false
             }
-            true
         }
     }
 
     override fun onStart() {
         super.onStart()
+    }
+
+    private fun updateToolbarAndBackground(toolbarColor: Int, backgroundColor: Int) {
+        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor))
+        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        window.statusBarColor = ContextCompat.getColor(this, toolbarColor)
+        binding.bottomNavigation.setBackgroundColor(ContextCompat.getColor(this, backgroundColor))
+    }
+
+    private fun openFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
     }
 
     private fun subscribeEvents() {
@@ -331,7 +346,7 @@ class WalletMainActivity : AppCompatActivity() {
         runOnConfirm(message, action) {}
     }
 
-    private fun waitForAgentInitialze() {
+    private fun waitForAgentInitialize() {
         val app = application as WalletApp
         val progress = ProgressDialog(this)
         progress.setTitle("Initializing agent")

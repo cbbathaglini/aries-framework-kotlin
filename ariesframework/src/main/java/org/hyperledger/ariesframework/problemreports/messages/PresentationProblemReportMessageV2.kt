@@ -22,7 +22,7 @@ class PresentationProblemReportMessageV2 private constructor() : BaseProblemRepo
     constructor(
         threadId: String,
         descriptionOptions: DescriptionOptions,
-        proofRecord: ProofExchangeRecord
+        proofRecord: ProofExchangeRecord,
     ) : this() {
         thread = ThreadDecorator(threadId)
         type = Companion.type

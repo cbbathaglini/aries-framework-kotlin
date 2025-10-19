@@ -10,4 +10,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="tab_green">#2E7D32</color> <!-- Verde -->
+    <color name="inactive">#9E9E9E</color> <!-- Cinza -->
 </resources>

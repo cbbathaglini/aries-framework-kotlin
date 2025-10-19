@@ -16,6 +16,7 @@ class PresentationHandlerV2(val agent: Agent) : MessageHandler {
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         logger.debug("Entering in PresentationHandlerV2")
         val presentationRecord = agent.proofServiceV2.processPresentation(messageContext)
+
         logger.info("prseentarecord: ${presentationRecord.isVerified} $presentationRecord")
         if (presentationRecord.autoAcceptProof == AutoAcceptProof.Always ||
             agent.agentConfig.autoAcceptProof == AutoAcceptProof.Always

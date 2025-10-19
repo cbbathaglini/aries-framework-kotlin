@@ -549,6 +549,20 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         val schemasMap: Map<String, Schema> = ProofUtils.getSchemasUniffi(agent, schemaIds)
         val credentialDefinitionsMap: Map<String, CredentialDefinition> =
             ProofUtils.getCredentialDefinitionsUniffi(agent, credentialDefinitionIds)
+        logger.info("requestMessage.anoncredsProofRequest(): ${requestMessage.anoncredsProofRequest()}")
+
+        val presentationRequest = PresentationRequest(requestMessage.anoncredsProofRequest())
+        logger.info("presentationRequest: ${presentationRequest.toJson()}")
+        logger.info("anoncredsCreds: $anoncredsCreds")
+
+        logger.info("anoncredsss>>>>")
+        anoncredsCreds.forEach { cred ->
+            logger.info(cred.cred.toJson())
+            cred.requestedAttributes.forEach { item -> logger.info("key: ${item.key} || value: ${item.value}") }
+            cred.requestedPredicates.forEach { item -> logger.info("predicado >> $item") }
+        }
+
+        logger.info("requestMessage.anoncredsProofRequest(): ${requestMessage.anoncredsProofRequest()}")
 
         val createPresentation = Prover().createPresentation(
             PresentationRequest(requestMessage.anoncredsProofRequest()),

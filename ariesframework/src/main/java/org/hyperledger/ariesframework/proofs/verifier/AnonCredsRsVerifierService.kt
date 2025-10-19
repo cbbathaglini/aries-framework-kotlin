@@ -36,6 +36,11 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         logger.info("oprions: $options")
         logger.info("proofRequest: $proofRequest")
 
+        for ((key, value) in revocationRegistries) {
+            logger.info("🔹 Revocation Registry Key: $key")
+            logger.info("   -> Revocation Registry Value: $value")
+        }
+
         var presentation: Presentation? = null
 
         val (verified, nonRevokedIntervalOverrides) =

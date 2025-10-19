@@ -21,6 +21,7 @@ class ProblemReportsCommand(val agent: Agent, private val dispatcher: Dispatcher
         dispatcher.registerHandler(ProblemReportHandler(agent, PresentationProblemReportMessage.type))
         dispatcher.registerHandler(ProblemReportHandler(agent, CredentialProblemReportMessage.type))
         dispatcher.registerHandler(ProblemReportHandler(agent, MediationProblemReportMessage.type))
+        dispatcher.registerHandler(ProblemReportHandler(agent, MediationProblemReportMessage.type))
     }
 
     private fun registerMessages() {
