@@ -9,6 +9,7 @@ import java.util.UUID
 
 @Serializable
 abstract class BaseRecord {
+    @Transient
     private val logger = LoggerFactory.getLogger(BaseRecord::class.java)
 
     abstract var id: String
