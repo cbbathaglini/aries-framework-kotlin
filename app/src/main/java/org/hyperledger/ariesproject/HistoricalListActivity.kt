@@ -2,6 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -46,6 +47,12 @@ class HistoricalListActivity : AppCompatActivity() {
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
+        if (!app.isAgentInitialized()) {
+            Log.e("WalletApp", "Agente não inicializado ainda!")
+            return
+        }
+
+
         val connections = runBlocking { app.agent.connectionRepository.getAll() }
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, connections)
     }

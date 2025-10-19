@@ -2,6 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,13 +26,17 @@ class HistoricalDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        arguments?.let {
-            if (it.containsKey(ARG_CONNECTION_ID)) {
-                item = it.getParcelable(ARG_CONNECTION_RECORD)
-                connectionId = it.getString(ARG_CONNECTION_ID)
-                detailBinding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
-                detailBinding.toolbarLayout.title = getString(R.string.title_historical_detail)
+        try {
+            arguments?.let {
+                if (it.containsKey(ARG_CONNECTION_ID)) {
+                    item = it.getParcelable(ARG_CONNECTION_RECORD)
+                    connectionId = it.getString(ARG_CONNECTION_ID)
+                    detailBinding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
+                    detailBinding.toolbarLayout.title = getString(R.string.title_historical_detail)
+                }
             }
+        }catch (e: Throwable){
+            Log.e("WalletApp", e.message.toString())
         }
     }
 
@@ -40,6 +45,7 @@ class HistoricalDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
+        try {
         binding = HistoricalDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
         binding.historicalDetail.text = item?.printFields()
@@ -62,7 +68,7 @@ class HistoricalDetailFragment : Fragment() {
                     activity.startActivity(intent)
 
                     // Close current activity if needed
-                    activity.finish()
+                    //activity.finish()
                 }
             }
 
@@ -81,7 +87,7 @@ class HistoricalDetailFragment : Fragment() {
                     activity.startActivity(intent)
 
                     // Close current activity if needed
-                    activity.finish()
+                    //activity.finish()
                 }
             }
         }
@@ -99,12 +105,16 @@ class HistoricalDetailFragment : Fragment() {
                     activity.startActivity(intent)
 
                     // Close current activity if needed
-                    activity.finish()
+                    //activity.finish()
                 }
             }
         }
 
         return rootView
+        }catch (e: Throwable){
+            Log.e("WalletApp", e.message.toString())
+            throw e
+        }
     }
 
     companion object {

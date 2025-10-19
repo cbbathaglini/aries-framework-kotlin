@@ -22,6 +22,10 @@ class WalletApp : Application() {
     lateinit var agent: Agent
     var walletOpened: Boolean = false
 
+    fun isAgentInitialized(): Boolean {
+        return this::agent.isInitialized
+    }
+
     private fun copyResourceFile(resource: String) {
         val inputStream = applicationContext.assets.open(resource)
         val file = File(applicationContext.filesDir.absolutePath, resource)
