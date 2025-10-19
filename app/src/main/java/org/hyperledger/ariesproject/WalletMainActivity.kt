@@ -1,6 +1,5 @@
 package org.hyperledger.ariesproject
 
-import org.hyperledger.ariesproject.R
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
@@ -36,13 +35,12 @@ import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOff
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.MediationProblemReportMessage
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.ProofConstants
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
-import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
-import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRepository
 import org.hyperledger.ariesproject.databinding.ActivityWalletMainBinding
 import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
@@ -580,10 +578,11 @@ class WalletMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupRecyclerView(recyclerView: RecyclerView) {
+    fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(
             this,
-            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION)
+            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION, MainMenu.REQUESTPROOF,
+                MainMenu.SCANREQUESTPROOF)
         )
     }
 
@@ -607,6 +606,16 @@ class WalletMainActivity : AppCompatActivity() {
 
                 MainMenu.HISTORICAL -> {
                     val intent = Intent(v.context, HistoricalListActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.REQUESTPROOF -> {
+                    val intent = Intent(v.context, RequestProofActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.SCANREQUESTPROOF -> {
+                    val intent = Intent(v.context, VerifierProofActivity::class.java)
                     v.context.startActivity(intent)
                 }
 

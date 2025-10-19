@@ -7,7 +7,7 @@ import org.hyperledger.ariesframework.Tags
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
-@Serializable
+//@Serializable
 abstract class BaseRecord {
     @Transient
     private val logger = LoggerFactory.getLogger(BaseRecord::class.java)
@@ -18,7 +18,7 @@ abstract class BaseRecord {
     abstract var updatedAt: Instant?
     // var metadata: MutableMap<String, Any> = mutableMapOf()
 
-    var metadata: MutableMap<String, JsonElement> = mutableMapOf()
+     var metadata: MutableMap<String, JsonElement> = mutableMapOf()
 
     abstract fun getTags(): Tags
 

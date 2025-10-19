@@ -20,18 +20,19 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentials
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
+import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
-import org.hyperledger.ariesframework.proofs.formats.ProofFormatCoordinator
-import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationProblemReportErrorV2
-import org.hyperledger.ariesframework.proofs.messages.v2.ProposePresentationMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatCoordinator
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationProblemReportErrorV2
+import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalServiceParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
@@ -324,18 +325,22 @@ class ProofServiceV2(val agent: Agent) {
         return Pair(requestMessage, proofRecord)
     }
 
-    suspend fun processRequest(messageContext: InboundMessageContext): ProofExchangeRecord {
+    suspend fun processRequest(messageContext: InboundMessageContext?=null, requestMessage: RequestPresentationMessageV2? = null): ProofExchangeRecord {
         logger.info("PROCESS REQUEST -------------------------")
-        val connection = messageContext.connection
 
-        val requestMessage =
-            MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
-        logger.debug("Processing proof request with id ${requestMessage.id}")
+        var connection : ConnectionRecord? = null
+
+        var requestMessage = requestMessage
+        if(messageContext != null) {
+            requestMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
+            logger.debug("Processing proof request with id ${requestMessage.id}")
+            connection = messageContext.connection
+        }
 
         val proofRecord: ProofExchangeRecord? = agent.proofRepository.getByThreadAndConnectionIdAndRole(
             role = ProofRole.Prover.name,
             connectionId = connection?.id,
-            threadId = requestMessage.threadId,
+            threadId = requestMessage!!.threadId,
         )
         logger.info("proofRecord-proofRecord: ${proofRecord?.state}")
 
@@ -343,8 +348,9 @@ class ProofServiceV2(val agent: Agent) {
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to process request. No supported formats")
         }
-
+        logger.info("[TAG10]")
         if (proofRecord != null) {
+            logger.info("[TAG11]")
             val lastSentMessage =
                 agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                     associatedRecordId = proofRecord.id,
@@ -358,61 +364,65 @@ class ProofServiceV2(val agent: Agent) {
                     messageType = RequestPresentationMessageV2.type,
                     role = DidCommMessageRole.Receiver,
                 )
-
+            logger.info("[TAG20]")
             // assert
             proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
             proofRecord.assertState(ProofState.ProposalSent)
-
-            agent.connectionService.assertConnectionOrOutOfBandExchange(
-                messageContext = messageContext,
-                lastReceivedMessage = lastReceivedMessage,
-                lastSentMessage = lastSentMessage,
-                expectedConnectionId = proofRecord.connectionId,
-            )
+            logger.info("[TAG30]")
+//            agent.connectionService.assertConnectionOrOutOfBandExchange(
+//                messageContext = messageContext,
+//                lastReceivedMessage = lastReceivedMessage,
+//                lastSentMessage = lastSentMessage,
+//                expectedConnectionId = proofRecord.connectionId,
+//            )
 
             proofFormatCoordinator.processRequest(
                 proofRecord = proofRecord,
                 message = requestMessage,
                 formatServices = formatServices,
             )
+            logger.info("Requested processed")
 
             proofRepository.save(proofRecord)
             updateState(proofRecord, ProofState.RequestReceived)
-
+            logger.info("Update record")
             return proofRecord
         }
 
-        agent.connectionService.assertConnectionOrOutOfBandExchange(
-            messageContext = messageContext,
-        )
+//        agent.connectionService.assertConnectionOrOutOfBandExchange(
+//            messageContext = messageContext,
+//        )
 
+        logger.info("[TAG100]")
+        logger.info("[TAG100]message: ${requestMessage.threadId}")
+        logger.info("[TAG100]con: ${connection?.id}")
         logger.debug("No proof record found for request, creating a new one")
 
         val record = ProofExchangeRecord(
-            connectionId = connection?.id!!,
+            connectionId = connection?.id ?: "connectionless",
             threadId = requestMessage.threadId,
             parentThreadId = requestMessage.thread?.parentThreadId,
             state = ProofState.RequestReceived,
             role = ProofRole.Prover,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
-
+        logger.info("[TAG110]")
         proofFormatCoordinator.processRequest(
             proofRecord = record,
             message = requestMessage,
             formatServices = formatServices,
         )
-
+        logger.info("[TAG120]")
         logger.debug("Saving proof record and emit request-received event")
 
         // save new registry and emit an event
         agent.proofRepository.save(record)
-
+        logger.info("[TAG130]")
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.ProofRequestReceived.name,
                 connectionId = proofRecord?.connectionId ?: "",
-                theirLabel = connection.theirLabel,
+                theirLabel = connection?.theirLabel,
                 associatedRecordId = proofRecord?.id ?: "",
                 content = requestMessage.toJsonString(),
             ),

@@ -15,7 +15,7 @@ import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryBucket
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.error.CredoError
-import org.hyperledger.ariesframework.proofs.verifier.RevocationRegistryEntry
+import org.hyperledger.ariesframework.proofs.v2.verifier.RevocationRegistryEntry
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.RevocationStatusList

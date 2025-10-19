@@ -7,7 +7,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinit
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistries
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchemas
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 
 @Serializable
 data class CreateProofOptions(

@@ -1,161 +1,308 @@
 package org.hyperledger.ariesproject
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.Json
+import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
+import org.hyperledger.ariesframework.proofs.models.*
 import org.hyperledger.ariesframework.proofs.v1.ProofService
-import org.hyperledger.ariesframework.proofs.models.PredicateType
-import org.hyperledger.ariesframework.proofs.models.ProofAttributeInfo
-import org.hyperledger.ariesframework.proofs.models.ProofPredicateInfo
-import org.hyperledger.ariesframework.proofs.models.ProofRequest
-import org.hyperledger.ariesframework.proofs.models.RevocationInterval
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
+import java.util.Calendar
 
 class RequestProofActivity : AppCompatActivity() {
 
     private var connectionId: String? = null
-    private lateinit var addFieldButton: Button
+    private lateinit var addAttributeButton: Button
+    private lateinit var addPredicateButton: Button
     private lateinit var requestProofButton: Button
-    private lateinit var fieldsContainer: LinearLayout
+    private lateinit var attributesContainer: LinearLayout
+    private lateinit var predicatesContainer: LinearLayout
+    private lateinit var progressBar: ProgressBar
+    private lateinit var credentialDefInput: EditText
+    private lateinit var fromDateButton: Button
+    private lateinit var toDateButton: Button
+    private var fromTimestamp: Int? = null
+    private var toTimestamp: Int? = null
+    private lateinit var statusText: TextView
+    private lateinit var qrImageView: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_request_proof)
 
+        val backButton: Button = findViewById(R.id.backButton)
+        backButton.setOnClickListener { finish() }
+
+        // ConnectionId agora é opcional
         connectionId = intent.getStringExtra("CONNECTION_ID")
 
-        addFieldButton = findViewById(R.id.addFieldButton)
+        credentialDefInput = findViewById(R.id.credentialDefInput)
+        fromDateButton = findViewById(R.id.fromDateButton)
+        toDateButton = findViewById(R.id.toDateButton)
+
+        fromDateButton.setOnClickListener { pickDateTime(true) }
+        toDateButton.setOnClickListener { pickDateTime(false) }
+        addAttributeButton = findViewById(R.id.addAttributeButton)
+        addPredicateButton = findViewById(R.id.addPredicateButton)
         requestProofButton = findViewById(R.id.requestProofButton)
-        fieldsContainer = findViewById(R.id.fieldsContainer)
+        attributesContainer = findViewById(R.id.attributesContainer)
+        predicatesContainer = findViewById(R.id.predicatesContainer)
+        qrImageView = findViewById(R.id.qrImageView)
+        progressBar = findViewById(R.id.progressBar)
+        statusText = findViewById(R.id.statusText)
 
-        addFieldButton.setOnClickListener {
-            addFieldInput()
-        }
+        addAttributeButton.setOnClickListener { addAttributeField("") }
+        addPredicateButton.setOnClickListener { addPredicateField("", ">", "") }
+        requestProofButton.setOnClickListener { requestProof() }
 
-        requestProofButton.setOnClickListener {
-            requestProof()
-        }
+        // Campos padrão iniciais
+        addAttributeField("name")
+        addAttributeField("email")
+        addPredicateField("birthday", ">", "19970612")
     }
 
-    private fun addFieldInput() {
-        val fieldLayout = LinearLayout(this).apply {
+    private fun pickDateTime(isFrom: Boolean) {
+        val calendar = Calendar.getInstance()
+
+        val datePicker = DatePickerDialog(
+            this,
+            { _, year, month, day ->
+                TimePickerDialog(
+                    this,
+                    { _, hour, minute ->
+                        calendar.set(year, month, day, hour, minute, 0)
+                        val timestamp = (calendar.timeInMillis / 1000).toInt()
+                        if (isFrom) {
+                            fromTimestamp = timestamp
+                            fromDateButton.text = "De: ${calendar.time}"
+                        } else {
+                            toTimestamp = timestamp
+                            toDateButton.text = "Até: ${calendar.time}"
+                        }
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    true
+                ).show()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePicker.show()
+    }
+
+    private fun addAttributeField(defaultName: String) {
+        val layout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 8, 0, 8)
-            }
+            ).apply { setMargins(0, 8, 0, 8) }
         }
 
         val attrInput = EditText(this).apply {
-            hint = "Atributo (ex: name)"
+            hint = "Nome do atributo"
+            setText(defaultName)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
 
-        val predicateInput = EditText(this).apply {
-            hint = "Expressão (>, >=, <=, <)"
+        val removeButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_delete)
+            setBackgroundColor(0x00000000)
+            setOnClickListener { attributesContainer.removeView(layout) }
+        }
+
+        layout.addView(attrInput)
+        layout.addView(removeButton)
+        attributesContainer.addView(layout)
+    }
+
+    private fun addPredicateField(name: String, op: String, value: String) {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 8, 0, 8) }
+        }
+
+        val nameInput = EditText(this).apply {
+            hint = "Nome"
+            setText(name)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val opInput = EditText(this).apply {
+            hint = "Operador (>, >=, <, <=)"
+            setText(op)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 0.5f)
         }
 
         val valueInput = EditText(this).apply {
             hint = "Valor"
+            setText(value)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
 
-        fieldLayout.addView(attrInput)
-        fieldLayout.addView(predicateInput)
-        fieldLayout.addView(valueInput)
-        fieldsContainer.addView(fieldLayout)
+        val removeButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_delete)
+            setBackgroundColor(0x00000000)
+            setOnClickListener { predicatesContainer.removeView(layout) }
+        }
+
+        layout.addView(nameInput)
+        layout.addView(opInput)
+        layout.addView(valueInput)
+        layout.addView(removeButton)
+        predicatesContainer.addView(layout)
     }
 
     private fun requestProof() {
         lifecycleScope.launch {
-            val app = application as WalletApp
-            val requestedAttributes = mutableMapOf<String, ProofAttributeInfo>()
-            val requestedPredicates = mutableMapOf<String, ProofPredicateInfo>()
+            try {
+                val app = application as WalletApp
+                val credDefId = credentialDefInput.text.toString().trim()
 
-            for (i in 0 until fieldsContainer.childCount) {
-                val fieldLayout = fieldsContainer.getChildAt(i) as LinearLayout
-                val attrInput = fieldLayout.getChildAt(0) as EditText
-                val predicateInput = fieldLayout.getChildAt(1) as EditText
-                val valueInput = fieldLayout.getChildAt(2) as EditText
+//                if (credDefId.isEmpty()) {
+//                    Toast.makeText(this@RequestProofActivity, "Informe o Credential Definition ID", Toast.LENGTH_SHORT).show()
+//                    return@launch
+//                }
 
-                val attribute = attrInput.text.toString().trim()
-                val predicate = predicateInput.text.toString().trim()
-                val value = valueInput.text.toString().trim()
+                progressBar.visibility = View.VISIBLE
+                statusText.text = "Enviando solicitação..."
+                requestProofButton.isEnabled = false
 
-                if (attribute.isNotEmpty()) {
-                    if (predicate.isNotEmpty() && value.isNotEmpty()) {
-                        try {
-                            val predicateType = mapPredicateType(predicate)
-                            val predicateInfo = ProofPredicateInfo(
-                                name = attribute,
-                                nonRevoked = null,
-                                predicateType = predicateType,
-                                predicateValue = value.toInt(),
-                                /*restrictions = listOf(
-                                    AttributeFilter(credentialDefinitionId = "YOUR_CRED_DEF_ID")
-                                )*/
-                            )
-                            requestedPredicates[attribute] = predicateInfo
-                        } catch (e: Exception) {
-                            Toast.makeText(this@RequestProofActivity, "Erro no predicado: ${e.message}", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-                    } else {
-                        val attrInfo = ProofAttributeInfo(
-                            name = attribute,
-                            nonRevoked = null,
-                            /*restrictions = listOf(
-                                AttributeFilter(credentialDefinitionId = "YOUR_CRED_DEF_ID")
-                            )*/
+                val attributes = mutableMapOf<String, AnonCredsRequestedAttribute>()
+                val predicates = mutableMapOf<String, AnonCredsRequestedPredicate>()
+
+                // Coleta atributos
+                for (i in 0 until attributesContainer.childCount) {
+                    val layout = attributesContainer.getChildAt(i) as LinearLayout
+                    val attrInput = layout.getChildAt(0) as EditText
+                    val name = attrInput.text.toString().trim()
+                    if (name.isNotEmpty()) {
+                        attributes[name] = AnonCredsRequestedAttribute(
+                            name = name,
+                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId))
                         )
-                        requestedAttributes[attribute] = attrInfo
                     }
                 }
+
+                // Coleta predicados
+                for (i in 0 until predicatesContainer.childCount) {
+                    val layout = predicatesContainer.getChildAt(i) as LinearLayout
+                    val nameInput = layout.getChildAt(0) as EditText
+                    val opInput = layout.getChildAt(1) as EditText
+                    val valueInput = layout.getChildAt(2) as EditText
+
+                    val name = nameInput.text.toString().trim()
+                    val op = opInput.text.toString().trim()
+                    val value = valueInput.text.toString().trim()
+
+                    if (name.isNotEmpty() && op.isNotEmpty() && value.isNotEmpty()) {
+                        val type = mapPredicateType(op)
+                        predicates[name] = AnonCredsRequestedPredicate(
+                            name = name,
+                            pType = type,
+                            pValue = value.toLong(),
+                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId))
+                        )
+                    }
+                }
+
+                val revocationInterval = if (fromTimestamp != null && toTimestamp != null) {
+                    AnonCredsNonRevokedInterval(from = fromTimestamp!!.toLong(), to = toTimestamp!!.toLong())
+                } else null
+
+                val proofRequest = AnonCredsProofRequest(
+                    name = "Dynamic Proof Request",
+                    nonce = ProofService.generateProofRequestNonce(),
+                    requestedAttributes = attributes,
+                    requestedPredicates = predicates,
+                    nonRevoked = revocationInterval,
+                    version = "1.0"
+                )
+
+                val proofFormats: List<ProofFormatSpec> = listOf(
+                    ProofFormatSpec(
+                        attachmentId = RequestPresentationMessageV2.ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID,
+                        format = AnoncredsProofFormatService.ANONCREDS_PRESENTATION_REQUEST
+
+                    )
+                )
+
+                // Cria a prova offline
+                val (record, verifierRecord) = app.agent.proofCommandV2.requestProofOffline(
+                    proofRequest= proofRequest,
+                    formats = proofFormats)
+
+                verifierRecord.requestMessage?.let { message ->
+                    val jsonString = Json.encodeToString(RequestPresentationMessageV2.serializer(), message)
+                    val qrBitmap = generateQRCode(jsonString)
+                    qrImageView.setImageBitmap(qrBitmap)
+
+                }?: run {
+                    throw Exception("VerifierRecord não contém requestMessage")
+                }
+
+                statusText.setTextColor(getColor(android.R.color.holo_green_dark))
+                statusText.text = "✅ Prova gerada e QR Code disponível!"
+                Toast.makeText(this@RequestProofActivity, "Prova offline gerada!", Toast.LENGTH_LONG).show()
+
+            } catch (e: Exception) {
+                statusText.setTextColor(getColor(android.R.color.holo_red_dark))
+                statusText.text = "❌ Erro req: ${e.message}"
+                e.printStackTrace()
+            } finally {
+                progressBar.visibility = View.GONE
+                requestProofButton.isEnabled = true
             }
+        }
+    }
 
-            val nonce = ProofService.generateProofRequestNonce()
-
-            val now = (System.currentTimeMillis() / 1000).toInt()
-
-            val revocationInterval = RevocationInterval(
-                from = now,  // agora
-                to = now// agora
-            )
-
-            val proofRequest = ProofRequest(
-                nonce = nonce,
-                requestedAttributes = requestedAttributes,
-                requestedPredicates = requestedPredicates,
-                nonRevoked = revocationInterval,
-                name = "Proof Request"
-            )
-
-            app.agent.proofs.requestProof(connectionId!!, proofRequest, comment =  "Test")
-            Toast.makeText(this@RequestProofActivity, "Prova gerada:\n$proofRequest", Toast.LENGTH_LONG).show()
-
-            // Aqui você pode enviar proofRequest ao verificador, se desejar
-            val intent = Intent(this@RequestProofActivity, WalletMainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-            finish() // finaliza a Activity atual
-
+    private fun generateQRCode(data: String): Bitmap? {
+        return try {
+            val writer = com.google.zxing.qrcode.QRCodeWriter()
+            val bitMatrix = writer.encode(data, com.google.zxing.BarcodeFormat.QR_CODE, 800, 800)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            bitmap
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
     private fun mapPredicateType(op: String): PredicateType {
         return when (op.trim()) {
-            ">=", "≥" -> PredicateType.GreaterThanOrEqualTo
-            "<=", "≤" -> PredicateType.LessThanOrEqualTo
-            ">" -> PredicateType.GreaterThan
-            "<" -> PredicateType.LessThan
+            ">", "maior que" -> PredicateType.GreaterThan
+            ">=", "maior ou igual" -> PredicateType.GreaterThanOrEqualTo
+            "<", "menor que" -> PredicateType.LessThan
+            "<=", "menor ou igual" -> PredicateType.LessThanOrEqualTo
             else -> throw IllegalArgumentException("Operador inválido: $op")
         }
     }
-
 }

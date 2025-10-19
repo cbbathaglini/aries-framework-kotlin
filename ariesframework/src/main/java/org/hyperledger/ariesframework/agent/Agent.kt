@@ -45,11 +45,12 @@ import org.hyperledger.ariesframework.oob.repository.OutOfBandRepository
 import org.hyperledger.ariesframework.problemreports.ProblemReportsCommand
 import org.hyperledger.ariesframework.proofs.RevocationService
 import org.hyperledger.ariesframework.proofs.repository.ProofRepository
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRepository
 import org.hyperledger.ariesframework.proofs.v1.ProofCommand
 import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.hyperledger.ariesframework.proofs.v2.ProofCommandV2
 import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
-import org.hyperledger.ariesframework.proofs.verifier.AnonCredsRsVerifierService
+import org.hyperledger.ariesframework.proofs.v2.verifier.AnonCredsRsVerifierService
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
@@ -130,6 +131,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val basicMessages = BasicMessageCommand(this, dispatcher)
 
     val problemReports = ProblemReportsCommand(this, dispatcher)
+    val verifierRepository = VerifierRepository(this)
 
     private var _isInitialized = false
 

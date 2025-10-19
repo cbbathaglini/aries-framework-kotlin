@@ -45,9 +45,9 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
-import org.hyperledger.ariesframework.proofs.formats.ProofFormatService
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
@@ -56,7 +56,7 @@ import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
 import org.hyperledger.ariesframework.proofs.utils.RequestsEquals
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
-import org.hyperledger.ariesframework.proofs.verifier.VerifyProofOptions
+import org.hyperledger.ariesframework.proofs.v2.verifier.VerifyProofOptions
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 

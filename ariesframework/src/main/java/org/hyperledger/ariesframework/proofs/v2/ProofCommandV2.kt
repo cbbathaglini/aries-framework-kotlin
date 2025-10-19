@@ -10,19 +10,21 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
-import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationAckHandlerV2
-import org.hyperledger.ariesframework.proofs.handlers.v2.PresentationHandlerV2
-import org.hyperledger.ariesframework.proofs.handlers.v2.RequestPresentationHandlerV2
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationAckMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.PresentationMessageV2
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.handlers.PresentationAckHandlerV2
+import org.hyperledger.ariesframework.proofs.v2.handlers.PresentationHandlerV2
+import org.hyperledger.ariesframework.proofs.v2.handlers.RequestPresentationHandlerV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.CreateProofRequestOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
+import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentialsAnoncreds
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRecord
 import org.slf4j.LoggerFactory
 
 class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
@@ -92,6 +94,89 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         agent.messageSender.send(OutboundMessage(message, connection))
 
         return record
+    }
+
+    /**
+     * Cria uma requisição de prova offline (sem conexão) e salva o VerifierRecord.
+     *
+     * Equivalente a `requestProofOffline` no código Swift.
+     */
+    suspend fun requestProofOffline(
+        proofRequest: AnonCredsProofRequest,
+        formats: List<ProofFormatSpec> = emptyList(),
+        autoAcceptProof: AutoAcceptProof? = null,
+        willConfirm: Boolean? = null,
+        comment: String? = null
+    ): Pair<ProofExchangeRecord, VerifierRecord> {
+        try {
+            // Verifica se há formato informado
+            val format = formats.firstOrNull()?.attachmentId
+                ?: throw Exception("Proof format not informed")
+
+            // Gera os formatos de prova usando utilitário
+            val proofFormats = ProofUtils.getProofFormats(
+                proofRequest = proofRequest,
+                format = format
+            )
+
+            logger.info("proof formats: $proofFormats")
+
+            // Cria o pedido de prova localmente (sem conexão)
+            val (message, record) = agent.proofServiceV2.createRequest(
+                CreateProofRequestOptions(
+                    proofRequest = proofRequest,
+                    formats = formats,
+                    proofFormats = proofFormats,
+                    connectionRecord = null,
+                    comment = comment,
+                    autoAcceptProof = autoAcceptProof ?: AutoAcceptProof.Never,
+                    willConfirm = willConfirm
+                )
+            )
+
+            // Cria e salva o VerifierRecord
+            val verifierRecord = VerifierRecord(
+                proofRequest = proofRequest,
+                requestMessage = message,
+                globalThreadId = record.threadId
+            )
+
+            agent.verifierRepository.save(verifierRecord)
+
+            return Pair(record, verifierRecord)
+        } catch (e: Exception) {
+            logger.error("Erro ao criar prova offline: ${e.message}", e)
+            throw e
+        }
+    }
+
+
+    suspend fun processRequest(
+        requestMessage: RequestPresentationMessageV2
+    ): ProofExchangeRecord {
+        return agent.proofServiceV2.processRequest(requestMessage= requestMessage)
+    }
+
+    suspend fun createPresentation(
+        record: ProofExchangeRecord
+    ): Pair<ProofExchangeRecord, PresentationMessageV2> {
+        val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
+            proofRecordId = record.id,
+            agent = agent
+        )
+
+        val requestedCredentials = agent.proofServiceV2.autoSelectCredentialsForProofRequest(
+            retrievedCredentials = retrievedCredentials
+        )
+
+        val params = AcceptProofRequestOptions(
+            proofRecord = record,
+            proofFormats = record.formats ?: emptyList(),
+            requestedCredentials = requestedCredentials.toMap()
+        )
+
+        val (message, _) = agent.proofServiceV2.acceptRequest(params)
+        return Pair(record, message)
     }
 
     /**

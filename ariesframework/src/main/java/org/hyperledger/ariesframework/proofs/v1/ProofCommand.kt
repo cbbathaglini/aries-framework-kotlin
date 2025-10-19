@@ -8,13 +8,13 @@ import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
-import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationAckHandler
-import org.hyperledger.ariesframework.proofs.handlers.v1.PresentationHandler
-import org.hyperledger.ariesframework.proofs.handlers.v1.RequestPresentationHandler
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v1.handlers.PresentationAckHandler
+import org.hyperledger.ariesframework.proofs.v1.handlers.PresentationHandler
+import org.hyperledger.ariesframework.proofs.v1.handlers.RequestPresentationHandler
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationAckMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
@@ -37,10 +37,10 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     }
 
     private fun registerMessages() {
-        MessageSerializer.registerMessage(RequestPresentationMessage.type, RequestPresentationMessage::class)
-        MessageSerializer.registerMessage(PresentationMessage.type, PresentationMessage::class)
-        MessageSerializer.registerMessage(RequestPresentationMessage.type, RequestPresentationMessage::class)
-        MessageSerializer.registerMessage(PresentationAckMessage.type, PresentationAckMessage::class)
+        MessageSerializer.registerMessage(RequestPresentationMessage.Companion.type, RequestPresentationMessage::class)
+        MessageSerializer.registerMessage(PresentationMessage.Companion.type, PresentationMessage::class)
+        MessageSerializer.registerMessage(RequestPresentationMessage.Companion.type, RequestPresentationMessage::class)
+        MessageSerializer.registerMessage(PresentationAckMessage.Companion.type, PresentationAckMessage::class)
     }
 
     /**
@@ -87,7 +87,7 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         comment: String? = null,
     ): ProofExchangeRecord {
         try {
-            agent.didCommMessageRepository.getAgentMessage(proofRecordId, RequestPresentationMessageV2.type)
+            agent.didCommMessageRepository.getAgentMessage(proofRecordId, RequestPresentationMessageV2.Companion.type)
             val record = agent.proofRepository.getById(proofRecordId)
             val (message, proofRecord) = agent.proofService.createPresentation(
                 record,
@@ -179,11 +179,11 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     }
 
     /**
-     * Create a [RetrievedCredentials] object. Given input proof request,
+     * Create a [org.hyperledger.ariesframework.proofs.models.RetrievedCredentials] object. Given input proof request,
      * use credentials in the wallet to build indy requested credentials object for proof creation.
      *
      * @param proofRecordId the id of the proof request to get the matching credentials for.
-     * @return [RetrievedCredentials] object.
+     * @return [org.hyperledger.ariesframework.proofs.models.RetrievedCredentials] object.
      */
     suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String): RetrievedCredentials {
         val record = agent.proofRepository.getById(proofRecordId)
@@ -194,13 +194,13 @@ class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {
         }
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             record.id,
-            RequestPresentationMessage.type,
+            RequestPresentationMessage.Companion.type,
         )
         val proofRequestMessage = MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessage
 
         val proofRequestJson = proofRequestMessage.indyProofRequest()
         logger.debug("Proof request json: $proofRequestJson")
-        val proofRequest = Json.decodeFromString<ProofRequest>(proofRequestJson)
+        val proofRequest = Json.Default.decodeFromString<ProofRequest>(proofRequestJson)
 
         return agent.proofService.getRequestedCredentialsForProofRequest(proofRequest)
     }

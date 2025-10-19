@@ -12,7 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.InboundMessageContext
@@ -25,10 +24,10 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.PresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v1.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.messages.v2.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationAckMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.PartialProof
@@ -80,10 +79,10 @@ class ProofService(val agent: Agent) {
     ): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
         connectionRecord?.assertReady()
 
-        val proofRequestJson = Json.encodeToString(proofRequest)
-        val attachment = Attachment.fromData(
+        val proofRequestJson = Json.Default.encodeToString(proofRequest)
+        val attachment = Attachment.Companion.fromData(
             proofRequestJson.toByteArray(),
-            RequestPresentationMessageV2.INDY_PROOF_REQUEST_ATTACHMENT_ID,
+            RequestPresentationMessageV2.Companion.INDY_PROOF_REQUEST_ATTACHMENT_ID,
         )
         val message =
             RequestPresentationMessageV2(comment = comment, requestAttachment = listOf(attachment))
@@ -94,7 +93,7 @@ class ProofService(val agent: Agent) {
             state = ProofState.RequestSent,
             role = ProofRole.Prover,
             autoAcceptProof = autoAcceptProof,
-            protocolVersion = ProofConstants.PROTOCOL_VERSION_V1,
+            protocolVersion = ProofConstants.Companion.PROTOCOL_VERSION_V1,
         )
 
         agent.didCommMessageRepository.saveAgentMessage(
@@ -127,7 +126,7 @@ class ProofService(val agent: Agent) {
             threadId = proofRequestMessage.threadId,
             state = ProofState.RequestReceived,
             role = ProofRole.Prover,
-            protocolVersion = ProofConstants.PROTOCOL_VERSION_V1,
+            protocolVersion = ProofConstants.Companion.PROTOCOL_VERSION_V1,
         )
 
         agent.didCommMessageRepository.saveAgentMessage(
@@ -170,14 +169,14 @@ class ProofService(val agent: Agent) {
 
         val proofRequestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             proofRecord.id,
-            RequestPresentationMessage.type,
+            RequestPresentationMessage.Companion.type,
         )
         val proofRequestMessage =
             MessageSerializer.decodeFromString(proofRequestMessageJson) as RequestPresentationMessage
 
         val proof = createProof(proofRequestMessage.indyProofRequest(), requestedCredentials)
 
-        val attachment = Attachment.fromData(proof, PresentationMessage.INDY_PROOF_ATTACHMENT_ID)
+        val attachment = Attachment.Companion.fromData(proof, PresentationMessage.Companion.INDY_PROOF_ATTACHMENT_ID)
         val presentationMessage = PresentationMessage(comment, listOf(attachment))
         presentationMessage.thread = ThreadDecorator(proofRecord.threadId)
 
@@ -211,7 +210,7 @@ class ProofService(val agent: Agent) {
         val indyProofJson = presentationMessage.indyProof()
         val requestMessageJson = agent.didCommMessageRepository.getAgentMessage(
             proofRecord.id,
-            RequestPresentationMessage.type,
+            RequestPresentationMessage.Companion.type,
         )
         val requestMessage =
             MessageSerializer.decodeFromString(requestMessageJson) as RequestPresentationMessage
@@ -421,9 +420,12 @@ class ProofService(val agent: Agent) {
     suspend fun verifyProof(proofRequest: String, proof: String): Boolean = coroutineScope {
         logger.debug("verifying proof: $proof")
         val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
-        val schemas = async { RecoverFromLedger.getSchemas(partialProof.identifiers.map { it.schemaId }.toSet(), agent) }
+        val schemas = async {
+            RecoverFromLedger.Companion.getSchemas(partialProof.identifiers.map { it.schemaId }
+                .toSet(), agent)
+        }
         val credentialDefinitions = async {
-            RecoverFromLedger.getCredentialDefinitions(
+            RecoverFromLedger.Companion.getCredentialDefinitions(
                 partialProof.identifiers.map { it.credentialDefinitionId }
                     .toSet(),
                 agent,
@@ -530,8 +532,8 @@ class ProofService(val agent: Agent) {
             anoncredsCreds.add(requestedCredential)
         }
 
-        val schemas = RecoverFromLedger.getSchemas(schemaIds, agent)
-        val credentialDefinitions = RecoverFromLedger.getCredentialDefinitions(credentialDefinitionIds, agent)
+        val schemas = RecoverFromLedger.Companion.getSchemas(schemaIds, agent)
+        val credentialDefinitions = RecoverFromLedger.Companion.getCredentialDefinitions(credentialDefinitionIds, agent)
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
 
         try {

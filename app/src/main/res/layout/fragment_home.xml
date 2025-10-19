@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:orientation="vertical"
@@ -10,23 +11,37 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <include
-            android:id="@+id/menu_item_list"
-            layout="@layout/menu_item_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wallet Menu"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
 
+        <!-- RecyclerView com layout e dimensões definidas -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/menuList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Campo de convite -->
         <EditText
             android:id="@+id/invitation"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="24dp"
             android:hint="Input invitation here"
             android:background="@android:drawable/edit_text"
             android:imeOptions="actionSend"
             android:inputType="textUri"
-            android:padding="10dp" />
+            android:padding="10dp"
+            android:layout_marginTop="16dp" />
 
+        <!-- Botão de conexão -->
         <Button
             android:id="@+id/buttonConnect"
             android:layout_width="wrap_content"
