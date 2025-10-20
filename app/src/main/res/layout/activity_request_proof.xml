@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp"
@@ -10,16 +11,19 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-    <Button
-        android:id="@+id/backButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="← Voltar"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/gray_500"
-        android:layout_marginBottom="12dp" />
+        <!-- Botão voltar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="← Voltar"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/gray_500"
+            android:layout_marginBottom="12dp" />
 
+        <!-- Título -->
         <TextView
             android:text="Solicitação de Prova"
             android:textSize="22sp"
@@ -29,6 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
+        <!-- Credential Definition -->
         <EditText
             android:id="@+id/credentialDefInput"
             android:hint="Credential Definition ID"
@@ -37,6 +42,7 @@
             android:inputType="textUri"
             android:autofillHints="credentialDefinitionId" />
 
+        <!-- Atributos -->
         <TextView
             android:text="Atributos Solicitados"
             android:textStyle="bold"
@@ -45,12 +51,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/addAttributeButton"
+            style="@style/Widget.MaterialComponents.Button"
             android:text="Adicionar Atributo"
             android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white" />
 
         <LinearLayout
             android:id="@+id/attributesContainer"
@@ -59,6 +68,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <!-- Predicados -->
         <TextView
             android:text="Predicados"
             android:textStyle="bold"
@@ -67,12 +77,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/addPredicateButton"
+            style="@style/Widget.MaterialComponents.Button"
             android:text="Adicionar Predicado"
             android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white" />
 
         <LinearLayout
             android:id="@+id/predicatesContainer"
@@ -81,6 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <!-- Intervalo de Revogação -->
         <TextView
             android:text="Intervalo de Revogação"
             android:textStyle="bold"
@@ -96,8 +110,9 @@
             android:gravity="center"
             android:layout_marginTop="8dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/fromDateButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:text="Selecionar data inicial"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -109,8 +124,9 @@
                 android:layout_width="12dp"
                 android:layout_height="match_parent" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/toDateButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:text="Selecionar data final"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -119,6 +135,7 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
+        <!-- Loader e status -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -136,8 +153,10 @@
             android:textColor="@android:color/black"
             android:textSize="14sp" />
 
-        <Button
+        <!-- Enviar -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/requestProofButton"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Enviar Solicitação de Prova"
@@ -145,6 +164,7 @@
             android:textColor="@android:color/white"
             android:layout_marginTop="24dp" />
 
+        <!-- QR -->
         <ImageView
             android:id="@+id/qrImageView"
             android:layout_width="300dp"

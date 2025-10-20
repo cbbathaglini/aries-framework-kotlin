@@ -89,7 +89,7 @@ class NotificationHandler private constructor(private val context: Context) {
         notifyListeners()
     }
 
-    private fun saveNotifications() {
+    fun saveNotifications() {
         val jsonString = json.encodeToString(_notifications)
         prefs.edit().putString("notifications_list", jsonString).apply()
         android.util.Log.d("NOTIFICATION_HANDLER", "💾 Salvou ${_notifications.size} notificações")

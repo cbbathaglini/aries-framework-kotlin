@@ -4,24 +4,25 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
 import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 
-class HistoricalDetailActivity : AppCompatActivity() {
+class HistoricalDetailActivity : BaseActivity() {
     private lateinit var binding: ActivityHistoricalDetailBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        setSupportActionBar(binding.detailToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = getString(R.string.title_historical_detail)
 
-        // ✅ usa direto o botão do binding
+        // Deletar conexão
         binding.deleteConnection.setOnClickListener {
             deleteConnection()
         }
@@ -46,7 +47,7 @@ class HistoricalDetailActivity : AppCompatActivity() {
             }
 
             supportFragmentManager.beginTransaction()
-                .add(binding.historicalDetailContainer.id, fragment)
+                .replace(binding.historicalDetailContainer.id, fragment)
                 .commit()
         }
     }
@@ -59,7 +60,7 @@ class HistoricalDetailActivity : AppCompatActivity() {
                     intent.getStringExtra(HistoricalDetailFragment.ARG_CONNECTION_ID)
                 connectionId?.let {
                     app.agent.connectionRepository.deleteById(it)
-                    finish() // fecha a tela após deletar
+                    finish()
                 }
             } catch (e: Exception) {
                 Log.e("WalletApp", "Erro ao deletar conexão: ${e.message}")
@@ -70,7 +71,7 @@ class HistoricalDetailActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem) =
         when (item.itemId) {
             android.R.id.home -> {
-                navigateUpTo(Intent(this, HistoricalListActivity::class.java))
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)

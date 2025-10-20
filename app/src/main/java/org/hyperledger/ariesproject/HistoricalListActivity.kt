@@ -67,8 +67,8 @@ class HistoricalListActivity : AppCompatActivity() {
             val intent = Intent(v.context, HistoricalDetailActivity::class.java).apply {
                 putExtra(HistoricalDetailFragment.ARG_CONNECTION_ID, item.id)
                 putExtra(HistoricalDetailFragment.ARG_CONNECTION_RECORD, ConnectionRecordWrapper(item))
-                putExtra(HistoricalDetailFragment.ARG_CONNECTION_THREADID, item.threadId)
-                putExtra(HistoricalDetailFragment.ARG_CONNECTION_MEDIATORID, item.mediatorId)
+//                putExtra(HistoricalDetailFragment.ARG_CONNECTION_THREADID, item.threadId)
+//                putExtra(HistoricalDetailFragment.ARG_CONNECTION_MEDIATORID, item.mediatorId)
             }
 
             v.context.startActivity(intent)

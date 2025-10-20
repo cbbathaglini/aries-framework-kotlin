@@ -1,126 +1,126 @@
 package org.hyperledger.ariesproject
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
-import org.hyperledger.ariesproject.databinding.HistoricalDetailBinding
-import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
+import org.hyperledger.ariesproject.databinding.FragmentHistoricalDetailBinding
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HistoricalDetailFragment : Fragment() {
 
-    private var item: ConnectionRecordWrapper? = null
     private var connectionId: String? = null
-    private lateinit var detailBinding: ActivityHistoricalDetailBinding
-    private lateinit var binding: HistoricalDetailBinding
+    private lateinit var binding: FragmentHistoricalDetailBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        try {
-            arguments?.let {
-                if (it.containsKey(ARG_CONNECTION_ID)) {
-                    item = it.getParcelable(ARG_CONNECTION_RECORD)
-                    connectionId = it.getString(ARG_CONNECTION_ID)
-                    detailBinding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
-                    detailBinding.toolbarLayout.title = getString(R.string.title_historical_detail)
-                }
-            }
-        }catch (e: Throwable){
-            Log.e("WalletApp", e.message.toString())
-        }
+        connectionId = arguments?.getString(ARG_CONNECTION_ID)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
-        try {
-        binding = HistoricalDetailBinding.inflate(inflater, container, false)
-        val rootView = binding.root
-        binding.historicalDetail.text = item?.printFields()
-        binding.connectionName.text = item?.theirLabel;
+        val view = inflater.inflate(R.layout.fragment_historical_detail, container, false)
+        binding = FragmentHistoricalDetailBinding.bind(view)
+        return view
+    }
 
-        val activity = activity as HistoricalDetailActivity
-        val app = activity.application as WalletApp
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-       // Bind the delete button to the delete action
-        binding.getAllCredentialsButton.setOnClickListener {
-            // To prevent multiple clicks
-            binding.getAllCredentialsButton.isEnabled = false
+        val app = (requireActivity().application as WalletApp)
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                activity.runOnUiThread {
-                    // Send credentialId to another activity
-                    val intent = Intent(activity, CredentialListActivity::class.java).apply {
-                        putExtra("CONNECTION_ID", item?.id)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                connectionId?.let { id ->
+                    val record = app.agent.connectionRepository.getById(id)
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        preencherCampos(record)
                     }
-                    activity.startActivity(intent)
-
-                    // Close current activity if needed
-                    //activity.finish()
                 }
-            }
-
-        }
-
-        binding.sendMessage.setOnClickListener {
-            // To prevent multiple clicks
-            binding.sendMessage.isEnabled = false
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                activity.runOnUiThread {
-                    // Send credentialId to another activity
-                    val intent = Intent(activity, SendMessageActivity::class.java).apply {
-                        putExtra("CONNECTION_ID", item?.id)
-                    }
-                    activity.startActivity(intent)
-
-                    // Close current activity if needed
-                    //activity.finish()
-                }
+            } catch (e: Exception) {
+                Log.e("WalletApp", "Erro ao carregar conexão: ${e.message}")
             }
         }
 
-        binding.requestProof.setOnClickListener {
-            // To prevent multiple clicks
-            binding.requestProof.isEnabled = false
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                activity.runOnUiThread {
-                    // Send credentialId to another activity
-                    val intent = Intent(activity, RequestProofActivity::class.java).apply {
-                        putExtra("CONNECTION_ID", item?.id)
-                    }
-                    activity.startActivity(intent)
-
-                    // Close current activity if needed
-                    //activity.finish()
-                }
+        binding.copyDidButton.setOnClickListener {
+            val did = binding.connectionDid.text.toString()
+            if (did.isNotBlank()) {
+                val clipboard =
+                    requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("DID", did))
+                Toast.makeText(requireContext(), "DID copiado para a área de transferência", Toast.LENGTH_SHORT).show()
             }
         }
 
-        return rootView
-        }catch (e: Throwable){
-            Log.e("WalletApp", e.message.toString())
-            throw e
+        binding.requestProofButton.setOnClickListener {
+            connectionId?.let {
+                val intent = Intent(requireContext(), RequestProofActivity::class.java)
+                intent.putExtra("CONNECTION_ID", it)
+                startActivity(intent)
+            }
+        }
+
+        binding.viewCredentialsButton.setOnClickListener {
+            connectionId?.let {
+                val intent = Intent(requireContext(), CredentialListActivity::class.java)
+                intent.putExtra("CONNECTION_ID", it)
+                startActivity(intent)
+            }
         }
     }
 
+    private fun preencherCampos(record: ConnectionRecord) {
+        binding.connectionName.text = record.theirLabel ?: "Sem nome"
+        binding.connectionState.text = "Estado: ${record.state}"
+        binding.connectionId.text = record.id
+        binding.connectionDid.text = record.theirDid ?: "—"
+        binding.threadId.text = record.threadId ?: "—"
+        binding.theirLabel.text = record.theirLabel ?: "—"
+
+        // 🔹 Conversão segura da data
+        val dateFormatted = try {
+            when (val createdAt = record.createdAt) {
+                is Date -> {
+                    SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(createdAt)
+                }
+                is String -> {
+                    // tenta interpretar uma ISO string
+                    val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+                    parser.timeZone = TimeZone.getTimeZone("UTC")
+                    val date = parser.parse(createdAt)
+                    if (date != null)
+                        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+                    else
+                        createdAt
+                }
+                else -> "Desconhecido"
+            }
+        } catch (e: Exception) {
+            Log.e("WalletApp", "Erro ao formatar data: ${e.message}")
+            "Desconhecido"
+        }
+
+        binding.connectionDate.text = dateFormatted
+    }
+
     companion object {
-        const val ARG_CONNECTION_RECORD = "connection_record"
         const val ARG_CONNECTION_ID = "id"
-        const val ARG_CONNECTION_THREADID = "threadId"
-        const val ARG_CONNECTION_MEDIATORID = "mediatorId"
+        const val ARG_CONNECTION_RECORD = "connection_record"
     }
 }

@@ -66,6 +66,7 @@ class WalletMainActivity : BaseActivity() {
         openFragment(HomeFragment())
         updateToolbarAndBackground(R.color.teal_700, R.color.white)
         waitForAgentInitialize()
+        updateNotificationBadge()
     }
 
     private fun openFragment(fragment: Fragment) {

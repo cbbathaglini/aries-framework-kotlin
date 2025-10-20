@@ -64,8 +64,10 @@ class HomeFragment : Fragment() {
     }
 
     fun updateNotificationBadgeUI() {
+
         val handler = NotificationHandler.getInstance(requireContext())
-        val unread = handler.notifications.size
+        val unreadCount = handler.notifications.count { !it.isRead }
+
         (activity as? BaseActivity)?.updateNotificationBadge()
     }
 

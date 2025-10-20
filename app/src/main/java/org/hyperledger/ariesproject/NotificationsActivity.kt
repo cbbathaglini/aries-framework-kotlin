@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import org.hyperledger.ariesproject.databinding.ActivityNotificationsBinding
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 
@@ -36,10 +38,21 @@ class NotificationsActivity : BaseActivity() {
             runOnUiThread { reloadNotifications() }
         }
 
+        val markAllButton = findViewById<MaterialButton>(R.id.markAllReadButton)
+        markAllButton.setOnClickListener {
+            handler.markAllAsRead()
+            reloadNotifications()
+            updateNotificationBadge()
+
+            val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+            val badge = bottomNavigationView.getOrCreateBadge(R.id.nav_notifications)
+            badge.isVisible = false
+        }
         // Botão "Limpar todas"
         binding.clearAll.setOnClickListener {
             handler.clearAll()
             reloadNotifications()
+            updateNotificationBadge()
         }
     }
 
@@ -47,6 +60,7 @@ class NotificationsActivity : BaseActivity() {
         super.onResume()
         Log.d("NOTIFICATIONS", "onResume chamado — recarregando lista")
         reloadNotifications()
+        updateNotificationBadge()
     }
 
     private fun reloadNotifications() {
@@ -65,5 +79,19 @@ class NotificationsActivity : BaseActivity() {
         val isEmpty = handler.notifications.isEmpty()
         binding.emptyView.visibility = if (isEmpty) View.VISIBLE else View.GONE
         binding.recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
+
+    override fun updateNotificationBadge() {
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        val badge = bottomNavigationView.getOrCreateBadge(R.id.nav_notifications)
+        val unreadCount = handler.notifications.count { !it.isRead }
+
+        if (unreadCount > 0) {
+            badge.number = unreadCount
+            badge.isVisible = true
+        } else {
+            badge.clearNumber()
+            badge.isVisible = false
+        }
     }
 }

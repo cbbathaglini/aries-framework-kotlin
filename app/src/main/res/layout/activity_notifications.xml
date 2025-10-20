@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".NotificationsActivity">
 
+    <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -16,6 +17,7 @@
         app:titleTextColor="@android:color/white"
         app:navigationIcon="@drawable/ic_arrow_back" />
 
+    <!-- Conteúdo principal -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -24,19 +26,39 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:padding="16dp">
 
-        <Button
-            android:id="@+id/clearAll"
-            android:layout_width="wrap_content"
+        <!-- Linha de botões -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Limpar todas"
-            android:drawableStart="@drawable/ic_delete"
-            android:drawablePadding="8dp"
-            android:layout_gravity="end"
-            android:backgroundTint="@color/red"
-            android:textColor="@android:color/white"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp" />
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginBottom="12dp">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/markAllReadButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Marcar todas como lidas"
+                android:textAllCaps="false"
+                android:textColor="@color/teal_700"
+                app:strokeColor="@color/teal_700"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/clearAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Limpar todas"
+                android:drawableStart="@drawable/ic_delete"
+                android:drawablePadding="8dp"
+                android:backgroundTint="@color/red"
+                android:textColor="@android:color/white"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp" />
+        </LinearLayout>
+
+        <!-- Lista de notificações -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
@@ -45,6 +67,7 @@
             android:paddingTop="8dp"
             tools:listitem="@layout/item_notification" />
 
+        <!-- Texto vazio -->
         <TextView
             android:id="@+id/emptyView"
             android:layout_width="match_parent"
@@ -55,6 +78,7 @@
             android:padding="24dp"
             android:visibility="gone"
             android:textColor="@android:color/darker_gray" />
+
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

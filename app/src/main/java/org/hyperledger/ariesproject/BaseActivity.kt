@@ -75,19 +75,25 @@ open class BaseActivity : AppCompatActivity() {
         bottomNav.menu.setGroupCheckable(0, true, true)
     }
 
-    fun updateNotificationBadge() {
-        val handler = NotificationHandler.getInstance(this)
-        val count = handler.notifications.size
+    open fun updateNotificationBadge() {
+        try {
+            val handler = (application as WalletApp).notificationHandler
+            val unreadCount = handler.notifications.count { !it.isRead }
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        val badge = bottomNav.getOrCreateBadge(R.id.nav_notifications)
+            val bottomNavigationView = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottomNavigation
+            )
+            val badge = bottomNavigationView.getOrCreateBadge(R.id.nav_notifications)
 
-        if (count > 0) {
-            badge.isVisible = true
-            badge.number = count
-        } else {
-            badge.isVisible = false
-            badge.clearNumber()
+            if (unreadCount > 0) {
+                badge.number = unreadCount
+                badge.isVisible = true
+            } else {
+                badge.clearNumber()
+                badge.isVisible = false
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("BADGE", "Erro ao atualizar badge: ${e.message}")
         }
     }
 }
