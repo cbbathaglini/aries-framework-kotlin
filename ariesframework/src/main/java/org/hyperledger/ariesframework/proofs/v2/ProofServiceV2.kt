@@ -26,13 +26,6 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessageV2
-import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatCoordinator
-import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
-import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
-import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
-import org.hyperledger.ariesframework.proofs.v2.messages.PresentationProblemReportErrorV2
-import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMessageV2
-import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalServiceParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestOptions
@@ -61,6 +54,13 @@ import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.proofs.utils.W3cUtils
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatCoordinator
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationProblemReportErrorV2
+import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
@@ -317,7 +317,7 @@ class ProofServiceV2(val agent: Agent) {
         val requestMessage: RequestPresentationMessageV2 =
             proofFormatCoordinator.createRequest(requestParams)
 
-        logger.info("request message: ${requestMessage.requestAttachment.size}")
+        logger.info("request message: ${requestMessage.requestPresentationAttachments.size}")
         logger.debug("Saving record and emitting state changed for proof exchange record ${proofRecord.id}")
         agent.proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
@@ -325,13 +325,13 @@ class ProofServiceV2(val agent: Agent) {
         return Pair(requestMessage, proofRecord)
     }
 
-    suspend fun processRequest(messageContext: InboundMessageContext?=null, requestMessage: RequestPresentationMessageV2? = null): ProofExchangeRecord {
+    suspend fun processRequest(messageContext: InboundMessageContext? = null, requestMessage: RequestPresentationMessageV2? = null): ProofExchangeRecord {
         logger.info("PROCESS REQUEST -------------------------")
 
-        var connection : ConnectionRecord? = null
+        var connection: ConnectionRecord? = null
 
         var requestMessage = requestMessage
-        if(messageContext != null) {
+        if (messageContext != null) {
             requestMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
             logger.debug("Processing proof request with id ${requestMessage.id}")
             connection = messageContext.connection
@@ -794,7 +794,7 @@ class ProofServiceV2(val agent: Agent) {
             val requestAttachment = this.proofFormatCoordinator.getAttachmentForService(
                 formatService,
                 requestMessage.formats,
-                requestMessage.requestAttachment,
+                requestMessage.requestPresentationAttachments,
             )
 
             val proposalAttachment = proofFormatCoordinator.getAttachmentForService(
@@ -842,7 +842,7 @@ class ProofServiceV2(val agent: Agent) {
             val requestAttachment = proofFormatCoordinator.getAttachmentForService(
                 formatService,
                 requestMessage.formats,
-                requestMessage.requestAttachment,
+                requestMessage.requestPresentationAttachments,
             )
 
             val shouldAutoRespondToFormat = formatService.shouldAutoRespondToRequest(
@@ -887,7 +887,7 @@ class ProofServiceV2(val agent: Agent) {
             val requestAttachment = proofFormatCoordinator.getAttachmentForService(
                 formatService,
                 requestMessage.formats,
-                requestMessage.requestAttachment,
+                requestMessage.requestPresentationAttachments,
             )
 
             val presenttionAttachment = proofFormatCoordinator.getAttachmentForService(

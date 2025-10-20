@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -252,6 +253,8 @@ class RequestProofActivity : AppCompatActivity() {
                 val (record, verifierRecord) = app.agent.proofCommandV2.requestProofOffline(
                     proofRequest= proofRequest,
                     formats = proofFormats)
+                Log.d("ProofDebug", "Record.id = ${record.id}")
+                Log.d("ProofDebug", "VerifierRecord.requestMessage?.id = ${verifierRecord.requestMessage?.id}")
 
                 verifierRecord.requestMessage?.let { message ->
                     val jsonString = Json.encodeToString(RequestPresentationMessageV2.serializer(), message)

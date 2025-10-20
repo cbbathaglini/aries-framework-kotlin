@@ -25,7 +25,7 @@ class RequestPresentationMessageV2(
     val formats: List<ProofFormatSpec> = emptyList(),
 
     @SerialName("request_presentations~attach")
-    val requestAttachment: List<Attachment>,
+    val requestPresentationAttachments: List<Attachment>,
 ) : AgentMessage(generateId(), type) {
 
     companion object {
@@ -35,7 +35,7 @@ class RequestPresentationMessageV2(
     }
 
     fun getRequestPresentationAttachmentById(id: String): Attachment? {
-        return requestAttachment.firstOrNull { it.id == id }
+        return requestPresentationAttachments.firstOrNull { it.id == id }
     }
 
     fun indyProofRequest(): String {

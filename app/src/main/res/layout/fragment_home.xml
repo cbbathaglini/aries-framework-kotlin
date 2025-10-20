@@ -18,7 +18,7 @@
             android:text="Wallet Menu"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/teal_600"
             android:layout_gravity="center"
             android:layout_marginBottom="16dp" />
 
@@ -47,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Connect"
-            android:backgroundTint="@color/colorPrimary"
+            android:backgroundTint="@color/teal_600"
             android:textColor="@android:color/white"
             android:layout_gravity="end"
             android:layout_marginTop="8dp" />

@@ -24,10 +24,6 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.PresentationProblemReportMessage
-import org.hyperledger.ariesframework.proofs.v1.messages.PresentationAckMessage
-import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
-import org.hyperledger.ariesframework.proofs.v1.messages.RequestPresentationMessage
-import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.PartialProof
@@ -42,6 +38,10 @@ import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationAckMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
+import org.hyperledger.ariesframework.proofs.v1.messages.RequestPresentationMessage
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.hyperledger.ariesframework.util.concurrentMap
@@ -85,7 +85,7 @@ class ProofService(val agent: Agent) {
             RequestPresentationMessageV2.Companion.INDY_PROOF_REQUEST_ATTACHMENT_ID,
         )
         val message =
-            RequestPresentationMessageV2(comment = comment, requestAttachment = listOf(attachment))
+            RequestPresentationMessageV2(comment = comment, requestPresentationAttachments = listOf(attachment))
 
         val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord?.id ?: "connectionless-proof-request",
@@ -421,8 +421,11 @@ class ProofService(val agent: Agent) {
         logger.debug("verifying proof: $proof")
         val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
         val schemas = async {
-            RecoverFromLedger.Companion.getSchemas(partialProof.identifiers.map { it.schemaId }
-                .toSet(), agent)
+            RecoverFromLedger.Companion.getSchemas(
+                partialProof.identifiers.map { it.schemaId }
+                    .toSet(),
+                agent,
+            )
         }
         val credentialDefinitions = async {
             RecoverFromLedger.Companion.getCredentialDefinitions(

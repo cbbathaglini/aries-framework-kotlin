@@ -17,7 +17,7 @@
         android:text="← Voltar"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
-        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTint="@color/gray_500"
         android:layout_marginBottom="12dp" />
 
         <TextView
@@ -102,7 +102,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:backgroundTint="@color/colorPrimary"
+                android:backgroundTint="@color/teal_600"
                 android:textColor="@android:color/white" />
 
             <Space
@@ -115,7 +115,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:backgroundTint="@color/colorPrimary"
+                android:backgroundTint="@color/teal_600"
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
@@ -141,7 +141,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Enviar Solicitação de Prova"
-            android:backgroundTint="@color/colorPrimary"
+            android:backgroundTint="@color/teal_600"
             android:textColor="@android:color/white"
             android:layout_marginTop="24dp" />
 

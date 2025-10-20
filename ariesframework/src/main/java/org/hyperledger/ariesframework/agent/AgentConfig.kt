@@ -65,7 +65,7 @@ data class AgentConfig(
     var autoAcceptProof: AutoAcceptProof = AutoAcceptProof.Always,
     var ignoreRevocationCheck: Boolean = false,
     var useLedgerService: Boolean = false,
-    var useLegacyDidSovPrefix: Boolean = true,
+    var useLegacyDidSovPrefix: Boolean = false,
     var publicDidSeed: String? = null,
     var agentEndpoints: List<String>? = null,
     var useReturnRoute: Boolean = true,

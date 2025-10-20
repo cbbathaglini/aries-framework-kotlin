@@ -1,21 +1,21 @@
 package org.hyperledger.ariesframework.proofs.repository.verifier
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
-import org.hyperledger.ariesframework.Tags
 
 @Serializable
 data class PresentationVerifier(
     var presentationMessage: PresentationMessageV2? = null,
     var isVerified: Boolean? = false,
     var isOffline: Boolean? = true,
-    var proofRecordId: String? = null
+    var proofRecordId: String? = null,
 )
 
 @Serializable
@@ -30,7 +30,7 @@ class VerifierRecord(
     @Transient override var id: String = generateId(),
     @Transient override var _tags: Tags? = null,
     @Transient override val createdAt: Instant = Clock.System.now(),
-    @Transient override var updatedAt: Instant? = null
+    @Transient override var updatedAt: Instant? = null,
 ) : BaseRecord() {
 
     override fun getTags(): Tags {

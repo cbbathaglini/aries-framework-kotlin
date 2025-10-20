@@ -2,9 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 🔒 Permissões gerais -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- 🔵 Permissões Bluetooth (compatíveis com Android 12+) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- ✅ Android 12+ (API 31+) - usePermissionFlags evita alertas de localização -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADVERTISE"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_CONNECT"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <!-- Câmera obrigatória -->
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
 
     <application
@@ -17,7 +37,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="DataExtractionRules">
-        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
+
+        <!-- 🧾 Lista de Activities -->
         <activity
             android:name=".CredentialListActivity"
             android:label="@string/title_credential_list"
@@ -27,44 +50,30 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".WalletMainActivity" />
         </activity>
+
         <activity
             android:name=".CredentialDetailActivity"
             android:label="@string/title_credential_detail"
             android:parentActivityName=".CredentialListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".CredentialListActivity" />
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".CredentialW3cDetailActivity"
             android:label="@string/title_credential_detail"
             android:parentActivityName=".CredentialListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".CredentialListActivity" />
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".HistoricalListActivity"
             android:label="@string/title_historical_list"
             android:parentActivityName=".WalletMainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".WalletMainActivity" />
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name=".HistoricalDetailActivity"
             android:label="@string/title_historical_detail"
             android:parentActivityName=".HistoricalListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HistoricalListActivity" />
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".WalletMainActivity"
@@ -76,42 +85,53 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".BarcodeScannerActivity"
+
+        <activity android:name=".BarcodeScannerActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:noHistory="true">
-        </activity>
-        <activity
-            android:name=".SendMessageActivity"
+            android:noHistory="true" />
+
+        <activity android:name=".SendMessageActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:noHistory="true">
-        </activity>
-        <activity
-            android:name=".InvitationActivity"
+            android:noHistory="true" />
+
+        <activity android:name=".InvitationActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:noHistory="true">
-        </activity>
-        <activity
-            android:name=".RequestProofActivity"
+            android:noHistory="true" />
+
+        <activity android:name=".RequestProofActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:noHistory="true">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".WalletMainActivity" />
-        </activity>
+            android:noHistory="true" />
 
         <activity android:name=".VerifierProofActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <activity
-            android:name=".CustomCaptureActivity"
+        <activity android:name=".CustomCaptureActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:exported="false"/>
+            android:exported="false" />
+
+        <activity android:name=".ReceivingPresentationActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity android:name=".PresentationListActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity android:name=".PresentationDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="true"
+            android:label="Notificações"
+            android:theme="@style/AppTheme.NoActionBar" />
 
     </application>
-
-
 </manifest>

@@ -8,6 +8,11 @@ import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
+import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.models.ProofRequest
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
+import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
+import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.v1.handlers.PresentationAckHandler
 import org.hyperledger.ariesframework.proofs.v1.handlers.PresentationHandler
 import org.hyperledger.ariesframework.proofs.v1.handlers.RequestPresentationHandler
@@ -15,11 +20,6 @@ import org.hyperledger.ariesframework.proofs.v1.messages.PresentationAckMessage
 import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
 import org.hyperledger.ariesframework.proofs.v1.messages.RequestPresentationMessage
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
-import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
-import org.hyperledger.ariesframework.proofs.models.ProofRequest
-import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
-import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
-import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.slf4j.LoggerFactory
 
 class ProofCommand(val agent: Agent, private val dispatcher: Dispatcher) {

@@ -40,7 +40,7 @@
         android:text="← Voltar"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
-        android:backgroundTint="@color/colorPrimary" />
+        android:backgroundTint="@color/teal_700" />
 
     <ProgressBar
         android:id="@+id/progressBar"

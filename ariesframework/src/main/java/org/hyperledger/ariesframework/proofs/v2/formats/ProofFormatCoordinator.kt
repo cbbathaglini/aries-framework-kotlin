@@ -8,9 +8,6 @@ import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatServ
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialsForProofRequest
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.error.CredoError
-import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
-import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMessageV2
-import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.models.AcceptProofProposalParams
 import org.hyperledger.ariesframework.proofs.models.AcceptProofRequestParams
 import org.hyperledger.ariesframework.proofs.models.CreateProofProposalParams
@@ -20,6 +17,9 @@ import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RequestProofRequestParams
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMessageV2
+import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.slf4j.LoggerFactory
 
@@ -126,7 +126,7 @@ class ProofFormatCoordinator(
 
         val message = RequestPresentationMessageV2(
             formats = formats,
-            requestAttachment = requestAttachments,
+            requestPresentationAttachments = requestAttachments,
             comment = comment,
             goalCode = goalCode,
             goal = goal,
@@ -171,7 +171,7 @@ class ProofFormatCoordinator(
         logger.info("createRequest after formtatservice")
         val message = RequestPresentationMessageV2(
             formats = formats,
-            requestAttachment = requestAttachments,
+            requestPresentationAttachments = requestAttachments,
             comment = comment,
             goalCode = goalCode,
             goal = goal,
@@ -188,7 +188,7 @@ class ProofFormatCoordinator(
             agentMessage = message,
             associatedRecordId = proofRecord.id,
         )
-        logger.info("save didcomm")
+        logger.info("save didcomm: ${proofRecord.id}")
         return message
     }
 
@@ -201,7 +201,7 @@ class ProofFormatCoordinator(
             val attachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = message.formats,
-                attachments = message.requestAttachment,
+                attachments = message.requestPresentationAttachments,
             )
 
             formatService.processRequest(
@@ -249,7 +249,7 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment,
+                attachments = requestMessage.requestPresentationAttachments,
             )
             logger.info("[acceptRequest] requestAttachment: ${requestAttachment.getDataAsJson()}")
 
@@ -325,7 +325,7 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment,
+                attachments = requestMessage.requestPresentationAttachments,
             )
 
             val proposalAttachment = getAttachmentForService(
@@ -377,7 +377,7 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = requestMessage.formats,
-                attachments = requestMessage.requestAttachment,
+                attachments = requestMessage.requestPresentationAttachments,
             )
 
             val proposalAttachment = getAttachmentForService(
@@ -419,7 +419,7 @@ class ProofFormatCoordinator(
             val requestAttachment = getAttachmentForService(
                 proofFormatService = formatService,
                 formats = message.formats,
-                attachments = message.requestAttachment,
+                attachments = message.requestPresentationAttachments,
             )
 
             val presentationAttachment = getAttachmentForService(

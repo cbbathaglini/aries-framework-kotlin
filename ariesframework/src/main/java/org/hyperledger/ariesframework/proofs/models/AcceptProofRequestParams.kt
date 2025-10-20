@@ -2,8 +2,8 @@ package org.hyperledger.ariesframework.proofs.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
 
 @Serializable
 data class AcceptProofRequestParams(

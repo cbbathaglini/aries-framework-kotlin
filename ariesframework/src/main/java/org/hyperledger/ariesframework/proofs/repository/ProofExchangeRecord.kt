@@ -10,6 +10,7 @@ import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.ProofRole
 import org.hyperledger.ariesframework.proofs.models.ProofState
+import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -34,6 +35,10 @@ data class ProofExchangeRecord(
 
     var formats: List<ProofFormatSpec>? = emptyList(),
     var datas: Map<String, JsonElement>? = emptyMap(),
+
+    var proofRequestVerifierJson: String? = null,
+    var proofPresentationVerifierJson: String? = null,
+    var presentationMessage: PresentationMessageV2? = null,
 
 ) : BaseRecord() {
     override fun getTags(): Tags {

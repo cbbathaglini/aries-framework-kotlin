@@ -4,8 +4,8 @@ import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
-import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesframework.proofs.v1.messages.PresentationMessage
 
 class PresentationHandler(val agent: Agent) : MessageHandler {
     override val messageType = PresentationMessage.type

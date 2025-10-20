@@ -13,6 +13,7 @@ import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
+import org.hyperledger.ariesproject.notifications.NotificationHandler
 import java.io.File
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
@@ -20,6 +21,7 @@ const val genesisPath = "von.txn"
 
 class WalletApp : Application() {
     lateinit var agent: Agent
+    lateinit var notificationHandler: NotificationHandler
     var walletOpened: Boolean = false
 
     fun isAgentInitialized(): Boolean {
@@ -82,9 +84,11 @@ class WalletApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        notificationHandler = NotificationHandler.getInstance(this)
         GlobalScope.launch(Dispatchers.IO) {
             openWallet()
         }
+
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

@@ -3,12 +3,9 @@ package org.hyperledger.ariesproject
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
@@ -18,95 +15,86 @@ import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
 import org.hyperledger.ariesproject.databinding.CredentialListContentBinding
 
-class CredentialListActivity : AppCompatActivity() {
+class CredentialListActivity : BaseActivity() {
     private lateinit var binding: ActivityCredentialListBinding
-    private lateinit var connectionId : String
+    private lateinit var connectionId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityCredentialListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
+
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
-
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
-        println("connectionId: ${connectionId}")
+        Log.d("CredentialList", "connectionId: $connectionId")
+
+        // ✅ Garante que nenhuma aba fique verde
+        clearBottomNavigationSelection()
     }
 
     override fun onResume() {
         super.onResume()
+        clearBottomNavigationSelection()
         setupRecyclerView(binding.credentialList.credentialList)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
             android.R.id.home -> {
                 NavUtils.navigateUpFromSameTask(this)
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
-        var credentialsRecords : List<CredentialRecord> = mutableListOf()
-        var credentialsRecordsConn: MutableList<CredentialRecord> = mutableListOf()
-        var credentialsExchange: List<CredentialExchangeRecord> = mutableListOf()
-        var credentialsW3c: List<W3cCredentialRecord> = mutableListOf()
+        val credentialsRecordsConn = mutableListOf<CredentialRecord>()
 
-        //find all in the same connection if connection was send
-        if(connectionId != ""){
-            credentialsExchange = runBlocking { app.agent.credentialExchangeRepository.getByConnectionId(connectionId)};
-            credentialsExchange.forEach { credential ->
-                val allCredentials = credential.credentials
-                allCredentials.forEach { cred ->
-                    val credential = runBlocking { app.agent.credentialRepository.getByCredentialId(cred.credentialRecordId)}
-                    credentialsRecordsConn.add(credential);
-                }
-                recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecordsConn)
+        if (connectionId.isNotEmpty()) {
+            val credentialsExchange = runBlocking {
+                app.agent.credentialExchangeRepository.getByConnectionId(connectionId)
             }
-        }else {
-            //find all credentials
-            credentialsW3c = runBlocking { app.agent.w3cCredentialRepository.getAll()};
-            credentialsRecords = runBlocking { app.agent.credentialRepository.getAll()};
-
-            val listCredentials : List<Any> = credentialsW3c + credentialsRecords
-            Log.i("W3C", "size: ${listCredentials.size}")
-            recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, listCredentials)
+            credentialsExchange.forEach { exchange ->
+                exchange.credentials.forEach { cred ->
+                    val credential = runBlocking {
+                        app.agent.credentialRepository.getByCredentialId(cred.credentialRecordId)
+                    }
+                    credentialsRecordsConn.add(credential)
+                }
+            }
+            recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecordsConn)
+        } else {
+            val credentialsW3c = runBlocking { app.agent.w3cCredentialRepository.getAll() }
+            val credentialsRecords = runBlocking { app.agent.credentialRepository.getAll() }
+            recyclerView.adapter =
+                SimpleItemRecyclerViewAdapter(this, credentialsW3c + credentialsRecords)
         }
-
     }
 
     class SimpleItemRecyclerViewAdapter(
         private val parentActivity: CredentialListActivity,
         private val values: List<Any>,
     ) : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
-        private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
+
+        private val onClickListener = View.OnClickListener { v ->
             val item = v.tag
-            lateinit var intent: Intent
-            if(item is CredentialRecord) {
-                intent = Intent(v.context, CredentialDetailActivity::class.java).apply {
+            val intent = when (item) {
+                is CredentialRecord -> Intent(v.context, CredentialDetailActivity::class.java).apply {
                     putExtra(CredentialDetailFragment.ARG_CREDENTIAL, item.credential)
-                    putExtra(
-                        CredentialDetailFragment.ARG_CREDENTIAL_ID,
-                        item.credentialId
-                    ) // Keep as Int
+                    putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, item.credentialId)
                 }
-            }else if (item is W3cCredentialRecord){
-
-                intent = Intent(v.context, CredentialW3cDetailActivity::class.java).apply {
+                is W3cCredentialRecord -> Intent(v.context, CredentialW3cDetailActivity::class.java).apply {
                     putExtra(CredentialW3cDetailFragment.ARG_CREDENTIAL_W3C, item.credential.toString())
-                    putExtra(
-                        CredentialW3cDetailFragment.ARG_CREDENTIAL_W3C_ID,
-                        item.id
-                    )
-
+                    putExtra(CredentialW3cDetailFragment.ARG_CREDENTIAL_W3C_ID, item.id)
                 }
+                else -> null
             }
-
-            v.context.startActivity(intent)
+            intent?.let { v.context.startActivity(it) }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -117,12 +105,11 @@ class CredentialListActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = values[position]
-            if(item is CredentialRecord) {
-                holder.contentView.text = item.credentialId
-            }else if (item is W3cCredentialRecord){
-                holder.contentView.text = item.id + " (W3C)"
+            holder.contentView.text = when (item) {
+                is CredentialRecord -> item.credentialId
+                is W3cCredentialRecord -> "${item.id} (W3C)"
+                else -> ""
             }
-
             with(holder.itemView) {
                 tag = item
                 setOnClickListener(onClickListener)
@@ -132,7 +119,7 @@ class CredentialListActivity : AppCompatActivity() {
         override fun getItemCount() = values.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            var contentBinding = CredentialListContentBinding.bind(view)
+            private val contentBinding = CredentialListContentBinding.bind(view)
             val contentView: TextView = contentBinding.content
         }
     }

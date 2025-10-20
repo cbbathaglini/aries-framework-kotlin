@@ -46,50 +46,26 @@ import org.hyperledger.ariesproject.databinding.MenuItemListContentBinding
 import org.hyperledger.ariesproject.menu.MainMenu
 import org.json.JSONObject
 
-class WalletMainActivity : AppCompatActivity() {
+
+class WalletMainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityWalletMainBinding
+    private val TAG = "WalletMainActivity"
+
     private var credentialProgress: ProgressDialog? = null
     private var proofProgress: ProgressDialog? = null
-    private val TAG = "WalletMainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWalletMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setChildContent(R.layout.activity_wallet_main)
+        binding = ActivityWalletMainBinding.bind(findViewById(R.id.baseContainer))
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
 
-        // Abre o fragmento inicial (Home)
+        // 🏠 Abre fragmento inicial
         openFragment(HomeFragment())
-
-        // Menu inferior de navegação
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    openFragment(HomeFragment())
-                    updateToolbarAndBackground(R.color.colorPrimary, R.color.white)
-                    true
-                }
-                R.id.nav_notifications -> {
-                    openFragment(NotificationsFragment())
-                    updateToolbarAndBackground(R.color.colorPrimary, R.color.white)
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-    }
-
-    private fun updateToolbarAndBackground(toolbarColor: Int, backgroundColor: Int) {
-        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor))
-        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
-        window.statusBarColor = ContextCompat.getColor(this, toolbarColor)
-        binding.bottomNavigation.setBackgroundColor(ContextCompat.getColor(this, backgroundColor))
+        updateToolbarAndBackground(R.color.teal_700, R.color.white)
+        waitForAgentInitialize()
     }
 
     private fun openFragment(fragment: Fragment) {
@@ -98,19 +74,27 @@ class WalletMainActivity : AppCompatActivity() {
             .commit()
     }
 
+    private fun updateToolbarAndBackground(toolbarColor: Int, backgroundColor: Int) {
+        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor))
+
+    }
+
     private fun subscribeEvents() {
         val app = application as WalletApp
         app.agent.eventBus.subscribe<AgentEvents.CredentialEvent> {
             lifecycleScope.launch(Dispatchers.Main) {
+
                 if (it.record.state == CredentialState.OfferReceived) {
                     runOnConfirm("Accept credential?", action = {
                         getCredential(it.record.id)
+
                     }, negAction = {
                         declineCredential(it.record.id)
                     })
                 } else if (it.record.state == CredentialState.Done) {
                     credentialProgress?.dismiss()
                     showAlert("Credential received")
+
                 }
             }
         }
@@ -118,18 +102,37 @@ class WalletMainActivity : AppCompatActivity() {
         /* CredentialEvent for version 2.0 */
         app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             lifecycleScope.launch(Dispatchers.Main) {
-                Log.i("credentialrecord>>>>>>:", "itrecordid: " + it.record)
+                val handler = (application as WalletApp).notificationHandler
+
                 if (it.record.state == CredentialState.OfferReceived) {
+                    // 🟢 Adiciona notificação antes de atualizar o badge
+                    handler.addNotification(
+                        title = "Nova oferta de credencial (2.0)",
+                        message = "ConnectionID: ${it.record.id}",
+                        type = NotificationType.ISSUE_CREDENTIAL_V2,
+                        credentialId = it.record.id
+                    )
+
+                    // 🔔 Atualiza badge com base no handler real
+                    updateNotificationBadge()
+
                     Log.e("[IDD] state", it.record.toString())
-                    runOnConfirm("(2.0) Accept credential?", action = {
-                        Log.e("[IDD] CONFIRM", it.record.id)
+                    runOnConfirm("(2.0) Aceitar credencial?", action = {
                         getCredentialV2(it.record)
                     }, negAction = {
                         declineCredentialV2(it.record.id)
                     })
+
                 } else if (it.record.state == CredentialState.Done) {
+                    handler.addNotification(
+                        title = "Credencial recebida",
+                        message = "A credencial ${it.record.id} foi emitida com sucesso.",
+                        type = NotificationType.ISSUE_CREDENTIAL_V2
+                    )
+
+                    updateNotificationBadge()
                     credentialProgress?.dismiss()
-                    showAlert("(2.0) Credential received")
+                    showAlert("(2.0) Credencial recebida")
                 }
             }
         }
@@ -321,11 +324,11 @@ class WalletMainActivity : AppCompatActivity() {
         showAlert(messageToShow)
     }
 
-    private fun showAlert(message: String) {
-        val builder = AlertDialog.Builder(this@WalletMainActivity)
-        builder.setMessage(message)
-            .setPositiveButton(R.string.ok) { _, _ -> }
-        builder.create().show()
+    fun showAlert(message: String) {
+        AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
@@ -347,7 +350,7 @@ class WalletMainActivity : AppCompatActivity() {
     private fun waitForAgentInitialize() {
         val app = application as WalletApp
         val progress = ProgressDialog(this)
-        progress.setTitle("Initializing agent")
+        progress.setTitle("Inicializando agente...")
         progress.setCancelable(false)
         progress.show()
 
@@ -355,13 +358,10 @@ class WalletMainActivity : AppCompatActivity() {
             override fun onTick(millisUntilFinished: Long) {
                 if (app.walletOpened) {
                     subscribeEvents()
-                    // This causes a crash:
-                    // java.lang.IllegalArgumentException: View=DecorView@39d4aa3[Initializing agent] not attached to window manager
-                    // for now we just catch the exception
                     try {
                         progress.dismiss()
                     } catch (e: Exception) {
-                        Log.d(TAG, e.message ?: "Unknown error")
+                        Log.d(TAG, e.message ?: "Erro desconhecido")
                     }
                     cancel()
                 }
@@ -369,7 +369,7 @@ class WalletMainActivity : AppCompatActivity() {
 
             override fun onFinish() {
                 progress.dismiss()
-                showAlert("Failed to open a wallet.")
+                showAlert("Falha ao inicializar o agente.")
             }
         }
         timer.start()
@@ -563,16 +563,27 @@ class WalletMainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val app = application as WalletApp
         super.onActivityResult(requestCode, resultCode, data)
+
         if (resultCode == RESULT_OK) {
             lifecycleScope.launch(Dispatchers.Main) {
                 try {
                     val qrcodeData = data!!.getStringExtra("qrcode")
                     Log.d("demo", "Scanned code: $qrcodeData")
+
                     val (_, connection) = app.agent.oob.receiveInvitationFromUrl(qrcodeData!!)
-                    showAlert("Connected to ${connection?.theirLabel ?: "unknown agent"}")
+
+                    val handler = (application as WalletApp).notificationHandler
+                    handler.addNotification(
+                        title = "Nova Conexão",
+                        message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
+                        type = NotificationType.CONNECTION
+                    )
+
+                    showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
+
                 } catch (e: Exception) {
-                    Log.d("demo", e.localizedMessage)
-                    showAlert("Unrecognized qrcode")
+                    Log.e("demo", "Erro ao processar QRCode: ${e.localizedMessage}")
+                    showAlert("QRCode inválido ou falha na conexão.")
                 }
             }
         }
@@ -582,7 +593,7 @@ class WalletMainActivity : AppCompatActivity() {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(
             this,
             listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION, MainMenu.REQUESTPROOF,
-                MainMenu.SCANREQUESTPROOF)
+                MainMenu.SCANREQUESTPROOF, MainMenu.RECEIVING_PRESENTATION_PROOF, MainMenu.PRESENTATION_LIST)
         )
     }
 
@@ -616,6 +627,16 @@ class WalletMainActivity : AppCompatActivity() {
 
                 MainMenu.SCANREQUESTPROOF -> {
                     val intent = Intent(v.context, VerifierProofActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.RECEIVING_PRESENTATION_PROOF -> {
+                    val intent = Intent(v.context, ReceivingPresentationActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.PRESENTATION_LIST -> {
+                    val intent = Intent(v.context, PresentationListActivity::class.java)
                     v.context.startActivity(intent)
                 }
 

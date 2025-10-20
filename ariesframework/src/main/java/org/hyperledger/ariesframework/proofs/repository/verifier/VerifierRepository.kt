@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.proofs.repository.verifier
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.storage.Repository
 
-
 class VerifierRepository(agent: Agent) :
     Repository<VerifierRecord>(VerifierRecord::class, agent) {
 
