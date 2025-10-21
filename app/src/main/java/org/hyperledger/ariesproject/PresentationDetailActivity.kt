@@ -94,7 +94,17 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnSendBluetooth.setOnClickListener {
             record?.let {
                 pendingJson = loadJSONPreview(it)
-                checkAndRequestPermsThenScan()
+
+                // Se já conectado, envia diretamente
+                if (bluetoothClient.isConnected()) {
+                    appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
+                    sendJSONSafely(pendingJson!!)
+                } else {
+                    appendLog("🔍 Ainda não conectado — iniciando scan para encontrar o iOS…")
+                    checkAndRequestPermsThenScan()
+                }
+            } ?: run {
+                Toast.makeText(this, "❌ Nenhum registro carregado.", Toast.LENGTH_SHORT).show()
             }
         }
 

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.ParcelUuid
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.delay
 import java.util.*
 
 @SuppressLint("MissingPermission")
@@ -29,12 +30,28 @@ class BluetoothClient(private val context: Context) {
 
     // 🔹 Callback opcional quando um dispositivo é encontrado
     var onDeviceFound: ((String) -> Unit)? = null
+    private val discoveredDevices = mutableMapOf<String, BluetoothDevice>()
+
+    private val writeQueue: ArrayDeque<ByteArray> = ArrayDeque()
+    @Volatile private var isWriting = false
+    private var negotiatedMtu: Int = 23 // padrão
 
     // ----------------------------------------------------------------
     // SCAN
     // ----------------------------------------------------------------
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN])
     fun startScan() {
+
+        if (bluetoothGatt != null) {
+            onLog?.invoke("⚠️ Já conectado — ignorando novo scan.")
+            return
+        }
+
+        if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
+            onLog?.invoke("⚠️ Bluetooth desativado ou não suportado")
+            return
+        }
+
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
             onLog?.invoke("⚠️ Bluetooth desativado ou não suportado")
             return
@@ -63,13 +80,17 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
+    fun isConnected(): Boolean {
+        return bluetoothGatt != null && targetCharacteristic != null
+    }
+
     fun connectToNamedDevice(name: String) {
-        val device = bluetoothAdapter?.bondedDevices?.find { it.name == name }
+        val device = discoveredDevices.values.find { it.name == name }
         if (device != null) {
             onLog?.invoke("🔗 Conectando a $name...")
             connectToDevice(device)
         } else {
-            onLog?.invoke("❌ Dispositivo $name não encontrado entre os pareados.")
+            onLog?.invoke("❌ Dispositivo $name não encontrado entre os descobertos.")
         }
     }
 
@@ -78,14 +99,21 @@ class BluetoothClient(private val context: Context) {
     }
 
     private val scanCallback = object : ScanCallback() {
+
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             result?.let {
                 val device = it.device
                 val name = device.name ?: "Sem nome"
+                val address = device.address ?: return
+
+                // 🚫 Evita duplicados
+                if (discoveredDevices.containsKey(address)) return
+
+                discoveredDevices[address] = device
                 onLog?.invoke("📡 Encontrado: $name (RSSI: ${it.rssi})")
                 onDeviceFound?.invoke(name)
 
-                if (name.contains("IDDAndroid", ignoreCase = true) ||
+                if (name.contains("IDDiOS", ignoreCase = true) ||
                     name.contains("BLE-Proof-Transfer", ignoreCase = true)
                 ) {
                     onLog?.invoke("📱 Conectando automaticamente a $name")
@@ -159,7 +187,16 @@ class BluetoothClient(private val context: Context) {
             )
             descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             gatt.writeDescriptor(descriptor)
+            gatt.requestMtu(185)
         }
+
+        override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                negotiatedMtu = mtu
+                onLog?.invoke("📏 MTU negociada: $mtu")
+            }
+        }
+
 
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
@@ -185,7 +222,14 @@ class BluetoothClient(private val context: Context) {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            onLog?.invoke("📤 Chunk enviado com status=$status")
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                isWriting = false
+                writeNext()
+            } else {
+                onLog?.invoke("❌ onCharacteristicWrite status=$status — reintentando")
+                isWriting = false
+                writeNext()
+            }
         }
     }
 
@@ -194,33 +238,52 @@ class BluetoothClient(private val context: Context) {
     // ----------------------------------------------------------------
     fun sendJSON(json: String) {
         val gatt = bluetoothGatt
-        val characteristic = targetCharacteristic
+        val ch = targetCharacteristic
 
-        if (gatt == null || characteristic == null) {
-            onLog?.invoke("⚠️ Nenhum periférico ou characteristic disponível.")
+        // write com resposta garante ordem/entrega
+        ch?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+
+        val data = json.toByteArray(Charsets.UTF_8)
+        val payload = (negotiatedMtu - 3).coerceAtLeast(20) // ATT header 3 bytes
+        writeQueue.clear()
+
+        // fatia em chunks seguros
+        var i = 0
+        while (i < data.size) {
+            val end = minOf(i + payload, data.size)
+            writeQueue.addLast(data.copyOfRange(i, end))
+            i = end
+        }
+        // EOF
+        writeQueue.addLast("<EOF>".toByteArray(Charsets.UTF_8))
+
+        onLog?.invoke("📤 Enfileirados ${writeQueue.size} writes (payload≈$payload)")
+        if (!isWriting) writeNext()
+    }
+
+    // 🔹 Envia o próximo pedaço quando o anterior concluir
+    private fun writeNext() {
+        val gatt = bluetoothGatt ?: return
+        val ch = targetCharacteristic ?: return
+
+        val next = writeQueue.pollFirst() ?: run {
+            isWriting = false
+            onLog?.invoke("✅ JSON enviado completamente.")
             return
         }
-
-        val data = json.toByteArray()
-        val mtu = 180
-        onLog?.invoke("📤 Enviando JSON (${data.size} bytes)...")
-
-        try {
-            for (i in data.indices step mtu) {
-                val end = minOf(i + mtu, data.size)
-                val chunk = data.copyOfRange(i, end)
-                characteristic.value = chunk
-                gatt.writeCharacteristic(characteristic)
-                onLog?.invoke("➡️ Enviado chunk ${i / mtu + 1}")
-            }
-
-            characteristic.value = "<EOF>".toByteArray()
-            gatt.writeCharacteristic(characteristic)
-            onLog?.invoke("✅ JSON enviado completamente.")
-        } catch (e: Exception) {
-            onLog?.invoke("❌ Erro ao enviar JSON: ${e.localizedMessage}")
+        isWriting = true
+        ch.value = next
+        val ok = gatt.writeCharacteristic(ch)
+        if (!ok) {
+            onLog?.invoke("❌ writeCharacteristic falhou (stack ocupado). Tentando novamente…")
+            // re-enfila e tenta depois; aqui é simples: recoloca no início
+            writeQueue.addFirst(next)
+            isWriting = false
+        } else {
+            onLog?.invoke("➡️ Enviado chunk, restantes: ${writeQueue.size}")
         }
     }
+
 
     fun disconnect() {
         bluetoothGatt?.close()
