@@ -68,8 +68,56 @@
                 android:visibility="gone"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/txtJsonPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="—"
+                android:layout_marginTop="12dp"
+                android:textSize="13sp"
+                android:background="@android:color/darker_gray"
+                android:padding="8dp"
+                android:fontFamily="monospace"
+                android:textColor="@android:color/black" />
+
         </LinearLayout>
 
+        <TextView
+            android:text="Logs de Conexão"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black" />
+
+        <ScrollView
+            android:id="@+id/scrollLogs"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@android:color/darker_gray"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/txtLogs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@android:color/white"
+                android:fontFamily="monospace"
+                android:text="— aguardando logs —" />
+        </ScrollView>
+
+        <Button
+            android:id="@+id/btnCopyLogs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copiar Logs"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="@color/teal_600"
+            android:textColor="@android:color/white" />
         <Button
             android:id="@+id/backButton"
             android:layout_width="wrap_content"

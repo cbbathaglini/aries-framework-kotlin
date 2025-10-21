@@ -30,15 +30,8 @@ class IssueCredentialMessageV2(
         }
 
         const val INDY_CREDENTIAL_ATTACHMENT_ID = "indy"
+        const val ANONCREDS_CREDENTIAL_ATTACHMENT_ID = "anoncreds"
         val type = CredentialsConstants.ISSUE_CREDENTIAL_V2
-    }
-
-    fun getCredentialAttachmentById(id: String): Attachment {
-        val issueAttachment = credentialAttachments.find { it.id == id }
-        check(issueAttachment != null) {
-            "Indy attachment with id $INDY_CREDENTIAL_ATTACHMENT_ID not found in issue message"
-        }
-        return issueAttachment
     }
 
     fun setPleaseAck(on: List<AckValues> = listOf(AckValues.Receipt)) {

@@ -50,6 +50,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofFormatCreateReturn
 import org.hyperledger.ariesframework.proofs.models.ProofFormatProcessOptions
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRecord
 import org.hyperledger.ariesframework.proofs.utils.ProofRequestOperations
 import org.hyperledger.ariesframework.proofs.utils.RequestsEquals
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
@@ -183,9 +184,18 @@ class AnoncredsProofFormatService(
 
     override suspend fun processRequest(options: ProofFormatProcessOptions) {
         val attachment = options.attachment
-        val requestJson: AnonCredsProofRequest =
+        val anonCredsProofRequest: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(attachment.getDataAsJson())
-        DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(requestJson)
+
+        val verifierRecord = VerifierRecord(
+            proofRequest = anonCredsProofRequest,
+            globalThreadId = options.proofRecord.threadId
+        )
+
+        agent.verifierRepository.save(verifierRecord)
+        logger.info("💾 Salvo verifier id=${verifierRecord.id} threadid=${verifierRecord.globalThreadId ?: "null"}")
+
+        DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(anonCredsProofRequest)
     }
 
     override suspend fun acceptRequest(

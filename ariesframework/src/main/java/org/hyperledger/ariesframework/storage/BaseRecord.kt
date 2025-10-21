@@ -1,22 +1,22 @@
 package org.hyperledger.ariesframework.storage
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.Tags
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
-// @Serializable
+@Serializable
 abstract class BaseRecord {
-    @Transient
-    private val logger = LoggerFactory.getLogger(BaseRecord::class.java)
-
     abstract var id: String
     protected abstract var _tags: Tags?
     abstract val createdAt: Instant
     abstract var updatedAt: Instant?
     // var metadata: MutableMap<String, Any> = mutableMapOf()
 
+    @EncodeDefault
     var metadata: MutableMap<String, JsonElement> = mutableMapOf()
 
     abstract fun getTags(): Tags

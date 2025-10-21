@@ -1,12 +1,19 @@
 package org.hyperledger.ariesproject
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesproject.databinding.ItemNotificationBinding
 import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 import java.text.SimpleDateFormat
@@ -28,7 +35,6 @@ class NotificationsAdapter(
                 .format(Date(item.date))
             binding.date.text = dateFormatted
 
-            // 🔹 Cor do título indica se está lido ou não
             val context = binding.root.context
             val colorRes = if (item.isRead)
                 android.R.color.darker_gray
@@ -36,6 +42,13 @@ class NotificationsAdapter(
                 R.color.teal_700
 
             binding.title.setTextColor(context.getColor(colorRes))
+
+            // 🔹 Exibe botões apenas se for ISSUE_CREDENTIAL_V2
+            if (item.type == NotificationType.ISSUE_CREDENTIAL_V2) {
+                binding.actionButtons.visibility = View.VISIBLE
+            } else {
+                binding.actionButtons.visibility = View.GONE
+            }
         }
     }
 
@@ -51,22 +64,22 @@ class NotificationsAdapter(
     override fun getItemCount(): Int = notifications.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(notifications[position])
+        val notification = notifications[position]
+        val context = holder.itemView.context
+        val app = context.applicationContext as WalletApp
+        val handler = app.notificationHandler
 
+        holder.bind(notification)
+
+        // ✅ Marca como lida ao clicar no item (não nos botões)
         holder.itemView.setOnClickListener {
-            val notification = notifications[position]
-            val context = holder.itemView.context
-            val app = context.applicationContext as WalletApp
-            val handler = app.notificationHandler
-
-            // ✅ Marca a notificação como lida
             notification.isRead = true
             handler.saveNotifications()
+            notifyItemChanged(position)
 
-            notifyItemChanged(position) // Atualiza a cor do título
-
-            // 🔄 Atualiza badge
-            val bottomNavigationView = (context as? BaseActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigation)
+            // 🔄 Atualiza badge do sino
+            val bottomNavigationView =
+                (context as? BaseActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigation)
             bottomNavigationView?.let {
                 val badge = it.getOrCreateBadge(R.id.nav_notifications)
                 val unreadCount = handler.notifications.count { n -> !n.isRead }
@@ -77,40 +90,86 @@ class NotificationsAdapter(
                 }
             }
 
-
-
             when (notification.type) {
                 NotificationType.CONNECTION -> {
-                    val context = holder.itemView.context
-                    val app = context.applicationContext as WalletApp
-
                     kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
                         try {
-                            val record = app.agent.connectionRepository.getById(notification.connectionId!!)
+                            val record =
+                                app.agent.connectionRepository.getById(notification.connectionId!!)
                             val wrapper = ConnectionRecordWrapper(record)
 
-                            val intent = Intent(context, HistoricalDetailActivity::class.java).apply {
-                                putExtra(HistoricalDetailFragment.ARG_CONNECTION_ID, notification.connectionId)
-                                putExtra(HistoricalDetailFragment.ARG_CONNECTION_RECORD, wrapper)
-//                                putExtra(HistoricalDetailFragment.ARG_CONNECTION_THREADID, wrapper.threadId)
-//                                putExtra(HistoricalDetailFragment.ARG_CONNECTION_MEDIATORID, wrapper.mediatorId)
-                            }
-
+                            val intent =
+                                Intent(context, HistoricalDetailActivity::class.java).apply {
+                                    putExtra(
+                                        HistoricalDetailFragment.ARG_CONNECTION_ID,
+                                        notification.connectionId
+                                    )
+                                    putExtra(
+                                        HistoricalDetailFragment.ARG_CONNECTION_RECORD,
+                                        wrapper
+                                    )
+                                }
                             context.startActivity(intent)
 
                         } catch (e: Exception) {
-                            android.widget.Toast.makeText(context, "Erro ao abrir conexão: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(
+                                context,
+                                "Erro ao abrir conexão: ${e.localizedMessage}",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
                         }
-
-
                     }
+                }
+
+                NotificationType.ISSUE_CREDENTIAL_V2 -> {
+                    Log.d("NotificationsAdapter", "Notificação de credencial v2 exibida")
+                }
+
+                NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 -> {
+
                 }
 
                 else -> {
                     Log.d("NotificationsAdapter", "Notificação clicada: ${notification.type}")
                 }
-
             }
+        }
+
+        holder.itemView.findViewById<View?>(R.id.btnAccept)?.setOnClickListener {
+                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    try {
+                        val context = holder.itemView.context
+                        val record =
+                            app.agent.credentialsV2.getById(notification.credentialId!!)
+                            getCredentialV2(context= context, credentialExchangeRecord= record)
+                    } catch (e: Exception) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Erro ao aceitar credencial: ${e.localizedMessage}",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+        }
+//                },
+//                negAction = {
+//                    if (context is WalletMainActivity) {
+//                        context.declineCredentialV2(notification.credentialId!!)
+//                    }
+//                }
+//            )
+//        }
+
+        holder.itemView.findViewById<View?>(R.id.btnDecline)?.setOnClickListener {
+            (context as? BaseActivity)?.runOnConfirm(
+                "Recusar credencial?",
+                action = {
+                    if (context is WalletMainActivity) {
+                        context.declineCredentialV2(notification.credentialId!!)
+                    }
+                }
+            )
         }
     }
 
@@ -119,5 +178,50 @@ class NotificationsAdapter(
         notifications.clear()
         notifications.addAll(newList)
         notifyDataSetChanged()
+    }
+
+    private fun getCredentialV2(context: android.content.Context, credentialExchangeRecord: CredentialExchangeRecord) {
+        Log.i("CV2", "HERE")
+
+        val app = context.applicationContext as WalletApp
+        val progress = ProgressDialog(context)
+        progress.setTitle("Carregando...")
+        progress.setCancelable(true)
+        progress.show()
+
+        val job = kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val connectionRecordList = app.agent.connectionRepository.getAll()
+                Log.i("connectionRecordList", connectionRecordList.toString())
+
+                val connectionRecord =
+                    app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
+                Log.i("IDD", connectionRecord.toString())
+
+                app.agent.credentialsV2.acceptOffer(
+                    AcceptCredentialOfferOptionsV2(
+                        credentialExchangeRecord = credentialExchangeRecord,
+                        credentialFormats = credentialExchangeRecord.formats,
+                        autoAcceptCredential = AutoAcceptCredential.Always,
+                    )
+                )
+
+            } catch (e: Exception) {
+                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    Log.e("getCredentialV2", e.localizedMessage ?: "Erro desconhecido")
+                    progress.dismiss()
+                    android.widget.Toast.makeText(context, "Falha ao receber a credencial.", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                progress.dismiss()
+                //android.widget.Toast.makeText(context, "Credencial aceita com sucesso!", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+
+        progress.setOnCancelListener {
+            job.cancel()
+        }
     }
 }

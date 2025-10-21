@@ -1,6 +1,7 @@
 package org.hyperledger.ariesproject
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.*
@@ -9,6 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesproject.bluetooth.BluetoothServer
 
@@ -24,6 +28,10 @@ class ReceivingPresentationActivity : AppCompatActivity() {
     private lateinit var bluetoothServer: BluetoothServer
     private var agent: Agent? = null
 
+    private lateinit var txtJsonPreview: TextView
+
+    private lateinit var txtLogs: TextView
+    private lateinit var scrollLogs: ScrollView
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -42,9 +50,25 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         txtCreatedAt = findViewById(R.id.txtCreatedAt)
         progressBar = findViewById(R.id.progressBar)
         layoutResult = findViewById(R.id.layoutResult)
+        txtJsonPreview = findViewById(R.id.txtJsonPreview)
+        txtLogs = findViewById(R.id.txtLogs)
+        scrollLogs = findViewById(R.id.scrollLogs)
 
         val backButton: Button = findViewById(R.id.backButton)
         backButton.setOnClickListener { finish() }
+
+        val copyButton: Button = findViewById(R.id.btnCopyLogs)
+        copyButton.setOnClickListener {
+            val logs = txtLogs.text.toString()
+            if (logs.isNotBlank()) {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Logs BLE", logs)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, "Logs copiados para a área de transferência ✅", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Nenhum log disponível para copiar.", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         agent = (application as? WalletApp)?.agent
         requestBluetoothPermissions()
@@ -68,9 +92,22 @@ class ReceivingPresentationActivity : AppCompatActivity() {
     private fun startBluetoothServer() {
         bluetoothServer = BluetoothServer(this)
 
+        bluetoothServer.onDeviceConnected = { deviceName ->
+            runOnUiThread {
+                txtDevice.text = "Dispositivo conectado: $deviceName"
+            }
+        }
+
         bluetoothServer.onLog = { log ->
             runOnUiThread {
-                txtBluetoothState.text = log
+                // Mostra o log principal
+                txtBluetoothState.text = "Último evento: $log"
+
+                // Acumula logs no terminal
+                txtLogs.append("\n$log")
+
+                // Auto-scroll para o final
+                scrollLogs.post { scrollLogs.fullScroll(ScrollView.FOCUS_DOWN) }
             }
         }
 
@@ -82,7 +119,28 @@ class ReceivingPresentationActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 try {
-                    print("AQUIIIIIII")
+                    // Tenta formatar JSON com kotlinx.serialization
+                    val jsonFormatter = Json {
+                        prettyPrint = true
+                        prettyPrintIndent = "  "
+                        encodeDefaults = true
+                        ignoreUnknownKeys = true
+                    }
+
+                    val formattedJson = try {
+                        val parsed = jsonFormatter.parseToJsonElement(jsonString)
+                        jsonFormatter.encodeToString(JsonObject.serializer(), parsed.jsonObject)
+                    } catch (e: Exception) {
+                        // Se falhar no parse, mostra cru
+                        jsonString
+                    }
+
+                    runOnUiThread {
+                        txtJsonPreview.text = formattedJson
+                        progressBar.visibility = ProgressBar.GONE
+                        txtStatus.text = "✅ Apresentação recebida e exibida!"
+                    }
+
 //                    val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
 //                    runOnUiThread {
 //                        progressBar.visibility = ProgressBar.GONE
@@ -98,7 +156,7 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                     e.printStackTrace()
                     runOnUiThread {
                         progressBar.visibility = ProgressBar.GONE
-                        txtStatus.text = "❌ Erro na verificação: ${e.message}"
+                        txtStatus.text = "❌ Erro ao processar: ${e.message}"
                     }
                 }
             }

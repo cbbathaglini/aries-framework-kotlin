@@ -52,9 +52,9 @@ class HomeFragment : Fragment() {
                         connectionId= connection?.id
                     )
                     updateNotificationBadgeUI()
-                    (activity as? WalletMainActivity)?.showAlert(
-                        "Conectado com ${connection?.theirLabel ?: "Agente desconhecido"} - ${connection?.id ?: ""}"
-                    )
+//                    (activity as? WalletMainActivity)?.showAlert(
+//                        "Conectado com ${connection?.theirLabel ?: "Agente desconhecido"} - ${connection?.id ?: ""}"
+//                    )
                     binding.invitation.text.clear()
                 } catch (e: Exception) {
                     (activity as? WalletMainActivity)?.showAlert("Falha ao conectar: ${e.localizedMessage}")

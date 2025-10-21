@@ -110,7 +110,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @return The credential record
      *
      */
-    private suspend fun getById(credentialRecordId: String): CredentialExchangeRecord {
+    suspend fun getById(credentialRecordId: String): CredentialExchangeRecord {
         return agent.credentialExchangeRepository.getById(credentialRecordId)
     }
 

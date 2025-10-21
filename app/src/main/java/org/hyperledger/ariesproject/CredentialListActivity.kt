@@ -37,6 +37,7 @@ class CredentialListActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateNotificationBadge()
         clearBottomNavigationSelection()
         setupRecyclerView(binding.credentialList.credentialList)
     }

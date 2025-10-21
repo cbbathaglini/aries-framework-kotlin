@@ -2,34 +2,37 @@ package org.hyperledger.ariesframework.bluetooth
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothProfile
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
+import android.bluetooth.*
+import android.bluetooth.le.*
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.ParcelUuid
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import java.util.*
-import java.util.UUID
 
 @SuppressLint("MissingPermission")
 class BluetoothClient(private val context: Context) {
 
-    private val serviceUUID: UUID = UUID.fromString("00001234-0000-1000-8000-00805f9b34fb")
-    private val characteristicUUID: UUID = UUID.fromString("0000ABCD-0000-1000-8000-00805f9b34fb")
+    private val serviceUUID = UUID.fromString("d14a2b10-9f12-4b2a-b0c1-7b6b2c0a9d99")
+    private val characteristicUUID = UUID.fromString("d14a2b11-9f12-4b2a-b0c1-7b6b2c0a9d99")
 
     private var bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private var bluetoothGatt: BluetoothGatt? = null
     private var targetCharacteristic: BluetoothGattCharacteristic? = null
 
+    private val receivedBuffer = mutableListOf<Byte>()
+
     var onLog: ((String) -> Unit)? = null
     var onConnected: ((String) -> Unit)? = null
+    var onJSONReceived: ((String) -> Unit)? = null
 
+    // 🔹 Callback opcional quando um dispositivo é encontrado
+    var onDeviceFound: ((String) -> Unit)? = null
+
+    // ----------------------------------------------------------------
+    // SCAN
+    // ----------------------------------------------------------------
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN])
     fun startScan() {
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
@@ -44,33 +47,51 @@ class BluetoothClient(private val context: Context) {
             return
         }
 
-        try {
-            onLog?.invoke("🔍 Procurando periféricos BLE...")
-            bluetoothAdapter!!.bluetoothLeScanner.startScan(scanCallback)
-        } catch (e: SecurityException) {
-            onLog?.invoke("❌ Erro ao iniciar scan: ${e.localizedMessage}")
+        onLog?.invoke("🔍 Iniciando scan por periféricos BLE com UUID: $serviceUUID")
+
+        val filter = ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid(serviceUUID))
+            .build()
+
+        val settings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
+
+        bluetoothAdapter?.bluetoothLeScanner?.apply {
+            stopScan(scanCallback)
+            startScan(listOf(filter), settings, scanCallback)
+        }
+    }
+
+    fun connectToNamedDevice(name: String) {
+        val device = bluetoothAdapter?.bondedDevices?.find { it.name == name }
+        if (device != null) {
+            onLog?.invoke("🔗 Conectando a $name...")
+            connectToDevice(device)
+        } else {
+            onLog?.invoke("❌ Dispositivo $name não encontrado entre os pareados.")
         }
     }
 
     fun stopScan() {
-        try {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
-                == PackageManager.PERMISSION_GRANTED
-            ) {
-                bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-            }
-        } catch (e: SecurityException) {
-            onLog?.invoke("⚠️ Falha ao parar scan: ${e.localizedMessage}")
-        }
+        bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
     }
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             result?.let {
                 val device = it.device
-                onLog?.invoke("📡 Encontrado: ${device.name ?: "Sem nome"} (RSSI: ${it.rssi})")
-                stopScan()
-                connectToDevice(device)
+                val name = device.name ?: "Sem nome"
+                onLog?.invoke("📡 Encontrado: $name (RSSI: ${it.rssi})")
+                onDeviceFound?.invoke(name)
+
+                if (name.contains("IDDAndroid", ignoreCase = true) ||
+                    name.contains("BLE-Proof-Transfer", ignoreCase = true)
+                ) {
+                    onLog?.invoke("📱 Conectando automaticamente a $name")
+                    stopScan()
+                    connectToDevice(device)
+                }
             }
         }
 
@@ -79,6 +100,9 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
+    // ----------------------------------------------------------------
+    // CONEXÃO
+    // ----------------------------------------------------------------
     private fun connectToDevice(device: BluetoothDevice) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED
@@ -87,12 +111,8 @@ class BluetoothClient(private val context: Context) {
             return
         }
 
-        try {
-            onLog?.invoke("🔗 Conectando a ${device.name ?: "desconhecido"}...")
-            bluetoothGatt = device.connectGatt(context, false, gattCallback)
-        } catch (e: SecurityException) {
-            onLog?.invoke("❌ Erro ao conectar: ${e.localizedMessage}")
-        }
+        onLog?.invoke("🔗 Conectando a ${device.name ?: "desconhecido"}...")
+        bluetoothGatt = device.connectGatt(context, false, gattCallback)
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
@@ -102,42 +122,82 @@ class BluetoothClient(private val context: Context) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     onLog?.invoke("✅ Conectado ao periférico ${gatt.device.name}")
                     onConnected?.invoke(gatt.device.name ?: "Desconhecido")
-                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
-                        == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        gatt.discoverServices()
-                    }
+                    gatt.discoverServices()
                 }
 
-                BluetoothProfile.STATE_DISCONNECTED ->
+                BluetoothProfile.STATE_DISCONNECTED -> {
                     onLog?.invoke("❌ Desconectado de ${gatt.device.name}")
+                    bluetoothGatt = null
+                }
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                gatt.services.find { it.uuid == serviceUUID }?.let { service ->
-                    onLog?.invoke("🧭 Serviço encontrado: ${service.uuid}")
-                    targetCharacteristic = service.getCharacteristic(characteristicUUID)
-                    onLog?.invoke("✍️ Pronto para enviar JSON.")
-                }
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                onLog?.invoke("❌ Falha ao descobrir serviços (status=$status)")
+                return
             }
+
+            val service = gatt.getService(serviceUUID)
+            if (service == null) {
+                onLog?.invoke("❌ Serviço não encontrado: $serviceUUID")
+                return
+            }
+
+            targetCharacteristic = service.getCharacteristic(characteristicUUID)
+            if (targetCharacteristic == null) {
+                onLog?.invoke("❌ Característica não encontrada: $characteristicUUID")
+                return
+            }
+
+            onLog?.invoke("🧭 Serviço e característica encontrados — pronto para envio e leitura.")
+
+            // 🔹 Habilita notificações para receber dados do iOS
+            gatt.setCharacteristicNotification(targetCharacteristic, true)
+            val descriptor = targetCharacteristic!!.getDescriptor(
+                UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+            )
+            descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
+        ) {
+            val value = characteristic.value ?: return
+            val chunk = String(value)
+
+            if (chunk == "<EOF>") {
+                val full = receivedBuffer.toByteArray()
+                val json = String(full)
+                onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
+                onJSONReceived?.invoke(json)
+                receivedBuffer.clear()
+            } else {
+                receivedBuffer.addAll(value.toList())
+                onLog?.invoke("⬇️ Recebido ${value.size} bytes (${receivedBuffer.size} total)")
+            }
+        }
+
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            onLog?.invoke("📤 Chunk enviado com status=$status")
         }
     }
 
+    // ----------------------------------------------------------------
+    // ENVIO DE JSON (Android → iOS)
+    // ----------------------------------------------------------------
     fun sendJSON(json: String) {
-        val characteristic = targetCharacteristic
         val gatt = bluetoothGatt
+        val characteristic = targetCharacteristic
 
-        if (characteristic == null || gatt == null) {
+        if (gatt == null || characteristic == null) {
             onLog?.invoke("⚠️ Nenhum periférico ou characteristic disponível.")
-            return
-        }
-
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            onLog?.invoke("❌ Sem permissão BLUETOOTH_CONNECT para envio")
             return
         }
 
@@ -157,18 +217,14 @@ class BluetoothClient(private val context: Context) {
             characteristic.value = "<EOF>".toByteArray()
             gatt.writeCharacteristic(characteristic)
             onLog?.invoke("✅ JSON enviado completamente.")
-        } catch (e: SecurityException) {
-            onLog?.invoke("❌ Falha no envio: ${e.localizedMessage}")
+        } catch (e: Exception) {
+            onLog?.invoke("❌ Erro ao enviar JSON: ${e.localizedMessage}")
         }
     }
 
     fun disconnect() {
-        try {
-            bluetoothGatt?.close()
-            bluetoothGatt = null
-            onLog?.invoke("🔌 Conexão BLE encerrada.")
-        } catch (e: Exception) {
-            onLog?.invoke("⚠️ Erro ao encerrar conexão: ${e.localizedMessage}")
-        }
+        bluetoothGatt?.close()
+        bluetoothGatt = null
+        onLog?.invoke("🔌 Conexão BLE encerrada.")
     }
 }

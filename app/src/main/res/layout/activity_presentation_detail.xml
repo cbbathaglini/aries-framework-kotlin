@@ -2,13 +2,15 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- 🔙 Botão de voltar -->
         <Button
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
@@ -17,23 +19,27 @@
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/teal_600"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="16dp" />
 
+        <!-- 🪪 Cabeçalho -->
         <TextView
             android:text="Detalhes da Apresentação"
             android:textSize="22sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp" />
 
+        <!-- 🧾 Informações -->
         <TextView
             android:id="@+id/txtRecordId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ID: —"
             android:textSize="16sp"
-            android:layout_marginBottom="6dp" />
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="4dp" />
 
         <TextView
             android:id="@+id/txtCreatedAt"
@@ -41,11 +47,14 @@
             android:layout_height="wrap_content"
             android:text="Criado em: —"
             android:textSize="14sp"
-            android:layout_marginBottom="10dp" />
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginBottom="16dp" />
 
+        <!-- 🧩 Conteúdo JSON -->
         <TextView
             android:text="Conteúdo JSON"
             android:textStyle="bold"
+            android:textSize="16sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="6dp" />
@@ -53,52 +62,92 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@android:color/darker_gray"
-            android:padding="8dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="8dp">
+
             <TextView
                 android:id="@+id/txtJson"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:background="@android:color/darker_gray"
                 android:text="—"
-                android:textIsSelectable="true"
                 android:textSize="13sp"
+                android:textColor="@android:color/black"
+                android:textIsSelectable="true"
                 android:fontFamily="monospace" />
         </ScrollView>
 
-        <TextView
-            android:id="@+id/txtBluetoothStatus"
-            android:text="Bluetooth: Aguardando..."
+        <Button
+            android:id="@+id/btnCopyJson"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="📋 Copiar conteúdo"
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="@color/teal_700"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white" />
+
+        <!-- 🔍 Lista de dispositivos BLE -->
+        <TextView
+            android:text="Dispositivos disponíveis"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnScanDevices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔍 Buscar dispositivos"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white"
             android:layout_marginBottom="8dp" />
+
+        <ListView
+            android:id="@+id/bluetoothDevicesList"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:dividerHeight="1dp"
+            android:background="@android:color/white"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/txtBluetoothStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth: Aguardando..."
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:id="@+id/btnSendBluetooth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Enviar via Bluetooth 📡"
-            android:layout_marginBottom="16dp" />
+            android:text="📡 Enviar via Bluetooth"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/teal_600"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="20dp" />
 
+        <!-- 🧾 Logs -->
         <TextView
-            android:text="Logs:"
+            android:text="Logs"
             android:textStyle="bold"
+            android:textSize="16sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp" />
 
-        <ScrollView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/logsRecycler"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:background="@android:color/white"
-            android:padding="8dp">
-            <TextView
-                android:id="@+id/logView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:fontFamily="monospace"
-                android:textColor="@android:color/darker_gray" />
-        </ScrollView>
+            android:layout_height="180dp"
+            android:background="@android:color/background_light"
+            android:padding="8dp"
+            android:nestedScrollingEnabled="true" />
     </LinearLayout>
 </ScrollView>

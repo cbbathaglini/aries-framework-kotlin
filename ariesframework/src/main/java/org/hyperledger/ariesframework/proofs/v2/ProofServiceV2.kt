@@ -482,6 +482,7 @@ class ProofServiceV2(val agent: Agent) {
         val message: PresentationMessageV2 = proofFormatCoordinator.acceptRequest(acceptRequestParams)
 
         proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
+        proofRecord.presentationMessage = message
         updateState(proofRecord, ProofState.PresentationSent)
 
         return Pair(message, proofRecord)

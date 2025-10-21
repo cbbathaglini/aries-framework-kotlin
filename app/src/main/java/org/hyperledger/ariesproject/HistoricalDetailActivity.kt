@@ -1,10 +1,10 @@
 package org.hyperledger.ariesproject
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.FrameLayout
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
@@ -25,6 +25,15 @@ class HistoricalDetailActivity : BaseActivity() {
         // Deletar conexão
         binding.deleteConnection.setOnClickListener {
             deleteConnection()
+        }
+
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = "Detalhes da Conexão"
+
+        toolbar.setNavigationOnClickListener {
+            finish()
         }
 
         val connectionRecordParcelable =
@@ -76,4 +85,9 @@ class HistoricalDetailActivity : BaseActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+
+    override fun onResume() {
+        super.onResume()
+        updateNotificationBadge()
+    }
 }

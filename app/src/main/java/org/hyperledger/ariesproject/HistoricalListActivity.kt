@@ -7,24 +7,27 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalListBinding
 import org.hyperledger.ariesproject.databinding.HistoricalListContentBinding
 import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 
-class HistoricalListActivity : AppCompatActivity() {
+class HistoricalListActivity : BaseActivity() {
     private lateinit var binding: ActivityHistoricalListBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityHistoricalListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
+
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
 
@@ -33,6 +36,7 @@ class HistoricalListActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateNotificationBadge()
         setupRecyclerView(binding.historicalList.historicalList)
     }
 

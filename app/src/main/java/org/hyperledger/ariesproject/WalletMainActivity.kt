@@ -114,26 +114,17 @@ class WalletMainActivity : BaseActivity() {
                         credentialId = it.record.id
                     )
 
-                    // 🔔 Atualiza badge com base no handler real
                     updateNotificationBadge()
 
-                    Log.e("[IDD] state", it.record.toString())
-                    runOnConfirm("(2.0) Aceitar credencial?", action = {
-                        getCredentialV2(it.record)
-                    }, negAction = {
-                        declineCredentialV2(it.record.id)
-                    })
-
                 } else if (it.record.state == CredentialState.Done) {
+                    showAlert("credential done")
                     handler.addNotification(
-                        title = "Credencial recebida",
+                        title = "Credencial 2.0 recebida",
                         message = "A credencial ${it.record.id} foi emitida com sucesso.",
-                        type = NotificationType.ISSUE_CREDENTIAL_V2
+                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2
                     )
 
                     updateNotificationBadge()
-                    credentialProgress?.dismiss()
-                    showAlert("(2.0) Credencial recebida")
                 }
             }
         }
@@ -159,23 +150,23 @@ class WalletMainActivity : BaseActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
 
                 Log.i("proofrecord>>>>>>:", "itrecordid: " + it.record)
-                if (it.record.state == ProofState.RequestReceived) { //1
-                    runOnConfirm("Accept proof request?", action = {
-
-                        Log.i("proofrecord:", "itrecordid: " + it.record)
-
-                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
-                    }, negAction = {
-                        declineProofV2(it.record.id)
-                    })
-                } else if (it.record.state == ProofState.Done) {//3
-                    proofProgress?.dismiss()
-                    showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived) {//2
-                    receivePresentationProof(app, it)
-                }else{
-                    showAlert("message: ${it.record.state}")
-                }
+//                if (it.record.state == ProofState.RequestReceived) { //1
+//                    runOnConfirm("Accept proof request?", action = {
+//
+//                        Log.i("proofrecord:", "itrecordid: " + it.record)
+//
+//                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
+//                    }, negAction = {
+//                        declineProofV2(it.record.id)
+//                    })
+//                } else if (it.record.state == ProofState.Done) {//3
+//                    proofProgress?.dismiss()
+//                    showAlert("Proof done")
+//                } else if (it.record.state == ProofState.PresentationReceived) {//2
+//                    receivePresentationProof(app, it)
+//                }else{
+//                    showAlert("message: ${it.record.state}")
+//                }
             }
         }
 
@@ -332,17 +323,17 @@ class WalletMainActivity : BaseActivity() {
             .show()
     }
 
-    private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
-        val builder = AlertDialog.Builder(this@WalletMainActivity)
-        builder.setMessage(message)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                action()
-            }
-            .setNegativeButton(R.string.cancel) { _, _ ->
-                negAction()
-            }
-        builder.create().show()
-    }
+//    private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
+//        val builder = AlertDialog.Builder(this@WalletMainActivity)
+//        builder.setMessage(message)
+//            .setPositiveButton(R.string.ok) { _, _ ->
+//                action()
+//            }
+//            .setNegativeButton(R.string.cancel) { _, _ ->
+//                negAction()
+//            }
+//        builder.create().show()
+//    }
 
     private fun runOnConfirm(message: String, action: () -> Unit) {
         runOnConfirm(message, action) {}
@@ -398,7 +389,7 @@ class WalletMainActivity : BaseActivity() {
 
 
     /* v2.0 */
-    private fun declineCredentialV2(id: String) {
+    fun declineCredentialV2(id: String) {
         val app = application as WalletApp
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -478,45 +469,45 @@ class WalletMainActivity : BaseActivity() {
         credentialProgress = progress
     }
 
-    private fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
-        Log.i("CV2", "HERE")
-        val app = application as WalletApp
-        val progress = ProgressDialog(this)
-        progress.setTitle("Loading")
-        progress.setCancelable(true)
-
-        val job = lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val connectionRecordList = app.agent.connectionRepository.getAll()
-                Log.i("connectionRecordList", connectionRecordList.toString())
-
-                val connectionRecord =
-                    app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
-                Log.i("IDD", connectionRecord.toString())
-                app.agent.credentialsV2.acceptOffer(
-                    AcceptCredentialOfferOptionsV2(
-                        credentialExchangeRecord = credentialExchangeRecord,
-                        credentialFormats = credentialExchangeRecord.formats,
-                        autoAcceptCredential = AutoAcceptCredential.Always,
-                    )
-                )
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    progress.dismiss()
-                    showAlert("Failed to receive a credential.")
-                }
-            }
-        }
-
-        progress.setOnCancelListener {
-            job.cancel()
-        }
-        progress.show()
-
-
-        credentialProgress = progress
-    }
+//    public fun getCredentialV2(credentialExchangeRecord: CredentialExchangeRecord) {
+//        Log.i("CV2", "HERE")
+//        val app = application as WalletApp
+//        val progress = ProgressDialog(this)
+//        progress.setTitle("Loading")
+//        progress.setCancelable(true)
+//
+//        val job = lifecycleScope.launch(Dispatchers.IO) {
+//            try {
+//                val connectionRecordList = app.agent.connectionRepository.getAll()
+//                Log.i("connectionRecordList", connectionRecordList.toString())
+//
+//                val connectionRecord =
+//                    app.agent.connectionRepository.getById(credentialExchangeRecord.connectionId!!)
+//                Log.i("IDD", connectionRecord.toString())
+//                app.agent.credentialsV2.acceptOffer(
+//                    AcceptCredentialOfferOptionsV2(
+//                        credentialExchangeRecord = credentialExchangeRecord,
+//                        credentialFormats = credentialExchangeRecord.formats,
+//                        autoAcceptCredential = AutoAcceptCredential.Always,
+//                    )
+//                )
+//            } catch (e: Exception) {
+//                lifecycleScope.launch(Dispatchers.Main) {
+//                    Log.d("demo", e.localizedMessage)
+//                    progress.dismiss()
+//                    showAlert("Failed to receive a credential.")
+//                }
+//            }
+//        }
+//
+//        progress.setOnCancelListener {
+//            job.cancel()
+//        }
+//        progress.show()
+//
+//
+//        credentialProgress = progress
+//    }
 
     private fun sendProof( id: String, version: String) {
 
@@ -580,7 +571,7 @@ class WalletMainActivity : BaseActivity() {
                         type = NotificationType.CONNECTION
                     )
 
-                    showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
+                    //showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
 
                 } catch (e: Exception) {
                     Log.e("demo", "Erro ao processar QRCode: ${e.localizedMessage}")

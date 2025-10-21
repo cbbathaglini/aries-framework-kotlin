@@ -1,11 +1,20 @@
 package org.hyperledger.ariesproject.notifications
 
+import android.app.ProgressDialog
 import android.content.Context
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesproject.NotificationItem
 import org.hyperledger.ariesproject.NotificationType
+import org.hyperledger.ariesproject.WalletApp
 
 class NotificationHandler private constructor(private val context: Context) {
 
@@ -118,6 +127,4 @@ class NotificationHandler private constructor(private val context: Context) {
             android.util.Log.e("NOTIFICATION_HANDLER", "❌ Erro ao carregar notificações: ${e.message}")
         }
     }
-
-
 }

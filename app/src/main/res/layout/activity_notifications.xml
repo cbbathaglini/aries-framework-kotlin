@@ -45,20 +45,18 @@
                 app:strokeColor="@color/teal_700"
                 android:layout_marginEnd="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/clearAll"
+                style="@style/Widget.App.Button.IconOnly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Limpar todas"
-                android:drawableStart="@drawable/ic_delete"
-                android:drawablePadding="8dp"
+                app:icon="@drawable/ic_delete"
+                app:iconTint="@android:color/white"
                 android:backgroundTint="@color/red"
-                android:textColor="@android:color/white"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp" />
+                android:contentDescription="Clear all"
+                />
         </LinearLayout>
 
-        <!-- Lista de notificações -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
@@ -67,7 +65,6 @@
             android:paddingTop="8dp"
             tools:listitem="@layout/item_notification" />
 
-        <!-- Texto vazio -->
         <TextView
             android:id="@+id/emptyView"
             android:layout_width="match_parent"

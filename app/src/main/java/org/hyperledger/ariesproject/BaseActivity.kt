@@ -96,4 +96,16 @@ open class BaseActivity : AppCompatActivity() {
             android.util.Log.w("BADGE", "Erro ao atualizar badge: ${e.message}")
         }
     }
+
+    fun runOnConfirm(
+        message: String,
+        action: () -> Unit,
+        negAction: (() -> Unit)? = null
+    ) {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setMessage(message)
+            .setPositiveButton(android.R.string.ok) { _, _ -> action() }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> negAction?.invoke() }
+            .show()
+    }
 }

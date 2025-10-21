@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothGattService
@@ -24,8 +25,8 @@ import java.util.UUID
 @SuppressLint("MissingPermission")
 class BluetoothServer(private val context: Context) {
 
-    private val serviceUUID: UUID = UUID.fromString("00001234-0000-1000-8000-00805f9b34fb")
-    private val characteristicUUID: UUID = UUID.fromString("0000ABCD-0000-1000-8000-00805f9b34fb")
+    private val serviceUUID = UUID.fromString("d14a2b10-9f12-4b2a-b0c1-7b6b2c0a9d99")
+    private val characteristicUUID = UUID.fromString("d14a2b11-9f12-4b2a-b0c1-7b6b2c0a9d99")
 
     private var bluetoothManager: BluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -37,9 +38,79 @@ class BluetoothServer(private val context: Context) {
 
     var onLog: ((String) -> Unit)? = null
     var onJSONReceived: ((String) -> Unit)? = null
+    var onDeviceConnected: ((String) -> Unit)? = null
 
+//    fun startServer() {
+//        onLog?.invoke("🚀 startServer() iniciado — criando GATT server...")
+//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+//            != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            onLog?.invoke("⚠️ Permissão BLUETOOTH_CONNECT não concedida.")
+//            return
+//        }
+//
+//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE)
+//            != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            onLog?.invoke("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida.")
+//            return
+//        }
+//
+//        try {
+//            bluetoothAdapter.name = "IDDAndroid"
+//            gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
+//
+//            // Cria e adiciona serviço ANTES de iniciar advertising
+//            transferCharacteristic = BluetoothGattCharacteristic(
+//                characteristicUUID,
+//                BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+//                BluetoothGattCharacteristic.PERMISSION_WRITE
+//            )
+//
+//            val service = BluetoothGattService(serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+//            service.addCharacteristic(transferCharacteristic)
+//            gattServer?.addService(service)
+//
+//        } catch (e: Exception) {
+//            onLog?.invoke("❌ Erro ao inicializar servidor: ${e.localizedMessage}")
+//        }
+//
+//        transferCharacteristic = BluetoothGattCharacteristic(
+//            characteristicUUID,
+//            BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+//            BluetoothGattCharacteristic.PERMISSION_WRITE,
+//        )
+//
+//        val service = BluetoothGattService(serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+//        service.addCharacteristic(transferCharacteristic)
+//        onLog?.invoke("🧱 Serviço criado: ${service.uuid}")
+//        onLog?.invoke("🔹 Característica criada: ${transferCharacteristic?.uuid}")
+//        val added = gattServer?.addService(service)
+//        onLog?.invoke("📦 addService retornou: $added")
+//
+//        val advertiser = bluetoothAdapter.bluetoothLeAdvertiser
+//        val settings = AdvertiseSettings.Builder()
+//            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+//            .setConnectable(true)
+//            .build()
+//
+//        val data = AdvertiseData.Builder()
+//            .addServiceUuid(ParcelUuid(serviceUUID))
+//            .setIncludeDeviceName(true)
+//            .build()
+//
+//        try {
+//            advertiser.startAdvertising(settings, data, advertiseCallback)
+//            onLog?.invoke("📡 Anunciando serviço BLE-Proof-Transfer")
+//        } catch (e: SecurityException) {
+//            onLog?.invoke("❌ Erro ao anunciar BLE: ${e.localizedMessage}")
+//        }
+//    }
+
+    @SuppressLint("MissingPermission")
     fun startServer() {
-        // ✅ Verifica permissões Bluetooth para Android 12+
+        onLog?.invoke("🚀 startServer() iniciado — criando GATT server...")
+
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -55,38 +126,76 @@ class BluetoothServer(private val context: Context) {
         }
 
         try {
+            bluetoothAdapter.name = "IDDAndroid"
             gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
-        } catch (e: SecurityException) {
-            onLog?.invoke("❌ Erro ao abrir GATT Server: ${e.localizedMessage}")
+
+            transferCharacteristic = BluetoothGattCharacteristic(
+                characteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                        BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_WRITE or
+                        BluetoothGattCharacteristic.PERMISSION_READ
+            )
+            onLog?.invoke("🔍 Característica propriedades: ${transferCharacteristic?.properties}")
+
+            val descriptor = BluetoothGattDescriptor(
+                UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
+                BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+            )
+            transferCharacteristic?.addDescriptor(descriptor)
+
+            val service = BluetoothGattService(serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+            service.addCharacteristic(transferCharacteristic)
+            val added = gattServer?.addService(service)
+
+            onLog?.invoke("🧱 Serviço criado: ${service.uuid}")
+            onLog?.invoke("🔹 Característica criada: ${transferCharacteristic?.uuid}")
+            onLog?.invoke("📦 addService retornou: $added")
+
+        } catch (e: Exception) {
+            onLog?.invoke("❌ Erro ao inicializar servidor: ${e.localizedMessage}")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startAdvertising() {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            onLog?.invoke("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida.")
             return
         }
 
-        transferCharacteristic = BluetoothGattCharacteristic(
-            characteristicUUID,
-            BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-            BluetoothGattCharacteristic.PERMISSION_WRITE,
-        )
-
-        val service = BluetoothGattService(serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
-        service.addCharacteristic(transferCharacteristic)
-        gattServer?.addService(service)
-
         val advertiser = bluetoothAdapter.bluetoothLeAdvertiser
+        if (advertiser == null) {
+            onLog?.invoke("❌ Este dispositivo não suporta BLE advertising.")
+            return
+        }
+
+        // Configurações do advertising
         val settings = AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             .setConnectable(true)
             .build()
 
+        // Pacote principal — anuncia apenas o UUID (menor que 31 bytes)
         val data = AdvertiseData.Builder()
             .addServiceUuid(ParcelUuid(serviceUUID))
+            .setIncludeDeviceName(false)
+            .build()
+
+        // Pacote de resposta com o nome do dispositivo
+        val scanResponse = AdvertiseData.Builder()
             .setIncludeDeviceName(true)
             .build()
 
         try {
-            advertiser.startAdvertising(settings, data, advertiseCallback)
-            onLog?.invoke("📡 Anunciando serviço BLE-Proof-Transfer")
+            advertiser.startAdvertising(settings, data, scanResponse, advertiseCallback)
+            onLog?.invoke("📡 Iniciando advertising BLE (UUID + nome via scanResponse)...")
         } catch (e: SecurityException) {
-            onLog?.invoke("❌ Erro ao anunciar BLE: ${e.localizedMessage}")
+            onLog?.invoke("❌ Erro ao iniciar advertising: ${e.localizedMessage}")
         }
     }
 
@@ -102,10 +211,55 @@ class BluetoothServer(private val context: Context) {
 
     private val gattServerCallback = object : BluetoothGattServerCallback() {
 
+        override fun onServiceAdded(status: Int, service: BluetoothGattService) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                onLog?.invoke("🧩 Serviço adicionado, iniciando advertising...")
+                startAdvertising()
+            } else {
+                onLog?.invoke("❌ Falha ao adicionar serviço: status=$status")
+            }
+        }
+
+        override fun onNotificationSent(device: BluetoothDevice?, status: Int) {
+            onLog?.invoke("📤 Notificação enviada para ${device?.name} (status=$status)")
+        }
+
+        override fun onMtuChanged(device: BluetoothDevice?, mtu: Int) {
+            onLog?.invoke("📏 MTU alterado: $mtu")
+        }
+        override fun onDescriptorWriteRequest(
+            device: BluetoothDevice,
+            requestId: Int,
+            descriptor: android.bluetooth.BluetoothGattDescriptor,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray
+        ) {
+            onLog?.invoke("✏️ onDescriptorWriteRequest: valor=${value.contentToString()}")
+            if (responseNeeded) {
+                gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
+                onLog?.invoke("✅ CCCD configurado pelo cliente (${device.name})")
+            }
+        }
+
+        override fun onExecuteWrite(device: BluetoothDevice?, requestId: Int, execute: Boolean) {
+            onLog?.invoke("💾 onExecuteWrite executado: $execute")
+        }
+
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
+            onLog?.invoke("📶 Mudança de estado: status=$status, newState=$newState (${device.name})")
             when (newState) {
-                BluetoothProfile.STATE_CONNECTED -> onLog?.invoke("✅ Cliente conectado: ${device.name}")
-                BluetoothProfile.STATE_DISCONNECTED -> onLog?.invoke("❌ Cliente desconectado: ${device.name}")
+                BluetoothProfile.STATE_CONNECTED -> {
+                    val name = device.name ?: "Dispositivo BLE (sem nome)"
+                    onLog?.invoke("✅ Cliente conectado: $name")
+                    onDeviceConnected?.invoke(name)
+                }
+                BluetoothProfile.STATE_DISCONNECTED -> {
+
+                    val name = device.name ?: "Desconhecido"
+                    onLog?.invoke("❌ Cliente desconectado: $name")
+                }
             }
         }
 
@@ -118,6 +272,7 @@ class BluetoothServer(private val context: Context) {
             offset: Int,
             value: ByteArray,
         ) {
+            onLog?.invoke("✉️ onCharacteristicWriteRequest chamado! valor=${value.size} bytes")
             val chunk = String(value)
             if (chunk == "<EOF>") {
                 val fullData = receivedBuffer.toByteArray()
@@ -130,9 +285,10 @@ class BluetoothServer(private val context: Context) {
                 onLog?.invoke("⬇️ Recebido ${value.size} bytes (${receivedBuffer.size} total)")
             }
 
-            if (responseNeeded) {
-                gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
-            }
+//            if (responseNeeded) {
+//                gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
+//            }
+            gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
     }
 }
