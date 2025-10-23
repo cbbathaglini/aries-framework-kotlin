@@ -1,0 +1,58 @@
+{
+  "networks": [
+    {
+      "networkName": "serpro",
+      "chainId": 1337,
+      "nodeAddress": "http://10.139.76.166:8000",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000018888"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000003333"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0000000000000000000000000000000000005555"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0x0000000000000000000000000000000000004444"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0x0000000000000000000000000000000000002222"
+        }
+      }
+    },
+    {
+      "networkName": "localhost",
+      "chainId": 1337,
+      "nodeAddress": "http://localhost:8545",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000018888"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000003333"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0000000000000000000000000000000000005555"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0x0000000000000000000000000000000000004444"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0x0000000000000000000000000000000000002222"
+        }
+      }
+    }
+  ]
+}

@@ -18,9 +18,8 @@ enum class MediatorPickupStrategy {
 
 @Serializable
 data class BesuLedgerConfig(
-    val chainId: ULong,
-    val nodeAddress: String,
-    val network: String? = null,
+    val configFile: String,
+    val multiledger: Boolean,
 )
 
 /**
