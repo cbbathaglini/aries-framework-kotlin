@@ -159,23 +159,9 @@ class NotificationsAdapter(
                         val record = app.agent.credentialsV2.getById(notification.credentialId!!)
                         getCredentialV2(context, record)
 
-//                        handler.addNotification(
-//                            title = "Credencial aceita",
-//                            message = "A credencial foi aceita com sucesso.",
-//                            type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
-//                            connectionId = notification.connectionId,
-//                            credentialId = notification.credentialId
-//                        )
                     } else if (notification.type == NotificationType.PROOF_REQUEST_V2) {
                         sendProof(context, notification.proofRecordId!!, "v2")
 
-                        handler.addNotification(
-                            title = "Prova enviada",
-                            message = "A prova foi enviada com sucesso.",
-                            type = NotificationType.PRESENTATION_PROOF_V2,
-                            connectionId = notification.connectionId,
-                            proofRecordId = notification.proofRecordId
-                        )
                     }
 
                     notification.isRead = true
@@ -317,6 +303,11 @@ class NotificationsAdapter(
             val job = kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
                     app.agent.proofCommandV2.acceptRequest(id)
+                    kotlinx.coroutines.GlobalScope.launch(Dispatchers.Main) {
+                        progress.dismiss()
+                        android.widget.Toast.makeText(context,  "Proof sent successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+
                 } catch (e: Exception) {
                     kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
                         Log.i("demo proof", e.localizedMessage)
@@ -329,6 +320,7 @@ class NotificationsAdapter(
 
             progress.setOnCancelListener {
                 job.cancel()
+                progress.dismiss()
             }
             progress.show()
 

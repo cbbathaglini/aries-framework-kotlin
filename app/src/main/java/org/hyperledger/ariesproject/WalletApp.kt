@@ -19,6 +19,7 @@ import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 import java.io.File
+import java.util.Date
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
 const val genesisPath = "von.txn"
@@ -143,7 +144,7 @@ class WalletApp : Application() {
             if (it.record.state == CredentialState.OfferReceived) {
                 handler.addNotification(
                     title = "Nova oferta de credencial (2.0)",
-                    message = "ConnectionID: ${it.record.id}",
+                    message = "Credential ID: ${it.record.id}",
                     type = NotificationType.ISSUE_CREDENTIAL_V2,
                     credentialId = it.record.id
                 )
@@ -151,7 +152,7 @@ class WalletApp : Application() {
             } else if (it.record.state == CredentialState.Done) {
                 handler.addNotification(
                     title = "Credencial 2.0 recebida",
-                    message = "A credencial ${it.record.id} foi emitida com sucesso.",
+                    message = "Credential ID: ${it.record.id}",
                     type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
                     credentialId = it.record.id
                 )
@@ -162,8 +163,8 @@ class WalletApp : Application() {
         agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
             if (it.record.state == ProofState.RequestReceived) {
                 handler.addNotification(
-                    title = "Nova solicitação de prova (2.0)",
-                    message = "ConnectionID: ${it.record.id}",
+                    title = "New proof request 2.0",
+                    message = "Proof ID: ${it.record.id}",
                     type = NotificationType.PROOF_REQUEST_V2,
                     proofRecordId = it.record.id
                 )
@@ -171,14 +172,14 @@ class WalletApp : Application() {
             } else if (it.record.state == ProofState.PresentationSent) {
                 handler.addNotification(
                     title = "Proof sent",
-                    message = "Proof ID ${it.record.id} was sent",
+                    message = "Proof ID: ${it.record.id}",
                     type = NotificationType.OTHER
                 )
                 notifyBadgeUpdate()
             }else if (it.record.state == ProofState.Done) {
                 handler.addNotification(
-                    title = "Prova concluída",
-                    message = "Prova ${it.record.id} foi apresentada com sucesso.",
+                    title = "Proof done",
+                    message = "Proof ID: ${it.record.id}",
                     type = NotificationType.PRESENTATION_PROOF_V2
                 )
                 notifyBadgeUpdate()

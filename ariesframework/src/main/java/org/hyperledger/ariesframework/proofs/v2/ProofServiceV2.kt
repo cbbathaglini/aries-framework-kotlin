@@ -964,7 +964,7 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun updateState(proofRecord: ProofExchangeRecord, newState: ProofState) {
         proofRecord.state = newState
         agent.proofRepository.update(proofRecord)
-        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
+        agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
     }
 
     /**
