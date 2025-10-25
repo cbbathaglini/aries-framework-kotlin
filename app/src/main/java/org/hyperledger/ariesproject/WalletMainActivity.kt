@@ -3,7 +3,10 @@ package org.hyperledger.ariesproject
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -80,133 +83,149 @@ class WalletMainActivity : BaseActivity() {
 
     }
 
-    private fun subscribeEvents() {
-        val app = application as WalletApp
-        app.agent.eventBus.subscribe<AgentEvents.CredentialEvent> {
-            lifecycleScope.launch(Dispatchers.Main) {
-
-                if (it.record.state == CredentialState.OfferReceived) {
-                    runOnConfirm("Accept credential?", action = {
-                        getCredential(it.record.id)
-
-                    }, negAction = {
-                        declineCredential(it.record.id)
-                    })
-                } else if (it.record.state == CredentialState.Done) {
-                    credentialProgress?.dismiss()
-                    showAlert("Credential received")
-
-                }
-            }
-        }
-
-        /* CredentialEvent for version 2.0 */
-        app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                val handler = (application as WalletApp).notificationHandler
-
-                if (it.record.state == CredentialState.OfferReceived) {
-                    // 🟢 Adiciona notificação antes de atualizar o badge
-                    handler.addNotification(
-                        title = "Nova oferta de credencial (2.0)",
-                        message = "ConnectionID: ${it.record.id}",
-                        type = NotificationType.ISSUE_CREDENTIAL_V2,
-                        credentialId = it.record.id
-                    )
-
-                    updateNotificationBadge()
-
-                } else if (it.record.state == CredentialState.Done) {
-                    showAlert("credential done")
-                    handler.addNotification(
-                        title = "Credencial 2.0 recebida",
-                        message = "A credencial ${it.record.id} foi emitida com sucesso.",
-                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2
-                    )
-
-                    updateNotificationBadge()
-                }
-            }
-        }
-
-        app.agent.eventBus.subscribe<AgentEvents.ProofEvent> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                if (it.record.state == ProofState.RequestReceived) {
-                    runOnConfirm("Accept proof request?", action = {
-                        sendProof( it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
-                    }, negAction = {
-                        declineProof(it.record.id)
-                    })
-                } else if (it.record.state == ProofState.Done) {
-                    proofProgress?.dismiss()
-                    showAlert("Proof done")
-                } else if (it.record.state == ProofState.PresentationReceived) {
-                    receivePresentationProof(app, it)
-                }
-            }
-        }
-
-        app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
-            lifecycleScope.launch(Dispatchers.Main) {
-
-                Log.i("proofrecord>>>>>>:", "itrecordid: " + it.record)
-//                if (it.record.state == ProofState.RequestReceived) { //1
-//                    runOnConfirm("Accept proof request?", action = {
+//    private fun subscribeEvents() {
+//        val app = application as WalletApp
+//        app.agent.eventBus.subscribe<AgentEvents.CredentialEvent> {
+//            lifecycleScope.launch(Dispatchers.Main) {
 //
-//                        Log.i("proofrecord:", "itrecordid: " + it.record)
+//                if (it.record.state == CredentialState.OfferReceived) {
+//                    runOnConfirm("Accept credential?", action = {
+//                        getCredential(it.record.id)
 //
-//                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
 //                    }, negAction = {
-//                        declineProofV2(it.record.id)
+//                        declineCredential(it.record.id)
 //                    })
+//                } else if (it.record.state == CredentialState.Done) {
+//                    credentialProgress?.dismiss()
+//                    showAlert("Credential received")
+//
+//                }
+//            }
+//        }
+//
+//        /* CredentialEvent for version 2.0 */
+//        app.agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                val handler = (application as WalletApp).notificationHandler
+//
+//                if (it.record.state == CredentialState.OfferReceived) {
+//                    // 🟢 Adiciona notificação antes de atualizar o badge
+//                    handler.addNotification(
+//                        title = "Nova oferta de credencial (2.0)",
+//                        message = "ConnectionID: ${it.record.id}",
+//                        type = NotificationType.ISSUE_CREDENTIAL_V2,
+//                        credentialId = it.record.id
+//                    )
+//
+//                    updateNotificationBadge()
+//
+//                } else if (it.record.state == CredentialState.Done) {
+//                    showAlert("credential done")
+//                    handler.addNotification(
+//                        title = "Credencial 2.0 recebida",
+//                        message = "A credencial ${it.record.id} foi emitida com sucesso.",
+//                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2
+//                    )
+//
+//                    updateNotificationBadge()
+//                }
+//            }
+//        }
+//
+////        app.agent.eventBus.subscribe<AgentEvents.ProofEvent> {
+////            lifecycleScope.launch(Dispatchers.Main) {
+////                if (it.record.state == ProofState.RequestReceived) {
+////                    runOnConfirm("Accept proof request?", action = {
+////                        sendProof( it.record.id, ProofConstants.PROTOCOL_VERSION_V1)
+////                    }, negAction = {
+////                        declineProof(it.record.id)
+////                    })
+////                } else if (it.record.state == ProofState.Done) {
+////                    proofProgress?.dismiss()
+////                    showAlert("Proof done")
+////                } else if (it.record.state == ProofState.PresentationReceived) {
+////                    receivePresentationProof(app, it)
+////                }
+////            }
+////        }
+//
+//        app.agent.eventBus.subscribe<AgentEvents.ProofEventV2> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                val handler = (application as WalletApp).notificationHandler
+//                Log.i("proofrecord>>>>>>:", "itrecordid: " + it.record)
+//                if (it.record.state == ProofState.RequestReceived) { //1
+//                    handler.addNotification(
+//                        title = "Nova solicitação de prova (2.0)",
+//                        message = "ConnectionID: ${it.record.id}",
+//                        type = NotificationType.PROOF_REQUEST_V2,
+//                        proofRecordId = it.record.id
+//                    )
+//
+//                    updateNotificationBadge()
+//
+////                    runOnConfirm("Accept proof request?", action = {
+////
+////                        Log.i("proofrecord:", "itrecordid: " + it.record)
+////
+////                        sendProof(it.record.id, ProofConstants.PROTOCOL_VERSION_V2)
+////                    }, negAction = {
+////                        declineProofV2(it.record.id)
+////                    })
 //                } else if (it.record.state == ProofState.Done) {//3
 //                    proofProgress?.dismiss()
 //                    showAlert("Proof done")
 //                } else if (it.record.state == ProofState.PresentationReceived) {//2
 //                    receivePresentationProof(app, it)
+//                }else if (it.record.state == ProofState.PresentationSent) { //3
+//                    handler.addNotification(
+//                        title = "Apresentação enviada",
+//                        message = "Proof id: ${it.record.id}",
+//                        type = NotificationType.OTHER,
+//                        proofRecordId = it.record.id
+//                    )
 //                }else{
 //                    showAlert("message: ${it.record.state}")
 //                }
-            }
-        }
-
-        //show an alert on revocation of credential - revocation notification - 1.0
-        app.agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEvent> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                showAlert("Credential revoked (1.0): ${it.record.id}")
-            }
-        }
-
-        //show an alert on revocation of credential - revocation notification - 2.0
-        app.agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                showAlert("Credential revoked (2.0): ${it.record.id}")
-            }
-        }
-
-        // Show an alert on basic message, this is useful for debugging.
-        app.agent.eventBus.subscribe<AgentEvents.BasicMessageEvent> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                showAlert("Basic Message: ${it.record}")
-            }
-        }
-
-        // Show an alert on credential problem report
-        app.agent.eventBus.subscribe<AgentEvents.ProblemReportEvent> {
-            lifecycleScope.launch(Dispatchers.Main) {
-                // Check if message type is a CredentialProblemReport
-                if (it.message is CredentialProblemReportMessage) {
-                    showAlert("Issuer reported a problem while issuing the credential - ${it.message.description.en}")
-                }
-                if (it.message is PresentationProblemReportMessage) {
-                    showAlert("Verifier reported a problem while verifying the presentation - ${it.message.description.en}")
-                }
-                if (it.message is MediationProblemReportMessage) {
-                    showAlert("Mediator reported a problem - ${it.message.description.en}")
-                }
-            }
-        }
-    }
+//            }
+//        }
+//
+//        //show an alert on revocation of credential - revocation notification - 1.0
+//        app.agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEvent> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                showAlert("Credential revoked (1.0): ${it.record.id}")
+//            }
+//        }
+//
+//        //show an alert on revocation of credential - revocation notification - 2.0
+//        app.agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                showAlert("Credential revoked (2.0): ${it.record.id}")
+//            }
+//        }
+//
+//        // Show an alert on basic message, this is useful for debugging.
+//        app.agent.eventBus.subscribe<AgentEvents.BasicMessageEvent> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                showAlert("Basic Message: ${it.record}")
+//            }
+//        }
+//
+//        // Show an alert on credential problem report
+//        app.agent.eventBus.subscribe<AgentEvents.ProblemReportEvent> {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                // Check if message type is a CredentialProblemReport
+//                if (it.message is CredentialProblemReportMessage) {
+//                    showAlert("Issuer reported a problem while issuing the credential - ${it.message.description.en}")
+//                }
+//                if (it.message is PresentationProblemReportMessage) {
+//                    showAlert("Verifier reported a problem while verifying the presentation - ${it.message.description.en}")
+//                }
+//                if (it.message is MediationProblemReportMessage) {
+//                    showAlert("Mediator reported a problem - ${it.message.description.en}")
+//                }
+//            }
+//        }
+//    }
 
     private suspend fun receivePresentationProof(
         app: WalletApp,
@@ -323,6 +342,26 @@ class WalletMainActivity : BaseActivity() {
             .show()
     }
 
+
+    private val badgeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "org.hyperledger.ariesproject.UPDATE_BADGE") {
+                Log.d(TAG, "🔔 Atualizando badge via broadcast")
+                updateNotificationBadge()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(badgeReceiver, IntentFilter("org.hyperledger.ariesproject.UPDATE_BADGE"))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(badgeReceiver)
+    }
+
 //    private fun runOnConfirm(message: String, action: () -> Unit, negAction: () -> Unit) {
 //        val builder = AlertDialog.Builder(this@WalletMainActivity)
 //        builder.setMessage(message)
@@ -339,6 +378,53 @@ class WalletMainActivity : BaseActivity() {
         runOnConfirm(message, action) {}
     }
 
+//    private fun waitForAgentInitialize() {
+//        val app = application as WalletApp
+//        val progress = ProgressDialog(this)
+//        progress.setTitle("Inicializando agente...")
+//        progress.setCancelable(false)
+//        progress.show()
+//
+//        // Espera o evento de inicialização
+//        GlobalScope.launch(Dispatchers.Main) {
+//            while (!app.isAgentInitialized()) {
+//                delay(500)
+//            }
+//            progress.dismiss()
+//            updateNotificationBadge()
+//        }
+//
+//        // Também escuta o evento de pronto
+//        GlobalScope.launch(Dispatchers.Main) {
+//            app.agent.eventBus.subscribe<AgentEvents.AgentReadyEvent> {
+//                runOnUiThread {
+//                    progress.dismiss()
+//                    updateNotificationBadge()
+//                }
+//            }
+//        }
+//
+//        val timer = object : CountDownTimer(20000, 1000) {
+//            override fun onTick(millisUntilFinished: Long) {
+//                if (app.walletOpened) {
+//                    //subscribeEvents()
+//                    try {
+//                        progress.dismiss()
+//                    } catch (e: Exception) {
+//                        Log.d(TAG, e.message ?: "Erro desconhecido")
+//                    }
+//                    cancel()
+//                }
+//            }
+//
+//            override fun onFinish() {
+//                progress.dismiss()
+//                showAlert("Falha ao inicializar o agente.")
+//            }
+//        }
+//        timer.start()
+//    }
+
     private fun waitForAgentInitialize() {
         val app = application as WalletApp
         val progress = ProgressDialog(this)
@@ -348,12 +434,15 @@ class WalletMainActivity : BaseActivity() {
 
         val timer = object : CountDownTimer(20000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                if (app.walletOpened) {
-                    subscribeEvents()
+                // ✅ Garante que o agente foi criado e inicializado antes de usá-lo
+                if (app.isAgentInitialized() && app.walletOpened) {
                     try {
+                        // Agora o agente existe e você pode acessar eventBus, etc.
+                        Log.d(TAG, "✅ Agente inicializado, seguindo execução")
                         progress.dismiss()
+                        updateNotificationBadge()
                     } catch (e: Exception) {
-                        Log.d(TAG, e.message ?: "Erro desconhecido")
+                        Log.e(TAG, "Erro ao finalizar inicialização: ${e.message}", e)
                     }
                     cancel()
                 }
@@ -364,6 +453,7 @@ class WalletMainActivity : BaseActivity() {
                 showAlert("Falha ao inicializar o agente.")
             }
         }
+
         timer.start()
     }
 
@@ -424,6 +514,9 @@ class WalletMainActivity : BaseActivity() {
             }
         }
     }
+
+
+
     private fun declineProof(id: String) {
         val app = application as WalletApp
 
@@ -509,47 +602,7 @@ class WalletMainActivity : BaseActivity() {
 //        credentialProgress = progress
 //    }
 
-    private fun sendProof( id: String, version: String) {
 
-        try {
-            val app = application as WalletApp
-            val progress = ProgressDialog(this)
-            progress.setTitle("Sending proof")
-            progress.setCancelable(true)
-
-            val job = lifecycleScope.launch(Dispatchers.IO) {
-                try {
-
-                    if (ProofConstants.PROTOCOL_VERSION_V1.equals(version)) {
-                        val retrievedCredentials =
-                            app.agent.proofs.getRequestedCredentialsForProofRequest(id)
-                        val requestedCredentials: RequestedCredentials =
-                            app.agent.proofService.autoSelectCredentialsForProofRequest(
-                                retrievedCredentials
-                            )
-                        app.agent.proofs.acceptRequest(id, requestedCredentials)
-                    } else {
-                        app.agent.proofCommandV2.acceptRequest(id)
-                    }
-
-                } catch (e: Exception) {
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        Log.i("demo proof", e.localizedMessage)
-                        progress.dismiss()
-                        showAlert("Failed to present proof.")
-                    }
-                }
-            }
-
-            progress.setOnCancelListener {
-                job.cancel()
-            }
-            progress.show()
-            proofProgress = progress
-        }catch (e: Exception){
-            showAlert("Error in proof: ${e.message} | ${e.localizedMessage}")
-        }
-    }
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

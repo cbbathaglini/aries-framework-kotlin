@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.proofs.models.ProofConstants
+import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesproject.databinding.ItemNotificationBinding
 import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 import java.text.SimpleDateFormat
@@ -43,7 +45,9 @@ class NotificationsAdapter(
 
             binding.title.setTextColor(context.getColor(colorRes))
 
-            if (item.type == NotificationType.ISSUE_CREDENTIAL_V2) {
+            if (item.type == NotificationType.ISSUE_CREDENTIAL_V2 ||
+                item.type == NotificationType.PROOF_REQUEST_V2
+            ) {
                 binding.actionButtons.visibility = View.VISIBLE
             } else {
                 binding.actionButtons.visibility = View.GONE
@@ -151,25 +155,36 @@ class NotificationsAdapter(
             kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
                 try {
                     val context = holder.itemView.context
-                    val record = app.agent.credentialsV2.getById(notification.credentialId!!)
-                    getCredentialV2(context, record)
+                    if (notification.type == NotificationType.ISSUE_CREDENTIAL_V2) {
+                        val record = app.agent.credentialsV2.getById(notification.credentialId!!)
+                        getCredentialV2(context, record)
 
-                    handler.addNotification(
-                        title = "Credencial aceita",
-                        message = "A credencial foi aceita com sucesso.",
-                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
-                        connectionId = notification.connectionId,
-                        credentialId = notification.credentialId
-                    )
+//                        handler.addNotification(
+//                            title = "Credencial aceita",
+//                            message = "A credencial foi aceita com sucesso.",
+//                            type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
+//                            connectionId = notification.connectionId,
+//                            credentialId = notification.credentialId
+//                        )
+                    } else if (notification.type == NotificationType.PROOF_REQUEST_V2) {
+                        sendProof(context, notification.proofRecordId!!, "v2")
 
-                    // Oculta os botões após a ação
+                        handler.addNotification(
+                            title = "Prova enviada",
+                            message = "A prova foi enviada com sucesso.",
+                            type = NotificationType.PRESENTATION_PROOF_V2,
+                            connectionId = notification.connectionId,
+                            proofRecordId = notification.proofRecordId
+                        )
+                    }
+
                     notification.isRead = true
                     notifyItemChanged(position)
 
                 } catch (e: Exception) {
                     android.widget.Toast.makeText(
                         context,
-                        "Erro ao aceitar credencial: ${e.localizedMessage}",
+                        "Erro ao processar ação: ${e.localizedMessage}",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                 }
@@ -198,6 +213,9 @@ class NotificationsAdapter(
                 }
             )
         }
+
+
+
 
 //        holder.itemView.findViewById<View?>(R.id.btnAccept)?.setOnClickListener {
 //                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
@@ -285,6 +303,37 @@ class NotificationsAdapter(
 
         progress.setOnCancelListener {
             job.cancel()
+        }
+    }
+
+    private fun sendProof( context: android.content.Context, id: String, version: String) {
+
+        try {
+            val app = context.applicationContext as WalletApp
+            val progress = ProgressDialog(context)
+            progress.setTitle("Sending proof")
+            progress.setCancelable(true)
+
+            val job = kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    app.agent.proofCommandV2.acceptRequest(id)
+                } catch (e: Exception) {
+                    kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        Log.i("demo proof", e.localizedMessage)
+                        progress.dismiss()
+                        android.widget.Toast.makeText(context, "Failed to present proof!", android.widget.Toast.LENGTH_LONG).show()
+                    }
+
+                }
+            }
+
+            progress.setOnCancelListener {
+                job.cancel()
+            }
+            progress.show()
+
+        }catch (e: Exception){
+            android.widget.Toast.makeText(context, "Error in proof: ${e.message} ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 }
