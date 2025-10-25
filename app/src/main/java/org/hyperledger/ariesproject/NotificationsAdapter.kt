@@ -43,7 +43,6 @@ class NotificationsAdapter(
 
             binding.title.setTextColor(context.getColor(colorRes))
 
-            // 🔹 Exibe botões apenas se for ISSUE_CREDENTIAL_V2
             if (item.type == NotificationType.ISSUE_CREDENTIAL_V2) {
                 binding.actionButtons.visibility = View.VISIBLE
             } else {
@@ -126,7 +125,14 @@ class NotificationsAdapter(
                 }
 
                 NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 -> {
+                    Log.d("NotificationsAdapter", "Abrindo detalhe da credencial ${notification.credentialId}")
 
+                    val intent = Intent(context, CredentialDetailActivity::class.java).apply {
+                        putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, notification.credentialId)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+
+                    context.startActivity(intent)
                 }
 
                 else -> {
@@ -135,23 +141,81 @@ class NotificationsAdapter(
             }
         }
 
-        holder.itemView.findViewById<View?>(R.id.btnAccept)?.setOnClickListener {
-                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                    try {
-                        val context = holder.itemView.context
-                        val record =
-                            app.agent.credentialsV2.getById(notification.credentialId!!)
-                            getCredentialV2(context= context, credentialExchangeRecord= record)
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(
-                            context,
-                            "Erro ao aceitar credencial: ${e.localizedMessage}",
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+        // dentro de onBindViewHolder()
 
+        val btnAccept = holder.itemView.findViewById<View?>(R.id.btnAccept)
+        val btnDecline = holder.itemView.findViewById<View?>(R.id.btnDecline)
+
+
+        btnAccept?.setOnClickListener {
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                try {
+                    val context = holder.itemView.context
+                    val record = app.agent.credentialsV2.getById(notification.credentialId!!)
+                    getCredentialV2(context, record)
+
+                    handler.addNotification(
+                        title = "Credencial aceita",
+                        message = "A credencial foi aceita com sucesso.",
+                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
+                        connectionId = notification.connectionId,
+                        credentialId = notification.credentialId
+                    )
+
+                    // Oculta os botões após a ação
+                    notification.isRead = true
+                    notifyItemChanged(position)
+
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Erro ao aceitar credencial: ${e.localizedMessage}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
+
+        btnDecline?.setOnClickListener {
+            (context as? BaseActivity)?.runOnConfirm(
+                "Recusar credencial?",
+                action = {
+                    if (context is WalletMainActivity) {
+                        context.declineCredentialV2(notification.credentialId!!)
+                    }
+
+                    handler.addNotification(
+                        title = "Credencial recusada",
+                        message = "A credencial foi recusada pelo usuário.",
+                        type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
+                        connectionId = notification.connectionId,
+                        credentialId = notification.credentialId
+                    )
+
+                    // Oculta os botões após a ação
+                    notification.isRead = true
+                    notifyItemChanged(position)
+                }
+            )
+        }
+
+//        holder.itemView.findViewById<View?>(R.id.btnAccept)?.setOnClickListener {
+//                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+//                    try {
+//                        val context = holder.itemView.context
+//                        val record =
+//                            app.agent.credentialsV2.getById(notification.credentialId!!)
+//                            getCredentialV2(context= context, credentialExchangeRecord= record)
+//                    } catch (e: Exception) {
+//                        android.widget.Toast.makeText(
+//                            context,
+//                            "Erro ao aceitar credencial: ${e.localizedMessage}",
+//                            android.widget.Toast.LENGTH_LONG
+//                        ).show()
+//                    }
+//                }
+//
+//        }
 //                },
 //                negAction = {
 //                    if (context is WalletMainActivity) {
@@ -173,7 +237,6 @@ class NotificationsAdapter(
         }
     }
 
-    // 🔄 Atualiza lista com segurança (chame no listener do NotificationHandler)
     fun updateList(newList: List<NotificationItem>) {
         notifications.clear()
         notifications.addAll(newList)
