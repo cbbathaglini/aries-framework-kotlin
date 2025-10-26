@@ -637,7 +637,7 @@ class WalletMainActivity : BaseActivity() {
     fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(
             this,
-            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION, MainMenu.REQUESTPROOF,
+            listOf(MainMenu.GET, MainMenu.LIST, MainMenu.PROOF_LIST, MainMenu.HISTORICAL, MainMenu.CONNECTION, MainMenu.REQUESTPROOF,
                 MainMenu.SCANREQUESTPROOF, MainMenu.RECEIVING_PRESENTATION_PROOF, MainMenu.PRESENTATION_LIST)
         )
     }
@@ -657,6 +657,11 @@ class WalletMainActivity : BaseActivity() {
 
                 MainMenu.LIST -> {
                     val intent = Intent(v.context, CredentialListActivity::class.java)
+                    v.context.startActivity(intent)
+                }
+
+                MainMenu.PROOF_LIST -> {
+                    val intent = Intent(v.context, ProofListActivity::class.java)
                     v.context.startActivity(intent)
                 }
 

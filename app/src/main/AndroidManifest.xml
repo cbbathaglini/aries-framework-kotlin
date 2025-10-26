@@ -122,6 +122,11 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity android:name=".ProofListActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
         <activity android:name=".PresentationDetailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
