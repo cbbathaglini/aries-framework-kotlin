@@ -19,7 +19,7 @@ class ProofRequestDetailActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.detailToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = getString(R.string.title_proof_detail)
+        supportActionBar?.title = "Request proof detail"
 
         if (savedInstanceState == null) {
             val proofId = intent.getStringExtra(ProofRequestDetailFragment.ARG_PROOF_ID)

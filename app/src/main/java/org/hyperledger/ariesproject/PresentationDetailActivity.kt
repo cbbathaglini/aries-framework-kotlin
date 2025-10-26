@@ -18,6 +18,8 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.bluetooth.BluetoothClient
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.error.CredoError
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPOutputStream
 
 @SuppressLint("MissingPermission")
 class PresentationDetailActivity : AppCompatActivity() {
@@ -114,6 +116,13 @@ class PresentationDetailActivity : AppCompatActivity() {
             bluetoothClient.connectToNamedDevice(device)
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        bluetoothClient.disconnect()
+    }
+
+
 
     private fun setupBluetoothClient() {
         bluetoothClient = BluetoothClient(this).apply {

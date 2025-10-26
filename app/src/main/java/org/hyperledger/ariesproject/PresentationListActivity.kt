@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.proofs.models.ProofState
 
 class PresentationListActivity : AppCompatActivity() {
 
@@ -80,6 +81,7 @@ class PresentationListActivity : AppCompatActivity() {
                 val all = agent?.proofRepository?.getAll() ?: emptyList()
                 val filtered = all
                     .filter { it.presentationMessage != null }
+                    .filter { it.state == ProofState.PresentationSent }
                     .sortedByDescending { it.createdAt }
 
                 records = filtered

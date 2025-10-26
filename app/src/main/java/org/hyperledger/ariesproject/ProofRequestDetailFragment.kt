@@ -252,7 +252,7 @@ class ProofRequestDetailFragment : Fragment() {
 
     private fun updateStatusCard(state: ProofState?) {
         val (bgColor, message) = when (state) {
-            ProofState.Done -> Pair("#C8E6C9", "✅ Prova concluída e verificada.")
+            ProofState.Done -> Pair("#C8E6C9", "✅ Prova concluída.")
             ProofState.PresentationSent, ProofState.PresentationReceived ->
                 Pair("#BBDEFB", "📤 Prova em apresentação.")
             ProofState.RequestReceived ->
