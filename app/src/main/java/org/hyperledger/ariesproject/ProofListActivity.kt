@@ -59,6 +59,7 @@ class ProofListActivity : BaseActivity() {
             runBlocking { app.agent.proofRepository.getAll() }
         }
 
-        recyclerView.adapter = ProofAdapter(this, proofs)
+        val sortedProofs = proofs.sortedByDescending { it.createdAt  }
+        recyclerView.adapter = ProofAdapter(this, sortedProofs)
     }
 }

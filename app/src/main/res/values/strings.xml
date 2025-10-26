@@ -11,6 +11,7 @@
     <string name="get_all_credentials_button">get_all_credentials</string>
     <string name="title_request_proof">Request a proof</string>
     <string name="title_scan_proof">Scan proof</string>
+    <string name="title_proof_detail">Proof Detail</string>
     <string name="title_proof_list">Proofs list</string>
     <string name="get_all_credentials">Get all credentials in this connection</string>
     <string name="ok">Ok</string>

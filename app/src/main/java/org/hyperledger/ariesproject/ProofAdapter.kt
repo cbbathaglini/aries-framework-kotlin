@@ -12,6 +12,7 @@ import org.hyperledger.ariesproject.databinding.ProofListContentBinding
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import org.hyperledger.ariesframework.proofs.models.ProofState
 
 class ProofAdapter(
     private val parentActivity: ProofListActivity,
@@ -21,7 +22,7 @@ class ProofAdapter(
     private val onClickListener = View.OnClickListener { v ->
         val item = v.tag as ProofExchangeRecord
         val intent = Intent(v.context, ProofDetailActivity::class.java).apply {
-            putExtra("PROOF_ID", item.id)
+            putExtra(ProofDetailFragment.ARG_PROOF_ID, item.id)
         }
         v.context.startActivity(intent)
     }
@@ -43,9 +44,26 @@ class ProofAdapter(
         holder.typeView.text = "Estado: ${item.state}"
 
         // Configura o clique
+        val color = colorForState(item.state)
+        holder.typeView.setTextColor(color)
+
         with(holder.itemView) {
             tag = item
             setOnClickListener(onClickListener)
+        }
+    }
+
+    private fun colorForState(state: ProofState): Int {
+        return when (state) {
+            ProofState.ProposalSent -> parentActivity.getColor(android.R.color.holo_purple)
+            ProofState.ProposalReceived -> parentActivity.getColor(android.R.color.holo_blue_dark)
+            ProofState.RequestSent-> parentActivity.getColor(android.R.color.holo_orange_light)
+            ProofState.RequestReceived -> parentActivity.getColor(android.R.color.holo_orange_dark)
+            ProofState.PresentationSent -> parentActivity.getColor(android.R.color.holo_green_light)
+            ProofState.ProposalReceived-> parentActivity.getColor(android.R.color.holo_blue_light)
+            ProofState.Done -> parentActivity.getColor(android.R.color.holo_green_dark)
+            ProofState.Abandoned -> parentActivity.getColor(android.R.color.holo_red_dark)
+            else -> parentActivity.getColor(android.R.color.darker_gray)
         }
     }
 
