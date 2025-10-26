@@ -52,10 +52,26 @@
         </activity>
 
         <activity
+            android:name=".ProofListActivity"
+            android:label="Proofs"
+            android:parentActivityName=".WalletMainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".WalletMainActivity" />
+        </activity>
+
+        <activity
             android:name=".CredentialDetailActivity"
             android:label="@string/title_credential_detail"
             android:parentActivityName=".CredentialListActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity android:name=".ProofDetailActivity"
+            android:label="Proof detail"
+            android:parentActivityName=".ProofListActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+
 
         <activity
             android:name=".CredentialW3cDetailActivity"
@@ -105,42 +121,34 @@
         <activity android:name=".VerifierProofActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".CustomCaptureActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/AppTheme.NoActionBar"
             android:exported="false" />
 
         <activity android:name=".ReceivingPresentationActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".PresentationListActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
-        <activity android:name=".ProofListActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <activity android:name=".ProofDetailActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
         <activity android:name=".PresentationDetailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".ProofRequestDetailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".NotificationsActivity"

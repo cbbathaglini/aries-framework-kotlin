@@ -13,6 +13,7 @@ import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
 import org.hyperledger.ariesproject.databinding.ActivityProofListBinding
 import org.hyperledger.ariesproject.databinding.ProofListContentBinding
 import java.text.SimpleDateFormat

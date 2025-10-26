@@ -20,6 +20,7 @@ class CredentialDetailActivity : BaseActivity() {
         setSupportActionBar(binding.detailToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.title_credential_detail)
+        binding.detailToolbar.setTitleTextColor(getColor(R.color.white))
 
 //        binding.fab.setOnClickListener { view ->
 //            Snackbar.make(view, "Ação ainda não implementada", Snackbar.LENGTH_SHORT).show()

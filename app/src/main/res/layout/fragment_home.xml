@@ -3,54 +3,309 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="@android:color/white"
+    android:padding="20dp">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
+        <!-- Título -->
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Wallet Menu"
-            android:textSize="22sp"
+            android:text="Wallet App"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="@color/teal_600"
-            android:layout_gravity="center"
+            android:textColor="@android:color/black"
             android:layout_marginBottom="16dp" />
 
-        <!-- RecyclerView com layout e dimensões definidas -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/menuList"
+        <!-- Card de boas-vindas -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardWelcome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="#F3F4F6"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp">
 
-        <!-- Campo de convite -->
-        <EditText
-            android:id="@+id/invitation"
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Welcome to your Digital Wallet"
+                    android:textColor="@android:color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:text="Easily manage credentials, connections, and proofs"
+                    android:textColor="#555555"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Ações rápidas -->
+        <TextView
+            android:text="Quick actions"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:hint="Input invitation here"
-            android:background="@android:drawable/edit_text"
-            android:imeOptions="actionSend"
-            android:inputType="textUri"
-            android:padding="10dp"
-            android:layout_marginTop="16dp" />
-
-        <!-- Botão de conexão -->
-        <Button
-            android:id="@+id/buttonConnect"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Connect"
-            android:backgroundTint="@color/teal_600"
-            android:textColor="@android:color/white"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp" />
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
 
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardConnect"
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                app:cardCornerRadius="20dp"
+                app:cardBackgroundColor="#E2E8F0"
+                app:cardElevation="6dp">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:tint="@color/teal_700"
+                        android:src="@drawable/ic_qr_code"
+                        android:layout_marginBottom="10dp" />
+
+                    <TextView
+                        android:text="Connect"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCredentials"
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                app:cardCornerRadius="20dp"
+                app:cardBackgroundColor="#E2E8F0"
+                app:cardElevation="6dp">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:tint="#009688"
+                        android:src="@drawable/ic_id_card"
+                        android:layout_marginBottom="10dp" />
+
+                    <TextView
+                        android:text="Credentials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <TextView
+            android:text="Manage Wallet"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/linkHistory"
+                android:text="Connection History"
+                android:textColor="@color/teal_700"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:id="@+id/linkProofs"
+                android:text="Proofs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/teal_700"
+                android:textSize="16sp"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:id="@+id/linkInvite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Generate Invitation"
+                android:textColor="@color/teal_700"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <TextView
+            android:text="Offline Proofs"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/btnRequestProof"
+                android:text="(Verifier) Request Proof"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:backgroundTint="@color/teal_700"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="10dp" />
+
+            <Button
+                android:id="@+id/btnScanProof"
+                android:text="(Holder) Scan Proof"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/teal_700"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnReceivePresentation"
+                android:text="(Verifier) Receive Presentation"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/teal_700"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnPresentationList"
+                android:text="(Holder) Presentation List"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/teal_700"
+                android:layout_width="match_parent"
+                android:layout_height="48dp" />
+        </LinearLayout>
+
+        <TextView
+            android:text="Connect via Invitation URL"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/teal_700"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                android:layout_marginBottom="12dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/invitation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Paste the invite URL"
+                    android:textColor="@android:color/black"
+                    android:textColorHint="#888"
+                    android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:weightSum="2">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonClear"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Clean"
+                    app:strokeColor="@color/teal_700"
+                    app:strokeWidth="2dp"
+                    app:cornerRadius="8dp"
+                    android:backgroundTint="@android:color/white"
+                    android:textColor="@color/teal_700"
+                    android:layout_marginEnd="8dp"
+                    app:rippleColor="@android:color/transparent"
+                    app:elevation="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonConnect"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Connect"
+                    app:backgroundTint="@color/teal_700"
+                    app:cornerRadius="8dp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

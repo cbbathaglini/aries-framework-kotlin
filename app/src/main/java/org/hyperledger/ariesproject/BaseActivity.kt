@@ -2,7 +2,9 @@ package org.hyperledger.ariesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.datatransport.runtime.logging.Logging
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 
@@ -92,6 +94,9 @@ open class BaseActivity : AppCompatActivity() {
                 badge.clearNumber()
                 badge.isVisible = false
             }
+
+            Log.d("BADGE", "bottomNavigationView: $bottomNavigationView")
+
         } catch (e: Exception) {
             android.util.Log.w("BADGE", "Erro ao atualizar badge: ${e.message}")
         }

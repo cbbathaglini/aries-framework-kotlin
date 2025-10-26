@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.FrameLayout
 import org.hyperledger.ariesproject.databinding.ActivityProofDetailBinding
+import org.hyperledger.ariesproject.databinding.ActivityProofListBinding
 
 class ProofDetailActivity : BaseActivity() {
 
