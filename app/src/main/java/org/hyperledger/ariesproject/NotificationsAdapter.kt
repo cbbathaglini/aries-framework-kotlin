@@ -15,7 +15,6 @@ import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOp
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesproject.databinding.ItemNotificationBinding
-import org.hyperledger.ariesproject.wrapper.ConnectionRecordWrapper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,7 +26,6 @@ class NotificationsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: NotificationItem) {
-            Log.d("ADAPTER_BIND", "Exibindo: ${item.title}")
             binding.title.text = item.title
             binding.message.text = item.message
 
@@ -109,9 +107,15 @@ class NotificationsAdapter(
                     }
                     context.startActivity(intent)
                 }
+                NotificationType.PROOF_REQUEST_V2 -> {
+                    val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
+                        putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
                 else -> {
-                    // Ignora outros tipos de notificação
-                    Log.d("NotificationsAdapter", "Tipo de notificação sem ação: ${notification.type}")
+                    Log.d("NotificationsAdapter", "Type of notification without an action: ${notification.type}")
                 }
             }
         }
@@ -128,24 +132,24 @@ class NotificationsAdapter(
                 } catch (e: Exception) {
                     android.widget.Toast.makeText(
                         context,
-                        "Erro ao processar ação: ${e.localizedMessage}",
+                        "Error processing action: ${e.localizedMessage}",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                 }
             }
         }
 
-        // Botão Recusar → recusa credencial
+
         holder.itemView.findViewById<View?>(R.id.btnDecline)?.setOnClickListener {
             (context as? BaseActivity)?.runOnConfirm(
-                "Recusar credencial?",
+                "Decline credential?",
                 action = {
                     if (context is WalletMainActivity) {
                         context.declineCredentialV2(notification.credentialId!!)
                     }
                     handler.addNotification(
-                        title = "Credencial recusada",
-                        message = "A credencial foi recusada pelo usuário.",
+                        title = "Crendential Declined",
+                        message = "The credential was declined by user",
                         type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
                         connectionId = notification.connectionId,
                         credentialId = notification.credentialId
@@ -164,18 +168,16 @@ class NotificationsAdapter(
         }
     }
 
-    // Atualiza lisata
     fun updateList(newList: List<NotificationItem>) {
         notifications.clear()
         notifications.addAll(newList)
         notifyDataSetChanged()
     }
 
-    // Aceitar credencial (já existente)
     private fun getCredentialV2(context: android.content.Context, credentialExchangeRecord: CredentialExchangeRecord) {
         val app = context.applicationContext as WalletApp
         val progress = ProgressDialog(context)
-        progress.setTitle("Carregando...")
+        progress.setTitle("Loading...")
         progress.setCancelable(true)
         progress.show()
 
@@ -191,7 +193,7 @@ class NotificationsAdapter(
             } catch (e: Exception) {
                 GlobalScope.launch(Dispatchers.Main) {
                     progress.dismiss()
-                    android.widget.Toast.makeText(context, "Erro ao aceitar credencial: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, "Error accepting credential: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
                 }
             }
 

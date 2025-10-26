@@ -191,7 +191,8 @@ class WalletApp : Application() {
                 handler.addNotification(
                     title = "Proof done",
                     message = "Proof ID: ${it.record.id}",
-                    type = NotificationType.PROOF_REQUEST_V2
+                    type = NotificationType.PROOF_REQUEST_V2,
+                    proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
             }
