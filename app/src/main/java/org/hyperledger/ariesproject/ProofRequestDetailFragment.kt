@@ -3,6 +3,7 @@ package org.hyperledger.ariesproject
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +27,8 @@ class ProofRequestDetailFragment : Fragment() {
 
     private var proofId: String? = null
     private lateinit var binding: ProofRequestDetailBinding
+    private var compatibleCredentials: List<Map<String, Any?>> = emptyList()
+    var chosenCredentialId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,15 +88,15 @@ class ProofRequestDetailFragment : Fragment() {
         val attrs = proofRequest?.requestedAttributes ?: emptyMap()
         populateRequestedAttributes(attrs)
 
-        loadAvailableCredentials(proofRequest)
+        loadAvailableCredentials(proofRequest, record)
 
         binding.btnSendProof.apply {
             visibility = if (record.state != ProofState.Done) View.VISIBLE else View.GONE
-            setOnClickListener { generatePresentation(record.id) }
+            setOnClickListener { sendProof(record.id) }
         }
     }
 
-    private fun loadAvailableCredentials(proofRequest: AnonCredsProofRequest?) {
+    private fun loadAvailableCredentials(proofRequest: AnonCredsProofRequest?,record: ProofExchangeRecord) {
         if (proofRequest == null) return
         val app = requireActivity().application as WalletApp
 
@@ -155,6 +158,8 @@ class ProofRequestDetailFragment : Fragment() {
                     } else null
                 }
 
+                compatibleCredentials = compatible
+
                 withContext(Dispatchers.Main) {
                     if (compatible.isEmpty()) {
                         binding.selectCredentialHeader.text = "Nenhuma credencial compatível encontrada."
@@ -175,6 +180,19 @@ class ProofRequestDetailFragment : Fragment() {
                         binding.credentialSpinner.apply {
                             visibility = View.VISIBLE
                             this.adapter = adapter
+                        }
+
+                        record.chosenCredentialId?.let { chosenId ->
+                            val indexToSelect = compatible.indexOfFirst {
+                                val id = it["id"] as? String
+                                id == chosenId
+                            }
+
+                            if (indexToSelect >= 0) {
+                                Log.i("ProofRequestDetail", "Selecionando credencial pré-escolhida: $chosenId")
+                                binding.credentialSpinner.isEnabled = false
+                                binding.credentialSpinner.setSelection(indexToSelect)
+                            }
                         }
                     }
                 }
@@ -271,7 +289,7 @@ class ProofRequestDetailFragment : Fragment() {
         }
     }
 
-    private fun generatePresentation(proofRecordId: String) {
+    private fun sendProof(proofRecordId: String) {
         val app = requireActivity().application as WalletApp
         val selectedIndex = binding.credentialSpinner.selectedItemPosition
 
@@ -288,7 +306,10 @@ class ProofRequestDetailFragment : Fragment() {
             try {
                 val record = app.agent.proofRepository.getById(proofRecordId)
 
-                val presentationResult = app.agent.proofCommandV2.acceptRequest(record.id)
+                val selectedIndex = binding.credentialSpinner.selectedItemPosition
+                val chosenCredentialId = compatibleCredentials[selectedIndex]["id"] as String
+                Log.i("chosen credential id: ", chosenCredentialId)
+                val presentationResult = app.agent.proofCommandV2.acceptRequest(record.id, chosenCredentialId)
 
                 withContext(Dispatchers.Main) {
                     binding.loadingProgress.visibility = View.GONE

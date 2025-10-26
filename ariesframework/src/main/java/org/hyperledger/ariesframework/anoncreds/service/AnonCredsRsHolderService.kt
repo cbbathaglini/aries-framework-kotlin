@@ -622,7 +622,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             tags = queryFromRestrictions(requestedAttribute.restrictions)
         }
 
-        val credentials = agent.w3cCredentialRepository.findByQuery(tags.toJsonString())
+        val credentials : List<W3cCredentialRecord> = agent.w3cCredentialRepository.findByQuery(tags.toJsonString())
 
         val filteredCredentials = credentials.filter { rec ->
             attibutesList.all(rec.getTags()::containsKey)

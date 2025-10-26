@@ -188,6 +188,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
      */
     suspend fun acceptRequest(
         proofRecordId: String,
+        chosenCredentialId: String? = null,
         comment: String? = null,
     ): ProofExchangeRecord {
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
@@ -195,8 +196,30 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 proofRecordId = proofRecordId,
                 agent = agent,
             )
-        val requestedCredentials: RequestedCredentialsAnoncreds =
+
+        val requestedCredentials: RequestedCredentialsAnoncreds = if (chosenCredentialId != null) {
+            val customRequested = RequestedCredentialsAnoncreds()
+
+            retrievedCredentials.requestedAttributes.forEach { (referent, attributes) ->
+                val match = attributes.find { it.credentialId == chosenCredentialId }
+                    ?: attributes.firstOrNull() // fallback de segurança
+                if (match != null) {
+                    customRequested.requestedAttributes[referent] = match
+                }
+            }
+
+            retrievedCredentials.requestedPredicates.forEach { (referent, predicates) ->
+                val match = predicates.find { it.credentialId == chosenCredentialId }
+                    ?: predicates.firstOrNull()
+                if (match != null) {
+                    customRequested.requestedPredicates[referent] = match
+                }
+            }
+
+            customRequested
+        } else {
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        }
 
         val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,
@@ -211,6 +234,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofFormats = record.formats!!,
             comment = comment,
             requestedCredentials = requestedCredentialsMap,
+            chosenCredentialId= chosenCredentialId
         )
 
         val (message, proofRecord) = agent.proofServiceV2.acceptRequest(params)

@@ -482,6 +482,7 @@ class ProofServiceV2(val agent: Agent) {
         )
         val message: PresentationMessageV2 = proofFormatCoordinator.acceptRequest(acceptRequestParams)
 
+        proofRecord.chosenCredentialId = params.chosenCredentialId
         proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
         proofRecord.presentationMessage = message
         updateState(proofRecord, ProofState.PresentationSent)
@@ -1020,7 +1021,7 @@ class ProofServiceV2(val agent: Agent) {
      * @return ``RetrievedCredentials`` object.
      */
     suspend fun getRequestedCredentialsForProofRequest(
-        anoncredsProofRequest: AnonCredsProofRequest,
+        anoncredsProofRequest: AnonCredsProofRequest
     ): RetrievedCredentialsAnonCreds = coroutineScope {
         // 1) Dispara tudo em paralelo, mas apenas coleta resultados (Pair)
         val attrDeferred = anoncredsProofRequest.requestedAttributes.map { (referent, requestedAttribute) ->
@@ -1028,7 +1029,7 @@ class ProofServiceV2(val agent: Agent) {
                 val credentials = agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
-                        attributeReferent = referent,
+                        attributeReferent = referent
                     ),
                 )
 
