@@ -9,7 +9,7 @@ class Dispatcher(val agent: Agent) {
 
     fun registerHandler(handler: MessageHandler) {
         handlers[handler.messageType] = handler
-        handlers[replaceNewDidCommPrefixWithLegacyDidSov(handler.messageType)] = handler
+
     }
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
@@ -55,16 +55,4 @@ class Dispatcher(val agent: Agent) {
         return handlers[message.type] != null
     }
 
-    companion object {
-        fun replaceNewDidCommPrefixWithLegacyDidSov(messageType: String): String {
-            val didSovPrefix = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec"
-            val didCommPrefix = "https://didcomm.org"
-
-            if (messageType.startsWith(didCommPrefix)) {
-                return messageType.replace(didCommPrefix, didSovPrefix)
-            }
-
-            return messageType
-        }
-    }
 }

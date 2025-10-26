@@ -466,6 +466,8 @@ class AnoncredsCredentialFormatService(
         logger.info("jsonElementSchema: $jsonElementSchema")
         val fetchSchemaReturn: FetchSchemaReturn = FetchSchemaReturn.fromJson(jsonElementSchema, anonCredsCredential.schemaId)
 
+        credentialExchangeRecord.credentialDefinitionId = anonCredsCredential.credDefId
+
         var revocationRegistryResult: FetchIntermediateRevocationRegistryDefinitionResult? = null
         if (anonCredsCredential.revRegId != null) {
             val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)

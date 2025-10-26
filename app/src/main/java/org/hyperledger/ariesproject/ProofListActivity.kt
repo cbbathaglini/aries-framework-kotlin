@@ -38,6 +38,7 @@ class ProofListActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateNotificationBadge()
         setupRecyclerView(binding.proofList.proofListRecycler)
     }
 

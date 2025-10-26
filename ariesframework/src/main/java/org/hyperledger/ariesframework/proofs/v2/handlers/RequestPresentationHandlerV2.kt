@@ -18,7 +18,7 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
     private val logger = LoggerFactory.getLogger(RequestPresentationHandlerV2::class.java)
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("Entering in RequestPresentationHandlerV2")
+        logger.info("Entering in RequestPresentationHandlerV2")
         val proofRecord = agent.proofServiceV2.processRequest(messageContext)
 
         if (proofRecord.autoAcceptProof == AutoAcceptProof.Always ||

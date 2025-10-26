@@ -623,6 +623,7 @@ class WalletMainActivity : BaseActivity() {
                         message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
                         type = NotificationType.CONNECTION
                     )
+                    updateNotificationBadge()
 
                     //showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
 

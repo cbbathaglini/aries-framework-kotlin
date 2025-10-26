@@ -12,7 +12,7 @@ class PresentationAckHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = PresentationAckMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("Entering in PresentationAckHandlerV2")
+        logger.info("Entering in PresentationAckHandlerV2")
         agent.proofServiceV2.processAck(messageContext)
         return null
     }

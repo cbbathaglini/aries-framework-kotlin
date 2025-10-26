@@ -113,7 +113,7 @@ class ProofServiceV2(val agent: Agent) {
 
         logger.debug("Save record and emit state change event")
         proofRepository.save(proofRecord)
-        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
+        agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
 
         return Pair(proposalMessage, proofRecord)
     }
@@ -196,7 +196,7 @@ class ProofServiceV2(val agent: Agent) {
 
         // Save record and emit event
         proofRepository.save(proofRecord)
-        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
+        agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
 
         return proofRecord
     }
@@ -320,7 +320,7 @@ class ProofServiceV2(val agent: Agent) {
         logger.info("request message: ${requestMessage.requestPresentationAttachments.size}")
         logger.debug("Saving record and emitting state changed for proof exchange record ${proofRecord.id}")
         agent.proofRepository.save(proofRecord)
-        agent.eventBus.publish(AgentEvents.ProofEvent(proofRecord.copy()))
+        agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
 
         return Pair(requestMessage, proofRecord)
     }
@@ -429,6 +429,7 @@ class ProofServiceV2(val agent: Agent) {
         )
 
         agent.eventBus.publish(AgentEvents.ProofEventV2(record.copy()))
+        logger.info("Saved new proof record successfully")
         return record
     }
 

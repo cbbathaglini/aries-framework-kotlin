@@ -96,9 +96,7 @@ class DidCommMessageRepositoryTest {
         assertEquals(decodedUpdate.label, invitationUpdate.label)
 
         var type = ConnectionInvitationMessage.type
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)
-        }
+
         val updatedRecord = repository.findSingleByQuery(
             """
             {"associatedRecordId": "${record.associatedRecordId!!}",

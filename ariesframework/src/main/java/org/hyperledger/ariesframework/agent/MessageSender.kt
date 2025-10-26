@@ -55,9 +55,6 @@ class MessageSender(val agent: Agent) {
             agentMessage.transport = TransportDecorator("all")
         }
 
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            agentMessage.replaceNewDidCommPrefixWithLegacyDidSov()
-        }
 
         // If the message is a response to an out-of-band invitation, set the parent thread id.
         // We should not override the parent thread id if it is already set, because it may be
@@ -140,9 +137,7 @@ class MessageSender(val agent: Agent) {
         var recipientKeys = keys.recipientKeys
         for (routingKey in keys.routingKeys) {
             val forwardMessage = ForwardMessage(recipientKeys[0], encryptedMessage)
-            if (agent.agentConfig.useLegacyDidSovPrefix) {
-                forwardMessage.replaceNewDidCommPrefixWithLegacyDidSov()
-            }
+
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }

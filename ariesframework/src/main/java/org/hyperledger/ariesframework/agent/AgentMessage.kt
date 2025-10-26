@@ -49,9 +49,6 @@ open class AgentMessage(
         return MessageSerializer.encodeToString(this)
     }
 
-    fun replaceNewDidCommPrefixWithLegacyDidSov() {
-        type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)
-    }
 
     override fun toString(): String {
         return "AgentMessage(id='$id', type='$type', thread=$thread, transport=$transport)"
@@ -87,7 +84,7 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
         val asAgent = kser as KSerializer<AgentMessage>
 
         serializers[type] = asAgent
-        serializers[Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)] = asAgent
+
     }
 
     @OptIn(ExperimentalSerializationApi::class)

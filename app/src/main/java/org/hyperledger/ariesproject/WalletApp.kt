@@ -8,6 +8,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentConfig
 import org.hyperledger.ariesframework.agent.AgentEvents
@@ -17,6 +18,7 @@ import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofState
+import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 import java.io.File
 import java.util.Date
@@ -165,7 +167,7 @@ class WalletApp : Application() {
                 handler.addNotification(
                     title = "New proof request 2.0",
                     message = "Proof ID: ${it.record.id}",
-                    type = NotificationType.PROOF_REQUEST_V2,
+                    type = NotificationType.ACCEPT_PROOF_REQUEST_V2,
                     proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
@@ -173,14 +175,23 @@ class WalletApp : Application() {
                 handler.addNotification(
                     title = "Proof sent",
                     message = "Proof ID: ${it.record.id}",
-                    type = NotificationType.OTHER
+                    type = NotificationType.PRESENTATION_PROOF_V2,
+                    proofRecordId = it.record.id
+                )
+                notifyBadgeUpdate()
+            }else if (it.record.state == ProofState.PresentationReceived) {
+                receivePresentation(record= it.record)
+                handler.addNotification(
+                    title = "Proof received",
+                    message = "Proof ID: ${it.record.id} | Verified? ${it.record.isVerified ?: false}",
+                    proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
             }else if (it.record.state == ProofState.Done) {
                 handler.addNotification(
                     title = "Proof done",
                     message = "Proof ID: ${it.record.id}",
-                    type = NotificationType.PRESENTATION_PROOF_V2
+                    type = NotificationType.PROOF_REQUEST_V2
                 )
                 notifyBadgeUpdate()
             }
@@ -196,6 +207,35 @@ class WalletApp : Application() {
         }
 
         //updateNotificationBadge()
+    }
+
+    fun receivePresentation(record: ProofExchangeRecord) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                // 1️⃣ Cria uma cópia mutável (equivalente ao "var mutable = proofRecord" no Swift)
+                var mutableRecord = record
+
+                // 2️⃣ Cria a mensagem de ACK via ProofServiceV2
+                val (message, updatedRecord) = agent.proofServiceV2.createAck(mutableRecord)
+
+                // 3️⃣ Busca a conexão associada
+                val connection = agent.connectionRepository.getById(updatedRecord.connectionId)
+
+                // 4️⃣ Envia o ACK de volta
+                agent.messageSender.send(OutboundMessage(message, connection))
+
+                Log.d("WalletApp", "✅ ACK enviado para apresentação ${updatedRecord.threadId}")
+
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    notificationHandler.addNotification(
+                        title = "❌ Erro ao receber apresentação",
+                        message = e.localizedMessage ?: "Erro desconhecido"
+                    )
+                    Log.e("WalletApp", "❌ Falha ao processar apresentação: ${e.localizedMessage}", e)
+                }
+            }
+        }
     }
 
     private fun notifyBadgeUpdate() {

@@ -14,7 +14,7 @@ class PresentationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = PresentationMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("Entering in PresentationHandlerV2")
+        logger.info("Entering in PresentationHandlerV2")
         val presentationRecord = agent.proofServiceV2.processPresentation(messageContext)
 
         logger.info("prseentarecord: ${presentationRecord.isVerified} $presentationRecord")

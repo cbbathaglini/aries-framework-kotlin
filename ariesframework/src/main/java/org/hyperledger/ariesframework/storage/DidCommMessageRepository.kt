@@ -13,16 +13,10 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
     }
 
     suspend fun saveAgentMessage(role: DidCommMessageRole, agentMessage: AgentMessage, associatedRecordId: String) {
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            agentMessage.replaceNewDidCommPrefixWithLegacyDidSov()
-        }
         super.save(DidCommMessageRecord(agentMessage, role, associatedRecordId))
     }
 
     suspend fun saveOrUpdateAgentMessage(role: DidCommMessageRole, agentMessage: AgentMessage, associatedRecordId: String) {
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            agentMessage.replaceNewDidCommPrefixWithLegacyDidSov()
-        }
         val record = findSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"${agentMessage.type}\"}")
         if (record != null) {
             record.message = agentMessage.toJsonString()
@@ -36,10 +30,6 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
     suspend fun getAgentMessage(associatedRecordId: String, messageType: String): String {
         var type = messageType
 
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
-        }
-
         val record = getSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"$type\"}")
 
         return record.message
@@ -48,10 +38,6 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
     suspend fun getAgentMessage(associatedRecordId: String, messageType: String, role: DidCommMessageRole): String {
         var type = messageType
 
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
-        }
-
         val record = getSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"$type\", \"role\": \"$role\"}")
 
         return record.message
@@ -59,9 +45,6 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
 
     suspend fun findAgentMessage(associatedRecordId: String, messageType: String): String? {
         var type = messageType
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
-        }
         val record = findSingleByQuery("{\"associatedRecordId\": \"$associatedRecordId\", \"messageType\": \"$type\"}")
         return record?.message
     }
@@ -88,11 +71,8 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
         messageType: String,
         role: DidCommMessageRole,
     ): T? {
-        val actualType = if (agent.agentConfig.useLegacyDidSovPrefix) {
-            Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(messageType)
-        } else {
-            messageType
-        }
+        val actualType = messageType
+
 
         val record = findSingleByQuery(
             """{
