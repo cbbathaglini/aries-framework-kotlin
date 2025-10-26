@@ -316,7 +316,6 @@ class ProofRequestDetailFragment : Fragment() {
                     binding.proofStatusMessage.text = "✅ Apresentação criada e enviada com sucesso!"
                     binding.btnSendProof.visibility = View.GONE
 
-                    // Exibe resultado JSON bonito (como no Swift)
                     val presentationJson = presentationResult.toString()
                     val resultView = TextView(requireContext()).apply {
                         text = presentationJson

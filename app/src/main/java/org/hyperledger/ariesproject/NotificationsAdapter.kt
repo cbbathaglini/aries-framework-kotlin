@@ -44,17 +44,78 @@ class NotificationsAdapter(
 
             when (item.type) {
                 NotificationType.ISSUE_CREDENTIAL_V2 -> {
-                    binding.btnAccept.visibility = View.VISIBLE
-                    binding.btnDecline.visibility = View.VISIBLE
-                    binding.btnCheck.visibility = View.GONE
+                    // Verifica se já existe uma notificação de credencial recebida
+                    val credentialReceived = notifications.any { notif ->
+                        notif.type == NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 &&
+                                notif.credentialId == item.credentialId
+                    }
+
+                    if (credentialReceived) {
+                        // Já foi recebida: esconde aceitar/recusar e mostra status
+                        binding.btnAccept.visibility = View.GONE
+                        binding.btnDecline.visibility = View.GONE
+                        binding.btnCheck.visibility = View.GONE
+                        binding.txtStatus.apply {
+                            visibility = View.VISIBLE
+                            text = "✅ Credencial recebida"
+                            setTextColor(context.getColor(R.color.teal_700))
+                        }
+                    } else {
+                        // Ainda é uma oferta pendente
+                        binding.btnAccept.visibility = View.VISIBLE
+                        binding.btnDecline.visibility = View.VISIBLE
+                        binding.btnCheck.visibility = View.GONE
+                        binding.txtStatus.visibility = View.GONE
+                    }
                 }
-                NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
+                NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 -> {
+                    // Credencial recebida — exibe botão para ver os detalhes
                     binding.btnAccept.visibility = View.GONE
                     binding.btnDecline.visibility = View.GONE
                     binding.btnCheck.visibility = View.VISIBLE
+                    binding.txtStatus.visibility = View.GONE
+                    binding.btnCheck.text = "Ver credencial"
                 }
+
+                NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
+                    // Solicitação de prova pendente (mostrar Conferir detalhes)
+                    val proofDoneExists = notifications.any { notif ->
+                        notif.type == NotificationType.PROOF_REQUEST_V2 &&
+                                notif.proofRecordId == item.proofRecordId
+                    }
+
+                    if (proofDoneExists) {
+                        // Já existe prova concluída, esconde o botão de detalhes
+                        binding.btnAccept.visibility = View.GONE
+                        binding.btnDecline.visibility = View.GONE
+                        binding.btnCheck.visibility = View.GONE
+                        binding.txtStatus.apply {
+                            visibility = View.VISIBLE
+                            text = "✅ Prova concluída"
+                            setTextColor(context.getColor(R.color.teal_700))
+                        }
+                    } else {
+                        // Mostrar o botão de conferir detalhes
+                        binding.btnAccept.visibility = View.GONE
+                        binding.btnDecline.visibility = View.GONE
+                        binding.btnCheck.visibility = View.VISIBLE
+                        binding.txtStatus.visibility = View.GONE
+                        binding.btnCheck.text = "Conferir detalhes"
+                    }
+                }
+
+                NotificationType.PROOF_REQUEST_V2 -> {
+                    // Prova concluída, mostrar botão de “Conferir prova”
+                    binding.btnAccept.visibility = View.GONE
+                    binding.btnDecline.visibility = View.GONE
+                    binding.btnCheck.visibility = View.VISIBLE
+                    binding.txtStatus.visibility = View.GONE
+                    binding.btnCheck.text = "Conferir prova"
+                }
+
                 else -> {
                     binding.actionButtons.visibility = View.GONE
+                    binding.txtStatus.visibility = View.GONE
                 }
             }
         }
@@ -160,11 +221,28 @@ class NotificationsAdapter(
             )
         }
         holder.itemView.findViewById<View?>(R.id.btnCheck)?.setOnClickListener {
-            val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
-                putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            when (notification.type) {
+                NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 -> {
+                    val intent = Intent(context, CredentialDetailActivity::class.java).apply {
+                        putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, notification.credentialId)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
+
+                NotificationType.PROOF_REQUEST_V2,
+                NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
+                    val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
+                        putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
+
+                else -> {
+                    Log.d("NotificationsAdapter", "btnCheck clicked for ${notification.type}")
+                }
             }
-            context.startActivity(intent)
         }
     }
 
