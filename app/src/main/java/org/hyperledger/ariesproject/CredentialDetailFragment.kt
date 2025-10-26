@@ -72,6 +72,7 @@ class CredentialDetailFragment : Fragment() {
         binding.credDefId.text =
             "Credential Definition ID: ${record.credentialDefinitionId ?: "N/A"}"
         binding.revRegId.text = "Revocation Registry: ${record.revRegId ?: "N/A"}"
+        binding.w3cCredentialId.text = "W3cCredential ID: ${record.w3cCredentialId ?: "N/A"}"
 
         val attributes = record.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
         populateAttributes(attributes)

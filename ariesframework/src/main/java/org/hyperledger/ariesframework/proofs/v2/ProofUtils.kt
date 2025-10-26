@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinit
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
@@ -109,7 +110,7 @@ class ProofUtils {
          * @param proofRecordId the id of the proof request to get the matching credentials for.
          * @return [RetrievedCredentials] object.
          */
-        suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String, agent: Agent): RetrievedCredentialsAnonCreds {
+        suspend fun getRequestedCredentialsForProofRequest(proofRecordId: String, agent: Agent, credentialW3cId: String? = null): RetrievedCredentialsAnonCreds {
             val record = agent.proofRepository.getById(proofRecordId)
 
             checkIfMessageTypeIsCorrect(proofRecordId, agent)
@@ -127,7 +128,7 @@ class ProofUtils {
             logger.debug("Proof request json: $proofRequestJson")
             val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
 
-            return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest)
+            return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest, credentialW3cId=credentialW3cId)
         }
 
         private suspend fun checkIfMessageTypeIsCorrect(proofRecordId: String, agent: Agent) {

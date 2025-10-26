@@ -7,6 +7,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
@@ -157,15 +158,24 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
     suspend fun createPresentation(
         record: ProofExchangeRecord,
+        chosenCredentialId: String? = null
     ): Pair<ProofExchangeRecord, PresentationMessageV2> {
+
+        var chosenCredential : CredentialExchangeRecord? = null
+        if (chosenCredentialId != null) {
+            chosenCredential =
+                agent.credentialExchangeRepository.getById(chosenCredentialId)
+        }
+        logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
+
         val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
             proofRecordId = record.id,
             agent = agent,
+            credentialW3cId = chosenCredential?.w3cCredentialId
         )
 
-        val requestedCredentials = agent.proofServiceV2.autoSelectCredentialsForProofRequest(
-            retrievedCredentials = retrievedCredentials,
-        )
+        val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+
 
         val params = AcceptProofRequestOptions(
             proofRecord = record,
@@ -191,35 +201,22 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         chosenCredentialId: String? = null,
         comment: String? = null,
     ): ProofExchangeRecord {
+
+        var chosenCredential : CredentialExchangeRecord? = null
+        if (chosenCredentialId != null) {
+            chosenCredential =
+                agent.credentialExchangeRepository.getById(chosenCredentialId)
+        }
+
         val retrievedCredentials: RetrievedCredentialsAnonCreds =
             ProofUtils.getRequestedCredentialsForProofRequest(
                 proofRecordId = proofRecordId,
                 agent = agent,
+                credentialW3cId = chosenCredential?.w3cCredentialId
             )
 
-        val requestedCredentials: RequestedCredentialsAnoncreds = if (chosenCredentialId != null) {
-            val customRequested = RequestedCredentialsAnoncreds()
+        val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
-            retrievedCredentials.requestedAttributes.forEach { (referent, attributes) ->
-                val match = attributes.find { it.credentialId == chosenCredentialId }
-                    ?: attributes.firstOrNull() // fallback de segurança
-                if (match != null) {
-                    customRequested.requestedAttributes[referent] = match
-                }
-            }
-
-            retrievedCredentials.requestedPredicates.forEach { (referent, predicates) ->
-                val match = predicates.find { it.credentialId == chosenCredentialId }
-                    ?: predicates.firstOrNull()
-                if (match != null) {
-                    customRequested.requestedPredicates[referent] = match
-                }
-            }
-
-            customRequested
-        } else {
-            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
-        }
 
         val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,

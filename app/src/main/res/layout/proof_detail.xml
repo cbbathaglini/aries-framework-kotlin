@@ -60,6 +60,8 @@
             android:background="@android:color/darker_gray"
             android:layout_marginVertical="8dp"/>
 
+
+
 <!--        <TextView-->
 <!--            android:text="Atributos"-->
 <!--            android:textStyle="bold"-->

@@ -21,6 +21,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
@@ -1021,15 +1022,17 @@ class ProofServiceV2(val agent: Agent) {
      * @return ``RetrievedCredentials`` object.
      */
     suspend fun getRequestedCredentialsForProofRequest(
-        anoncredsProofRequest: AnonCredsProofRequest
+        anoncredsProofRequest: AnonCredsProofRequest,
+        credentialW3cId: String?
     ): RetrievedCredentialsAnonCreds = coroutineScope {
-        // 1) Dispara tudo em paralelo, mas apenas coleta resultados (Pair)
+
         val attrDeferred = anoncredsProofRequest.requestedAttributes.map { (referent, requestedAttribute) ->
             async {
                 val credentials = agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
-                        attributeReferent = referent
+                        attributeReferent = referent,
+                        credentialW3cId = credentialW3cId
                     ),
                 )
 
@@ -1057,6 +1060,7 @@ class ProofServiceV2(val agent: Agent) {
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent,
+                        credentialW3cId = credentialW3cId
                     ),
                 )
 

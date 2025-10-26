@@ -56,6 +56,13 @@
                 android:textColor="@android:color/black" />
         </LinearLayout>
 
+        <!-- DIVISÓRIA -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
         <TextView
             android:id="@+id/headerProofInfo"
             android:layout_width="match_parent"
@@ -88,6 +95,13 @@
             android:text="Estado: "
             android:paddingBottom="12dp" />
 
+        <!-- DIVISÓRIA -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
         <TextView
             android:id="@+id/requestedAttributesHeader"
             android:layout_width="match_parent"
@@ -102,6 +116,63 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
+
+        <!-- DIVISÓRIA -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <!-- Predicados Solicitados -->
+        <TextView
+            android:id="@+id/requestedPredicatesHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Predicados Solicitados"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/requestedPredicatesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <!-- DIVISÓRIA -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <!-- Intervalo de Não Revogação -->
+        <TextView
+            android:id="@+id/nonRevokedHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Intervalo de Não Revogação"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/nonRevokedInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Início: - | Fim: -"
+            android:textColor="@android:color/darker_gray"
+            android:paddingBottom="12dp" />
+
+        <!-- DIVISÓRIA -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
 
         <TextView
             android:id="@+id/selectCredentialHeader"

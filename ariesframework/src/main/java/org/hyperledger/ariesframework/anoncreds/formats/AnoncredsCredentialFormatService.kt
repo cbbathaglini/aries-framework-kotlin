@@ -552,7 +552,7 @@ class AnoncredsCredentialFormatService(
         )
         logger.info("storeCredentialOptions: $storeCredentialOptions")
 
-        val credentialId = agent.anonCredsHolderService.storeCredential(
+        val credentialId : String = agent.anonCredsHolderService.storeCredential(
             options = storeCredentialOptions,
         )
         logger.info("credentialId: $credentialId")
@@ -584,6 +584,7 @@ class AnoncredsCredentialFormatService(
             }
         }
 
+        credentialExchangeRecord.w3cCredentialId = credentialId
         credentialExchangeRecord.credentials.add(
             CredentialRecordBinding(
                 credentialRecordType = this.credentialRecordType,
@@ -592,7 +593,7 @@ class AnoncredsCredentialFormatService(
         )
 
         try {
-            agent.credentialExchangeRepository.save(credentialExchangeRecord)
+            agent.credentialExchangeRepository.update(credentialExchangeRecord)
         } catch (e: Throwable) {
             logger.error("${e.message}") // duplicate entry, but saved
         }

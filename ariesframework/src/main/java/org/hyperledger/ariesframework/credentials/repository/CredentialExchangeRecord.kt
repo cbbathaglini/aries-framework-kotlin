@@ -51,6 +51,7 @@ data class CredentialExchangeRecord(
     var role: CredentialRole? = null,
     var revocationNotification: RevocationNotification? = null,
     var formats: List<Format>? = emptyList(),
+    var w3cCredentialId: String? = null
 ) : BaseRecord() {
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()

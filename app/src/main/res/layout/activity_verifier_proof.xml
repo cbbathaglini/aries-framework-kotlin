@@ -4,13 +4,13 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- Scanner moderno -->
+    <!-- Scanner -->
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:id="@+id/scannerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Quadrado central -->
+    <!-- Moldura central -->
     <View
         android:id="@+id/scanFrame"
         android:layout_width="250dp"
@@ -42,10 +42,49 @@
         android:textColor="@android:color/white"
         android:backgroundTint="@color/teal_700" />
 
+    <!-- Loader central -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:visibility="gone" />
+
+    <!-- Container inferior: Spinner + Botão -->
+    <LinearLayout
+        android:id="@+id/bottomContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#AA000000">
+
+        <!-- Lista de credenciais -->
+        <Spinner
+            android:id="@+id/credentialSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dropdown"
+            android:visibility="gone"
+            android:theme="@style/ThemeOverlay.AppCompat.Light"
+            android:background="@android:color/white"
+            android:popupBackground="@android:color/white"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="4dp" />
+
+        <!-- Botão para gerar apresentação -->
+        <Button
+            android:id="@+id/generateButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Gerar Apresentação"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/teal_700"
+            android:visibility="gone" />
+    </LinearLayout>
+
 </FrameLayout>

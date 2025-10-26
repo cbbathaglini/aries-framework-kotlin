@@ -136,13 +136,13 @@ class BluetoothServer(private val context: Context) {
                         BluetoothGattCharacteristic.PROPERTY_NOTIFY or
                         BluetoothGattCharacteristic.PROPERTY_READ,
                 BluetoothGattCharacteristic.PERMISSION_WRITE or
-                        BluetoothGattCharacteristic.PERMISSION_READ
+                        BluetoothGattCharacteristic.PERMISSION_READ,
             )
             onLog?.invoke("🔍 Característica propriedades: ${transferCharacteristic?.properties}")
 
             val descriptor = BluetoothGattDescriptor(
                 UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
-                BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+                BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE,
             )
             transferCharacteristic?.addDescriptor(descriptor)
 
@@ -153,7 +153,6 @@ class BluetoothServer(private val context: Context) {
             onLog?.invoke("🧱 Serviço criado: ${service.uuid}")
             onLog?.invoke("🔹 Característica criada: ${transferCharacteristic?.uuid}")
             onLog?.invoke("📦 addService retornou: $added")
-
         } catch (e: Exception) {
             onLog?.invoke("❌ Erro ao inicializar servidor: ${e.localizedMessage}")
         }
@@ -234,7 +233,7 @@ class BluetoothServer(private val context: Context) {
             preparedWrite: Boolean,
             responseNeeded: Boolean,
             offset: Int,
-            value: ByteArray
+            value: ByteArray,
         ) {
             onLog?.invoke("✏️ onDescriptorWriteRequest: valor=${value.contentToString()}")
             if (responseNeeded) {
@@ -256,7 +255,6 @@ class BluetoothServer(private val context: Context) {
                     onDeviceConnected?.invoke(name)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-
                     val name = device.name ?: "Desconhecido"
                     onLog?.invoke("❌ Cliente desconectado: $name")
                 }
