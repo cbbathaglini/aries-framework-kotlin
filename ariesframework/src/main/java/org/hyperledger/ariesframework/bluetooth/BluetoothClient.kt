@@ -28,7 +28,6 @@ class BluetoothClient(private val context: Context) {
     var onConnected: ((String) -> Unit)? = null
     var onJSONReceived: ((String) -> Unit)? = null
 
-    // 🔹 Callback opcional quando um dispositivo é encontrado
     var onDeviceFound: ((String) -> Unit)? = null
     private val discoveredDevices = mutableMapOf<String, BluetoothDevice>()
 
@@ -36,9 +35,6 @@ class BluetoothClient(private val context: Context) {
     @Volatile private var isWriting = false
     private var negotiatedMtu: Int = 23 // padrão
 
-    // ----------------------------------------------------------------
-    // SCAN
-    // ----------------------------------------------------------------
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN])
     fun startScan() {
 
@@ -106,7 +102,6 @@ class BluetoothClient(private val context: Context) {
                 val name = device.name ?: "Sem nome"
                 val address = device.address ?: return
 
-                // 🚫 Evita duplicados
                 if (discoveredDevices.containsKey(address)) return
 
                 discoveredDevices[address] = device
@@ -128,9 +123,6 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
-    // ----------------------------------------------------------------
-    // CONEXÃO
-    // ----------------------------------------------------------------
     private fun connectToDevice(device: BluetoothDevice) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED
@@ -233,9 +225,6 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
-    // ----------------------------------------------------------------
-    // ENVIO DE JSON (Android → iOS)
-    // ----------------------------------------------------------------
     fun sendJSON(json: String) {
         val gatt = bluetoothGatt
         val ch = targetCharacteristic
@@ -244,7 +233,7 @@ class BluetoothClient(private val context: Context) {
         ch?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
         val data = json.toByteArray(Charsets.UTF_8)
-        val payload = (negotiatedMtu - 3).coerceAtLeast(20) // ATT header 3 bytes
+        val payload = (negotiatedMtu - 3).coerceAtLeast(20)
         writeQueue.clear()
 
         // fatia em chunks seguros

@@ -17,9 +17,6 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.bluetooth.BluetoothClient
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.error.CredoError
-import java.io.ByteArrayOutputStream
-import java.util.zip.GZIPOutputStream
 
 @SuppressLint("MissingPermission")
 class PresentationDetailActivity : AppCompatActivity() {
@@ -41,6 +38,18 @@ class PresentationDetailActivity : AppCompatActivity() {
     private var pendingJson: String? = null
     private val devices = mutableListOf<String>()
     private lateinit var devicesAdapter: ArrayAdapter<String>
+
+    // === Novo: lista de permissões BLE (ajustada por versão) ===
+    private val blePermissions: Array<String> by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else {
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     private val requestPerms = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -86,7 +95,9 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnCopyJson.setOnClickListener {
             val json = txtJson.text.toString()
             if (json.isNotEmpty()) {
-                copyToClipboard(json)
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Presentation JSON", json)
+                clipboard.setPrimaryClip(clip)
                 Toast.makeText(this, "📋 Conteúdo copiado", Toast.LENGTH_SHORT).show()
             }
         }
@@ -96,13 +107,11 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnSendBluetooth.setOnClickListener {
             record?.let {
                 pendingJson = loadJSONPreview(it)
-
-                // Se já conectado, envia diretamente
                 if (bluetoothClient.isConnected()) {
                     appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
                     sendJSONSafely(pendingJson!!)
                 } else {
-                    appendLog("🔍 Ainda não conectado — iniciando scan para encontrar o iOS…")
+                    appendLog("🔍 Ainda não conectado — iniciando scan…")
                     checkAndRequestPermsThenScan()
                 }
             } ?: run {
@@ -122,8 +131,7 @@ class PresentationDetailActivity : AppCompatActivity() {
         bluetoothClient.disconnect()
     }
 
-
-
+    // === CLIENTE BLE ===
     private fun setupBluetoothClient() {
         bluetoothClient = BluetoothClient(this).apply {
             onLog = { msg ->
@@ -150,6 +158,7 @@ class PresentationDetailActivity : AppCompatActivity() {
         }
     }
 
+    // === CARREGA REGISTRO ===
     private suspend fun loadRecord(recordId: String?) {
         if (recordId == null) return
         val rec = agent?.proofRepository?.getById(recordId)
@@ -164,35 +173,24 @@ class PresentationDetailActivity : AppCompatActivity() {
     private fun loadJSONPreview(record: ProofExchangeRecord?): String {
         val presentation = record?.presentationMessage ?: return "Nenhum conteúdo disponível"
         return try {
-            val json = Json {
+            Json {
                 prettyPrint = true
                 prettyPrintIndent = "  "
                 encodeDefaults = true
                 explicitNulls = false
             }.encodeToString(presentation)
-            json
         } catch (e: Exception) {
             appendLog("❌ Erro ao gerar JSON: ${e.localizedMessage}")
             "{}"
         }
     }
 
-    private fun copyToClipboard(text: String) {
-        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val clip = android.content.ClipData.newPlainText("Presentation JSON", text)
-        clipboard.setPrimaryClip(clip)
-    }
-
+    // === SCAN BLE ===
     private fun checkAndRequestPermsThenScan() {
-        val perms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        val need = perms.any {
+        val needRequest = blePermissions.any {
             ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (need) requestPerms.launch(perms)
+        if (needRequest) requestPerms.launch(blePermissions)
         else startBleScan()
     }
 
@@ -200,10 +198,12 @@ class PresentationDetailActivity : AppCompatActivity() {
         devices.clear()
         devicesAdapter.notifyDataSetChanged()
         txtBluetoothStatus.text = "🔍 Procurando dispositivos BLE…"
+
         appendLog("🔎 Iniciando scan…")
         bluetoothClient.startScan()
     }
 
+    // === ENVIO JSON ===
     private fun sendJSONSafely(json: String) {
         try {
             bluetoothClient.sendJSON(json)

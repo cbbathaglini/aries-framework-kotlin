@@ -21,23 +21,26 @@ class ReceivingPresentationActivity : AppCompatActivity() {
     private lateinit var txtBluetoothState: TextView
     private lateinit var txtDevice: TextView
     private lateinit var txtStatus: TextView
-    private lateinit var txtCreatedAt: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var layoutResult: LinearLayout
+    private lateinit var txtJsonPreview: TextView
+    private lateinit var txtLogs: TextView
+    private lateinit var scrollLogs: ScrollView
 
     private lateinit var bluetoothServer: BluetoothServer
     private var agent: Agent? = null
 
-    private lateinit var txtJsonPreview: TextView
-
-    private lateinit var txtLogs: TextView
-    private lateinit var scrollLogs: ScrollView
+    // === NOVO: launcher de permissão ===
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.all { it.value }
-        if (allGranted) startBluetoothServer()
-        else Toast.makeText(this, "Permissões Bluetooth negadas.", Toast.LENGTH_LONG).show()
+        if (allGranted) {
+            appendLog("✅ Permissões concedidas, iniciando servidor BLE…")
+            startBluetoothServer()
+        } else {
+            Toast.makeText(this, "❌ Permissões Bluetooth negadas.", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,33 +50,29 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         txtBluetoothState = findViewById(R.id.txtBluetoothState)
         txtDevice = findViewById(R.id.txtDevice)
         txtStatus = findViewById(R.id.txtStatus)
-        txtCreatedAt = findViewById(R.id.txtCreatedAt)
         progressBar = findViewById(R.id.progressBar)
         layoutResult = findViewById(R.id.layoutResult)
         txtJsonPreview = findViewById(R.id.txtJsonPreview)
         txtLogs = findViewById(R.id.txtLogs)
         scrollLogs = findViewById(R.id.scrollLogs)
 
-        val backButton: Button = findViewById(R.id.backButton)
-        backButton.setOnClickListener { finish() }
+        findViewById<Button>(R.id.backButton).setOnClickListener { finish() }
 
-        val copyButton: Button = findViewById(R.id.btnCopyLogs)
-        copyButton.setOnClickListener {
+        findViewById<Button>(R.id.btnCopyLogs).setOnClickListener {
             val logs = txtLogs.text.toString()
-            if (logs.isNotBlank()) {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("Logs BLE", logs)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "Logs copiados para a área de transferência ✅", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Nenhum log disponível para copiar.", Toast.LENGTH_SHORT).show()
-            }
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val clip = android.content.ClipData.newPlainText("Logs BLE", logs)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(this, "📋 Logs copiados para a área de transferência", Toast.LENGTH_SHORT).show()
         }
 
         agent = (application as? WalletApp)?.agent
         requestBluetoothPermissions()
     }
 
+    // ==================================================
+    // 🔹 PERMISSÕES BLE
+    // ==================================================
     private fun requestBluetoothPermissions() {
         val needed = arrayOf(
             Manifest.permission.BLUETOOTH_CONNECT,
@@ -89,79 +88,88 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         else permissionLauncher.launch(needed)
     }
 
+    // ==================================================
+    // 🔹 INICIALIZA O SERVIDOR
+    // ==================================================
     private fun startBluetoothServer() {
-        bluetoothServer = BluetoothServer(this)
+        bluetoothServer = BluetoothServer(this).apply {
 
-        bluetoothServer.onDeviceConnected = { deviceName ->
-            runOnUiThread {
-                txtDevice.text = "Dispositivo conectado: $deviceName"
-            }
-        }
-
-        bluetoothServer.onLog = { log ->
-            runOnUiThread {
-                // Mostra o log principal
-                txtBluetoothState.text = "Último evento: $log"
-
-                // Acumula logs no terminal
-                txtLogs.append("\n$log")
-
-                // Auto-scroll para o final
-                scrollLogs.post { scrollLogs.fullScroll(ScrollView.FOCUS_DOWN) }
-            }
-        }
-
-        bluetoothServer.onJSONReceived = { jsonString ->
-            runOnUiThread {
-                txtStatus.text = "📥 Apresentação recebida!"
-                progressBar.visibility = ProgressBar.VISIBLE
+            onDeviceConnected = { deviceName ->
+                runOnUiThread {
+                    txtDevice.text = "Dispositivo conectado: $deviceName"
+                }
             }
 
-            lifecycleScope.launch {
-                try {
-                    // Tenta formatar JSON com kotlinx.serialization
-                    val jsonFormatter = Json {
-                        prettyPrint = true
-                        prettyPrintIndent = "  "
-                        encodeDefaults = true
-                        ignoreUnknownKeys = true
-                    }
+            onLog = { log ->
+                runOnUiThread {
+                    txtBluetoothState.text = "Último evento: $log"
+                    appendLog(log)
+                }
+            }
 
-                    val formattedJson = try {
-                        val parsed = jsonFormatter.parseToJsonElement(jsonString)
-                        jsonFormatter.encodeToString(JsonObject.serializer(), parsed.jsonObject)
+            onJSONReceived = { jsonString ->
+                runOnUiThread {
+                    txtStatus.text = "📥 Apresentação recebida!"
+                    progressBar.visibility = ProgressBar.VISIBLE
+                }
+
+                lifecycleScope.launch {
+                    try {
+                        val jsonFormatter = Json {
+                            prettyPrint = true
+                            prettyPrintIndent = "  "
+                            encodeDefaults = true
+                            ignoreUnknownKeys = true
+                        }
+
+                        val formattedJson = try {
+                            val parsed = jsonFormatter.parseToJsonElement(jsonString)
+                            jsonFormatter.encodeToString(JsonObject.serializer(), parsed.jsonObject)
+                        } catch (_: Exception) {
+                            jsonString
+                        }
+
+                        runOnUiThread {
+                            txtJsonPreview.text = formattedJson
+                            progressBar.visibility = ProgressBar.GONE
+                            txtStatus.text = "✅ Apresentação recebida e exibida!"
+                            layoutResult.setBackgroundColor(getColor(android.R.color.holo_green_light))
+                        }
+
+                        // 👉 Se quiser processar a apresentação localmente:
+                        // val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
+                        // runOnUiThread { ... }
+
                     } catch (e: Exception) {
-                        // Se falhar no parse, mostra cru
-                        jsonString
-                    }
-
-                    runOnUiThread {
-                        txtJsonPreview.text = formattedJson
-                        progressBar.visibility = ProgressBar.GONE
-                        txtStatus.text = "✅ Apresentação recebida e exibida!"
-                    }
-
-//                    val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
-//                    runOnUiThread {
-//                        progressBar.visibility = ProgressBar.GONE
-//                        if (result != null) {
-//                            txtStatus.text = "✅ Apresentação verificada com sucesso!"
-//                            layoutResult.setBackgroundColor(getColor(android.R.color.holo_green_light))
-//                        } else {
-//                            txtStatus.text = "❌ Falha na verificação."
-//                            layoutResult.setBackgroundColor(getColor(android.R.color.holo_red_light))
-//                        }
-//                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    runOnUiThread {
-                        progressBar.visibility = ProgressBar.GONE
-                        txtStatus.text = "❌ Erro ao processar: ${e.message}"
+                        e.printStackTrace()
+                        runOnUiThread {
+                            progressBar.visibility = ProgressBar.GONE
+                            txtStatus.text = "❌ Erro ao processar: ${e.message}"
+                            layoutResult.setBackgroundColor(getColor(android.R.color.holo_red_light))
+                        }
                     }
                 }
             }
         }
 
+        // ⚠️ Corrigido: não use `context` ou `onLog` fora do BluetoothServer
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            appendLog("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida.")
+            return
+        }
+
         bluetoothServer.startServer()
+    }
+
+    // ==================================================
+    // 🔹 LOGGING UTIL
+    // ==================================================
+    private fun appendLog(msg: String) {
+        txtLogs.append("\n$msg")
+        scrollLogs.post { scrollLogs.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 }
