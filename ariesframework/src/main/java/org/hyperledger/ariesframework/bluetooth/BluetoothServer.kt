@@ -28,6 +28,7 @@ class BluetoothServer(private val context: Context) {
 
     private var isAdvertising = false
     private var isConnected = false
+    private var connectedDevice: BluetoothDevice? = null
 
     private val receivedBuffer = mutableListOf<Byte>()
     var onLog: ((String) -> Unit)? = null
@@ -183,12 +184,15 @@ class BluetoothServer(private val context: Context) {
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             onLog?.invoke("📶 Conexão: status=$status, newState=$newState (${device.name})")
-            isConnected = (newState == BluetoothProfile.STATE_CONNECTED)
 
-            if (isConnected) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                connectedDevice = device
+                isConnected = true
                 onDeviceConnected?.invoke(device.name ?: "Sem nome")
                 Handler(Looper.getMainLooper()).post { stopAdvertising() }
             } else {
+                connectedDevice = null
+                isConnected = false
                 Handler(Looper.getMainLooper()).post { startAdvertising() } // disponível para nvoos clientes
             }
         }
@@ -222,6 +226,11 @@ class BluetoothServer(private val context: Context) {
                 val text = String(full)
                 onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
                 onJSONReceived?.invoke(text)
+
+                Handler(Looper.getMainLooper()).post {
+                    disconnectClient()
+                }
+
             } else {
                 receivedBuffer.addAll(value.toList())
                 onLog?.invoke("⬇️ Chunk ${value.size} bytes (total=${receivedBuffer.size})")
@@ -229,6 +238,20 @@ class BluetoothServer(private val context: Context) {
             if (responseNeeded) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
+        }
+    }
+
+    fun disconnectClient() {
+        val device = connectedDevice
+        if (device != null && isConnected) {
+            onLog?.invoke("🔌 Desconectando cliente: ${device.name}")
+            try {
+                gattServer?.cancelConnection(device)
+            } catch (e: Exception) {
+                onLog?.invoke("⚠️ Erro ao desconectar: ${e.message}")
+            }
+            connectedDevice = null
+            isConnected = false
         }
     }
 }

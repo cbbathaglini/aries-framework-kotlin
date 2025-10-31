@@ -43,6 +43,13 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        bluetoothServer.onJSONReceived = null
+        bluetoothServer.disconnectClient()
+        bluetoothServer.stopServer()
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_receiving_presentation)
@@ -172,4 +179,5 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         txtLogs.append("\n$msg")
         scrollLogs.post { scrollLogs.fullScroll(ScrollView.FOCUS_DOWN) }
     }
+
 }

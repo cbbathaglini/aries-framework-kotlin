@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.bluetooth.BluetoothClient
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.bluetooth.BluetoothClientAV
 
 @SuppressLint("MissingPermission")
 class PresentationDetailActivity : AppCompatActivity() {
@@ -27,12 +28,14 @@ class PresentationDetailActivity : AppCompatActivity() {
     private lateinit var btnCopyJson: Button
     private lateinit var btnScanDevices: Button
     private lateinit var btnSendBluetooth: Button
+    private lateinit var btnSendBluetoothAndroid: Button
     private lateinit var txtBluetoothStatus: TextView
     private lateinit var logsRecycler: RecyclerView
     private lateinit var logsAdapter: LogsAdapter
     private lateinit var devicesList: ListView
 
     private lateinit var bluetoothClient: BluetoothClient
+    private lateinit var bluetoothClientAV: BluetoothClientAV
     private var agent: Agent? = null
     private var record: ProofExchangeRecord? = null
     private var pendingJson: String? = null
@@ -75,6 +78,7 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnCopyJson        = findViewById(R.id.btnCopyJson)
         btnScanDevices     = findViewById(R.id.btnScanDevices)
         btnSendBluetooth   = findViewById(R.id.btnSendBluetooth)
+        btnSendBluetoothAndroid   = findViewById(R.id.btnSendBluetoothAndroid)
         txtBluetoothStatus = findViewById(R.id.txtBluetoothStatus)
         devicesList        = findViewById(R.id.bluetoothDevicesList)
         logsRecycler       = findViewById(R.id.logsRecycler)
@@ -119,6 +123,16 @@ class PresentationDetailActivity : AppCompatActivity() {
             }
         }
 
+        btnSendBluetoothAndroid.setOnClickListener {
+            record?.let {
+                pendingJson = loadJSONPreview(it)
+                appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
+                sendJSONSafelyAndroid(pendingJson!!)
+            } ?: run {
+                Toast.makeText(this, "❌ Nenhum registro carregado.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         devicesList.setOnItemClickListener { _, _, pos, _ ->
             val device = devices[pos]
             appendLog("🔗 Conectando a $device…")
@@ -129,9 +143,9 @@ class PresentationDetailActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         bluetoothClient.disconnect()
+        bluetoothClientAV.disconnect()
     }
 
-    // === CLIENTE BLE ===
     private fun setupBluetoothClient() {
         bluetoothClient = BluetoothClient(this).apply {
             onLog = { msg ->
@@ -203,12 +217,23 @@ class PresentationDetailActivity : AppCompatActivity() {
         bluetoothClient.startScan()
     }
 
-    // === ENVIO JSON ===
+
     private fun sendJSONSafely(json: String) {
         try {
             bluetoothClient.sendJSON(json)
             appendLog("✅ JSON enviado com sucesso.")
             Toast.makeText(this, "📤 Apresentação enviada via Bluetooth", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            appendLog("❌ Falha ao enviar JSON: ${e.localizedMessage}")
+            Toast.makeText(this, "Erro ao enviar JSON", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun sendJSONSafelyAndroid(json: String) {
+        try {
+            bluetoothClientAV = BluetoothClientAV(this)
+            bluetoothClientAV.start(json)
+
         } catch (e: Exception) {
             appendLog("❌ Falha ao enviar JSON: ${e.localizedMessage}")
             Toast.makeText(this, "Erro ao enviar JSON", Toast.LENGTH_LONG).show()
