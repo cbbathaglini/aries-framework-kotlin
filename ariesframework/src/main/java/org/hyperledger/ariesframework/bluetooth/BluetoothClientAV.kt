@@ -30,7 +30,7 @@ class BluetoothClientAV(private val context: Context) {
     private var newMTU = 512
     private var pendingLatch: CountDownLatch? = null
 
-    @SuppressLint("MissingPermission")
+
     fun start(jsonString: String) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
             != PackageManager.PERMISSION_GRANTED
@@ -44,6 +44,12 @@ class BluetoothClientAV(private val context: Context) {
 
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+                    return
+                }
                 val uuids = result.scanRecord?.serviceUuids?.map { it.uuid } ?: emptyList()
                 if (uuids.contains(serviceUuid)) {
                     Log.i(TAG, "Dispositivo encontrado: ${result.device.name} (${result.device.address})")
@@ -63,8 +69,14 @@ class BluetoothClientAV(private val context: Context) {
         }, 10000)
     }
 
-    @SuppressLint("MissingPermission")
+
     private fun connect(device: BluetoothDevice) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+            return
+        }
         Log.i(TAG, "🔗 Conectando ao dispositivo...")
         gatt = device.connectGatt(context, false, gattCallback)
     }
@@ -87,15 +99,25 @@ class BluetoothClientAV(private val context: Context) {
             }
         }
 
-        @SuppressLint("MissingPermission")
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+                return
+            }
             Log.i(TAG, "📏 MTU negociada: $mtu bytes (status=$status)")
             gatt.discoverServices() // só descobre serviços após MTU confirmada
 
         }
 
-        @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+                return
+            }
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.e(TAG, "Erro ao descobrir serviços: $status")
                 return
@@ -136,7 +158,6 @@ class BluetoothClientAV(private val context: Context) {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun sendLargeData(
         gatt: BluetoothGatt,
         data: ByteArray,
@@ -144,6 +165,12 @@ class BluetoothClientAV(private val context: Context) {
         onProgress: ((sent: Int, total: Int) -> Unit)? = null,
         onComplete: (() -> Unit)? = null
     ) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+            return
+        }
         Thread {
             var offset = 0
             val totalSize = data.size
@@ -204,8 +231,13 @@ class BluetoothClientAV(private val context: Context) {
         }.start()
     }
 
-    @SuppressLint("MissingPermission")
     fun disconnect() {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+            return
+        }
         gatt?.close()
         gatt = null
         Log.i(TAG,"🔌 Conexão BLE encerrada.")

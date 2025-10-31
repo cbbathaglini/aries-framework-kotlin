@@ -11,10 +11,10 @@ import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import java.util.*
 
-@SuppressLint("MissingPermission")
 class BluetoothServer(private val context: Context) {
 
     private val serviceUUID = UUID.fromString("d14a2b10-9f12-4b2a-b0c1-7b6b2c0a9d99")
@@ -34,8 +34,23 @@ class BluetoothServer(private val context: Context) {
     var onLog: ((String) -> Unit)? = null
     var onJSONReceived: ((String) -> Unit)? = null
     var onDeviceConnected: ((String) -> Unit)? = null
-
+    val TAG = "SimpleBleClient"
     // ─────────────────────────────────────────────────────────────────────────────
+
+    private fun checkPermission(){
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+
+        }
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
+
+        }
+    }
 
     fun startServer() {
         onLog?.invoke("🚀 startServer() — preparando advertising e GATT…")
@@ -72,6 +87,7 @@ class BluetoothServer(private val context: Context) {
     }
 
     fun stopServer() {
+        checkPermission();
         stopAdvertising()
         try { gattServer?.close() } catch (_: Throwable) {}
         gattServer = null
@@ -91,6 +107,7 @@ class BluetoothServer(private val context: Context) {
         }
 
         // nome curto para não estourar 31 bytes
+        checkPermission();
         bluetoothAdapter.name = "IDD"
 
         val settings = AdvertiseSettings.Builder()
@@ -110,12 +127,14 @@ class BluetoothServer(private val context: Context) {
             .build()
 
         onLog?.invoke("📡 Iniciando advertising (UUID + nome no scanResponse)…")
+        checkPermission();
         advertiser.startAdvertising(settings, advData, scanResp, advertiseCallback)
     }
 
     private fun stopAdvertising() {
         val advertiser = bluetoothAdapter.bluetoothLeAdvertiser ?: return
         if (!isAdvertising) return
+        checkPermission();
         advertiser.stopAdvertising(advertiseCallback)
         isAdvertising = false
         onLog?.invoke("🛑 Advertising parado.")
@@ -146,7 +165,7 @@ class BluetoothServer(private val context: Context) {
 
     private fun openGattServerAndAddService() {
         onLog?.invoke("🧱 Abrindo GATT server e adicionando serviço…")
-
+        checkPermission();
         gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
 
         transferCharacteristic = BluetoothGattCharacteristic(
@@ -183,6 +202,7 @@ class BluetoothServer(private val context: Context) {
         }
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
+            checkPermission();
             onLog?.invoke("📶 Conexão: status=$status, newState=$newState (${device.name})")
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -207,6 +227,7 @@ class BluetoothServer(private val context: Context) {
             value: ByteArray
         ) {
             onLog?.invoke("✏️ Descriptor write (len=${value.size})")
+            checkPermission();
             if (responseNeeded) gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
 
@@ -236,6 +257,7 @@ class BluetoothServer(private val context: Context) {
                 onLog?.invoke("⬇️ Chunk ${value.size} bytes (total=${receivedBuffer.size})")
             }
             if (responseNeeded) {
+                checkPermission();
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
         }
@@ -243,6 +265,7 @@ class BluetoothServer(private val context: Context) {
 
     fun disconnectClient() {
         val device = connectedDevice
+        checkPermission();
         if (device != null && isConnected) {
             onLog?.invoke("🔌 Desconectando cliente: ${device.name}")
             try {
