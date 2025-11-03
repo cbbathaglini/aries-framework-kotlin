@@ -33,6 +33,76 @@ class BluetoothClientAV(private val context: Context) {
 
     var onLog: ((String) -> Unit)? = null
 
+    /** 🔒 Verifica permissões conforme versão do Android */
+    private fun hasBlePermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ (API 31+)
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // Android 11 e anteriores — usar permissões antigas + localização
+            (
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    ) &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun ensureBlePermissions(activity: Activity?): Boolean {
+        val permissions = mutableListOf<String>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.addAll(listOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ))
+        } else {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        val missing = permissions.filter {
+            ActivityCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        return if (missing.isNotEmpty()) {
+            if (activity != null) {
+                ActivityCompat.requestPermissions(activity, missing.toTypedArray(), 1001)
+            }
+            false
+        } else {
+            true
+        }
+    }
+
+    /** 🔑 Solicita permissões dinâmicas de acordo com a versão do Android */
+    private fun requestBlePermissionsIfNeeded() {
+        val act = context as? Activity ?: run {
+            onLog?.invoke("❌ Contexto não é uma Activity — não é possível solicitar permissões dinamicamente.")
+            return
+        }
+
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        }
+
+        val missing = permissions.filter {
+            ActivityCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missing.isNotEmpty()) {
+            ActivityCompat.requestPermissions(act, missing.toTypedArray(), 1001)
+        }
+    }
 
     fun start(jsonString: String) {
 
@@ -41,13 +111,17 @@ class BluetoothClientAV(private val context: Context) {
             return
         }
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            onLog?.invoke("Permissão BLUETOOTH_SCAN não concedida")
+        if (!hasBlePermissions()) {
+            onLog?.invoke("Permissões BLE não concedidas — solicitando…")
+            requestBlePermissionsIfNeeded()
+        }
+
+        if (!ensureBlePermissions(context as? Activity)) {
+            onLog?.invoke("🚫 Permissões BLE não concedidas — solicite manualmente e tente novamente.")
             return
         }
-        this.jsonString = jsonString
+
+            this.jsonString = jsonString
         onLog?.invoke("🔍 Iniciando escaneamento BLE...")
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 
@@ -107,6 +181,10 @@ class BluetoothClientAV(private val context: Context) {
         bluetoothAdapter.bluetoothLeScanner?.stopScan(callback)
         bluetoothAdapter.bluetoothLeScanner?.flushPendingScanResults(callback)
         bluetoothAdapter.name = "AV"
+        if (bluetoothAdapter.name != "AV") {
+            bluetoothAdapter.name = "AV"
+            onLog?.invoke("📛 Nome do cliente forçado para 'AV'")
+        }
 
         Handler(Looper.getMainLooper()).postDelayed({
             scanner.startScan(null, settings, callback)
@@ -119,14 +197,28 @@ class BluetoothClientAV(private val context: Context) {
 
 
     private fun connect(device: BluetoothDevice) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            onLog?.invoke("Permissão BLUETOOTH_SCAN não concedida")
+        if (!hasBlePermissions()) {
+            onLog?.invoke("Permissões BLE não concedidas")
             return
         }
+
+        if (!ensureBlePermissions(context as? Activity)) {
+            onLog?.invoke("🚫 Permissões BLE não concedidas — solicite manualmente e tente novamente.")
+            return
+        }
+
         onLog?.invoke("🔗 Conectando ao dispositivo...")
-        gatt = device.connectGatt(context, false, gattCallback)
+        try {
+            gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+            } else {
+                device.connectGatt(context, false, gattCallback)
+            }
+        } catch (se: SecurityException) {
+            onLog?.invoke("❌ Falha ao conectar: permissão de Bluetooth negada em tempo de execução (${se.message})")
+        } catch (e: Exception) {
+            onLog?.invoke("❌ Erro inesperado ao conectar: ${e.message}")
+        }
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
@@ -156,8 +248,9 @@ class BluetoothClientAV(private val context: Context) {
             }
             onLog?.invoke("📏 MTU negociada: $mtu bytes (status=$status)")
             Handler(Looper.getMainLooper()).postDelayed({
+                onLog?.invoke("🔍 Descobrindo serviços (delay 800 ms)…")
                 gatt.discoverServices()
-            }, 300)
+            }, 800)
 
         }
 
@@ -190,30 +283,31 @@ class BluetoothClientAV(private val context: Context) {
             onLog?.invoke("🧩 Característica encontrada")
 
 
-            onLog?.invoke("🤝 Enviando handshake inicial HELLO_AV")
-
-            sendLargeData(
-                gatt,
-                "HELLO_AV".toByteArray(Charsets.UTF_8),
-                chunkSize = newMTU,
-                onComplete = {
-                    onLog?.invoke("🤝 Handshake enviado, aguardando 300 ms…")
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        onLog?.invoke("📤 Enviando JSON agora…")
-                        sendLargeData(
-                            gatt,
-                            jsonString.toByteArray(Charsets.UTF_8),
-                            chunkSize = newMTU,
-                            onProgress = { sent, total ->
-                                onLog?.invoke("📦 Progresso: $sent / $total bytes enviados")
-                            },
-                            onComplete = {
-                                onLog?.invoke("🎉 Transmissão finalizada com sucesso!")
-                            }
-                        )
-                    }, 300)
-                }
-            )
+            Handler(Looper.getMainLooper()).postDelayed({
+                onLog?.invoke("🤝 Enviando handshake inicial HELLO_AV")
+                sendLargeData(
+                    gatt,
+                    "HELLO_AV".toByteArray(Charsets.UTF_8),
+                    chunkSize = newMTU,
+                    onComplete = {
+                        onLog?.invoke("🤝 Handshake enviado, aguardando 300 ms…")
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            onLog?.invoke("📤 Enviando JSON agora…")
+                            sendLargeData(
+                                gatt,
+                                jsonString.toByteArray(Charsets.UTF_8),
+                                chunkSize = newMTU,
+                                onProgress = { sent, total ->
+                                    onLog?.invoke("📦 Progresso: $sent / $total bytes enviados")
+                                },
+                                onComplete = {
+                                    onLog?.invoke("🎉 Transmissão finalizada com sucesso!")
+                                }
+                            )
+                        }, 300)
+                    }
+                )
+            }, 500)
 
 //            sendLargeData(gatt, jsonString.toByteArray(Charsets.UTF_8), chunkSize = newMTU,
 //                onProgress = { sent, total ->
@@ -246,12 +340,11 @@ class BluetoothClientAV(private val context: Context) {
         onProgress: ((sent: Int, total: Int) -> Unit)? = null,
         onComplete: (() -> Unit)? = null
     ) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            onLog?.invoke("Permissão BLUETOOTH_SCAN não concedida")
+        if (!hasBlePermissions()) {
+            onLog?.invoke("Permissões BLE não concedidas — abortando envio.")
             return
         }
+
         Thread {
             var offset = 0
             val totalSize = data.size
@@ -265,17 +358,33 @@ class BluetoothClientAV(private val context: Context) {
                 pendingLatch = latch
 
                 try {
-//                    targetCharacteristic?.apply {
-//                        writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-//                        value = chunk
-//                    }
-
                     targetCharacteristic?.apply {
-                        writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                        writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
                         value = chunk
                     }
 
-                    val success = gatt.writeCharacteristic(targetCharacteristic)
+//                    targetCharacteristic?.apply {
+//                        writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+//                        value = chunk
+//                    }
+
+                    val success = try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                            ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+                            != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            onLog?.invoke("⚠️ Permissão BLUETOOTH_CONNECT não concedida no momento — abortando escrita.")
+                            false
+                        } else {
+                            gatt.writeCharacteristic(targetCharacteristic)
+                        }
+                    } catch (se: SecurityException) {
+                        onLog?.invoke("❌ Falha ao escrever característica: permissão de Bluetooth negada (${se.message})")
+                        false
+                    } catch (e: Exception) {
+                        onLog?.invoke("❌ Erro inesperado ao escrever característica: ${e.message}")
+                        false
+                    }
                     onLog?.invoke("✉️ writeCharacteristic retornou: $success")
 
                     if (!success) {
@@ -291,7 +400,7 @@ class BluetoothClientAV(private val context: Context) {
                     totalSent += currentChunkSize
                     offset += currentChunkSize
                     onProgress?.invoke(totalSent, totalSize)
-                    Thread.sleep(50)
+                    Thread.sleep(200)
 
                 } catch (e: Exception) {
                     onLog?.invoke("Erro ao enviar chunk: ${e.message}")
@@ -304,7 +413,23 @@ class BluetoothClientAV(private val context: Context) {
                 writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
                 value = "<EOF>".toByteArray(Charsets.UTF_8)
             }
-            val success = gatt.writeCharacteristic(targetCharacteristic)
+            val success = try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    onLog?.invoke("⚠️ Permissão BLUETOOTH_CONNECT não concedida no momento — abortando escrita.")
+                    false
+                } else {
+                    gatt.writeCharacteristic(targetCharacteristic)
+                }
+            } catch (se: SecurityException) {
+                onLog?.invoke("❌ Falha ao escrever característica: permissão de Bluetooth negada (${se.message})")
+                false
+            } catch (e: Exception) {
+                onLog?.invoke("❌ Erro inesperado ao escrever característica: ${e.message}")
+                false
+            }
             if (success) {
                 onLog?.invoke("Envio do EOF.")
             }

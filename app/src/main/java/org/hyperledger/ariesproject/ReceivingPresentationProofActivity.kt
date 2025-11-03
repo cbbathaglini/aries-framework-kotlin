@@ -3,6 +3,7 @@ package org.hyperledger.ariesproject
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,22 +78,31 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         requestBluetoothPermissions()
     }
 
-    // ==================================================
-    // 🔹 PERMISSÕES BLE
-    // ==================================================
     private fun requestBluetoothPermissions() {
-        val needed = arrayOf(
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_ADVERTISE,
-            Manifest.permission.BLUETOOTH_SCAN
-        )
+        val needed = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        }
 
         val missing = needed.filter {
             ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
 
-        if (missing.isEmpty()) startBluetoothServer()
-        else permissionLauncher.launch(needed)
+        if (missing.isEmpty()) {
+            appendLog("✅ Todas as permissões BLE já concedidas.")
+            startBluetoothServer()
+        } else {
+            appendLog("⚠️ Solicitando permissões BLE faltantes: ${missing.joinToString()}")
+            permissionLauncher.launch(missing.toTypedArray())
+        }
     }
 
     // ==================================================
@@ -160,12 +170,11 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         }
 
         // ⚠️ Corrigido: não use `context` ou `onLog` fora do BluetoothServer
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_ADVERTISE
-            ) != PackageManager.PERMISSION_GRANTED
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
+            != PackageManager.PERMISSION_GRANTED
         ) {
-            appendLog("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida.")
+            appendLog("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida (Android 12+).")
             return
         }
 

@@ -8,6 +8,7 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
@@ -39,18 +40,11 @@ class BluetoothServer(private val context: Context) {
     // ─────────────────────────────────────────────────────────────────────────────
 
     private fun checkPermission(){
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
-
+        if (!hasBlePermissions()) {
+            onLog?.invoke("🚫 Permissões BLE não concedidas — verifique se a localização (Android 11-) ou Bluetooth (Android 12+) estão ativas.")
+            return
         }
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e(TAG, "Permissão BLUETOOTH_SCAN não concedida")
 
-        }
     }
 
 //    fun startServer() {
@@ -87,6 +81,23 @@ class BluetoothServer(private val context: Context) {
 //        }
 //    }
 
+    private fun hasBlePermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ (API 31+)
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // Android 11 e anteriores — usar permissões antigas + localização
+            (
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    ) &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     fun startServer() {
         onLog?.invoke("🚀 startServer() — preparando advertising e GATT…")
         onLog?.invoke("📱 BLE peripheral suportado? ${bluetoothAdapter.isMultipleAdvertisementSupported}")
@@ -94,10 +105,8 @@ class BluetoothServer(private val context: Context) {
         onLog?.invoke("⚙️ Versão Android: ${android.os.Build.VERSION.SDK_INT}")
         onLog?.invoke("🏷️ Dispositivo: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
 
-        val needAdvertise = ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED
-        val needConnect   = ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)   != PackageManager.PERMISSION_GRANTED
-        if (needAdvertise || needConnect) {
-            onLog?.invoke("⚠️ Permissões de Bluetooth não concedidas (ADVERTISE/CONNECT).")
+        if (!hasBlePermissions()) {
+            onLog?.invoke("🚫 Permissões BLE não concedidas — verifique se a localização (Android 11-) ou Bluetooth (Android 12+) estão ativas.")
             return
         }
 
@@ -256,12 +265,30 @@ class BluetoothServer(private val context: Context) {
 //                    BluetoothGattCharacteristic.PERMISSION_READ
 //        )
 
+//        transferCharacteristic = BluetoothGattCharacteristic(
+//            characteristicUUID,
+//            BluetoothGattCharacteristic.PROPERTY_WRITE or
+//                    BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+//            BluetoothGattCharacteristic.PERMISSION_WRITE
+//        )
+
         transferCharacteristic = BluetoothGattCharacteristic(
             characteristicUUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE or
-                    BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-            BluetoothGattCharacteristic.PERMISSION_WRITE
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                    BluetoothGattCharacteristic.PROPERTY_READ,
+            BluetoothGattCharacteristic.PERMISSION_WRITE or
+                    BluetoothGattCharacteristic.PERMISSION_READ
         )
+
+//        transferCharacteristic = BluetoothGattCharacteristic(
+//            characteristicUUID,
+//            BluetoothGattCharacteristic.PROPERTY_WRITE or
+//                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+//                    BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+//            BluetoothGattCharacteristic.PERMISSION_WRITE
+//        )
 
 
         val cccd = BluetoothGattDescriptor(
@@ -288,13 +315,13 @@ class BluetoothServer(private val context: Context) {
         }
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            val nome = device.name ?: "Sem nome"
+            val nome = device.name ?: "WNIDD"
             checkPermission();
             onLog?.invoke("📶 Conexão: status=$status, newState=$newState (${device.name})")
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
 
-                if (nome != "AV") {
+                if (nome != "AV" && nome != "WNIDD") {
                     onLog?.invoke("🚫 Conexão rejeitada de $nome")
                     gattServer?.cancelConnection(device)
                     return
@@ -302,12 +329,17 @@ class BluetoothServer(private val context: Context) {
 
                 connectedDevice = device
                 isConnected = true
-                onDeviceConnected?.invoke(device.name ?: "Sem nome")
-                Handler(Looper.getMainLooper()).post { stopAdvertising() }
+                onDeviceConnected?.invoke(device.name ?: "WNIDD")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    onLog?.invoke("🕒 Parando advertising após estabilizar conexão (delay 800ms)")
+                    stopAdvertising()
+                }, 800)
             } else {
                 connectedDevice = null
                 isConnected = false
-                Handler(Looper.getMainLooper()).post { startAdvertising() } // disponível para nvoos clientes
+                Handler(Looper.getMainLooper()).postDelayed({
+                    startAdvertising()
+                }, 1000)
             }
         }
 
@@ -369,6 +401,10 @@ class BluetoothServer(private val context: Context) {
 
 
                 chunk == "<EOF>" -> {
+                    if (receivedBuffer.isEmpty()) {
+                        onLog?.invoke("⚠️ EOF recebido, mas buffer está vazio — ignorando.")
+                        return
+                    }
                     val full = receivedBuffer.toByteArray()
                     receivedBuffer.clear()
                     val text = String(full)
