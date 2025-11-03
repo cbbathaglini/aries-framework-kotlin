@@ -156,6 +156,17 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return agent.proofServiceV2.processRequest(requestMessage = requestMessage)
     }
 
+
+    suspend fun processPresentationOffline(presentationMessage: String): Boolean {
+
+        val message = MessageSerializer.decodeFromString(presentationMessage) as? PresentationMessageV2
+                ?: throw Exception("Failed to decode PresentationMessageV2")
+
+        val proofRecord = agent.proofServiceV2.processPresentationOffline(message)
+
+        return proofRecord?.isVerified ?: false
+    }
+
     suspend fun createPresentation(
         record: ProofExchangeRecord,
         chosenCredentialId: String? = null

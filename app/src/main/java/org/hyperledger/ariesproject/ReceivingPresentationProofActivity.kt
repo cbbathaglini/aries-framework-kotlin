@@ -153,9 +153,11 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                             layoutResult.setBackgroundColor(getColor(android.R.color.holo_green_light))
                         }
 
-                        // 👉 Se quiser processar a apresentação localmente:
-                        // val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
-                        // runOnUiThread { ... }
+                        val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
+
+                        runOnUiThread {
+                            txtStatus.text = "✅ Apresentação verificada? " + result
+                        }
 
                     } catch (e: Exception) {
                         e.printStackTrace()

@@ -53,6 +53,7 @@ import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestOptions
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.repository.verifier.PresentationVerifier
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.proofs.utils.W3cUtils
 import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatCoordinator
@@ -68,6 +69,7 @@ import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.math.log
 import kotlin.math.max
 
 class ProofServiceV2(val agent: Agent) {
@@ -673,6 +675,51 @@ class ProofServiceV2(val agent: Agent) {
                 proofRecord = proofRecord,
             )
         }
+
+        return proofRecord
+    }
+
+    suspend fun processPresentationOffline(message: PresentationMessageV2): ProofExchangeRecord? {
+        logger.info("[init] Processing presentation in ProcessPresentationProofProcessor")
+
+        val presentationMessage = message
+        val formatServices = getFormatServicesFromMessage(presentationMessage.formats)
+
+        var proofRecord = ProofExchangeRecord(
+            connectionId = "connectionless-proof-presentation",
+            threadId = BaseRecord.generateId(),
+            state = ProofState.ProposalReceived,
+            role = ProofRole.Verifier,
+            protocolVersion = ProofConstants.PROTOCOL_VERSION_V2
+        )
+
+        val threadId = presentationMessage.threadId
+
+        val verifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
+
+        val lastSentMessage = verifierRecord.requestMessage
+            ?: throw Exception("No RequestPresentationMessageV2 found in verifier record")
+
+        val result = proofFormatCoordinator.processPresentation(
+            proofRecord,
+            presentationMessage,
+            lastSentMessage,
+            formatServices
+        )
+        logger.info("result: ${result.isValid}")
+
+        val presentationVerifier = PresentationVerifier(
+            presentationMessage = message,
+            isVerified = proofRecord.isVerified,
+            isOffline = true,
+            proofRecordId = proofRecord.id
+        )
+
+        verifierRecord.addPresentation(presentationVerifier)
+        agent.verifierRepository.update(verifierRecord)
+        verifierRecord.printDetails()
+
+        logger.info("[end] Finished processing presentation for proof ${proofRecord.id}")
 
         return proofRecord
     }
