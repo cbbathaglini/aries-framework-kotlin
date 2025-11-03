@@ -158,5 +158,12 @@
             android:background="@android:color/background_light"
             android:padding="8dp"
             android:nestedScrollingEnabled="true" />
+
+        <Button
+            android:id="@+id/btnCopyLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📋 Copiar Logs"
+            android:layout_marginTop="8dp"/>
     </LinearLayout>
 </ScrollView>

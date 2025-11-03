@@ -26,6 +26,7 @@ class PresentationDetailActivity : AppCompatActivity() {
     private lateinit var txtCreatedAt: TextView
     private lateinit var txtJson: TextView
     private lateinit var btnCopyJson: Button
+    private lateinit var btnCopyLogs: Button
     private lateinit var btnScanDevices: Button
     private lateinit var btnSendBluetooth: Button
     private lateinit var btnSendBluetoothAndroid: Button
@@ -78,6 +79,7 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnCopyJson        = findViewById(R.id.btnCopyJson)
         btnScanDevices     = findViewById(R.id.btnScanDevices)
         btnSendBluetooth   = findViewById(R.id.btnSendBluetooth)
+        btnCopyLogs = findViewById(R.id.btnCopyLogs)
         btnSendBluetoothAndroid   = findViewById(R.id.btnSendBluetoothAndroid)
         txtBluetoothStatus = findViewById(R.id.txtBluetoothStatus)
         devicesList        = findViewById(R.id.bluetoothDevicesList)
@@ -103,6 +105,20 @@ class PresentationDetailActivity : AppCompatActivity() {
                 val clip = android.content.ClipData.newPlainText("Presentation JSON", json)
                 clipboard.setPrimaryClip(clip)
                 Toast.makeText(this, "📋 Conteúdo copiado", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnCopyLogs.setOnClickListener {
+            // Recupera todas as mensagens do adapter
+            val allLogs = logsAdapter.getAllLogs().joinToString("\n")
+
+            if (allLogs.isNotEmpty()) {
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Logs BLE", allLogs)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, "📋 Logs copiados para a área de transferência", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Nenhum log para copiar", Toast.LENGTH_SHORT).show()
             }
         }
 

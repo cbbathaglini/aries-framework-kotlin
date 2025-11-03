@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import java.util.*
 
@@ -52,6 +53,40 @@ class BluetoothServer(private val context: Context) {
         }
     }
 
+//    fun startServer() {
+//        onLog?.invoke("🚀 startServer() — preparando advertising e GATT…")
+//        onLog?.invoke("📱 BLE peripheral suportado? ${bluetoothAdapter.isMultipleAdvertisementSupported}")
+//        onLog?.invoke("💡 Advertiser disponível? ${bluetoothAdapter.bluetoothLeAdvertiser != null}")
+//        onLog?.invoke("⚙️ Versão Android: ${android.os.Build.VERSION.SDK_INT}")
+//        onLog?.invoke("🏷️ Dispositivo: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+//
+//        val needAdvertise = ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED
+//        val needConnect   = ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)   != PackageManager.PERMISSION_GRANTED
+//        if (needAdvertise || needConnect) {
+//            onLog?.invoke("⚠️ Permissões de Bluetooth não concedidas (ADVERTISE/CONNECT).")
+//            return
+//        }
+//
+//        if (!bluetoothAdapter.isEnabled) {
+//            onLog?.invoke("⚠️ Bluetooth OFF — ative antes.")
+//            return
+//        }
+//        if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+//            onLog?.invoke("❌ Dispositivo não suporta BLE.")
+//            return
+//        }
+//        if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
+//            onLog?.invoke("❌ Múltiplos advertisers/Peripheral mode não suportados.")
+//            return
+//        }
+//
+//        Handler(Looper.getMainLooper()).post { startAdvertising() }
+//
+//        Handler(Looper.getMainLooper()).post {
+//            openGattServerAndAddService()
+//        }
+//    }
+
     fun startServer() {
         onLog?.invoke("🚀 startServer() — preparando advertising e GATT…")
         onLog?.invoke("📱 BLE peripheral suportado? ${bluetoothAdapter.isMultipleAdvertisementSupported}")
@@ -70,20 +105,26 @@ class BluetoothServer(private val context: Context) {
             onLog?.invoke("⚠️ Bluetooth OFF — ative antes.")
             return
         }
+
         if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             onLog?.invoke("❌ Dispositivo não suporta BLE.")
             return
         }
+
         if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
             onLog?.invoke("❌ Múltiplos advertisers/Peripheral mode não suportados.")
             return
         }
 
-        Handler(Looper.getMainLooper()).post { startAdvertising() }
-
+        // ✅ Primeiro abre e registra o serviço GATT
         Handler(Looper.getMainLooper()).post {
             openGattServerAndAddService()
         }
+
+        // ✅ Só depois de o serviço estar ativo inicia o advertising
+        Handler(Looper.getMainLooper()).postDelayed({
+            startAdvertising()
+        }, 500)
     }
 
     fun stopServer() {
@@ -163,20 +204,65 @@ class BluetoothServer(private val context: Context) {
     // ─────────────────────────────────────────────────────────────────────────────
     // GATT server
 
+//    private fun openGattServerAndAddService() {
+//        onLog?.invoke("🧱 Abrindo GATT server e adicionando serviço…")
+//        checkPermission();
+//        gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
+//
+////        transferCharacteristic = BluetoothGattCharacteristic(
+////            characteristicUUID,
+////            BluetoothGattCharacteristic.PROPERTY_WRITE or
+////                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+////                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+////                    BluetoothGattCharacteristic.PROPERTY_READ,
+////            BluetoothGattCharacteristic.PERMISSION_WRITE or
+////                    BluetoothGattCharacteristic.PERMISSION_READ
+////        )
+//
+//        transferCharacteristic = BluetoothGattCharacteristic(
+//            characteristicUUID,
+//            BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+//                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+//                    BluetoothGattCharacteristic.PROPERTY_READ,
+//            BluetoothGattCharacteristic.PERMISSION_WRITE or
+//                    BluetoothGattCharacteristic.PERMISSION_READ
+//        )
+//
+//        val cccd = BluetoothGattDescriptor(
+//            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
+//            BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+//        )
+//        transferCharacteristic?.addDescriptor(cccd)
+//
+//        val service = BluetoothGattService(serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+//        service.addCharacteristic(transferCharacteristic)
+//
+//        val added = gattServer?.addService(service) ?: false
+//        onLog?.invoke("📦 addService retornou: $added")
+//    }
+
+
     private fun openGattServerAndAddService() {
         onLog?.invoke("🧱 Abrindo GATT server e adicionando serviço…")
-        checkPermission();
+        checkPermission()
         gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
+
+//        transferCharacteristic = BluetoothGattCharacteristic(
+//            characteristicUUID,
+//            BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+//                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+//                    BluetoothGattCharacteristic.PROPERTY_READ,
+//            BluetoothGattCharacteristic.PERMISSION_WRITE or
+//                    BluetoothGattCharacteristic.PERMISSION_READ
+//        )
 
         transferCharacteristic = BluetoothGattCharacteristic(
             characteristicUUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE or
-                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                    BluetoothGattCharacteristic.PROPERTY_READ,
-            BluetoothGattCharacteristic.PERMISSION_WRITE or
-                    BluetoothGattCharacteristic.PERMISSION_READ
+                    BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PERMISSION_WRITE
         )
+
 
         val cccd = BluetoothGattDescriptor(
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
@@ -202,10 +288,18 @@ class BluetoothServer(private val context: Context) {
         }
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
+            val nome = device.name ?: "Sem nome"
             checkPermission();
             onLog?.invoke("📶 Conexão: status=$status, newState=$newState (${device.name})")
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+
+                if (nome != "AV") {
+                    onLog?.invoke("🚫 Conexão rejeitada de $nome")
+                    gattServer?.cancelConnection(device)
+                    return
+                }
+
                 connectedDevice = device
                 isConnected = true
                 onDeviceConnected?.invoke(device.name ?: "Sem nome")
@@ -231,6 +325,7 @@ class BluetoothServer(private val context: Context) {
             if (responseNeeded) gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
 
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onCharacteristicWriteRequest(
             device: BluetoothDevice,
             requestId: Int,
@@ -240,21 +335,56 @@ class BluetoothServer(private val context: Context) {
             offset: Int,
             value: ByteArray
         ) {
+            onLog?.invoke("🧾 onCharacteristicWriteRequest() chamado — len=${value.size}, prepared=$preparedWrite, response=$responseNeeded")
             val chunk = String(value)
-            if (chunk == "<EOF>") {
-                val full = receivedBuffer.toByteArray()
-                receivedBuffer.clear()
-                val text = String(full)
-                onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
-                onJSONReceived?.invoke(text)
+//            if (chunk == "<EOF>") {
+//                val full = receivedBuffer.toByteArray()
+//                receivedBuffer.clear()
+//                val text = String(full)
+//                onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
+//                onJSONReceived?.invoke(text)
+//
+////                Handler(Looper.getMainLooper()).post {
+////                    disconnectClient()
+////                }
+//
+//                Handler(Looper.getMainLooper()).postDelayed({
+//                    onLog?.invoke("⏳ Aguardando antes de desconectar cliente…")
+//                    disconnectClient()
+//                }, 1000)
+//
+//            } else {
+//                receivedBuffer.addAll(value.toList())
+//                onLog?.invoke("⬇️ Chunk ${value.size} bytes (total=${receivedBuffer.size})")
+//            }
 
-                Handler(Looper.getMainLooper()).post {
-                    disconnectClient()
+            when {
+                chunk == "HELLO_AV" -> {
+                    onLog?.invoke("🤝 Handshake recebido de cliente autorizado ✅")
+                    if (responseNeeded) {
+                        gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
+                    }
+                    return
                 }
 
-            } else {
-                receivedBuffer.addAll(value.toList())
-                onLog?.invoke("⬇️ Chunk ${value.size} bytes (total=${receivedBuffer.size})")
+
+                chunk == "<EOF>" -> {
+                    val full = receivedBuffer.toByteArray()
+                    receivedBuffer.clear()
+                    val text = String(full)
+                    onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
+                    onJSONReceived?.invoke(text)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        onLog?.invoke("⏳ Aguardando antes de desconectar cliente…")
+                        disconnectClient()
+                    }, 1000)
+                    onLog?.invoke("📥 Buffer acumulado = ${receivedBuffer.size} bytes")
+                }
+
+                else -> {
+                    receivedBuffer.addAll(value.toList())
+                    onLog?.invoke("⬇️ Chunk ${value.size} bytes (total=${receivedBuffer.size})")
+                }
             }
             if (responseNeeded) {
                 checkPermission();

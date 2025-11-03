@@ -30,4 +30,8 @@ class LogsAdapter(private val items: MutableList<String>) :
         items.add(line)
         notifyItemInserted(items.size - 1)
     }
+
+    fun getAllLogs(): List<String> {
+        return items.toList()
+    }
 }
