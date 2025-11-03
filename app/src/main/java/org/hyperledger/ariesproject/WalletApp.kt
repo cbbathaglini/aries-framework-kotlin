@@ -201,9 +201,10 @@ class WalletApp : Application() {
         agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> {
             handler.addNotification(
                 title = "Revogação recebida",
-                message = "Uma credencial foi revogada.",
+                message = "A credencial (${it.record.id}) foi revogada.",
                 type = NotificationType.OTHER
             )
+            agent.credentialsV2.revokeCredential(it.record)
             notifyBadgeUpdate()
         }
 

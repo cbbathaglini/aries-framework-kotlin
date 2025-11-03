@@ -127,7 +127,7 @@ class CredentialListActivity : BaseActivity() {
                     val date = item.createdAt ?: java.util.Date()
                     holder.dateView.text = "Criado em: ${date}"
                     val type = ""//item.credentials.first().credentialRecordType
-                    holder.typeView.text = "Tipo: ${type}"
+                    holder.typeView.text = "Is revoked?: ${item.isRevoked}"
                 }
 
 //                is W3cCredentialRecord -> {

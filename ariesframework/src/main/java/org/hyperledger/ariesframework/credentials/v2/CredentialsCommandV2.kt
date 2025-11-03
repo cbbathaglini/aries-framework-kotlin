@@ -3,6 +3,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.OfferCredentialOptions
@@ -55,6 +56,10 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         val connectionRecord = agent.connectionService.getById(credentialExchangeRecord.connectionId!!)
         agent.messageSender.send(OutboundMessage(offerCredentialMessageV2, connectionRecord))
         return credentialExchange
+    }
+
+    suspend fun revokeCredential(credentialExchangeRecord: CredentialExchangeRecord) : Boolean {
+        return agent.credentialServiceV2.setToRevoke(credentialExchangeRecord)
     }
 
     /**
@@ -160,4 +165,10 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
         return credentialRecord
     }
+}
+
+private suspend fun CredentialServiceV2.setToRevoke(credentialExchangeRecord: CredentialExchangeRecord): Boolean {
+    credentialExchangeRecord.isRevoked = true
+    updateState(credentialExchangeRecord, CredentialState.Revoked)
+    return true
 }
