@@ -195,7 +195,7 @@
             android:id="@+id/btnSendProof"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="✅ Aceitar e Enviar Prova"
+            android:text="✅ Accept and send proof"
             android:backgroundTint="@color/teal_700"
             android:textColor="@android:color/white"
             android:layout_marginTop="20dp"

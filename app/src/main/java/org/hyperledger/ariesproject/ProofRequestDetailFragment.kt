@@ -293,6 +293,8 @@ class ProofRequestDetailFragment : Fragment() {
                     }
 
                 val compatible = allRecords.mapNotNull { cred ->
+                    if (cred.isRevoked == true) return@mapNotNull null
+
                     val recordCredDefId = cred.credentialDefinitionId ?: return@mapNotNull null
                     val recordAttrs = cred.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
 
@@ -314,6 +316,8 @@ class ProofRequestDetailFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     if (compatible.isEmpty()) {
+                        binding.btnSendProof.visibility = View.GONE
+                        binding.btnSendProof.isEnabled = false
                         binding.selectCredentialHeader.text = "Nenhuma credencial compatível encontrada."
                         binding.credentialSpinner.visibility = View.GONE
                     } else {

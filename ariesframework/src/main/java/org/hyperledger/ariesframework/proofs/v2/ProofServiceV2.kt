@@ -431,6 +431,7 @@ class ProofServiceV2(val agent: Agent) {
             ),
         )
 
+        logger.info("[TAG140]")
         agent.eventBus.publish(AgentEvents.ProofEventV2(record.copy()))
         logger.info("Saved new proof record successfully")
         return record
