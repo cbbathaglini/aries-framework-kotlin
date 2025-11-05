@@ -4,6 +4,7 @@ import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
@@ -114,6 +115,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
         }
 
         credentialRecord.revocationNotification = RevocationNotification(comment)
+        credentialRecord.state = CredentialState.Revoked
         agent.credentialExchangeRepository.update(credentialRecord)
 
         agent.historyRepository.save(

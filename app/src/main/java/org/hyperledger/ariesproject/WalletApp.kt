@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -16,6 +17,7 @@ import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -204,11 +206,28 @@ class WalletApp : Application() {
                 message = "A credencial (${it.record.id}) foi revogada.",
                 type = NotificationType.OTHER
             )
-            agent.credentialsV2.revokeCredential(it.record)
+            //agent.credentialsV2.revokeCredential(it.record)
             notifyBadgeUpdate()
         }
 
         //updateNotificationBadge()
+    }
+
+     fun declineCredentialV2(id: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val decline = DeclineCredentialOfferOptions(
+                    sendProblemReport = true
+                )
+                agent.credentialsV2.declineOffer(
+                    credentialRecordId = id,
+                    options = decline,
+                )
+            } catch (e: Exception) {
+                Log.d("demo", e.localizedMessage)
+            }
+        }
+
     }
 
     fun receivePresentation(record: ProofExchangeRecord) {
@@ -236,6 +255,16 @@ class WalletApp : Application() {
                     )
                     Log.e("WalletApp", "❌ Falha ao processar apresentação: ${e.localizedMessage}", e)
                 }
+            }
+        }
+    }
+
+    private fun declineProofV2(id: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                agent.proofCommandV2.declineRequest(id)
+            } catch (e: Exception) {
+                Log.d("demo", e.localizedMessage)
             }
         }
     }

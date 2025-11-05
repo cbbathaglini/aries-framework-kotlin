@@ -477,46 +477,6 @@ class WalletMainActivity : BaseActivity() {
         }
     }
 
-
-    /* v2.0 */
-    fun declineCredentialV2(id: String) {
-        val app = application as WalletApp
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val decline = DeclineCredentialOfferOptions(
-                    sendProblemReport = true
-                )
-                app.agent.credentialsV2.declineOffer(
-                    credentialRecordId = id,
-                    options = decline,
-                )
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    showAlert("Failed to decline a credential.")
-                }
-            }
-        }
-    }
-
-    private fun declineProofV2(id: String) {
-        val app = application as WalletApp
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                app.agent.proofCommandV2.declineRequest(id)
-            } catch (e: Exception) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    Log.d("demo", e.localizedMessage)
-                    showAlert("Failed to decline a proof (v2).")
-                }
-            }
-        }
-    }
-
-
-
     private fun declineProof(id: String) {
         val app = application as WalletApp
 

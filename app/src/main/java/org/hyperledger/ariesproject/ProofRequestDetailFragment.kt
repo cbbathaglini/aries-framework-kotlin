@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -30,6 +31,7 @@ import org.hyperledger.ariesproject.databinding.ProofRequestDetailBinding
 class ProofRequestDetailFragment : Fragment() {
 
     private var proofId: String? = null
+    private var type: NotificationType = NotificationType.OTHER
     private lateinit var binding: ProofRequestDetailBinding
     private var compatibleCredentials: List<Map<String, Any?>> = emptyList()
     var chosenCredentialId: String? = null
@@ -37,6 +39,7 @@ class ProofRequestDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         proofId = arguments?.getString(ARG_PROOF_ID)
+        type = NotificationType.fromString(arguments?.getString(ARG_TYPE))
     }
 
     override fun onCreateView(
@@ -101,12 +104,20 @@ class ProofRequestDetailFragment : Fragment() {
         showNonRevokedInterval(proofRequest)
 
         // Carrega credenciais compatíveis
-        loadAvailableCredentials(proofRequest, record)
-
-        binding.btnSendProof.apply {
-            visibility = if (record.state != ProofState.Done) View.VISIBLE else View.GONE
-            setOnClickListener { sendProof(record.id) }
+        if (record.state != ProofState.Declined && record.state != ProofState.Abandoned) {
+            loadAvailableCredentials(proofRequest, record)
+            binding.btnSendProof.apply {
+                visibility = if (record.state != ProofState.Done) View.VISIBLE else View.GONE
+                setOnClickListener { sendProof(record.id) }
+            }
+        } else {
+            // Oculta o seletor e botão se a prova foi recusada ou abandonada
+            binding.selectCredentialHeader.text = "❌ Prova recusada ou abandonada — não é possível selecionar credenciais."
+            binding.credentialSpinner.visibility = View.GONE
+            binding.btnSendProof.visibility = View.GONE
         }
+
+
     }
 
     private fun populateRequestedAttributes(attrs: Map<String, AnonCredsRequestedAttribute>) {
@@ -293,7 +304,7 @@ class ProofRequestDetailFragment : Fragment() {
                     }
 
                 val compatible = allRecords.mapNotNull { cred ->
-                    if (cred.isRevoked == true) return@mapNotNull null
+                    if (cred.state == CredentialState.Revoked) return@mapNotNull null
 
                     val recordCredDefId = cred.credentialDefinitionId ?: return@mapNotNull null
                     val recordAttrs = cred.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
@@ -387,5 +398,6 @@ class ProofRequestDetailFragment : Fragment() {
 
     companion object {
         const val ARG_PROOF_ID = "PROOF_ID"
+        const val ARG_TYPE = "TYPE"
     }
 }

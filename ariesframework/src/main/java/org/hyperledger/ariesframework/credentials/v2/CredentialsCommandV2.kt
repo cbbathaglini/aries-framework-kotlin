@@ -58,10 +58,6 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         return credentialExchange
     }
 
-    suspend fun revokeCredential(credentialExchangeRecord: CredentialExchangeRecord) : Boolean {
-        return agent.credentialServiceV2.setToRevoke(credentialExchangeRecord)
-    }
-
     /**
      * Initiate a new credential exchange as issuer by sending a credential offer message
      * to the connection with the specified connection id.
@@ -165,10 +161,4 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
 
         return credentialRecord
     }
-}
-
-private suspend fun CredentialServiceV2.setToRevoke(credentialExchangeRecord: CredentialExchangeRecord): Boolean {
-    credentialExchangeRecord.isRevoked = true
-    updateState(credentialExchangeRecord, CredentialState.Revoked)
-    return true
 }

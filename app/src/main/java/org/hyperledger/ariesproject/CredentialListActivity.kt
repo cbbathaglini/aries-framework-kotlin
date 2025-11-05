@@ -14,6 +14,7 @@ import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
+import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
@@ -127,7 +128,7 @@ class CredentialListActivity : BaseActivity() {
                     val date = item.createdAt ?: java.util.Date()
                     holder.dateView.text = "Criado em: ${date}"
                     val type = ""//item.credentials.first().credentialRecordType
-                    holder.typeView.text = "Is revoked?: ${item.isRevoked}"
+                    holder.typeView.text = "Is revoked?: ${item.state == CredentialState.Revoked}"
                 }
 
 //                is W3cCredentialRecord -> {
