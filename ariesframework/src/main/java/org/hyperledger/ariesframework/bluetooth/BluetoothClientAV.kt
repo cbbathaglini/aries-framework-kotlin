@@ -121,7 +121,7 @@ class BluetoothClientAV(private val context: Context) {
             return
         }
 
-            this.jsonString = jsonString
+        this.jsonString = jsonString
         onLog?.invoke("🔍 Iniciando escaneamento BLE...")
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 

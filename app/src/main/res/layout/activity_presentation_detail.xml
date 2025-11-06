@@ -132,15 +132,15 @@
             android:backgroundTint="@color/teal_600"
             android:textColor="@android:color/white"
             android:layout_marginBottom="20dp" />
-        <Button
-            android:id="@+id/btnSendBluetoothAndroid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="📡 Enviar via Bluetooth Android"
-            android:textAllCaps="false"
-            android:backgroundTint="@color/teal_600"
-            android:textColor="@android:color/white"
-            android:layout_marginBottom="20dp" />
+<!--        <Button-->
+<!--            android:id="@+id/btnSendBluetoothAndroid"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="📡 Enviar via Bluetooth Android"-->
+<!--            android:textAllCaps="false"-->
+<!--            android:backgroundTint="@color/teal_600"-->
+<!--            android:textColor="@android:color/white"-->
+<!--            android:layout_marginBottom="20dp" />-->
 
         <!-- 🧾 Logs -->
         <TextView

@@ -2,10 +2,14 @@ package org.hyperledger.ariesframework.bluetooth
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelUuid
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
@@ -58,6 +62,24 @@ class BluetoothClient(private val context: Context) {
         ) {
             onLog?.invoke("❌ Permissão BLUETOOTH_SCAN não concedida")
             return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+
+            val missing = permissions.filter {
+                ActivityCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+            }
+
+            val act = context as? Activity
+            if (act != null && missing.isNotEmpty()) {
+                ActivityCompat.requestPermissions(act, missing.toTypedArray(), 1001)
+            }
+
         }
 
         onLog?.invoke("🔍 Iniciando scan por periféricos BLE com UUID: $serviceUUID")
@@ -179,7 +201,7 @@ class BluetoothClient(private val context: Context) {
             )
             descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             gatt.writeDescriptor(descriptor)
-            gatt.requestMtu(185)
+            gatt.requestMtu(512)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
@@ -225,6 +247,26 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
+    fun sendJSONFast(json: String) {
+        val gatt = bluetoothGatt ?: return
+        val ch = targetCharacteristic ?: return
+        ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+
+        val data = json.toByteArray(Charsets.UTF_8)
+        val mtuPayload = (negotiatedMtu - 3).coerceAtLeast(20)
+        var i = 0
+        while (i < data.size) {
+            val end = minOf(i + mtuPayload, data.size)
+            ch.value = data.copyOfRange(i, end)
+            gatt.writeCharacteristic(ch)
+            i = end
+            Thread.sleep(10) // leve atraso para não saturar buffer BLE
+        }
+        ch.value = "<EOF>".toByteArray(Charsets.UTF_8)
+        gatt.writeCharacteristic(ch)
+        onLog?.invoke("✅ JSON enviado (${data.size} bytes).")
+    }
+
     fun sendJSON(json: String) {
         val gatt = bluetoothGatt
         val ch = targetCharacteristic
@@ -251,27 +293,137 @@ class BluetoothClient(private val context: Context) {
     }
 
     // 🔹 Envia o próximo pedaço quando o anterior concluir
-    private fun writeNext() {
-        val gatt = bluetoothGatt ?: return
-        val ch = targetCharacteristic ?: return
+//    private fun writeNext() {
+//        val gatt = bluetoothGatt ?: return
+//        val ch = targetCharacteristic ?: return
+//
+//        val next = writeQueue.pollFirst() ?: run {
+//            isWriting = false
+//            onLog?.invoke("✅ JSON enviado completamente.")
+//            return
+//        }
+//        isWriting = true
+//        ch.value = next
+//        val ok = gatt.writeCharacteristic(ch)
+//        if (!ok) {
+//            onLog?.invoke("❌ writeCharacteristic falhou (stack ocupado). Tentando novamente…")
+//            // re-enfila e tenta depois; aqui é simples: recoloca no início
+//            writeQueue.addFirst(next)
+//            isWriting = false
+//        } else {
+//            onLog?.invoke("➡️ Enviado chunk, restantes: ${writeQueue.size}")
+//        }
+//    }
+
+//    private fun writeNext() {
+//        val gatt = bluetoothGatt ?: return
+//        val ch = targetCharacteristic ?: return
+//
+//        val next = writeQueue.pollFirst() ?: run {
+//            onLog?.invoke("✅ JSON enviado completamente.")
+//            return
+//        }
+//
+//        ch.value = next
+//        val ok = gatt.writeCharacteristic(ch)
+//        onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
+//
+//        // 🔹 envia próximo após 50 ms (sem esperar callback)
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            writeNext()
+//        }, 50)
+//    }
+
+//    private fun writeNext() {
+//        val gatt = bluetoothGatt ?: return
+//        val ch = targetCharacteristic ?: return
+//
+//        // 🔒 impede execuções simultâneas
+//        if (isWriting) return
+//        isWriting = true
+//
+//        val next = writeQueue.pollFirst() ?: run {
+//            isWriting = false
+//            onLog?.invoke("✅ JSON enviado")
+//            return
+//        }
+//
+//        ch.value = next
+//        val ok = gatt.writeCharacteristic(ch)
+//        onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
+//
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            isWriting = false
+//            writeNext()
+//        }, 50)
+//    }
+private fun writeNext() {
+    val gatt = bluetoothGatt ?: return
+    val ch = targetCharacteristic ?: return
+
+    // 🔒 Impede chamadas paralelas
+    synchronized(writeQueue) {
+        if (isWriting) return
+        isWriting = true
 
         val next = writeQueue.pollFirst() ?: run {
             isWriting = false
-            onLog?.invoke("✅ JSON enviado completamente.")
+            //onLog?.invoke("✅ JSON enviado completamente.") // apenas uma vez
             return
         }
-        isWriting = true
+
         ch.value = next
         val ok = gatt.writeCharacteristic(ch)
-        if (!ok) {
-            onLog?.invoke("❌ writeCharacteristic falhou (stack ocupado). Tentando novamente…")
-            // re-enfila e tenta depois; aqui é simples: recoloca no início
-            writeQueue.addFirst(next)
-            isWriting = false
+
+        if (ok) {
+            // 🔹 Log imediato de progresso
+            // onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
+
+            // Aguarda 30–50 ms e envia o próximo
+            Handler(Looper.getMainLooper()).postDelayed({
+                synchronized(writeQueue) {
+                    isWriting = false
+                    writeNext()
+                }
+            }, 40)
         } else {
-            onLog?.invoke("➡️ Enviado chunk, restantes: ${writeQueue.size}")
+            onLog?.invoke("⚠️ Falha ao enviar chunk — reintentando...")
+            writeQueue.addFirst(next) // reenvia o mesmo
+            isWriting = false
+            Handler(Looper.getMainLooper()).postDelayed({
+                writeNext()
+            }, 100)
         }
     }
+}
+
+//    private fun writeNext() {
+//        val gatt = bluetoothGatt ?: return
+//        val ch = targetCharacteristic ?: return
+//
+//        synchronized(writeQueue) {
+//            if (isWriting) return
+//            isWriting = true
+//
+//            val next = writeQueue.pollFirst() ?: run {
+//                isWriting = false
+//                onLog?.invoke("✅ JSON sendo enviado")
+//                return
+//            }
+//
+//            ch.value = next
+//            val ok = gatt.writeCharacteristic(ch)
+//            onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
+//
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                synchronized(writeQueue) {
+//                    isWriting = false
+//                    if (writeQueue.isNotEmpty()) writeNext()
+//                    else onLog?.invoke("✅ JSON enviado completamente (final real).")
+//                }
+//            }, 30)
+//        }
+//    }
 
 
     fun disconnect() {

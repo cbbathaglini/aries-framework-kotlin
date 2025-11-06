@@ -167,6 +167,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity android:name=".PresentationsReceivedListActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity android:name=".PresentationsFromRecordActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity android:name=".ProofRequestDetailActivity"
             android:exported="true"
             android:screenOrientation="portrait"

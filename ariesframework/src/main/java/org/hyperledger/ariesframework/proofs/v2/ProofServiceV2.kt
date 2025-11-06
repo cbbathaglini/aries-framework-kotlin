@@ -54,6 +54,7 @@ import org.hyperledger.ariesframework.proofs.models.SelectCredentialsForRequestO
 import org.hyperledger.ariesframework.proofs.models.composeAutoAccept
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.repository.verifier.PresentationVerifier
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRecord
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.proofs.utils.W3cUtils
 import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatCoordinator
@@ -696,7 +697,7 @@ class ProofServiceV2(val agent: Agent) {
 
         val threadId = presentationMessage.threadId
 
-        val verifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
+        val verifierRecord : VerifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
 
         val lastSentMessage = verifierRecord.requestMessage
             ?: throw Exception("No RequestPresentationMessageV2 found in verifier record")

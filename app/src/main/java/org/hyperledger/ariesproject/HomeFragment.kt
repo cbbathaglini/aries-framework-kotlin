@@ -66,6 +66,10 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), PresentationListActivity::class.java))
         }
 
+        binding.btnShowPresentations.setOnClickListener {
+            startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
+        }
+
         // 🔹 Conectar via URL
         binding.buttonConnect.setOnClickListener {
             val invitationUrl = binding.invitation.text.toString().trim()

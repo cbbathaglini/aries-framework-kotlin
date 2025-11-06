@@ -235,6 +235,13 @@
                 android:textColor="@color/teal_700"
                 android:layout_width="match_parent"
                 android:layout_height="48dp" />
+            <Button
+                android:id="@+id/btnShowPresentations"
+                android:text="(Holder) Show all presentations received"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/teal_700"
+                android:layout_width="match_parent"
+                android:layout_height="48dp" />
         </LinearLayout>
 
         <TextView
