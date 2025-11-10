@@ -249,7 +249,6 @@ class RequestProofActivity : AppCompatActivity() {
                     )
                 )
 
-                // Cria a prova offline
                 val (record, verifierRecord) = app.agent.proofCommandV2.requestProofOffline(
                     proofRequest= proofRequest,
                     formats = proofFormats)

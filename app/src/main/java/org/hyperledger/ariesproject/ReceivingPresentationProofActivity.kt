@@ -155,9 +155,9 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                         }
 
                         val (proofRecord, result) = agent!!.proofCommandV2.processPresentationOffline(jsonString)
-                        Log.e("fake error: ", "state: ${proofRecord.state} || verified: ${proofRecord.isVerified}")
+                        Log.e("fake error: ", "thread: ${proofRecord.threadId} state: ${proofRecord.state} || verified: ${proofRecord.isVerified}")
 
-                        //agent?.proofCommandV2?.processAck()
+                        agent?.proofCommandV2?.processOfflineAck(proofRecord)
 
                         runOnUiThread {
                             txtStatus.text = "✅ Apresentação verificada? " + result

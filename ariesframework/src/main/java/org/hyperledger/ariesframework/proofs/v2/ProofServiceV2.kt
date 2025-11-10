@@ -688,15 +688,14 @@ class ProofServiceV2(val agent: Agent) {
         val presentationMessage = message
         val formatServices = getFormatServicesFromMessage(presentationMessage.formats)
 
-        var proofRecord = ProofExchangeRecord(
+        val threadId = presentationMessage.threadId
+        val proofRecord = ProofExchangeRecord(
             connectionId = "connectionless-proof-presentation",
-            threadId = BaseRecord.generateId(),
+            threadId = threadId,
             state = ProofState.ProposalReceived,
             role = ProofRole.Verifier,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2
         )
-
-        val threadId = presentationMessage.threadId
 
         val verifierRecord : VerifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
 
@@ -724,6 +723,7 @@ class ProofServiceV2(val agent: Agent) {
 
         logger.info("[end] Finished processing presentation for proof ${proofRecord.id}")
 
+        agent.proofRepository.save(proofRecord)
         return proofRecord
     }
 
@@ -763,6 +763,14 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
         logger.info("path = createAck")
         proofRecord.assertState(ProofState.PresentationReceived)
+
+        val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
+        updateState(proofRecord, ProofState.Done)
+
+        return Pair(ackMessage, proofRecord)
+    }
+
+    suspend fun processOfflineAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
 
         val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
         updateState(proofRecord, ProofState.Done)
@@ -1025,6 +1033,8 @@ class ProofServiceV2(val agent: Agent) {
 
     suspend fun updateState(proofRecord: ProofExchangeRecord, newState: ProofState) {
         proofRecord.state = newState
+        val a = agent.proofRepository.findById(proofRecord.id)
+        logger.info("agent 00000: ${a?.state} ${a?.threadId}")
         agent.proofRepository.update(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
     }

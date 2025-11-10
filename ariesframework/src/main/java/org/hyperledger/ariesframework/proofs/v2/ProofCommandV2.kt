@@ -170,10 +170,8 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return Pair(proofRecord, result)
     }
 
-    suspend fun processAck(){
-        agent.proofServiceV2.processAck(message= PresentationAckMessageV2(
-            status = AckStatus.OK
-        ))
+    suspend fun processOfflineAck(proofRecord: ProofExchangeRecord){
+       agent.proofServiceV2.processOfflineAck(proofRecord)
     }
 
     suspend fun createPresentation(
