@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.proofs.v2
 
 import android.util.Log
 import kotlinx.serialization.json.JsonElement
+import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
@@ -157,14 +158,22 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     }
 
 
-    suspend fun processPresentationOffline(presentationMessage: String): Boolean {
+    suspend fun processPresentationOffline(presentationMessage: String): Pair<ProofExchangeRecord,Boolean> {
 
         val message = MessageSerializer.decodeFromString(presentationMessage) as? PresentationMessageV2
-                ?: throw Exception("Failed to decode PresentationMessageV2")
+            ?: throw Exception("Failed to decode PresentationMessageV2")
 
         val proofRecord = agent.proofServiceV2.processPresentationOffline(message)
+            ?: throw Exception("Failed to process presentation")
 
-        return proofRecord?.isVerified ?: false
+        val result = proofRecord.isVerified ?: false
+        return Pair(proofRecord, result)
+    }
+
+    suspend fun processAck(){
+        agent.proofServiceV2.processAck(message= PresentationAckMessageV2(
+            status = AckStatus.OK
+        ))
     }
 
     suspend fun createPresentation(
@@ -186,7 +195,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         )
 
         val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
-
 
         val params = AcceptProofRequestOptions(
             proofRecord = record,

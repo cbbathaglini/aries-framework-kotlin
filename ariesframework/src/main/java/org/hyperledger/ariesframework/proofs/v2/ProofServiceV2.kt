@@ -598,6 +598,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
+        logger.info("path = processPresentation")
         val connection = messageContext.connection
 
         val presentationMessage =
@@ -760,6 +761,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
+        logger.info("path = createAck")
         proofRecord.assertState(ProofState.PresentationReceived)
 
         val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
@@ -768,16 +770,22 @@ class ProofServiceV2(val agent: Agent) {
         return Pair(ackMessage, proofRecord)
     }
 
-    suspend fun processAck(messageContext: InboundMessageContext): ProofExchangeRecord {
-        val connection = messageContext.connection
+    suspend fun processAck(messageContext: InboundMessageContext? = null, message: PresentationAckMessageV2? = null): ProofExchangeRecord {
+        logger.info("path = processAck")
 
-        val presentationAckMessage =
-            MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationAckMessageV2
+        var presentationAckMessage : PresentationAckMessageV2? = message
+        var connection : ConnectionRecord? = null
 
-        logger.debug("Processing proof ack with id ${presentationAckMessage.id}")
+        if (messageContext != null) {
+            connection = messageContext.connection
+            presentationAckMessage =
+                MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationAckMessageV2
+        }
+
+        logger.info("Processing proof ack with id ${presentationAckMessage?.id}")
 
         val proofRecord = proofRepository.findByThreadRoleAndConnection(
-            threadId = presentationAckMessage.threadId,
+            threadId = presentationAckMessage?.threadId,
             role = ProofRole.Prover,
             connectionId = connection?.id,
         )
@@ -801,12 +809,14 @@ class ProofServiceV2(val agent: Agent) {
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
         proofRecord.assertState(ProofState.PresentationSent)
 
-        agent.connectionService.assertConnectionOrOutOfBandExchange(
-            messageContext = messageContext,
-            lastReceivedMessage = lastReceivedMessage,
-            lastSentMessage = lastSentMessage,
-            expectedConnectionId = proofRecord.connectionId,
-        )
+        if (messageContext != null) {
+            agent.connectionService.assertConnectionOrOutOfBandExchange(
+                messageContext = messageContext,
+                lastReceivedMessage = lastReceivedMessage,
+                lastSentMessage = lastSentMessage,
+                expectedConnectionId = proofRecord.connectionId,
+            )
+        }
 
         updateState(proofRecord, ProofState.Done)
 

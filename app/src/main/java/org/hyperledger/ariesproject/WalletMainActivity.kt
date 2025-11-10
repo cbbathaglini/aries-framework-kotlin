@@ -565,35 +565,35 @@ class WalletMainActivity : BaseActivity() {
 
 
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val app = application as WalletApp
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            lifecycleScope.launch(Dispatchers.Main) {
-                try {
-                    val qrcodeData = data!!.getStringExtra("qrcode")
-                    Log.d("demo", "Scanned code: $qrcodeData")
-
-                    val (_, connection) = app.agent.oob.receiveInvitationFromUrl(qrcodeData!!)
-
-                    val handler = (application as WalletApp).notificationHandler
-                    handler.addNotification(
-                        title = "Nova Conexão",
-                        message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
-                        type = NotificationType.CONNECTION
-                    )
-                    updateNotificationBadge()
-
-                    //showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
-
-                } catch (e: Exception) {
-                    Log.e("demo", "Erro ao processar QRCode: ${e.localizedMessage}")
-                    showAlert("QRCode inválido ou falha na conexão.")
-                }
-            }
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        val app = application as WalletApp
+//        super.onActivityResult(requestCode, resultCode, data)
+//
+//        if (resultCode == RESULT_OK) {
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                try {
+//                    val qrcodeData = data!!.getStringExtra("qrcode")
+//                    Log.d("demo", "Scanned code: $qrcodeData")
+//
+//                    val (_, connection) = app.agent.oob.receiveInvitationFromUrl(qrcodeData!!)
+//
+//                    val handler = (application as WalletApp).notificationHandler
+//                    handler.addNotification(
+//                        title = "Nova Conexão",
+//                        message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
+//                        type = NotificationType.CONNECTION
+//                    )
+//                    updateNotificationBadge()
+//
+//                    //showAlert("Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
+//
+//                } catch (e: Exception) {
+//                    Log.e("demo", "Erro ao processar QRCode: ${e.localizedMessage}")
+//                    showAlert("QRCode inválido ou falha na conexão.")
+//                }
+//            }
+//        }
+//    }
 
     fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(

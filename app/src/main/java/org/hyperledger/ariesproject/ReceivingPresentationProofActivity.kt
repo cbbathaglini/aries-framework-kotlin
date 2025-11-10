@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -153,11 +154,15 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                             layoutResult.setBackgroundColor(getColor(android.R.color.holo_green_light))
                         }
 
-                        val result = agent?.proofCommandV2?.processPresentationOffline(jsonString)
+                        val (proofRecord, result) = agent!!.proofCommandV2.processPresentationOffline(jsonString)
+                        Log.e("fake error: ", "state: ${proofRecord.state} || verified: ${proofRecord.isVerified}")
+
+                        //agent?.proofCommandV2?.processAck()
 
                         runOnUiThread {
                             txtStatus.text = "✅ Apresentação verificada? " + result
                         }
+
 
                     } catch (e: Exception) {
                         e.printStackTrace()

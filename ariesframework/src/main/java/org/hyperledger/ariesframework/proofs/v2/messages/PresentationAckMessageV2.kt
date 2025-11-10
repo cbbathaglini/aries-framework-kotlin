@@ -6,7 +6,7 @@ import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 
 @Serializable
-class PresentationAckMessageV2 private constructor(
+class PresentationAckMessageV2(
     val status: AckStatus,
 ) : AgentMessage(generateId(), type) {
     constructor(threadId: String, status: AckStatus) : this(status) {

@@ -1,5 +1,6 @@
 package org.hyperledger.ariesproject
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,6 +17,20 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    private val scanQrLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val qrcodeData = data?.getStringExtra("qrcode")
+            if (!qrcodeData.isNullOrEmpty()) {
+                processQrCode(qrcodeData)
+            } else {
+                (activity as? WalletMainActivity)?.showAlert("QR Code inválido.")
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -30,7 +45,8 @@ class HomeFragment : Fragment() {
 
         // Ações rápidas
         binding.cardConnect.setOnClickListener {
-            startActivity(Intent(requireContext(), BarcodeScannerActivity::class.java))
+            val intent = Intent(requireContext(), BarcodeScannerActivity::class.java)
+            scanQrLauncher.launch(intent)
         }
 
         binding.cardCredentials.setOnClickListener {
@@ -69,6 +85,7 @@ class HomeFragment : Fragment() {
         binding.btnShowPresentations.setOnClickListener {
             startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
         }
+
 
         // 🔹 Conectar via URL
         binding.buttonConnect.setOnClickListener {
@@ -113,4 +130,32 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    private fun processQrCode(qrcodeData: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val app = requireActivity().application as WalletApp
+                val (_, connection) = app.agent.oob.receiveInvitationFromUrl(qrcodeData)
+
+                val handler = NotificationHandler.getInstance(requireContext())
+                handler.addNotification(
+                    title = "Nova Conexão",
+                    message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
+                    type = NotificationType.CONNECTION,
+                    connectionId = connection?.id
+                )
+
+                updateNotificationBadgeUI()
+
+                (activity as? WalletMainActivity)
+                    ?.showAlert("✅ Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
+
+            } catch (e: Exception) {
+                (activity as? WalletMainActivity)
+                    ?.showAlert("❌ Falha ao processar QRCode: ${e.localizedMessage}")
+            }
+        }
+    }
+
+
 }
