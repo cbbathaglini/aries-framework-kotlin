@@ -65,7 +65,7 @@ class WalletApp : Application() {
 
         val besuLedgerContig = BesuLedgerConfig(
             configFile =  "besu_config.json",
-            multiledger = false
+            multiledger = true
         )
 
 
@@ -83,10 +83,6 @@ class WalletApp : Application() {
         )
         agent = Agent(applicationContext, config)
         agent.initialize()
-
-//        kotlinx.coroutines.delay(2000)
-//        subscribeAgentEvents()
-
 
         walletOpened = true
 

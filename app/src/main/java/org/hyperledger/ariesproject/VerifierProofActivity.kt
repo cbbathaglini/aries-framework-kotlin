@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
@@ -56,6 +57,7 @@ class VerifierProofActivity : AppCompatActivity() {
         generateButton.setOnClickListener {
             if (selectedCredentialId != null && proofRecordId != null) {
                 generatePresentation()
+
             }
         }
 
@@ -79,6 +81,18 @@ class VerifierProofActivity : AppCompatActivity() {
             }
             override fun possibleResultPoints(resultPoints: MutableList<com.google.zxing.ResultPoint>?) {}
         })
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startScanner() // ✅ agora o scanner inicia imediatamente após permissão
+            } else {
+                Toast.makeText(this, "Permissão de câmera negada.", Toast.LENGTH_LONG).show()
+                finish()
+            }
+        }
     }
 
     override fun onResume() {
@@ -208,7 +222,11 @@ class VerifierProofActivity : AppCompatActivity() {
                 val (_, presentation) = agent.proofCommandV2.createPresentation(record, selectedCredentialId!!)
 
                 val presentationJson = Json.encodeToString(PresentationMessageV2.serializer(), presentation)
-                statusText.text = "✅ Apresentação gerada:\n${presentationJson.take(200)}..."
+                //statusText.text = "✅ Apresentação gerada:\n${presentationJson.take(200)}..."
+                Snackbar.make(scannerView, "✅ Apresentação gerada com sucesso!", Snackbar.LENGTH_LONG)
+                    .setBackgroundTint(Color.parseColor("#2E7D32")) // verde bonito
+                    .setTextColor(Color.WHITE)
+                    .show()
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
             } catch (e: Exception) {
                 e.printStackTrace()
