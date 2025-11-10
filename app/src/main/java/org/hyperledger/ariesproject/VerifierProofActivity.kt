@@ -230,7 +230,11 @@ class VerifierProofActivity : AppCompatActivity() {
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
             } catch (e: Exception) {
                 e.printStackTrace()
-                statusText.text = "❌ Erro ao gerar apresentação: ${e.localizedMessage}"
+                Snackbar.make(scannerView, "❌ Erro ao gerar apresentação: ${e.localizedMessage}", Snackbar.LENGTH_LONG)
+                    .setBackgroundTint(Color.parseColor("#FF0000")) // verde bonito
+                    .setTextColor(Color.WHITE)
+                    .show()
+                //statusText.text = "❌ Erro ao gerar apresentação: ${e.localizedMessage}"
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
             } finally {
                 progressBar.visibility = View.GONE
