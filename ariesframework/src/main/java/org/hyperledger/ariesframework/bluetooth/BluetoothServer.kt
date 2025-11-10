@@ -120,8 +120,8 @@ class BluetoothServer(private val context: Context) {
             return
         }
 
-        if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
-            onLog?.invoke("❌ Múltiplos advertisers/Peripheral mode não suportados.")
+        if (bluetoothAdapter.bluetoothLeAdvertiser == null) {
+            onLog?.invoke("❌ Modo periférico não suportado neste dispositivo.")
             return
         }
 
