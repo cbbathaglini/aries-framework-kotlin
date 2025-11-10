@@ -63,12 +63,9 @@ class WalletApp : Application() {
         // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
         val agentLabel = "SimpleApp-1X$androidId"
 
-        val chainId= properties.getProperty("besu_chainId").toULong()
-        val nodeAddress= properties.getProperty("besu_nodeAddress")
-
         val besuLedgerContig = BesuLedgerConfig(
-            chainId= chainId,
-            nodeAddress = nodeAddress
+            configFile =  "besu_config.json",
+            multiledger = false
         )
 
 

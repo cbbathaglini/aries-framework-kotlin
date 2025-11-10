@@ -10,6 +10,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
@@ -22,6 +26,8 @@ import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.ContractConfig
 import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.LedgerClient
+import uniffi.indy_besu_vdr.LedgerConfiguration
+import uniffi.indy_besu_vdr.LedgerRouter
 import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.resolveCredentialDefinition
 import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
@@ -31,119 +37,166 @@ import uniffi.indy_besu_vdr.resolveSchema
 import uniffi.indy_besu_vdr.revocationStatusListFromString
 import java.io.File
 
+
+/**
+ * LedgerBesuService supports single or multi-ledger configuration dynamically.
+ * Contract addresses and specs are loaded from a JSON configuration file.
+ */
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
     private val appContext: Context = context.applicationContext
     private var pool: Pool? = null
-    private val context: Context = context
-    private var ledgerBesu: LedgerClient? = null
-
+    private var ledgerClient: LedgerClient? = null
+    private var ledgerRouter: LedgerRouter? = null
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-    private val path = "/abi/"
+    // Load configuration JSON path from Agent configuration
+    private val configFilePath: String =
+        agent.agentConfig.besuLedgerConfig?.configFile ?: "besu_config.json"
+    private val isMultiLedger: Boolean =
+        agent.agentConfig.besuLedgerConfig?.multiledger ?: false
 
-    // serpro
-    private val didRegistryConfigAddress = "0x0000000000000000000000000000000000018888"
-    private val schemaRegistryConfigAddress = "0x0000000000000000000000000000000000005555"
-    private val credentialDefinitionRegistryConfigAddress =
-        "0x0000000000000000000000000000000000004444"
-    private val revocationRegistryConfigAddress = "0x0000000000000000000000000000000000002222"
+    /**
+     * Load JSON configuration for all networks and contracts.
+     */
+    private fun loadLedgerConfig(): JsonObject {
+        logger.info("Loading ledger configuration from $configFilePath")
+        val inputStream = appContext.assets.open(configFilePath.trimStart('/'))
+        val content = inputStream.bufferedReader().use { it.readText() }
+        return Json.parseToJsonElement(content).jsonObject
+    }
 
-//    //cpqd
-//    private val didRegistryConfigAddress = "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1"
-//    private val schemaRegistryConfigAddress = "0x0054a3ca30a8e042431659012a89547Fb5F37B09"
-//    private val credentialDefinitionRegistryConfigAddress =
-//        "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0"
-//    private val revocationRegistryConfigAddress = "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5"
-    data class ContractConfigBesu(
-        val address: String,
-        val specPath: String,
-        var spec: ContractSpec? = null,
-    ) {
-        companion object {
+    /**
+     * Build a list of ContractConfig objects from a given network section in JSON.
+     */
+    private fun loadContractConfigsForNetwork(networkJson: JsonObject): List<ContractConfig> {
+        val contracts = mutableListOf<ContractConfig>()
+        for ((_, value) in networkJson) {
+            val obj = value.jsonObject
+            val address = obj["address"]?.jsonPrimitive?.content ?: continue
+            val specPath = obj["specPath"]?.jsonPrimitive?.content ?: continue
 
-            private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
-
-            // Modificar o método para aceitar um Context
-            fun loadFromFile(
-                context: Context,
-                address: String,
-                specPath: String,
-            ): ContractConfig {
-                // Usando o contexto para acessar o arquivo dentro da pasta assets
-                val inputStream =
-                    context.assets.open(specPath.trimStart('/')) // Remove a barra inicial
-                val content = inputStream.bufferedReader().use { it.readText() }
-                val jsonObject = JSONObject(content)
-                val name = jsonObject.getString("sourceName").substringAfterLast("/")
+            try {
+                val inputStream = appContext.assets.open(specPath.trimStart('/'))
+                val abiContent = inputStream.bufferedReader().use { it.readText() }
+                val abiJson = JSONObject(abiContent)
+                val contractName = abiJson.getString("sourceName")
+                    .substringAfterLast("/")
                     .substringBeforeLast(".")
-                val abi = jsonObject.getJSONArray("abi").toString()
-//                logger.info("ABI: $abi")
-//                logger.info("contract spec: $name")
-                return ContractConfig(
-                    address = address,
-                    specPath = null,
-                    spec = ContractSpec(name, abi),
-                )
+                val abi = abiJson.getJSONArray("abi").toString()
+
+                val spec = ContractSpec(contractName, abi)
+                contracts.add(ContractConfig(address = address, specPath = null, spec = spec))
+            } catch (e: Exception) {
+                logger.error("Failed to load contract spec from $specPath: ${e.message}")
             }
         }
+        return contracts
     }
 
-    // Criando configurações individuais para cada contrato
-    val didRegistryConfig: ContractConfig by lazy {
-        logger.info("appcontex: ${appContext.fileList()}")
-        ContractConfigBesu.loadFromFile(
-            context = appContext,
-            address = didRegistryConfigAddress,
-            specPath = path + "EthereumExtDidRegistry.json",
-        )
-    }
-
-    val schemaRegistryConfig: ContractConfig by lazy {
-        ContractConfigBesu.loadFromFile(
-            context = appContext,
-            address = schemaRegistryConfigAddress,
-            specPath = path + "SchemaRegistry.json",
-        )
-    }
-
-    val credentialDefinitionRegistryConfig: ContractConfig by lazy {
-        ContractConfigBesu.loadFromFile(
-            context = appContext,
-            address = credentialDefinitionRegistryConfigAddress,
-            specPath = path + "CredentialDefinitionRegistry.json",
-        )
-    }
-
-    val revocationRegistryConfig: ContractConfig by lazy {
-        ContractConfigBesu.loadFromFile(
-            context = appContext,
-            address = revocationRegistryConfigAddress,
-            specPath = path + "RevocationRegistry.json",
-        )
-    }
-
+    /**
+     * Initialize Ledger client or router depending on configuration.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun initialize() {
-        logger.info("Initializing Pool")
+        logger.info("Initializing Besu Ledger Service...")
+
         if (pool != null) {
             logger.warn("Pool already initialized.")
             return
         }
-        var contratos: List<ContractConfig> = listOf(
-            didRegistryConfig,
-            schemaRegistryConfig,
-            credentialDefinitionRegistryConfig,
-            revocationRegistryConfig,
-        )
-        ledgerBesu = LedgerClient(
-            agent.agentConfig.besuLedgerConfig?.chainId ?: 0u,
-            agent.agentConfig.besuLedgerConfig?.nodeAddress ?: "",
-            contratos,
-            agent.agentConfig.besuLedgerConfig?.network,
-            null,
-        )
+
+        val configJson = loadLedgerConfig()
+        val networksArray = configJson["networks"]?.jsonArray
+            ?: throw IllegalArgumentException("Missing 'networks' array in configuration")
+
+        val clients = mutableListOf<LedgerConfiguration>()
+
+        // Se não for multiledger, considera apenas a primeira rede
+        val targetNetworks = if (isMultiLedger) {
+            logger.info("Multiledger mode enabled: loading all ${networksArray.size} networks")
+            networksArray
+        } else {
+            logger.info("Single-ledger mode enabled: using only the first network entry")
+            listOf(networksArray.first())
+        }
+
+        for (networkElement in targetNetworks) {
+            if (networkElement !is JsonObject) {
+                logger.warn("Skipping invalid network entry (not an object)")
+                continue
+            }
+
+            val networkName = networkElement["networkName"]?.jsonPrimitive?.contentOrNull ?: "default"
+
+            val chainIdStr = networkElement["chainId"]?.jsonPrimitive?.contentOrNull
+            val chainId = chainIdStr?.toULongOrNull()
+            if (chainId == null) {
+                logger.warn("Network $networkName has no valid 'chainId', skipping")
+                continue
+            }
+
+            val nodeAddress = networkElement["nodeAddress"]?.jsonPrimitive?.contentOrNull
+            if (nodeAddress == null) {
+                logger.warn("Network $networkName has no valid 'nodeAddress', skipping")
+                continue
+            }
+
+            val contractsElem = networkElement["contracts"]
+            val contractsSection = if (contractsElem is JsonObject) contractsElem else null
+            if (contractsSection == null) {
+                logger.warn("Network $networkName has no 'contracts' section, skipping")
+                continue
+            }
+
+            val contractConfigs = loadContractConfigsForNetwork(contractsSection)
+
+            logger.info("Loaded ${contractConfigs.size} contracts for network $networkName")
+
+            val ledgerConfig = LedgerConfiguration(
+                chainId = chainId,
+                nodeAddress = nodeAddress,
+                contractConfigs = contractConfigs,
+                network = networkName,
+                quorumConfig = null
+            )
+
+            clients.add(ledgerConfig)
+        }
+
+        if (clients.isEmpty()) {
+            throw IllegalStateException("No valid network configurations found")
+        }
+
+        if (isMultiLedger) {
+            ledgerRouter = LedgerRouter(clients.toList())
+            logger.info("LedgerRouter initialized with ${clients.size} networks.")
+        } else {
+            val firstConfig = clients.first()
+            ledgerClient = LedgerClient(
+                chainId = firstConfig.chainId,
+                nodeAddress = firstConfig.nodeAddress,
+                contractConfigs = firstConfig.contractConfigs,
+                network = firstConfig.network,
+                quorumConfig = null
+            )
+            logger.info("LedgerClient initialized in single-ledger mode (network=${firstConfig.network}).")
+        }
+    }
+
+
+    /**
+     * Get LedgerClient depending on mode.
+     */
+    fun getLedgerClient(network: String? = null): LedgerClient {
+        return if (isMultiLedger) {
+            if (network == null) throw IllegalArgumentException("Network name required for multiledger mode")
+            ledgerRouter?.getLedgerForIdentifier(network)
+                ?: throw Exception("Ledger not found for network $network")
+        } else {
+            ledgerClient ?: throw Exception("Ledger client not initialized")
+        }
     }
 
     override suspend fun registerSchema(did: DidInfo, schemaTemplate: SchemaTemplate): String {
@@ -151,10 +204,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getSchema(schemaId: String): Pair<String, Int> {
-        if (this.ledgerBesu == null) {
-            throw Exception("Ledger não foi inicializado")
-        }
-        var schema = resolveSchema(this.ledgerBesu!!, schemaId)
+        val client = ledgerClient ?:getLedgerClient(schemaId)
+        ?: throw Exception("Ledger not initialized")
+
+        val schema = resolveSchema(client, schemaId)
         val seqNo = 0
         val attrNames = schema.attrNames
         val issuer = schema.issuerId
@@ -169,9 +222,9 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
-        val ledger = ledgerBesu ?: throw Exception("Ledger não foi inicializado")
-
-        val schema = resolveSchema(ledger, schemaId)
+        val client = ledgerClient ?:getLedgerClient(schemaId)
+        ?: throw Exception("Ledger not initialized")
+        val schema = resolveSchema(client, schemaId)
         val seqNo = 0
 
         val anonSchema = AnonCredsSchema(
@@ -206,12 +259,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getCredentialDefinitionvVdr(credentialId: String): uniffi.indy_besu_vdr.CredentialDefinition {
-        if (this.ledgerBesu == null) {
-            throw Exception("Ledger não foi inicializado")
-        }
+        val client = ledgerClient ?:getLedgerClient(credentialId)
+        ?: throw Exception("Ledger not initialized")
 
         try {
-            return resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+            return resolveCredentialDefinition(client, credentialId)
         } catch (e: Throwable) {
             logger.error("error cred def >>> ${e.message}")
             throw Exception("credential definition not found")
@@ -219,13 +271,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getCredentialDefinition(credentialId: String): String {
-        if (this.ledgerBesu == null) {
-            throw Exception("Ledger não foi inicializado")
-        }
-
+        val client = ledgerClient ?:getLedgerClient(credentialId)
+        ?: throw Exception("Ledger not initialized")
         var credentialDefinition: uniffi.indy_besu_vdr.CredentialDefinition? = null
         try {
-            credentialDefinition = resolveCredentialDefinition(this.ledgerBesu!!, credentialId)
+            credentialDefinition = resolveCredentialDefinition(client, credentialId)
         } catch (e: Throwable) {
             logger.error("error cred def >>> ${e.message}")
         }
@@ -256,8 +306,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
-        val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
-        logger.info("revocarionrd: $revocationRD")
+        val client = ledgerClient ?:getLedgerClient(id)
+        ?: throw Exception("Ledger not initialized")
+        val revocationRD = resolveRevocationRegistryDefinition(client, id)
+        logger.info("revocationrd: $revocationRD")
         val jsonObject = mapOf(
             "issuerId" to JsonPrimitive(revocationRD.issuerId),
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
@@ -266,12 +318,14 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
         )
 
-        logger.info("revocarionrd: $revocationRD")
+        logger.info("revocationrd: $revocationRD")
         return Json.encodeToString(JsonObject(jsonObject))
     }
 
     override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): RevocationRegistryDefinition {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
+        val client = ledgerClient ?:getLedgerClient(id)
+        ?: throw Exception("Ledger not initialized")
         // val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
 //        logger.info("revocarionrd: ${revocationRD.toString()}")
 //        val jsonObject = mapOf(
@@ -282,7 +336,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 //            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
 //        )
 
-        return resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
+        return resolveRevocationRegistryDefinition(client , id)
     }
 
     override suspend fun getRevocationRegistryDelta(
@@ -290,14 +344,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
-        if (this.ledgerBesu == null) {
-            throw Exception("Ledger não foi inicializado")
-        }
+        val client = ledgerClient ?:getLedgerClient(id)
+        ?: throw Exception("Ledger not initialized")
 
         // val correct = "did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7/anoncreds/v0/REV_REG_DEF/did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7:identidade_v2:1.0:default/CL_ACCUM/0"
 
         val def = resolveRevocationRegistryDefinition(
-            client = this.ledgerBesu!!,
+            client = client,
             revRegDefId = id,
         )
         logger.info("def: $def")
@@ -306,7 +359,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
         val revocationStatusList =
             resolveRevocationRegistryStatusListFull(
-                this.ledgerBesu!!,
+                client,
                 id,
                 to.toULong(),
             )
@@ -333,9 +386,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
+        val client = ledgerClient ?:getLedgerClient(id)
+        ?: throw Exception("Ledger not initialized")
         val revocationStatusList = revocationStatusListFromString(
             resolveRevocationRegistryStatusList(
-                this.ledgerBesu!!,
+                client,
                 id,
                 timestamp.toULong(),
             ),
@@ -354,9 +409,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         id: String,
         timestamp: Int,
     ): uniffi.indy_besu_vdr.RevocationStatusList {
+        val client = ledgerClient ?:getLedgerClient(id)
+        ?: throw Exception("Ledger not initialized")
         val revocationStatusList: uniffi.indy_besu_vdr.RevocationStatusList =
             resolveRevocationRegistryStatusListFull(
-                this.ledgerBesu!!,
+                client,
                 id,
                 timestamp.toULong(),
 
