@@ -131,9 +131,9 @@ class BluetoothServer(private val context: Context) {
         }
 
         // ✅ Só depois de o serviço estar ativo inicia o advertising
-        Handler(Looper.getMainLooper()).postDelayed({
-            startAdvertising()
-        }, 500)
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            startAdvertising()
+//        }, 500)
     }
 
     fun stopServer() {
@@ -158,7 +158,7 @@ class BluetoothServer(private val context: Context) {
 
         // nome curto para não estourar 31 bytes
         checkPermission();
-        bluetoothAdapter.name = "IDD"
+        bluetoothAdapter.name = "ID"
 
         val settings = AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -168,7 +168,7 @@ class BluetoothServer(private val context: Context) {
 
         val advData = AdvertiseData.Builder()
             .addServiceUuid(ParcelUuid(serviceUUID))
-            .setIncludeDeviceName(false)
+            .setIncludeDeviceName(true) //de false para true
             .build()
 
         // Scan response: nome
@@ -309,6 +309,8 @@ class BluetoothServer(private val context: Context) {
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 onLog?.invoke("🧩 Serviço adicionado (OK).")
+                startAdvertising()
+
             } else {
                 onLog?.invoke("❌ Falha ao adicionar serviço: status=$status")
             }
@@ -321,7 +323,9 @@ class BluetoothServer(private val context: Context) {
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
 
-                if (nome != "AV" && nome != "WNIDD") {
+                if (nome == "IDDiOS" || nome == "AV" || nome == "WNIDD") {
+                    onLog?.invoke("🤝 Conexão aceita de ${nome}")
+                } else {
                     onLog?.invoke("🚫 Conexão rejeitada de $nome")
                     gattServer?.cancelConnection(device)
                     return

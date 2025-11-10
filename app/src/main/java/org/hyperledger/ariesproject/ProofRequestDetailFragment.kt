@@ -294,6 +294,9 @@ class ProofRequestDetailFragment : Fragment() {
                 val requestedCredDefIds = proofRequest.requestedAttributes.values
                     .flatMap { it.restrictions?.mapNotNull { r -> r.credDefId } ?: emptyList() }
 
+                val requestedCredDefIdsPredicates = proofRequest.requestedPredicates.values
+                    .flatMap { it.restrictions?.mapNotNull { r -> r.credDefId } ?: emptyList() }
+
                 val requestedAttrNames = proofRequest.requestedAttributes.values
                     .flatMap { attr ->
                         when {
@@ -310,9 +313,24 @@ class ProofRequestDetailFragment : Fragment() {
                     val recordAttrs = cred.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
 
                     val hasAllAttributes = requestedAttrNames.all { recordAttrs.containsKey(it) }
-                    val matchesCredDef = requestedCredDefIds.isEmpty() || requestedCredDefIds.contains(recordCredDefId)
+                    val matchesCredDefAttr = requestedCredDefIds.isEmpty() || requestedCredDefIds.contains(recordCredDefId)
+                    val matchesCredDefPredicates = requestedCredDefIdsPredicates.isEmpty() || requestedCredDefIdsPredicates.contains(recordCredDefId)
 
-                    if (hasAllAttributes && matchesCredDef) {
+                    val allPredicatesSatisfied = proofRequest.requestedPredicates.values.all { predicate ->
+                        val attrName = predicate.name
+                        val rawValue = recordAttrs[attrName]
+                        val attrValue = rawValue?.toIntOrNull() ?: return@all false
+
+                        when (predicate.pType) {
+                            PredicateType.GreaterThanOrEqualTo -> attrValue >= predicate.pValue
+                            PredicateType.GreaterThan -> attrValue > predicate.pValue
+                            PredicateType.LessThanOrEqualTo -> attrValue <= predicate.pValue
+                            PredicateType.LessThan -> attrValue < predicate.pValue
+                            else -> false
+                        }
+                    }
+
+                    if (hasAllAttributes && matchesCredDefAttr && matchesCredDefPredicates && allPredicatesSatisfied) {
                         mapOf(
                             "id" to cred.id,
                             "attrs" to recordAttrs,

@@ -121,7 +121,7 @@ class BluetoothClient(private val context: Context) {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             result?.let {
                 val device = it.device
-                val name = device.name ?: "Sem nome"
+                val name = device.name ?: "IDDAn"
                 val address = device.address ?: return
 
                 if (discoveredDevices.containsKey(address)) return
