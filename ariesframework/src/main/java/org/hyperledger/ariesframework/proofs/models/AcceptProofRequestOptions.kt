@@ -13,5 +13,5 @@ data class AcceptProofRequestOptions(
     val goal: String? = null,
     val autoAcceptProof: AutoAcceptProof? = null,
     val requestedCredentials: Map<String, JsonElement>? = emptyMap(),
-    val chosenCredentialId: String? = null
+    val chosenCredentialId: String? = null,
 )

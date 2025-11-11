@@ -5,7 +5,6 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.Tags
-import org.slf4j.LoggerFactory
 import java.util.UUID
 
 @Serializable

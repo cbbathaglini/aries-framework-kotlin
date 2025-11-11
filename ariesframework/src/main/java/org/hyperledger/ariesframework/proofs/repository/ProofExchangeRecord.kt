@@ -39,7 +39,7 @@ data class ProofExchangeRecord(
     var proofRequestVerifierJson: String? = null,
     var proofPresentationVerifierJson: String? = null,
     var presentationMessage: PresentationMessageV2? = null,
-    var chosenCredentialId: String? = null
+    var chosenCredentialId: String? = null,
 
 ) : BaseRecord() {
     override fun getTags(): Tags {

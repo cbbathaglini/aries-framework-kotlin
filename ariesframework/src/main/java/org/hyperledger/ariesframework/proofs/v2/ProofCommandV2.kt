@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.proofs.v2
 
 import android.util.Log
 import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.AckStatus
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
@@ -71,7 +70,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         autoAcceptProof: AutoAcceptProof? = null,
         willConfirm: Boolean? = null,
         comment: String? = null,
-    ): Pair<ProofExchangeRecord,VerifierRecord> {
+    ): Pair<ProofExchangeRecord, VerifierRecord> {
         val connection = agent.connectionRepository.getById(connectionId)
 
         val format: String = formats.first().attachmentId ?: throw CredoError("Formato de prova não informado")
@@ -98,7 +97,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofRequest = proofRequest,
             requestMessage = message,
             globalThreadId = record.threadId,
-            offline = false
+            offline = false,
         )
 
         agent.verifierRepository.save(verifierRecord)
@@ -144,7 +143,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 proofRequest = proofRequest,
                 requestMessage = message,
                 globalThreadId = record.threadId,
-                offline = true
+                offline = true,
             )
 
             agent.verifierRepository.save(verifierRecord)
@@ -162,9 +161,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return agent.proofServiceV2.processRequest(requestMessage = requestMessage)
     }
 
-
-    suspend fun processPresentationOffline(presentationMessage: String): Pair<ProofExchangeRecord,Boolean> {
-
+    suspend fun processPresentationOffline(presentationMessage: String): Pair<ProofExchangeRecord, Boolean> {
         val message = MessageSerializer.decodeFromString(presentationMessage) as? PresentationMessageV2
             ?: throw Exception("Failed to decode PresentationMessageV2")
 
@@ -175,16 +172,15 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return Pair(proofRecord, result)
     }
 
-    suspend fun processOfflineAck(proofRecord: ProofExchangeRecord){
-       agent.proofServiceV2.processOfflineAck(proofRecord)
+    suspend fun processOfflineAck(proofRecord: ProofExchangeRecord) {
+        agent.proofServiceV2.processOfflineAck(proofRecord)
     }
 
     suspend fun createPresentation(
         record: ProofExchangeRecord,
-        chosenCredentialId: String? = null
+        chosenCredentialId: String? = null,
     ): Pair<ProofExchangeRecord, PresentationMessageV2> {
-
-        var chosenCredential : CredentialExchangeRecord? = null
+        var chosenCredential: CredentialExchangeRecord? = null
         if (chosenCredentialId != null) {
             chosenCredential =
                 agent.credentialExchangeRepository.getById(chosenCredentialId)
@@ -194,7 +190,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
             proofRecordId = record.id,
             agent = agent,
-            credentialW3cId = chosenCredential?.w3cCredentialId
+            credentialW3cId = chosenCredential?.w3cCredentialId,
         )
 
         val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
@@ -223,8 +219,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         chosenCredentialId: String? = null,
         comment: String? = null,
     ): ProofExchangeRecord {
-
-        var chosenCredential : CredentialExchangeRecord? = null
+        var chosenCredential: CredentialExchangeRecord? = null
         if (chosenCredentialId != null) {
             chosenCredential =
                 agent.credentialExchangeRepository.getById(chosenCredentialId)
@@ -234,11 +229,10 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             ProofUtils.getRequestedCredentialsForProofRequest(
                 proofRecordId = proofRecordId,
                 agent = agent,
-                credentialW3cId = chosenCredential?.w3cCredentialId
+                credentialW3cId = chosenCredential?.w3cCredentialId,
             )
 
         val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
-
 
         val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,
@@ -253,7 +247,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofFormats = record.formats!!,
             comment = comment,
             requestedCredentials = requestedCredentialsMap,
-            chosenCredentialId= chosenCredentialId
+            chosenCredentialId = chosenCredentialId,
         )
 
         val (message, proofRecord) = agent.proofServiceV2.acceptRequest(params)

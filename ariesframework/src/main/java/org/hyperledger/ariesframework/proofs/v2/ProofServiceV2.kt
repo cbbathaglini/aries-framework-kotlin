@@ -21,7 +21,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
@@ -70,7 +69,6 @@ import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.math.log
 import kotlin.math.max
 
 class ProofServiceV2(val agent: Agent) {
@@ -412,7 +410,7 @@ class ProofServiceV2(val agent: Agent) {
             role = ProofRole.Prover,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
-        logger.info("[TAG110]")
+        logger.info("record ------> ${record.connectionId}")
         proofFormatCoordinator.processRequest(
             proofRecord = record,
             message = requestMessage,
@@ -696,10 +694,10 @@ class ProofServiceV2(val agent: Agent) {
             threadId = threadId,
             state = ProofState.ProposalReceived,
             role = ProofRole.Verifier,
-            protocolVersion = ProofConstants.PROTOCOL_VERSION_V2
+            protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
 
-        val verifierRecord : VerifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
+        val verifierRecord: VerifierRecord = agent.verifierRepository.getByGlobalThreadId(threadId)
 
         val lastSentMessage = verifierRecord.requestMessage
             ?: throw Exception("No RequestPresentationMessageV2 found in verifier record")
@@ -708,7 +706,7 @@ class ProofServiceV2(val agent: Agent) {
             proofRecord,
             presentationMessage,
             lastSentMessage,
-            formatServices
+            formatServices,
         )
         logger.info("result: ${result.isValid}")
 
@@ -716,7 +714,7 @@ class ProofServiceV2(val agent: Agent) {
             presentationMessage = message,
             isVerified = proofRecord.isVerified,
             isOffline = true,
-            proofRecordId = proofRecord.id
+            proofRecordId = proofRecord.id,
         )
 
         verifierRecord.addPresentation(presentationVerifier)
@@ -773,7 +771,6 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processOfflineAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
-
         val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
         updateState(proofRecord, ProofState.Done)
 
@@ -783,8 +780,8 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun processAck(messageContext: InboundMessageContext? = null, message: PresentationAckMessageV2? = null): ProofExchangeRecord {
         logger.info("path = processAck")
 
-        var presentationAckMessage : PresentationAckMessageV2? = message
-        var connection : ConnectionRecord? = null
+        var presentationAckMessage: PresentationAckMessageV2? = message
+        var connection: ConnectionRecord? = null
 
         if (messageContext != null) {
             connection = messageContext.connection
@@ -1094,16 +1091,15 @@ class ProofServiceV2(val agent: Agent) {
      */
     suspend fun getRequestedCredentialsForProofRequest(
         anoncredsProofRequest: AnonCredsProofRequest,
-        credentialW3cId: String?
+        credentialW3cId: String?,
     ): RetrievedCredentialsAnonCreds = coroutineScope {
-
         val attrDeferred = anoncredsProofRequest.requestedAttributes.map { (referent, requestedAttribute) ->
             async {
                 val credentials = agent.anonCredsHolderService.getCredentialsForProofRequest(
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent,
-                        credentialW3cId = credentialW3cId
+                        credentialW3cId = credentialW3cId,
                     ),
                 )
 
@@ -1131,7 +1127,7 @@ class ProofServiceV2(val agent: Agent) {
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent,
-                        credentialW3cId = credentialW3cId
+                        credentialW3cId = credentialW3cId,
                     ),
                 )
 

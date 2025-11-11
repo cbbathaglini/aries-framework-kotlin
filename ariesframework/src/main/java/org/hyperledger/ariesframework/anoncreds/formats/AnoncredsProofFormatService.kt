@@ -189,7 +189,7 @@ class AnoncredsProofFormatService(
 
         val verifierRecord = VerifierRecord(
             proofRequest = anonCredsProofRequest,
-            globalThreadId = options.proofRecord.threadId
+            globalThreadId = options.proofRecord.threadId,
         )
 
         agent.verifierRepository.save(verifierRecord)

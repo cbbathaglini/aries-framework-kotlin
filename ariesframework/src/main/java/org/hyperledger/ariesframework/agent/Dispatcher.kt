@@ -9,7 +9,6 @@ class Dispatcher(val agent: Agent) {
 
     fun registerHandler(handler: MessageHandler) {
         handlers[handler.messageType] = handler
-
     }
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
@@ -54,5 +53,4 @@ class Dispatcher(val agent: Agent) {
     fun canHandleMessage(message: AgentMessage): Boolean {
         return handlers[message.type] != null
     }
-
 }

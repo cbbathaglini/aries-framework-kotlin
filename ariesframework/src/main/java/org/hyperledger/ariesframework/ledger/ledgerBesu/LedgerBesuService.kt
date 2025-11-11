@@ -37,7 +37,6 @@ import uniffi.indy_besu_vdr.resolveSchema
 import uniffi.indy_besu_vdr.revocationStatusListFromString
 import java.io.File
 
-
 /**
  * LedgerBesuService supports single or multi-ledger configuration dynamically.
  * Contract addresses and specs are loaded from a JSON configuration file.
@@ -159,7 +158,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 nodeAddress = nodeAddress,
                 contractConfigs = contractConfigs,
                 network = networkName,
-                quorumConfig = null
+                quorumConfig = null,
             )
 
             clients.add(ledgerConfig)
@@ -179,12 +178,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 nodeAddress = firstConfig.nodeAddress,
                 contractConfigs = firstConfig.contractConfigs,
                 network = firstConfig.network,
-                quorumConfig = null
+                quorumConfig = null,
             )
             logger.info("LedgerClient initialized in single-ledger mode (network=${firstConfig.network}).")
         }
     }
-
 
     /**
      * Get LedgerClient depending on mode.
@@ -204,8 +202,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getSchema(schemaId: String): Pair<String, Int> {
-        val client = ledgerClient ?:getLedgerClient(schemaId)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(schemaId)
+            ?: throw Exception("Ledger not initialized")
 
         val schema = resolveSchema(client, schemaId)
         val seqNo = 0
@@ -222,8 +220,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
-        val client = ledgerClient ?:getLedgerClient(schemaId)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(schemaId)
+            ?: throw Exception("Ledger not initialized")
         val schema = resolveSchema(client, schemaId)
         val seqNo = 0
 
@@ -259,8 +257,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getCredentialDefinitionvVdr(credentialId: String): uniffi.indy_besu_vdr.CredentialDefinition {
-        val client = ledgerClient ?:getLedgerClient(credentialId)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(credentialId)
+            ?: throw Exception("Ledger not initialized")
 
         try {
             return resolveCredentialDefinition(client, credentialId)
@@ -271,8 +269,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getCredentialDefinition(credentialId: String): String {
-        val client = ledgerClient ?:getLedgerClient(credentialId)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(credentialId)
+            ?: throw Exception("Ledger not initialized")
         var credentialDefinition: uniffi.indy_besu_vdr.CredentialDefinition? = null
         try {
             credentialDefinition = resolveCredentialDefinition(client, credentialId)
@@ -306,8 +304,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
-        val client = ledgerClient ?:getLedgerClient(id)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
         val revocationRD = resolveRevocationRegistryDefinition(client, id)
         logger.info("revocationrd: $revocationRD")
         val jsonObject = mapOf(
@@ -324,8 +322,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): RevocationRegistryDefinition {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
-        val client = ledgerClient ?:getLedgerClient(id)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
         // val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
 //        logger.info("revocarionrd: ${revocationRD.toString()}")
 //        val jsonObject = mapOf(
@@ -336,7 +334,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 //            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
 //        )
 
-        return resolveRevocationRegistryDefinition(client , id)
+        return resolveRevocationRegistryDefinition(client, id)
     }
 
     override suspend fun getRevocationRegistryDelta(
@@ -344,8 +342,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         to: Int,
         from: Int,
     ): Pair<String, Int> {
-        val client = ledgerClient ?:getLedgerClient(id)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
 
         // val correct = "did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7/anoncreds/v0/REV_REG_DEF/did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7:identidade_v2:1.0:default/CL_ACCUM/0"
 
@@ -386,8 +384,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
-        val client = ledgerClient ?:getLedgerClient(id)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
         val revocationStatusList = revocationStatusListFromString(
             resolveRevocationRegistryStatusList(
                 client,
@@ -409,8 +407,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         id: String,
         timestamp: Int,
     ): uniffi.indy_besu_vdr.RevocationStatusList {
-        val client = ledgerClient ?:getLedgerClient(id)
-        ?: throw Exception("Ledger not initialized")
+        val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
         val revocationStatusList: uniffi.indy_besu_vdr.RevocationStatusList =
             resolveRevocationRegistryStatusListFull(
                 client,

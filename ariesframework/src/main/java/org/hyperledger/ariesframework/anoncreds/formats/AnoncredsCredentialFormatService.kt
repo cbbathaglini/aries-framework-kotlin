@@ -552,7 +552,7 @@ class AnoncredsCredentialFormatService(
         )
         logger.info("storeCredentialOptions: $storeCredentialOptions")
 
-        val credentialId : String = agent.anonCredsHolderService.storeCredential(
+        val credentialId: String = agent.anonCredsHolderService.storeCredential(
             options = storeCredentialOptions,
         )
         logger.info("credentialId: $credentialId")

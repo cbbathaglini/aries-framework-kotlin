@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.storage
 
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentMessage
-import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.slf4j.LoggerFactory
 
@@ -72,7 +71,6 @@ class DidCommMessageRepository(agent: Agent) : Repository<DidCommMessageRecord>(
         role: DidCommMessageRole,
     ): T? {
         val actualType = messageType
-
 
         val record = findSingleByQuery(
             """{

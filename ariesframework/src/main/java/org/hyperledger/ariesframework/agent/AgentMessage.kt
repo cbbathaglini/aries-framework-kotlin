@@ -49,7 +49,6 @@ open class AgentMessage(
         return MessageSerializer.encodeToString(this)
     }
 
-
     override fun toString(): String {
         return "AgentMessage(id='$id', type='$type', thread=$thread, transport=$transport)"
     }
@@ -84,7 +83,6 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
         val asAgent = kser as KSerializer<AgentMessage>
 
         serializers[type] = asAgent
-
     }
 
     @OptIn(ExperimentalSerializationApi::class)

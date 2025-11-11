@@ -55,7 +55,6 @@ class MessageSender(val agent: Agent) {
             agentMessage.transport = TransportDecorator("all")
         }
 
-
         // If the message is a response to an out-of-band invitation, set the parent thread id.
         // We should not override the parent thread id if it is already set, because it may be
         // a response to a different invitation. For example, a handshake-reuse message sent

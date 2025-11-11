@@ -1,8 +1,16 @@
 package org.hyperledger.ariesproject.bluetooth
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
+import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
@@ -12,7 +20,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import java.util.*
@@ -39,12 +46,11 @@ class BluetoothServer(private val context: Context) {
     val TAG = "SimpleBleClient"
     // ─────────────────────────────────────────────────────────────────────────────
 
-    private fun checkPermission(){
+    private fun checkPermission() {
         if (!hasBlePermissions()) {
             onLog?.invoke("🚫 Permissões BLE não concedidas — verifique se a localização (Android 11-) ou Bluetooth (Android 12+) estão ativas.")
             return
         }
-
     }
 
 //    fun startServer() {
@@ -85,16 +91,16 @@ class BluetoothServer(private val context: Context) {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 12+ (API 31+)
             ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
         } else {
             // Android 11 e anteriores — usar permissões antigas + localização
             (
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                    ) &&
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                ) &&
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -137,7 +143,7 @@ class BluetoothServer(private val context: Context) {
     }
 
     fun stopServer() {
-        checkPermission();
+        checkPermission()
         stopAdvertising()
         try { gattServer?.close() } catch (_: Throwable) {}
         gattServer = null
@@ -157,7 +163,7 @@ class BluetoothServer(private val context: Context) {
         }
 
         // nome curto para não estourar 31 bytes
-        checkPermission();
+        checkPermission()
         bluetoothAdapter.name = "ID"
 
         val settings = AdvertiseSettings.Builder()
@@ -168,7 +174,7 @@ class BluetoothServer(private val context: Context) {
 
         val advData = AdvertiseData.Builder()
             .addServiceUuid(ParcelUuid(serviceUUID))
-            .setIncludeDeviceName(true) //de false para true
+            .setIncludeDeviceName(true) // de false para true
             .build()
 
         // Scan response: nome
@@ -177,14 +183,14 @@ class BluetoothServer(private val context: Context) {
             .build()
 
         onLog?.invoke("📡 Iniciando advertising (UUID + nome no scanResponse)…")
-        checkPermission();
+        checkPermission()
         advertiser.startAdvertising(settings, advData, scanResp, advertiseCallback)
     }
 
     private fun stopAdvertising() {
         val advertiser = bluetoothAdapter.bluetoothLeAdvertiser ?: return
         if (!isAdvertising) return
-        checkPermission();
+        checkPermission()
         advertiser.stopAdvertising(advertiseCallback)
         isAdvertising = false
         onLog?.invoke("🛑 Advertising parado.")
@@ -218,15 +224,15 @@ class BluetoothServer(private val context: Context) {
 //        checkPermission();
 //        gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
 //
-////        transferCharacteristic = BluetoothGattCharacteristic(
-////            characteristicUUID,
-////            BluetoothGattCharacteristic.PROPERTY_WRITE or
-////                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-////                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-////                    BluetoothGattCharacteristic.PROPERTY_READ,
-////            BluetoothGattCharacteristic.PERMISSION_WRITE or
-////                    BluetoothGattCharacteristic.PERMISSION_READ
-////        )
+// //        transferCharacteristic = BluetoothGattCharacteristic(
+// //            characteristicUUID,
+// //            BluetoothGattCharacteristic.PROPERTY_WRITE or
+// //                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+// //                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+// //                    BluetoothGattCharacteristic.PROPERTY_READ,
+// //            BluetoothGattCharacteristic.PERMISSION_WRITE or
+// //                    BluetoothGattCharacteristic.PERMISSION_READ
+// //        )
 //
 //        transferCharacteristic = BluetoothGattCharacteristic(
 //            characteristicUUID,
@@ -249,7 +255,6 @@ class BluetoothServer(private val context: Context) {
 //        val added = gattServer?.addService(service) ?: false
 //        onLog?.invoke("📦 addService retornou: $added")
 //    }
-
 
     private fun openGattServerAndAddService() {
         onLog?.invoke("🧱 Abrindo GATT server e adicionando serviço…")
@@ -275,11 +280,11 @@ class BluetoothServer(private val context: Context) {
         transferCharacteristic = BluetoothGattCharacteristic(
             characteristicUUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE or
-                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                    BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_WRITE or
-                    BluetoothGattCharacteristic.PERMISSION_READ
+                BluetoothGattCharacteristic.PERMISSION_READ,
         )
 
 //        transferCharacteristic = BluetoothGattCharacteristic(
@@ -290,10 +295,9 @@ class BluetoothServer(private val context: Context) {
 //            BluetoothGattCharacteristic.PERMISSION_WRITE
 //        )
 
-
         val cccd = BluetoothGattDescriptor(
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
-            BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+            BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE,
         )
         transferCharacteristic?.addDescriptor(cccd)
 
@@ -310,7 +314,6 @@ class BluetoothServer(private val context: Context) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 onLog?.invoke("🧩 Serviço adicionado (OK).")
                 startAdvertising()
-
             } else {
                 onLog?.invoke("❌ Falha ao adicionar serviço: status=$status")
             }
@@ -318,13 +321,12 @@ class BluetoothServer(private val context: Context) {
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             val nome = device.name ?: "WNIDD"
-            checkPermission();
+            checkPermission()
             onLog?.invoke("📶 Conexão: status=$status, newState=$newState (${device.name})")
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-
                 if (nome == "IDDiOS" || nome == "AV" || nome == "WNIDD") {
-                    onLog?.invoke("🤝 Conexão aceita de ${nome}")
+                    onLog?.invoke("🤝 Conexão aceita de $nome")
                 } else {
                     onLog?.invoke("🚫 Conexão rejeitada de $nome")
                     gattServer?.cancelConnection(device)
@@ -354,10 +356,10 @@ class BluetoothServer(private val context: Context) {
             preparedWrite: Boolean,
             responseNeeded: Boolean,
             offset: Int,
-            value: ByteArray
+            value: ByteArray,
         ) {
             onLog?.invoke("✏️ Descriptor write (len=${value.size})")
-            checkPermission();
+            checkPermission()
             if (responseNeeded) gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
 
@@ -369,7 +371,7 @@ class BluetoothServer(private val context: Context) {
             preparedWrite: Boolean,
             responseNeeded: Boolean,
             offset: Int,
-            value: ByteArray
+            value: ByteArray,
         ) {
             onLog?.invoke("🧾 onCharacteristicWriteRequest() chamado — len=${value.size}, prepared=$preparedWrite, response=$responseNeeded")
             val chunk = String(value)
@@ -380,9 +382,9 @@ class BluetoothServer(private val context: Context) {
 //                onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
 //                onJSONReceived?.invoke(text)
 //
-////                Handler(Looper.getMainLooper()).post {
-////                    disconnectClient()
-////                }
+// //                Handler(Looper.getMainLooper()).post {
+// //                    disconnectClient()
+// //                }
 //
 //                Handler(Looper.getMainLooper()).postDelayed({
 //                    onLog?.invoke("⏳ Aguardando antes de desconectar cliente…")
@@ -402,7 +404,6 @@ class BluetoothServer(private val context: Context) {
                     }
                     return
                 }
-
 
                 chunk == "<EOF>" -> {
                     if (receivedBuffer.isEmpty()) {
@@ -427,7 +428,7 @@ class BluetoothServer(private val context: Context) {
                 }
             }
             if (responseNeeded) {
-                checkPermission();
+                checkPermission()
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
         }
@@ -435,7 +436,7 @@ class BluetoothServer(private val context: Context) {
 
     fun disconnectClient() {
         val device = connectedDevice
-        checkPermission();
+        checkPermission()
         if (device != null && isConnected) {
             onLog?.invoke("🔌 Desconectando cliente: ${device.name}")
             try {

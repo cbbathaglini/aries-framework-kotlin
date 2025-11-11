@@ -17,7 +17,6 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.bluetooth.BluetoothClient
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.bluetooth.BluetoothClientAV
 
 @SuppressLint("MissingPermission")
 class PresentationDetailActivity : AppCompatActivity() {

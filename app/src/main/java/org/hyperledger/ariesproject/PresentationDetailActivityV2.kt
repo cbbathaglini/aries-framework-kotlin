@@ -21,7 +21,7 @@ import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.bluetooth.BluetoothClient
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
-import org.hyperledger.ariesframework.bluetooth.BluetoothClientAV
+
 
 @SuppressLint("MissingPermission")
 class PresentationDetailActivityV2 : AppCompatActivity() {
@@ -40,7 +40,6 @@ class PresentationDetailActivityV2 : AppCompatActivity() {
     private lateinit var devicesList: ListView
 
     private lateinit var bluetoothClient: BluetoothClient
-    private lateinit var bluetoothClientAV: BluetoothClientAV
     private var agent: Agent? = null
     private var record: ProofExchangeRecord? = null
     private var pendingJson: String? = null
@@ -191,7 +190,7 @@ class PresentationDetailActivityV2 : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         bluetoothClient.disconnect()
-        bluetoothClientAV.disconnect()
+        //bluetoothClientAV.disconnect()
     }
 
     private fun setupBluetoothClient() {
@@ -260,8 +259,8 @@ class PresentationDetailActivityV2 : AppCompatActivity() {
 
     private fun sendJSONSafelyAndroid(json: String) {
         try {
-            bluetoothClientAV = BluetoothClientAV(this)
-            bluetoothClientAV.start(json)
+//            bluetoothClientAV = BluetoothClientAV(this)
+//            bluetoothClientAV.start(json)
 
         } catch (e: Exception) {
             appendLog("❌ Falha ao enviar JSON: ${e.localizedMessage}")

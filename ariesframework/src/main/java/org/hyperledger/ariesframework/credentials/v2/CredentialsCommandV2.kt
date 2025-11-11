@@ -3,7 +3,6 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialOfferOptions
 import org.hyperledger.ariesframework.credentials.models.NegotiateCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.models.OfferCredentialOptions
