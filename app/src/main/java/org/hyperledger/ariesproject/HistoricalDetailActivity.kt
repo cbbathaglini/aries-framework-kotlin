@@ -48,6 +48,9 @@ class HistoricalDetailActivity : BaseActivity() {
                         HistoricalDetailFragment.ARG_CONNECTION_ID,
                         intent.getStringExtra(HistoricalDetailFragment.ARG_CONNECTION_ID)
                     )
+
+                    intent.putExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF, "false")
+
                     putParcelable(
                         HistoricalDetailFragment.ARG_CONNECTION_RECORD,
                         connectionRecordParcelable

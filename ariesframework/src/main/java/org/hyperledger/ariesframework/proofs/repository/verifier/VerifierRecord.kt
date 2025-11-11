@@ -21,6 +21,7 @@ data class PresentationVerifier(
 @Serializable
 class VerifierRecord(
     // Campos serializáveis normais
+    val offline: Boolean? = null,
     var globalThreadId: String? = null,
     var proofRequest: AnonCredsProofRequest? = null,
     var requestMessage: RequestPresentationMessageV2? = null,

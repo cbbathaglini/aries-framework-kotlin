@@ -298,6 +298,7 @@ class ProofServiceV2(val agent: Agent) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
+        logger.info("connnnnnid: ${connectionRecord?.id ?: "connectionless-proof-request"}")
         val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord?.id ?: "connectionless-proof-request",
             threadId = BaseRecord.generateId(),
@@ -402,6 +403,7 @@ class ProofServiceV2(val agent: Agent) {
         logger.info("[TAG100]con: ${connection?.id}")
         logger.debug("No proof record found for request, creating a new one")
 
+        logger.info("connnnnnid: ${connection?.id ?: "connectionless"}")
         val record = ProofExchangeRecord(
             connectionId = connection?.id ?: "connectionless",
             threadId = requestMessage.threadId,

@@ -71,7 +71,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         autoAcceptProof: AutoAcceptProof? = null,
         willConfirm: Boolean? = null,
         comment: String? = null,
-    ): ProofExchangeRecord {
+    ): Pair<ProofExchangeRecord,VerifierRecord> {
         val connection = agent.connectionRepository.getById(connectionId)
 
         val format: String = formats.first().attachmentId ?: throw CredoError("Formato de prova não informado")
@@ -94,7 +94,16 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         Log.d("MAIN_MESSAGE", "requestProof")
         agent.messageSender.send(OutboundMessage(message, connection))
 
-        return record
+        val verifierRecord = VerifierRecord(
+            proofRequest = proofRequest,
+            requestMessage = message,
+            globalThreadId = record.threadId,
+            offline = false
+        )
+
+        agent.verifierRepository.save(verifierRecord)
+
+        return Pair(record, verifierRecord)
     }
 
     /**
@@ -114,15 +123,11 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             val format = formats.firstOrNull()?.attachmentId
                 ?: throw Exception("Proof format not informed")
 
-            // Gera os formatos de prova usando utilitário
             val proofFormats = ProofUtils.getProofFormats(
                 proofRequest = proofRequest,
                 format = format,
             )
 
-            logger.info("proof formats: $proofFormats")
-
-            // Cria o pedido de prova localmente (sem conexão)
             val (message, record) = agent.proofServiceV2.createRequest(
                 CreateProofRequestOptions(
                     proofRequest = proofRequest,
@@ -135,11 +140,11 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 ),
             )
 
-            // Cria e salva o VerifierRecord
             val verifierRecord = VerifierRecord(
                 proofRequest = proofRequest,
                 requestMessage = message,
                 globalThreadId = record.threadId,
+                offline = true
             )
 
             agent.verifierRepository.save(verifierRecord)

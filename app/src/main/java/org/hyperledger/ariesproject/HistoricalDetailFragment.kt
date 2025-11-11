@@ -72,6 +72,7 @@ class HistoricalDetailFragment : Fragment() {
             connectionId?.let {
                 val intent = Intent(requireContext(), RequestProofActivity::class.java)
                 intent.putExtra("CONNECTION_ID", it)
+                intent.putExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF, "false")
                 startActivity(intent)
             }
         }
@@ -122,5 +123,6 @@ class HistoricalDetailFragment : Fragment() {
     companion object {
         const val ARG_CONNECTION_ID = "id"
         const val ARG_CONNECTION_RECORD = "connection_record"
+        const val ARG_OFFLINE_PROOF = "offline"
     }
 }

@@ -22,13 +22,18 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribut
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.proofs.models.*
+import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
+import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRecord
 import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import java.util.Calendar
+import kotlin.String
 
 class RequestProofActivity : AppCompatActivity() {
 
     private var connectionId: String? = null
+    private var offline: Boolean = true
     private lateinit var addAttributeButton: Button
     private lateinit var addPredicateButton: Button
     private lateinit var requestProofButton: Button
@@ -53,6 +58,10 @@ class RequestProofActivity : AppCompatActivity() {
         // ConnectionId agora é opcional
         connectionId = intent.getStringExtra("CONNECTION_ID")
 
+        if(intent.getStringExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF) != null) {
+            offline = intent.getStringExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF).toBoolean()
+        }
+
         credentialDefInput = findViewById(R.id.credentialDefInput)
         fromDateButton = findViewById(R.id.fromDateButton)
         toDateButton = findViewById(R.id.toDateButton)
@@ -72,7 +81,6 @@ class RequestProofActivity : AppCompatActivity() {
         addPredicateButton.setOnClickListener { addPredicateField("", ">", "") }
         requestProofButton.setOnClickListener { requestProof() }
 
-        // Campos padrão iniciais
         addAttributeField("name")
         addAttributeField("email")
         addPredicateField("birthday", ">", "19970612")
@@ -249,9 +257,25 @@ class RequestProofActivity : AppCompatActivity() {
                     )
                 )
 
-                val (record, verifierRecord) = app.agent.proofCommandV2.requestProofOffline(
-                    proofRequest= proofRequest,
-                    formats = proofFormats)
+                var text :String = "Prova offline gerada!"
+                var result : Pair<ProofExchangeRecord, VerifierRecord>? = null
+                if (offline) {
+                    result = app.agent.proofCommandV2.requestProofOffline(
+                        proofRequest = proofRequest,
+                        formats = proofFormats
+                    )
+                }else{
+                    text = "Prova gerada!"
+                    result = app.agent.proofCommandV2.requestProof(
+                        connectionId = connectionId!!,
+                        proofRequest = proofRequest,
+                        formats = proofFormats
+                    )
+                }
+
+                val record: ProofExchangeRecord = result.first
+                val verifierRecord: VerifierRecord = result.second
+
                 Log.d("ProofDebug", "Record.id = ${record.id}")
                 Log.d("ProofDebug", "VerifierRecord.requestMessage?.id = ${verifierRecord.requestMessage?.id}")
 
@@ -266,7 +290,7 @@ class RequestProofActivity : AppCompatActivity() {
 
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
                 statusText.text = "✅ Prova gerada e QR Code disponível!"
-                Toast.makeText(this@RequestProofActivity, "Prova offline gerada!", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@RequestProofActivity, text, Toast.LENGTH_LONG).show()
 
             } catch (e: Exception) {
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
