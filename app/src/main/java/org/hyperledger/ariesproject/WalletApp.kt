@@ -61,7 +61,7 @@ class WalletApp : Application() {
         )
 
         // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
-        val agentLabel = "SimpleApp-1X$androidId"
+        val agentLabel = "SimpleApp-1X_$androidId"
         Log.e("app---------------", agentLabel)
 
         val besuLedgerContig = BesuLedgerConfig(
