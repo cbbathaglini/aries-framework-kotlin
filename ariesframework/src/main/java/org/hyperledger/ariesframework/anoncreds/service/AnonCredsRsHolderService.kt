@@ -623,8 +623,8 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         }
 
         var credentials: List<W3cCredentialRecord> = agent.w3cCredentialRepository.findByQuery(tags.toJsonString())
-        if (options.credentialW3cId != null) {
-            credentials = listOf(agent.w3cCredentialRepository.getById(options.credentialW3cId))
+        if (options.chosenCredentialId != null) {
+            credentials = listOf(agent.w3cCredentialRepository.getById(options.chosenCredentialId))
         }
 
         val filteredCredentials = credentials.filter { rec ->

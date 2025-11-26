@@ -14,4 +14,5 @@ data class AcceptProofRequestParams(
     val lastPresentation: Boolean? = null,
     val goalCode: String? = null,
     val goal: String? = null,
+    val chosenCredentialId: String? = null
 )

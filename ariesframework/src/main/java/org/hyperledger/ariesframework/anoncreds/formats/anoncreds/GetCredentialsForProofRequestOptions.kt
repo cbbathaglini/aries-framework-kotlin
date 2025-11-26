@@ -11,7 +11,7 @@ data class GetCredentialsForProofRequestOptions(
     val start: Int? = null,
     val limit: Int? = null,
     val extraQuery: ReferentWalletQuery? = null,
-    val credentialW3cId: String? = null,
+    val chosenCredentialId: String? = null, //equals to w3c credential id
 )
 
 typealias WalletQuery = Map<String, JsonElement?>

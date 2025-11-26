@@ -247,7 +247,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofFormats = record.formats!!,
             comment = comment,
             requestedCredentials = requestedCredentialsMap,
-            chosenCredentialId = chosenCredentialId,
+            chosenCredentialId = chosenCredential?.w3cCredentialId,
         )
 
         val (message, proofRecord) = agent.proofServiceV2.acceptRequest(params)

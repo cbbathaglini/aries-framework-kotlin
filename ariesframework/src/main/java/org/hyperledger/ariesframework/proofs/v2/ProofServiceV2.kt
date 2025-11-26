@@ -484,6 +484,7 @@ class ProofServiceV2(val agent: Agent) {
             lastPresentation = true,
             goalCode = goalCode,
             goal = goal,
+            chosenCredentialId = params.chosenCredentialId
         )
         val message: PresentationMessageV2 = proofFormatCoordinator.acceptRequest(acceptRequestParams)
 
@@ -1099,7 +1100,7 @@ class ProofServiceV2(val agent: Agent) {
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent,
-                        credentialW3cId = credentialW3cId,
+                        chosenCredentialId = credentialW3cId,
                     ),
                 )
 
@@ -1127,7 +1128,7 @@ class ProofServiceV2(val agent: Agent) {
                     options = GetCredentialsForProofRequestOptions(
                         proofRequest = anoncredsProofRequest,
                         attributeReferent = referent,
-                        credentialW3cId = credentialW3cId,
+                        chosenCredentialId = credentialW3cId,
                     ),
                 )
 

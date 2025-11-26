@@ -205,7 +205,9 @@ class AnoncredsProofFormatService(
         attachmentId: String,
         requestAttachment: Attachment,
         proposalAttachment: Attachment?,
+        chosenCredentialId: String?
     ): ProofFormatCreateReturn {
+
         logger.info("requestAttachment: ${requestAttachment.getDataAsJson()}")
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
@@ -214,6 +216,7 @@ class AnoncredsProofFormatService(
 
         val anoncredsSelected: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
             proofRequest = requestJson,
+            chosenCredentialId = chosenCredentialId,
             options = AnonCredsGetCredentialsForProofRequestOptions(
                 filterByNonRevocationRequirements = true,
             ),
@@ -330,6 +333,7 @@ class AnoncredsProofFormatService(
                 requestMessage = requestMessage,
             ),
         )
+        logger.info("is verified: ${proofRecord.isVerified}")
         return proofRecord.isVerified!!
     }
 
@@ -565,12 +569,14 @@ class AnoncredsProofFormatService(
 
     private suspend fun _selectCredentialsForRequest(
         proofRequest: AnonCredsProofRequest,
+        chosenCredentialId: String? = null,
         options: AnonCredsGetCredentialsForProofRequestOptions,
     ): AnonCredsSelectedCredentials {
         val credentialsForRequest =
             GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
                 agent = agent,
                 proofRequest = proofRequest,
+                chosenCredentialId = chosenCredentialId,
                 options = options,
             )
 

@@ -48,6 +48,7 @@ interface ProofFormatService<CF : ProofFormat> {
         attachmentId: String,
         requestAttachment: Attachment,
         proposalAttachment: Attachment? = null,
+        chosenCredentialId: String? = null
     ): ProofFormatCreateReturn
 
     suspend fun processPresentation(

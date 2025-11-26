@@ -352,8 +352,8 @@ class ProofRequestDetailFragment : Fragment() {
                     } else {
                         val spinnerItems = compatible.map {
                             val schema = it["schemaId"] ?: "sem schema"
-                            val id = (it["id"] as? String)?.takeLast(10)
-                            "Credencial ${id ?: ""} ($schema)"
+                            val id = (it["id"] as? String)
+                            "Credencial ${id ?: ""}"
                         }
 
                         val adapter = android.widget.ArrayAdapter(

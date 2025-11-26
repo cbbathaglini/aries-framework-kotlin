@@ -41,7 +41,6 @@ class RequestProofActivity : AppCompatActivity() {
     private lateinit var predicatesContainer: LinearLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var credentialDefInput: EditText
-    private lateinit var fromDateButton: Button
     private lateinit var toDateButton: Button
     private var fromTimestamp: Int? = null
     private var toTimestamp: Int? = null
@@ -63,10 +62,8 @@ class RequestProofActivity : AppCompatActivity() {
         }
 
         credentialDefInput = findViewById(R.id.credentialDefInput)
-        fromDateButton = findViewById(R.id.fromDateButton)
         toDateButton = findViewById(R.id.toDateButton)
 
-        fromDateButton.setOnClickListener { pickDateTime(true) }
         toDateButton.setOnClickListener { pickDateTime(false) }
         addAttributeButton = findViewById(R.id.addAttributeButton)
         addPredicateButton = findViewById(R.id.addPredicateButton)
@@ -81,9 +78,9 @@ class RequestProofActivity : AppCompatActivity() {
         addPredicateButton.setOnClickListener { addPredicateField("", ">", "") }
         requestProofButton.setOnClickListener { requestProof() }
 
-        addAttributeField("name")
+        addAttributeField("nome")
         addAttributeField("email")
-        addPredicateField("birthday", ">", "19970612")
+        addPredicateField("data_nascimento", ">", "19970612")
     }
 
     private fun pickDateTime(isFrom: Boolean) {
@@ -97,13 +94,10 @@ class RequestProofActivity : AppCompatActivity() {
                     { _, hour, minute ->
                         calendar.set(year, month, day, hour, minute, 0)
                         val timestamp = (calendar.timeInMillis / 1000).toInt()
-                        if (isFrom) {
-                            fromTimestamp = timestamp
-                            fromDateButton.text = "De: ${calendar.time}"
-                        } else {
-                            toTimestamp = timestamp
-                            toDateButton.text = "Até: ${calendar.time}"
-                        }
+
+                        toTimestamp = timestamp
+                        toDateButton.text = "Até: ${calendar.time}"
+
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
                     calendar.get(Calendar.MINUTE),
@@ -236,9 +230,8 @@ class RequestProofActivity : AppCompatActivity() {
                     }
                 }
 
-                val revocationInterval = if (fromTimestamp != null && toTimestamp != null) {
-                    AnonCredsNonRevokedInterval(from = fromTimestamp!!.toLong(), to = toTimestamp!!.toLong())
-                } else null
+
+                val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = toTimestamp!!.toLong())
 
                 val proofRequest = AnonCredsProofRequest(
                     name = "Dynamic Proof Request",

@@ -35,11 +35,13 @@ class GetCredentialsForProofRequestReferent {
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
             attributeReferent: String,
+            chosenCredentialId: String? = null,
         ): GetCredentialsForProofRequestReturn {
             return agent.anonCredsHolderService.getCredentialsForProofRequest(
                 options = GetCredentialsForProofRequestOptions(
                     proofRequest = proofRequest,
                     attributeReferent = attributeReferent,
+                    chosenCredentialId= chosenCredentialId,
                 ),
             )
         }
@@ -115,6 +117,7 @@ class GetCredentialsForProofRequestReferent {
             agent: Agent,
             proofRequest: AnonCredsProofRequest,
             options: AnonCredsGetCredentialsForProofRequestOptions,
+            chosenCredentialId: String? = null,
         ): AnonCredsCredentialsForProofRequest = coroutineScope {
             val attributesMap = mutableMapOf<String, List<AnonCredsRequestedAttributeMatch>>()
             val predicatesMap = mutableMapOf<String, List<AnonCredsRequestedPredicateMatch>>()
@@ -125,6 +128,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
+                        chosenCredentialId= chosenCredentialId,
                         attributeReferent = referent,
                     )
 
@@ -164,6 +168,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
+                        chosenCredentialId= chosenCredentialId,
                         attributeReferent = referent,
                     )
 

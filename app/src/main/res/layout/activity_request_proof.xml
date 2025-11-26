@@ -111,23 +111,9 @@
             android:layout_marginTop="8dp">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/fromDateButton"
-                style="@style/Widget.MaterialComponents.Button"
-                android:text="Selecionar data inicial"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/teal_600"
-                android:textColor="@android:color/white" />
-
-            <Space
-                android:layout_width="12dp"
-                android:layout_height="match_parent" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/toDateButton"
                 style="@style/Widget.MaterialComponents.Button"
-                android:text="Selecionar data final"
+                android:text="Selecionar data"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

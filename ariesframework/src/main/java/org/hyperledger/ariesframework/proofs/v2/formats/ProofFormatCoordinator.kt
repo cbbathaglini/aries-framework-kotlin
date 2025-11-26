@@ -220,7 +220,7 @@ class ProofFormatCoordinator(
     }
 
     suspend fun acceptRequest(params: AcceptProofRequestParams): PresentationMessageV2 {
-        val (proofRecord, proofFormats, formatServices, comment, lastPresentation, goalCode, goal) = params
+        val (proofRecord, proofFormats, formatServices, comment, lastPresentation, goalCode, goal, chosenCredentialId) = params
 
         logger.info("[acceptRequest] proofFormats: $proofFormats")
         val requestMessage =
@@ -270,6 +270,7 @@ class ProofFormatCoordinator(
                 proposalAttachment = proposalAttachment,
                 requestAttachment = requestAttachment,
                 attachmentId = formatService.formatKey,
+                chosenCredentialId = chosenCredentialId
             )
 
             presentationAttachments.add(proofAccepted.attachment)

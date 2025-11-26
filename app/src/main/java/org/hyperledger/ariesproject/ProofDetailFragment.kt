@@ -199,7 +199,7 @@ class ProofDetailFragment : Fragment() {
         val toText = formatTimestamp(interval?.to)
 
         val text = if (interval != null) {
-            "Início: $fromText | Fim: $toText"
+            "Data: $toText"
         } else {
             "Não especificado"
         }
