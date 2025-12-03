@@ -29,7 +29,17 @@ data class RevocationRegistryValue(
     val tailsLocation: String,
     val tailsHash: String,
     val issuanceType: String? = null, // indy
-)
+) {
+
+    fun toJson(pretty: Boolean = false): String {
+        val json = if (pretty) {
+            Json { prettyPrint = true }
+        } else {
+            Json
+        }
+        return json.encodeToString(this)
+    }
+}
 
 @Serializable
 data class PublicKeys(

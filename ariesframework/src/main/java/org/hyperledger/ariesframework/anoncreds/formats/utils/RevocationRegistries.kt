@@ -102,7 +102,8 @@ data class RevocationRegistries(val agent: Agent) {
                         "nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
                 )
 
-                RevocationInterval.assertBestPracticeRevocationInterval(nonRevoked)
+                // descomentar depois? ver oq fazer
+                // RevocationInterval.assertBestPracticeRevocationInterval(nonRevoked)
 
                 val revocationRegistry: RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 
@@ -132,10 +133,10 @@ data class RevocationRegistries(val agent: Agent) {
 
             logger.info(
                 "FLAVIO referent '$referent',: " +
-                        "revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
+                    "revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
             )
 
-            if (revocationRegistryId != null && revocationRegistries.isNotEmpty() &&revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
+            if (revocationRegistryId != null && revocationRegistries.isNotEmpty() && revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
                 val revocationStatusList: RevocationStatusList =
                     agent.ledgerService
                         .getRevocationStatusList(
@@ -211,7 +212,7 @@ data class RevocationRegistries(val agent: Agent) {
                     // 1) Busca definição se ainda não estiver no cache
                     if (revocationRegistries[revocationRegistryId] == null) {
                         val (revocationRegistryDefinition, resolutionMetadata) =
-                            registry.getRevocationRegistryDefinition(revocationRegistryId)
+                            registry.getRevocationRegistryDefinition(agent, revocationRegistryId)
 
                         if (revocationRegistryDefinition == null) {
                             throw CredoError(

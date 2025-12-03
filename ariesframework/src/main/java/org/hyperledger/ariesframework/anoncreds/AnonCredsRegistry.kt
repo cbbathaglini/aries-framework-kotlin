@@ -19,6 +19,7 @@ interface AnonCredsRegistry {
     ): GetCredentialDefinitionReturn
 
     suspend fun getRevocationRegistryDefinition(
+        agent: Agent,
         revocationRegistryDefinitionId: String,
     ): GetRevocationRegistryDefinitionReturn
 

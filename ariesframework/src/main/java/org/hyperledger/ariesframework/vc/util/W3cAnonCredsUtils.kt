@@ -177,16 +177,16 @@ class W3cAnonCredsUtils {
         fun anonCredsCredentialInfoFromAnonCredsRecord(anonCredsCredentialRecord: AnonCredsCredentialRecord): AnonCredsCredentialInfo {
             val attributes = mutableMapOf<String, String>()
 
-            for ((attribute, valueWrapper) in anonCredsCredentialRecord.credencial.values) {
+            for ((attribute, valueWrapper) in anonCredsCredentialRecord.credential.values) {
                 attributes[attribute] = valueWrapper.raw
             }
 
             return AnonCredsCredentialInfo(
                 credentialId = anonCredsCredentialRecord.id,
                 attributes = attributes,
-                schemaId = anonCredsCredentialRecord.credencial.schemaId,
-                credentialDefinitionId = anonCredsCredentialRecord.credencial.credDefId,
-                revocationRegistryId = anonCredsCredentialRecord.credencial.revRegId,
+                schemaId = anonCredsCredentialRecord.credential.schemaId,
+                credentialDefinitionId = anonCredsCredentialRecord.credential.credDefId,
+                revocationRegistryId = anonCredsCredentialRecord.credential.revRegId,
                 credentialRevocationId = anonCredsCredentialRecord.credentialRevocationId,
                 methodName = anonCredsCredentialRecord.methodName,
                 linkSecretId = anonCredsCredentialRecord.linkSecretId,

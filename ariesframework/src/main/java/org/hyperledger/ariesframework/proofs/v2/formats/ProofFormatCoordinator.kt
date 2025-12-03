@@ -270,7 +270,7 @@ class ProofFormatCoordinator(
                 proposalAttachment = proposalAttachment,
                 requestAttachment = requestAttachment,
                 attachmentId = formatService.formatKey,
-                chosenCredentialId = chosenCredentialId
+                chosenCredentialId = chosenCredentialId,
             )
 
             presentationAttachments.add(proofAccepted.attachment)

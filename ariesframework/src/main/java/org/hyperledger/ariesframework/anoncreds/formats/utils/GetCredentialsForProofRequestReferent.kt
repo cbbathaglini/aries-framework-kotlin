@@ -41,7 +41,7 @@ class GetCredentialsForProofRequestReferent {
                 options = GetCredentialsForProofRequestOptions(
                     proofRequest = proofRequest,
                     attributeReferent = attributeReferent,
-                    chosenCredentialId= chosenCredentialId,
+                    chosenCredentialId = chosenCredentialId,
                 ),
             )
         }
@@ -87,8 +87,8 @@ class GetCredentialsForProofRequestReferent {
                     "with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'",
             )
 
-            // Boas práticas (Aries RFC 0441)
-            RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
+            // Boas práticas (Aries RFC 0441) <<< DESCOMENTAR?
+            // RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
 
             val toTs = requestNonRevoked.to ?: dateToTimestamp(Date())
             val revocationStatusList: AnonCredsRevocationStatusList =
@@ -128,7 +128,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
-                        chosenCredentialId= chosenCredentialId,
+                        chosenCredentialId = chosenCredentialId,
                         attributeReferent = referent,
                     )
 
@@ -168,7 +168,7 @@ class GetCredentialsForProofRequestReferent {
                     getCredentialsForProofRequestReferent(
                         agent = agent,
                         proofRequest = proofRequest,
-                        chosenCredentialId= chosenCredentialId,
+                        chosenCredentialId = chosenCredentialId,
                         attributeReferent = referent,
                     )
 

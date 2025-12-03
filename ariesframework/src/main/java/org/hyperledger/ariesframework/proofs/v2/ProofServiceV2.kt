@@ -484,7 +484,7 @@ class ProofServiceV2(val agent: Agent) {
             lastPresentation = true,
             goalCode = goalCode,
             goal = goal,
-            chosenCredentialId = params.chosenCredentialId
+            chosenCredentialId = params.chosenCredentialId,
         )
         val message: PresentationMessageV2 = proofFormatCoordinator.acceptRequest(acceptRequestParams)
 

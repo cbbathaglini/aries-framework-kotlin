@@ -14,7 +14,7 @@ class AnonCredsCredentialRecord(
     val credentialId: String,
     val credentialRevocationId: String? = null,
     val linkSecretId: String,
-    val credencial: AnonCredsCredential,
+    val credential: AnonCredsCredential,
     val methodName: String,
 ) : BaseRecord() {
 
@@ -27,7 +27,7 @@ class AnonCredsCredentialRecord(
         credentialId: String,
         credentialRevocationId: String?,
         linkSecretId: String,
-        credencial: AnonCredsCredential,
+        credential: AnonCredsCredential,
         methodName: String,
     ) : this(
         id = BaseRecord.generateId(),
@@ -37,7 +37,7 @@ class AnonCredsCredentialRecord(
         credentialId = credentialId,
         credentialRevocationId = credentialRevocationId,
         linkSecretId = linkSecretId,
-        credencial = credencial,
+        credential = credential,
         methodName = methodName,
     ) {
         val tagMap = (tags ?: mutableMapOf()).toMutableMap()
@@ -46,11 +46,11 @@ class AnonCredsCredentialRecord(
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
-        tags["credentialDefinitionId"] = this.credencial.credDefId
-        tags["schemaId"] = this.credencial.schemaId
+        tags["credentialDefinitionId"] = this.credential.credDefId
+        tags["schemaId"] = this.credential.schemaId
         tags["credentialId"] = this.credentialId
         tags["credentialRevocationId"] = this.credentialRevocationId.toString()
-        tags["revocationRegistryId"] = this.credencial.revRegId.toString()
+        tags["revocationRegistryId"] = this.credential.revRegId.toString()
         tags["linkSecretId"] = this.linkSecretId
         tags["methodName"] = this.methodName
         return tags

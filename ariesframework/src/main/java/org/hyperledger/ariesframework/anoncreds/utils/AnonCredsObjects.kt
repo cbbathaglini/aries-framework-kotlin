@@ -62,7 +62,7 @@ class AnonCredsObjects {
         ): FetchRevocationRegistryDefinitionResult {
             val result = agent.anonCredsRegistryService
                 .getRegistryForIdentifier(revocationRegistryDefinitionId)
-                .getRevocationRegistryDefinition(revocationRegistryDefinitionId)
+                .getRevocationRegistryDefinition(agent, revocationRegistryDefinitionId)
 
             if (result.revocationRegistryDefinition == null) {
                 val message = result.resolutionMetadata?.message ?: "Unknown error"

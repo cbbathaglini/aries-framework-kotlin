@@ -6,12 +6,15 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.GetRevocationRegistryDefinitionReturn
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialDefinitionValue
+import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionReturn
 import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
+import org.hyperledger.ariesframework.error.CredoError
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
 
@@ -68,8 +71,43 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
         )
     }
 
-    override suspend fun getRevocationRegistryDefinition(revocationRegistryDefinitionId: String): GetRevocationRegistryDefinitionReturn {
-        TODO("Not yet implemented")
+    private fun extractCredentialDefinitionId(revRegDefId: String): String? {
+        val parts = revRegDefId.split("REV_REG_DEF/")
+        if (parts.size <= 1) return null
+
+        return parts[1].split("/").firstOrNull()
+    }
+
+    override suspend fun getRevocationRegistryDefinition(
+        agent: Agent,
+        revocationRegistryDefinitionId: String,
+    ): GetRevocationRegistryDefinitionReturn {
+        val revocationJson = agent.ledgerService
+            .getRevocationRegistryDefinition(revocationRegistryDefinitionId)
+
+        val revocationRegistryResult =
+            Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocationJson)
+                .copy(revocationRegistryDefinitionId = revocationRegistryDefinitionId)
+
+        val revRegId = revocationRegistryResult.revocationRegistryDefinitionId
+            ?: throw CredoError("Invalid revocation registry definition response")
+
+        val credentialDefinitionId =
+            extractCredentialDefinitionId(revocationRegistryDefinitionId)
+                ?: throw CredoError("Could not extract credential definition ID")
+
+        val revDef = AnonCredsRevocationRegistryDefinition(
+            issuerId = revocationRegistryResult.issuerId,
+            revocDefType = revocationRegistryResult.revocDefType,
+            credDefId = revocationRegistryResult.credDefId,
+            tag = revocationRegistryResult.tag,
+            value = revocationRegistryResult.value,
+        )
+
+        return GetRevocationRegistryDefinitionReturn(
+            revocationRegistryDefinition = revDef,
+            revocationRegistryDefinitionId = revocationRegistryDefinitionId,
+        )
     }
 
     override suspend fun getRevocationStatusList(

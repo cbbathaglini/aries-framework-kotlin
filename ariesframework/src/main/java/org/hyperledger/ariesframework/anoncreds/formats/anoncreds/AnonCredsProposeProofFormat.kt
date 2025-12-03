@@ -14,7 +14,7 @@ data class AnonCredsProposeProofFormat(
     val requestedPredicates: Map<String, AnonCredsPresentationPreviewPredicate>? = null,
     val attributes: List<AnonCredsPresentationPreviewAttribute>? = null,
     val predicates: List<AnonCredsPresentationPreviewPredicate>? = null,
-    @SerialName("nonRevokedInterval")
+    @SerialName("non_revoked")
     val nonRevokedInterval: AnonCredsNonRevokedInterval? = null,
 ) {
     fun normalizeFields(): AnonCredsProposeProofFormat {

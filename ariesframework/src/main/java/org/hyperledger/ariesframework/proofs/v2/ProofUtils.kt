@@ -155,7 +155,16 @@ class ProofUtils {
                     put("name", JsonPrimitive(name))
                     put("version", JsonPrimitive(version))
 
-                    // requested_attributes
+                    proofRequest.nonRevoked?.let { nr ->
+                        put(
+                            "non_revoked",
+                            buildJsonObject {
+                                nr.from?.let { put("from", JsonPrimitive(it)) }
+                                nr.to?.let { put("to", JsonPrimitive(it)) }
+                            },
+                        )
+                    }
+
                     put(
                         "requested_attributes",
                         buildJsonObject {

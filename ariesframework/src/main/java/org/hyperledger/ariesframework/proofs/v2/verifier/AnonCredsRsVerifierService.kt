@@ -6,7 +6,6 @@ import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -16,8 +15,10 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import org.hyperledger.ariesframework.proofs.models.PartialProof
+import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
@@ -32,10 +33,12 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
     override suspend fun verifyProof(
         options: VerifyProofOptions,
-    ): Boolean = coroutineScope {
+    ): Boolean {
         val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, revocationRegistries) = options
         logger.info("oprions: $options")
         logger.info("proofRequest: $proofRequest")
+        logger.info("request message >> ${requestMessage.anoncredsProofRequest()}")
+        logger.info("proof message >> ${presentationMessage.anoncredsProof()}")
 
         for ((key, value) in revocationRegistries) {
             logger.info("🔹 Revocation Registry Key: $key")
@@ -49,7 +52,7 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
         if (!verified) {
             logger.debug("Invalid timestamps for provided identifiers")
-            return@coroutineScope false
+            return false
         }
 
         presentation = Presentation(presentationMessage.anoncredsProof())
@@ -67,25 +70,120 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val proofAnoncreds = presentationMessage.anoncredsProof()
         val proofRequestAnoncreds = requestMessage.anoncredsProofRequest()
         val partialProofObj = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proofAnoncreds)
+
+        val holderTimestamp = partialProofObj.identifiers.first().timestamp
+        val revRegId : String? = partialProofObj.identifiers.first().revocationRegistryId
+//        val revocationStatusLists: RevocationStatusList =
+//            agent.ledgerService.getRevocationStatusList(
+//                id = revRegId.toString(),
+//                timestamp = holderTimestamp?.toInt() ?: 0,
+//            )
+
         val revocationStatusLists: List<anoncreds_uniffi.RevocationStatusList> =
             agent.revocationService.getRevocationStatusLists(
                 proof = partialProofObj,
                 revocationRegistryDefinitions = revocationRegistryDefinitions,
             )
 
-        return@coroutineScope try {
-            Verifier().verifyPresentation(
-                presReq = PresentationRequest(proofRequestAnoncreds),
+
+
+        val presentationRequest = PresentationRequest(proofRequestAnoncreds)
+        logger.info("presentation request: ${presentationRequest.toJson()}")
+
+        // Antes de chamar verifyPresentation, adicione:
+//        logger.info("🔍 Verificando dados de revogação:")
+//        logger.info("   - Número de RevStatusLists: ${revocationStatusLists.size}")
+        val revAnoncredsList : MutableList<AnonCredsRevocationStatusList> = mutableListOf()
+        revocationStatusLists.forEachIndexed { index, list ->
+            val rev = AnonCredsRevocationStatusList.fromAnoncreds(list)
+            logger.info("   - RevStatusList[$index]: revRegDefId=${rev.revRegDefId}")
+            logger.info("   - Timestamp: ${rev.timestamp}")
+            logger.info("   - CurrentAccumulator: ${rev.currentAccumulator}")
+            revAnoncredsList.add(rev)
+        }
+
+//        // Verifique também o partialProofObj
+//        logger.info("🔍 PartialProofObj:")
+//        logger.info("   - Identifiers: ${partialProofObj.identifiers}")
+//        partialProofObj.identifiers.forEach { identifier ->
+//            logger.info("     * revRegId: ${identifier.revocationRegistryId}")
+//            logger.info("     * timestamp: ${identifier.timestamp}")
+//        }
+
+        val nonRevokedOverrides = buildNonRevokedOverride(
+            proof= proof,
+            proofRequest = proofRequest,
+            revocationStatusLists = revAnoncredsList
+        )
+
+        try {
+            val verified = Verifier().verifyPresentation(
+                presReq = presentationRequest,
                 schemas = schemasAnoncreds,
                 credDefs = credentialDefinitionAnoncreds,
                 revRegDefs = revocationRegistryDefinitions,
                 revStatusLists = revocationStatusLists,
                 presentation = presentation,
-                nonrevokeIntervalOverride = null,
+                nonrevokeIntervalOverride = convertNonRevokedOverrides(nonRevokedOverrides),
             )
+            logger.info("verified proof>>> $verified")
+            return verified
         } catch (e: Exception) {
             logger.error("Error verifying proof: $e")
-            false
+        }
+        return false
+    }
+
+    private fun buildNonRevokedOverride(
+        proofRequest: AnonCredsProofRequest,
+        proof: AnonCredsProof,
+        revocationStatusLists: List<AnonCredsRevocationStatusList>
+    ): List<NonRevokedIntervalOverride> {
+        val overrides = mutableListOf<NonRevokedIntervalOverride>()
+
+        // Verificar se há non_revoked global
+        val globalNonRevoked = proofRequest.nonRevoked
+        if (globalNonRevoked == null) {
+            logger.info("⚠️ ProofRequest não tem non_revoked global")
+            return emptyList()
+        }
+
+        // Para cada identificador com revRegId
+        proof.identifiers.forEach { identifier ->
+            identifier.revRegId?.let { revRegId ->
+                // Encontrar a revocation status list correspondente
+                val statusList = revocationStatusLists.find { it.revRegDefId == revRegId }
+
+                if (statusList != null) {
+
+                    val override = NonRevokedIntervalOverride(
+                        revocationRegistryDefinitionId = revRegId,
+                        requestedFromTimestamp = globalNonRevoked.from ?: 0L,  // 0 no seu caso
+                        overrideRevocationStatusListTimestamp = statusList.timestamp
+                    )
+                    overrides.add(override)
+
+                    logger.info("✅ Criado override para $revRegId:")
+                    logger.info("   - requestedFromTimestamp: ${override.requestedFromTimestamp}")
+                    logger.info("   - override timestamp: ${override.overrideRevocationStatusListTimestamp}")
+                } else {
+                    logger.warn("⚠️ Não encontrou status list para revRegId: $revRegId")
+                }
+            }
+        }
+
+        return overrides
+    }
+
+    private fun convertNonRevokedOverrides(
+        overrides: List<NonRevokedIntervalOverride>
+    ): Map<String, Map<ULong, ULong>> {
+
+        return overrides.associate { override ->
+            override.revocationRegistryDefinitionId to mapOf(
+                override.requestedFromTimestamp.toULong() to
+                        override.overrideRevocationStatusListTimestamp.toULong()
+            )
         }
     }
 

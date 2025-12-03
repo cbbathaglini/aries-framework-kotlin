@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import uniffi.indy_besu_vdr.RevocationStatusList
 
 @Serializable
@@ -13,6 +14,14 @@ data class AnonCredsRevocationStatusList(
 ) {
     companion object {
 
+        fun fromAnoncreds(uniffiList: anoncreds_uniffi.RevocationStatusList): AnonCredsRevocationStatusList {
+
+            val jsonString = uniffiList.toJson()
+            val json = Json { ignoreUnknownKeys = true }
+            val parsed = json.decodeFromString<AnonCredsRevocationStatusList>(jsonString)
+            return parsed
+        }
+
         fun toAnonCreds(revocation: RevocationStatusList): AnonCredsRevocationStatusList {
             val listInt: List<Int> = revocation.revocationList.map { it.toInt() }
             return AnonCredsRevocationStatusList(
@@ -23,5 +32,14 @@ data class AnonCredsRevocationStatusList(
                 currentAccumulator = revocation.currentAccumulator,
             )
         }
+    }
+
+    fun toJson(pretty: Boolean = false): String {
+        val json = if (pretty) {
+            Json { prettyPrint = true }
+        } else {
+            Json
+        }
+        return json.encodeToString(this)
     }
 }

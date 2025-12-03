@@ -205,9 +205,8 @@ class AnoncredsProofFormatService(
         attachmentId: String,
         requestAttachment: Attachment,
         proposalAttachment: Attachment?,
-        chosenCredentialId: String?
+        chosenCredentialId: String?,
     ): ProofFormatCreateReturn {
-
         logger.info("requestAttachment: ${requestAttachment.getDataAsJson()}")
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
@@ -526,7 +525,7 @@ class AnoncredsProofFormatService(
                         credDefId = props.first().credentialDefinitionId,
                     ),
                 ),
-                nonRevoked = null,
+                nonRevoked = nonRevokedInterval
             )
         }
 
@@ -542,7 +541,7 @@ class AnoncredsProofFormatService(
                         credDefId = pred.credentialDefinitionId,
                     ),
                 ),
-                nonRevoked = null,
+                nonRevoked = nonRevokedInterval,
             )
         }
 
@@ -633,7 +632,6 @@ class AnoncredsProofFormatService(
             }
         }.awaitAll()
 
-        // Carregar schemas e cred defs a partir das credenciais obtidas
         val schemaIds: Set<String> = credentialObjects.map { it.schemaId }.toSet()
         val credDefIds: Set<String> = credentialObjects.map { it.credentialDefinitionId }.toSet()
 
@@ -643,7 +641,6 @@ class AnoncredsProofFormatService(
         val credentialDefinitions: Map<String, AnonCredsCredentialDefinition> =
             ProofUtils.getCredentialDefinitions(agent, credDefIds)
 
-        // Pode ajustar o tipo de retorno conforme sua função util: Pair ou data class
         val revocationRegistriesForRequestResult: RevocationRegistriesForRequestResult =
             RevocationRegistries(agent).getRevocationRegistriesForRequest(
                 proofRequest,

@@ -64,7 +64,7 @@ class RequestProofActivity : AppCompatActivity() {
         credentialDefInput = findViewById(R.id.credentialDefInput)
         toDateButton = findViewById(R.id.toDateButton)
 
-        toDateButton.setOnClickListener { pickDateTime(false) }
+        toDateButton.setOnClickListener { pickDateTime(true) }
         addAttributeButton = findViewById(R.id.addAttributeButton)
         addPredicateButton = findViewById(R.id.addPredicateButton)
         requestProofButton = findViewById(R.id.requestProofButton)
@@ -80,10 +80,10 @@ class RequestProofActivity : AppCompatActivity() {
 
         addAttributeField("nome")
         addAttributeField("email")
-        addPredicateField("data_nascimento", ">", "19970612")
+        addPredicateField("data_nascimento", ">=", "19970612")
     }
 
-    private fun pickDateTime(isFrom: Boolean) {
+    private fun pickDateTime(isTo: Boolean) {
         val calendar = Calendar.getInstance()
 
         val datePicker = DatePickerDialog(
@@ -192,6 +192,11 @@ class RequestProofActivity : AppCompatActivity() {
                 statusText.text = "Enviando solicitação..."
                 requestProofButton.isEnabled = false
 
+                //val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = toTimestamp!!.toLong())
+                val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = 1764937884L)
+                //val revocationInterval = AnonCredsNonRevokedInterval(from = 5L, to = 25L)
+
+
                 val attributes = mutableMapOf<String, AnonCredsRequestedAttribute>()
                 val predicates = mutableMapOf<String, AnonCredsRequestedPredicate>()
 
@@ -203,7 +208,9 @@ class RequestProofActivity : AppCompatActivity() {
                     if (name.isNotEmpty()) {
                         attributes[name] = AnonCredsRequestedAttribute(
                             name = name,
-                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId))
+                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId)),
+                            nonRevoked = revocationInterval
+
                         )
                     }
                 }
@@ -225,13 +232,13 @@ class RequestProofActivity : AppCompatActivity() {
                             name = name,
                             pType = type,
                             pValue = value.toLong(),
-                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId))
+                            restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId)),
+                            nonRevoked = revocationInterval
                         )
                     }
                 }
 
 
-                val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = toTimestamp!!.toLong())
 
                 val proofRequest = AnonCredsProofRequest(
                     name = "Dynamic Proof Request",
