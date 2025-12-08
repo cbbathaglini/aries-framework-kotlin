@@ -381,7 +381,7 @@ class AnoncredsCredentialFormatService(
             revocationStatusList = AnonCredsObjects.fetchRevocationStatusList(
                 agent,
                 revocationRegistryDefinitionId,
-                dateToTimestamp(Date()),
+                dateToTimestamp(Date()).toULong(),
             )
         }
 

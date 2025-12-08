@@ -207,9 +207,10 @@ class ProofDetailFragment : Fragment() {
         binding.nonRevokedInterval.text = text
     }
 
-    private fun formatTimestamp(timestamp: Long?): String {
+    fun formatTimestamp(timestamp: ULong?): String {
         return if (timestamp != null) {
-            val date = Date(timestamp * 1000)
+            val millis = timestamp.toLong() * 1000  // ULong → Long (segundos → ms)
+            val date = Date(millis)
             val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm:ss", Locale.getDefault())
             sdf.format(date)
         } else "-"

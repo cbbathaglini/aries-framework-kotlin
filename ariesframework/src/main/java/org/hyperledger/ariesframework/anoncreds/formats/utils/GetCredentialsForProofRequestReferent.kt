@@ -51,7 +51,7 @@ class GetCredentialsForProofRequestReferent {
          */
         data class RevocationStatusResult(
             val isRevoked: Boolean?, // null/undefined quando não aplicável
-            val timestamp: Long?, // epoch time conforme seu formato
+            val timestamp: ULong?, // epoch time conforme seu formato
         )
 
         /**
@@ -90,7 +90,7 @@ class GetCredentialsForProofRequestReferent {
             // Boas práticas (Aries RFC 0441) <<< DESCOMENTAR?
             // RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
 
-            val toTs = requestNonRevoked.to ?: dateToTimestamp(Date())
+            val toTs = requestNonRevoked.to ?: dateToTimestamp(Date()).toULong()
             val revocationStatusList: AnonCredsRevocationStatusList =
                 AnonCredsObjects.fetchRevocationStatusList(
                     agent = agent,

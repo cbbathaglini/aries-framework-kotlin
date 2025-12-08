@@ -113,13 +113,13 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
     override suspend fun getRevocationStatusList(
         agent: Agent,
         revocationRegistryId: String,
-        timestamp: Long,
+        timestamp: ULong,
     ): GetRevocationStatusListReturn {
         try {
             val revocationStatusList: RevocationStatusList =
                 agent.ledgerService.getRevocationStatusList(
                     revocationRegistryId,
-                    timestamp.toInt(),
+                    timestamp.toULong(),
                 )
 
             val revocationStatusListInts: List<Int> =
@@ -129,7 +129,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
                 revRegDefId = revocationStatusList.revRegDefId,
                 revocationList = revocationStatusListInts,
                 currentAccumulator = revocationStatusList.currentAccumulator,
-                timestamp = revocationStatusList.timestamp.toLong(),
+                timestamp =revocationStatusList.timestamp,
             )
             return GetRevocationStatusListReturn(
                 revocationStatusList = anoncredsRevocationStatusList,

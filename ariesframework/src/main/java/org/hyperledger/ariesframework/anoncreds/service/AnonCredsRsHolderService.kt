@@ -589,6 +589,8 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         val credentialDefinitions = options.credentialDefinitions
         val schemas = options.schemas
 
+        logger.error(">>> HOLDER nonce = ${requestMessage.toJsonString()}")
+
         val rsCredentialDefinitions = mutableMapOf<String, anoncreds_uniffi.CredentialDefinition>()
         val rsSchemas = mutableMapOf<String, anoncreds_uniffi.Schema>()
         val retrievedCredentials = mutableMapOf<String, Any>()
@@ -611,7 +613,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             }
         }
 
-        val getTimestamp: (Any) -> Long? = { attribute ->
+        val getTimestamp: (Any) -> ULong? = { attribute ->
             when (attribute) {
                 is AnonCredsRequestedAttributeMatch -> attribute.timestamp
                 is AnonCredsRequestedPredicateMatch -> attribute.timestamp
@@ -659,7 +661,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     ?: throw AnonCredsRsError("Revocation Registry $revocationRegistryId not found")
 
                 val definition: AnonCredsRevocationRegistryDefinition = registryData.definition
-                val revocationStatusLists: MutableMap<Long, AnonCredsRevocationStatusList> = registryData.revocationStatusLists
+                val revocationStatusLists: MutableMap<ULong, AnonCredsRevocationStatusList> = registryData.revocationStatusLists
                     ?: error("revocationStatusLists missing")
 
                 val statusList: AnonCredsRevocationStatusList = revocationStatusLists[timestamp]
@@ -689,21 +691,47 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                 val revocationStatusListJson = statusList.toJson()
                 val statusListUniffi =
                     anoncreds_uniffi.RevocationStatusList(revocationStatusListJson)
+                logger.error(">>> HOLDER STATUS LIST (UNIFFI JSON) <<<")
+                logger.info(" -> ${statusListUniffi.toJson()}")
 
                 val tailsFile = File(registryData.tailsFilePath, registryData.tailsHash!!)
                 if (!tailsFile.exists()) {
                     error("Tails file not found: ${tailsFile.path}")
                 }
 
-                logger.error("---- HOLDER REVOCATION DEBUG ----")
-                logger.error("credRevId = ${info.credentialRevocationId}")
-                logger.error("revRegId = ${info.revocationRegistryId}")
-                logger.error("timestamp usado pelo holder = $timestamp")
-                logger.error("revocationRegistryDefinition = ${revocationRegistryDefinition.toJson()}")
-                logger.error("revocationStatusList usado = $revocationStatusListJson")
-                logger.error("tails file = ${tailsFile.path}")
-                logger.error("----------------------------------")
+                // =============================================================
+                // 🔥 LOGS COMPLETOS PARA DEBUGAR A PROVA DO HOLDER
+                // =============================================================
 
+                logger.error("---- HOLDER REVOCATION DEBUG ----")
+                logger.error("credRevId (index)              = ${info.credentialRevocationId}")
+                logger.error("revRegId                       = ${info.revocationRegistryId}")
+                logger.error("timestamp usado pelo holder    = $timestamp")
+
+                logger.error("---- RevocationRegistryDefinition (HOLDER) ----")
+                logger.error(revocationRegistryDefinition.toJson())
+
+                logger.error("---- StatusList usada pelo HOLDER (JSON BRUTO) ----")
+                logger.error(revocationStatusListJson)
+
+                try {
+                    val parsed = Json.parseToJsonElement(revocationStatusListJson).jsonObject
+                    logger.error("accum (HOLDER)                 = ${parsed["accum"]}")
+                    logger.error("currentAccumulator (HOLDER)                 = ${parsed["currentAccumulator"]}")
+                    logger.error("revocationList (HOLDER)        = ${parsed["revocationList"]}")
+                    logger.error("timestamp (HOLDER-statuslist)  = ${parsed["timestamp"]}")
+                } catch (e: Exception) {
+                    logger.error("ERRO ao parsear statuslist holder: $e")
+                }
+
+                logger.error("tails file                     = ${tailsFile.path}")
+                logger.error("---------------------------------------------------")
+
+                // =============================================================
+                // 🔥 GERANDO O WITNESS (revocationState)
+                // =============================================================
+
+                logger.error("HOLDER revRegIndex (credentialRevocationId) = ${info.credentialRevocationId}")
                 revocationState = Prover().createOrUpdateRevocationState(
                     revRegDef = revocationRegistryDefinition,
                     revStatusList = statusListUniffi,
@@ -712,6 +740,24 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     revState = null,
                     oldRevStatusList = null,
                 )
+
+                logger.error("---- RevocationState GERADO pelo HOLDER ----")
+                try {
+                    val revStateJson = revocationState!!.toJson()
+                    logger.error(revStateJson)
+
+                    val parsedState = Json.parseToJsonElement(revStateJson).jsonObject
+
+                    // rev_reg.accum é onde o accumulator realmente fica no JSON do revocation state
+                    val revRegObj = parsedState["rev_reg"]?.jsonObject
+                    logger.error("revState.rev_reg.accum (HOLDER) = ${revRegObj?.get("accum")}")
+                    logger.error("revState.timestamp (HOLDER)     = ${parsedState["timestamp"]}")
+                    logger.error("revState.witness (HOLDER)       = ${parsedState["witness"]}")
+                } catch (e: Exception) {
+                    logger.error("ERRO ao parsear revState holder: $e")
+                }
+                logger.error("----------------------------------------------")
+
             }
 
             val credential = when (record) {
@@ -923,6 +969,12 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                 schemas = rsSchemas,
                 credDefs = rsCredentialDefinitions,
             )
+
+            val proofUniffi = presentation.proof()
+            val aggr = proofUniffi.aggregatedProof
+
+            PrintLongLine.print("HOLDER PRESENTATION.PROOF- $proofUniffi")
+            PrintLongLine.print("HOLDER AGGREGATED- $aggr")
 
             val anonCredsProof: AnonCredsProof =
                 Json.decodeFromString<AnonCredsProof>(presentation.toJson())

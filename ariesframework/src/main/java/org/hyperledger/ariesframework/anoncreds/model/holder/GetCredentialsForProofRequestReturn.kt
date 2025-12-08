@@ -16,6 +16,6 @@ data class CredentialForProofRequest(
 
 @Serializable
 data class AnonCredsNonRevokedInterval(
-    val from: Long? = null,
-    val to: Long? = null,
+    val from: ULong? = null,
+    val to: ULong? = null,
 )

@@ -129,19 +129,22 @@ data class RevocationRegistries(val agent: Agent) {
                 )
             }
 
-            val timestampToFetch = timestamp ?: nonRevoked?.to
+
+            val timestampToFetch : ULong = (timestamp ?: nonRevoked?.to) as ULong
 
             logger.info(
                 "FLAVIO referent '$referent',: " +
                     "revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
             )
 
-            if (revocationRegistryId != null && revocationRegistries.isNotEmpty() && revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
+            if (revocationRegistryId != null &&
+                revocationRegistries.isNotEmpty() &&
+                revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null) {
                 val revocationStatusList: RevocationStatusList =
                     agent.ledgerService
                         .getRevocationStatusList(
                             id = revocationRegistryId,
-                            timestamp = timestampToFetch!!.toInt(),
+                            timestamp = timestampToFetch,
                         )
 
                 if (revocationStatusList == null) {
@@ -151,8 +154,8 @@ data class RevocationRegistries(val agent: Agent) {
                     )
                 }
 
-                val revocationStatusMap: MutableMap<Long, RevocationStatusList> = mutableMapOf(
-                    revocationStatusList.timestamp.toLong() to revocationStatusList,
+                val revocationStatusMap: MutableMap<ULong, RevocationStatusList> = mutableMapOf(
+                    revocationStatusList.timestamp to revocationStatusList,
                 )
 
                 val revocationRegistryEntry = RevocationRegistryBucket(
@@ -229,7 +232,7 @@ data class RevocationRegistries(val agent: Agent) {
                     val entry = revocationRegistries.getValue(revocationRegistryId)
                     if (entry.revocationStatusLists?.get(timestamp) == null) {
                         val (revocationStatusList, statusListResolutionMetadata) =
-                            registry.getRevocationStatusList(agent, revocationRegistryId, timestamp)
+                            registry.getRevocationStatusList(agent, revocationRegistryId, timestamp.toULong())
 
                         if (revocationStatusList == null) {
                             throw CredoError(

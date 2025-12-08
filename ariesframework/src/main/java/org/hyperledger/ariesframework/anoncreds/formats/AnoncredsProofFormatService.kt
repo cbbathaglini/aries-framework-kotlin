@@ -60,6 +60,7 @@ import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMess
 import org.hyperledger.ariesframework.proofs.v2.verifier.VerifyProofOptions
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class AnoncredsProofFormatService(
     override val formatKey: String = "anoncreds",
@@ -667,11 +668,12 @@ class AnoncredsProofFormatService(
                 value = revRegValue,
             )
 
-            val revocationStatusListsAnoncreds: MutableMap<Long, AnonCredsRevocationStatusList> =
+            val revocationStatusListsAnoncreds: MutableMap<ULong, AnonCredsRevocationStatusList> =
                 value.revocationStatusLists
                     ?.mapValues { (_, v) -> AnonCredsRevocationStatusList.toAnonCreds(v) }
                     ?.toMutableMap()
                     ?: mutableMapOf()
+            logger.info("status list: ${revocationStatusListsAnoncreds}")
 
             anonCredsRevocationRegistries.put(
                 key,

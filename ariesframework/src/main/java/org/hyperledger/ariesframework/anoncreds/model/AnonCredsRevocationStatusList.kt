@@ -10,7 +10,7 @@ data class AnonCredsRevocationStatusList(
     val revRegDefId: String,
     val revocationList: List<Int>,
     val currentAccumulator: String,
-    val timestamp: Long,
+    val timestamp: ULong,
 ) {
     companion object {
 
@@ -25,7 +25,7 @@ data class AnonCredsRevocationStatusList(
         fun toAnonCreds(revocation: RevocationStatusList): AnonCredsRevocationStatusList {
             val listInt: List<Int> = revocation.revocationList.map { it.toInt() }
             return AnonCredsRevocationStatusList(
-                timestamp = revocation.timestamp.toLong(),
+                timestamp = revocation.timestamp,
                 issuerId = revocation.issuerId,
                 revRegDefId = revocation.revRegDefId,
                 revocationList = listInt,

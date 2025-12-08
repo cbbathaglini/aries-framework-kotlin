@@ -43,7 +43,7 @@ class AnonCredsObjects {
         suspend fun fetchRevocationStatusList(
             agent: Agent,
             revocationRegistryId: String,
-            timestamp: Long,
+            timestamp: ULong,
         ): AnonCredsRevocationStatusList {
             val registry =
                 agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)

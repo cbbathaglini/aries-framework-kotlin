@@ -20,7 +20,7 @@ object RevocationStatusListSerializer :
             revRegDefId = value.revRegDefId,
             revocationList = value.revocationList.map { it.toInt() },
             currentAccumulator = value.currentAccumulator,
-            timestamp = value.timestamp.toLong(),
+            timestamp = value.timestamp,
         )
         // encoder.encodeSerializableValue(AnonCredsRevocationStatusList.serializer(), dto)
         encoder.encodeSerializableValue(serializer<AnonCredsRevocationStatusList>(), dto)

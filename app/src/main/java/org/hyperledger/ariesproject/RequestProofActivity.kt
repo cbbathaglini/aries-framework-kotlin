@@ -81,6 +81,7 @@ class RequestProofActivity : AppCompatActivity() {
         addAttributeField("nome")
         addAttributeField("email")
         addPredicateField("data_nascimento", ">=", "19970612")
+        credentialDefInput.setText("did:ethr:serpro:0x3c975afa6b58598d6366e93a112629c397a4365a/anoncreds/v0/CLAIM_DEF/did:ethr:serpro:0x3c975afa6b58598d6366e93a112629c397a4365a:schema_revoked_f054e918-1d5b-499b-aaa7-14bba4bfbd07:1.0/default")
     }
 
     private fun pickDateTime(isTo: Boolean) {
@@ -193,7 +194,12 @@ class RequestProofActivity : AppCompatActivity() {
                 requestProofButton.isEnabled = false
 
                 //val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = toTimestamp!!.toLong())
-                val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = 1764937884L)
+                //val revocationInterval = AnonCredsNonRevokedInterval(from = 0L, to = 1764937884L)
+                var revocationInterval : AnonCredsNonRevokedInterval? = null
+                if (toTimestamp !=null) {
+                    revocationInterval = AnonCredsNonRevokedInterval(from = 0.toULong(), to = toTimestamp!!.toULong())
+                    //revocationInterval = AnonCredsNonRevokedInterval(from = 0.toULong(), to = 0.toULong())
+                }
                 //val revocationInterval = AnonCredsNonRevokedInterval(from = 5L, to = 25L)
 
 
@@ -209,7 +215,7 @@ class RequestProofActivity : AppCompatActivity() {
                         attributes[name] = AnonCredsRequestedAttribute(
                             name = name,
                             restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId)),
-                            nonRevoked = revocationInterval
+                            nonRevoked = null
 
                         )
                     }
@@ -233,7 +239,7 @@ class RequestProofActivity : AppCompatActivity() {
                             pType = type,
                             pValue = value.toLong(),
                             restrictions = listOf(AnonCredsProofRequestRestriction(credDefId = credDefId)),
-                            nonRevoked = revocationInterval
+                            nonRevoked = null
                         )
                     }
                 }

@@ -33,7 +33,7 @@ interface ILedgerService {
     suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int>
     suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int)
 
-    suspend fun getRevocationStatusList(id: String, timestamp: Int): RevocationStatusList
+    suspend fun getRevocationStatusList(id: String, timestamp: ULong): RevocationStatusList
     suspend fun getTailsPath(): String
     suspend fun getSchemaObj(schemaId: String): AnonCredsSchema
 }

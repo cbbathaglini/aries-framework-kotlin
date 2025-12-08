@@ -358,7 +358,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
 
     override suspend fun getRevocationStatusList(
         id: String,
-        timestamp: Int,
+        timestamp: ULong,
     ): uniffi.indy_besu_vdr.RevocationStatusList {
         throw Exception("not implemented for indy")
     }

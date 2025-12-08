@@ -7,5 +7,5 @@ data class RevocationRegistryBucket(
     val definition: RevocationRegistryDefinition,
     val tailsFilePath: String? = null,
     val tailsHash: String? = null,
-    val revocationStatusLists: MutableMap<Long, RevocationStatusList>? = null,
+    val revocationStatusLists: MutableMap<ULong, RevocationStatusList>? = null,
 )

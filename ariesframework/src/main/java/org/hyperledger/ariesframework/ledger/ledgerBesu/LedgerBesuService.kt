@@ -405,7 +405,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getRevocationStatusList(
         id: String,
-        timestamp: Int,
+        timestamp: ULong,
     ): uniffi.indy_besu_vdr.RevocationStatusList {
         val client = ledgerClient ?: getLedgerClient(id)
             ?: throw Exception("Ledger not initialized")
@@ -413,7 +413,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             resolveRevocationRegistryStatusListFull(
                 client,
                 id,
-                timestamp.toULong(),
+                timestamp,
 
             ) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
 

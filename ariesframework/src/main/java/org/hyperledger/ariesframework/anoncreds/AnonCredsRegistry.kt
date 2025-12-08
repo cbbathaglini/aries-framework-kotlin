@@ -26,7 +26,7 @@ interface AnonCredsRegistry {
     suspend fun getRevocationStatusList(
         agent: Agent,
         revocationRegistryId: String,
-        timestamp: Long,
+        timestamp: ULong,
     ): GetRevocationStatusListReturn
 
 //    suspend fun registerRevocationStatusList(
