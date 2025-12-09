@@ -8,5 +8,5 @@ data class AnonCredsRevocationStatusListJson(
     val revRegDefId: String,
     val timestamp: Long,
     val revocationList: List<Int>,
-    val accum: String
+    val accum: String,
 )

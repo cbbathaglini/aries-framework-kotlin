@@ -15,7 +15,6 @@ data class AnonCredsRevocationStatusList(
     companion object {
 
         fun fromAnoncreds(uniffiList: anoncreds_uniffi.RevocationStatusList): AnonCredsRevocationStatusList {
-
             val jsonString = uniffiList.toJson()
             val json = Json { ignoreUnknownKeys = true }
             val parsed = json.decodeFromString<AnonCredsRevocationStatusList>(jsonString)

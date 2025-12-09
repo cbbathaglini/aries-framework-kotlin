@@ -16,11 +16,8 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-import org.hyperledger.ariesframework.proofs.models.AnonCredsRevocationStatusListJson
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import org.hyperledger.ariesframework.proofs.models.PartialProof
-import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
@@ -56,12 +53,11 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         }
 
         val identifier = identifiers.first()
-        val holderTimestamp : Int? = identifier.timestamp
+        val holderTimestamp: Int? = identifier.timestamp
         val revRegId = identifier.revocationRegistryId
 
         logger.error(">>> VERIFIER identifier.revRegId  = $revRegId")
         logger.error(">>> VERIFIER identifier.timestamp = $holderTimestamp")
-
 
         val presentationRequest = PresentationRequest(requestMessage.anoncredsProofRequest())
         logger.error(">>> VERIFIER nonce = ${presentationRequest.toJson()}")
@@ -72,7 +68,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
         PrintLongLine.print("VERIFIER PRESENTATION.PROOF- $proofUniffi")
         PrintLongLine.print("VERIFIER AGGREGATED- $aggr")
-
 
         val schemaIds: Set<String> = schemas.schemas.keys
         val schemasAnoncreds: Map<String, Schema> =
@@ -110,7 +105,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val revRegDefsMap = mapOf(revRegId to revRegDefUni)
 
         logger.error(">>> VERIFIER RevocationRegistryDefinition JSON = ${revRegDefUni.toJson()}")
-
 
         val ledgerStatusList =
             agent.ledgerService.getRevocationStatusList(revRegId, ts)
@@ -153,7 +147,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         } catch (e: Exception) {
             logger.error("ERRO parseando UNIFFI statuslist no verifier: $e")
         }
-
 
         // (4) Chamar o verifier do anoncreds-rs
         return try {
@@ -202,11 +195,8 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
           "currentAccumulator": "${src.currentAccumulator}",
           "timestamp": $targetTimestamp
         }
-    """.trimIndent()
+        """.trimIndent()
     }
-
-
-
 
     suspend fun getRevocationRegistryDefinitions(revocationRegistryIds: Set<String>): Map<String, RevocationRegistryDefinition> {
         val revocationRegistryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()

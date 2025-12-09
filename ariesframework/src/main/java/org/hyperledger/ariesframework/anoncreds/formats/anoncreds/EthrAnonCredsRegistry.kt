@@ -129,7 +129,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
                 revRegDefId = revocationStatusList.revRegDefId,
                 revocationList = revocationStatusListInts,
                 currentAccumulator = revocationStatusList.currentAccumulator,
-                timestamp =revocationStatusList.timestamp,
+                timestamp = revocationStatusList.timestamp,
             )
             return GetRevocationStatusListReturn(
                 revocationStatusList = anoncredsRevocationStatusList,

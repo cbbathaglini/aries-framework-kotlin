@@ -80,7 +80,6 @@ import org.hyperledger.ariesframework.vc.proof.CredentialProve
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesframework.vc.util.W3cAnonCredsUtils
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.revocationStatusListToString
 import java.io.File
 import java.math.BigInteger
 import java.security.SecureRandom
@@ -757,7 +756,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                     logger.error("ERRO ao parsear revState holder: $e")
                 }
                 logger.error("----------------------------------------------")
-
             }
 
             val credential = when (record) {
@@ -953,7 +951,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         val presentationRequest = anoncreds_uniffi.PresentationRequest(anoncredsRequest)
 
         try {
-
             logger.error("---- HOLDER createPresentation DEBUG ----")
             logger.error("presentationRequest = ${presentationRequest.toJson()}")
             logger.error("anoncredsCreds = $anoncredsCreds")
