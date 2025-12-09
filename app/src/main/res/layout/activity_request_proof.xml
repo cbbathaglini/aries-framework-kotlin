@@ -33,15 +33,6 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
-        <!-- Credential Definition -->
-        <EditText
-            android:id="@+id/credentialDefInput"
-            android:hint="Credential Definition ID"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textUri"
-            android:autofillHints="credentialDefinitionId" />
-
         <!-- Atributos -->
         <TextView
             android:text="Atributos Solicitados"
@@ -67,6 +58,15 @@
             android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
+        <!-- Credential Definition -->
+        <EditText
+            android:id="@+id/credentialDefInput"
+            android:hint="Credential Definition ID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:autofillHints="credentialDefinitionId" />
 
         <!-- Predicados -->
         <TextView

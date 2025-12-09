@@ -152,19 +152,13 @@ class AnoncredsProofFormatService(
 
         logger.info("format: ${format.format}")
         val anoncredsFormat =
-            FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats).normalizeFields()
+            FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
+        //val anoncredsFormat = anonFormat.normalizeFields()
 
         logger.info("anoncredsFormat:>>>> $anoncredsFormat")
         logger.info("anoncredsFormat.attributes:>>>> ${anoncredsFormat.attributes}")
 
-        val request: AnonCredsProofRequest = createRequestFromPreview(
-            name = anoncredsFormat.name ?: "Proof request", // else eu coloquei
-            version = anoncredsFormat.version ?: "1.0", // else eu coloquei
-            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
-            attributes = anoncredsFormat.attributes ?: emptyList(),
-            predicates = anoncredsFormat.predicates ?: emptyList(),
-            nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
-        )
+        val request: AnonCredsProofRequest = createRequestFromPreview(anoncredsFormat)
         logger.info("AnonCredsProofRequest: ${request.toJson()}")
 
         // Assert attribute and predicate (group) names do not match
@@ -496,6 +490,21 @@ class AnoncredsProofFormatService(
         return formatIdentifier in supportedFormats
     }
 
+    private fun createRequestFromPreview(
+        anoncredsFormat: AnonCredsProposeProofFormat): AnonCredsProofRequest {
+
+        val requestedAttributes : Map<String, AnonCredsRequestedAttribute> = anoncredsFormat.requestedAttributes ?: emptyMap()
+        val requestedPredicates : Map<String, AnonCredsRequestedPredicate> = anoncredsFormat.requestedPredicates ?: emptyMap()
+
+        return AnonCredsProofRequest(
+            name = anoncredsFormat.name ?: "Proof request",
+            version = anoncredsFormat.version ?: "1.0",
+            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
+            requestedAttributes = requestedAttributes,
+            requestedPredicates = requestedPredicates,
+            nonRevoked = anoncredsFormat.nonRevokedInterval,
+        )
+    }
     private fun createRequestFromPreview(
         name: String,
         version: String,

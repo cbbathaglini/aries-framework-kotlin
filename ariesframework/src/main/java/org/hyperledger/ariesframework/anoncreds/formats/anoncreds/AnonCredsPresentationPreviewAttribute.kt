@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnonCredsPresentationPreviewAttribute(
     val name: String,
-    @SerialName("credentialDefinitionId")
+    @SerialName("cred_def_id")
     val credentialDefinitionId: String? = null,
     @SerialName("mimeType")
     val mimeType: String? = null,
