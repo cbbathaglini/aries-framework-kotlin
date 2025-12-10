@@ -8,7 +8,6 @@
     android:fitsSystemWindows="true"
     tools:context=".HistoricalDetailActivity">
 
-    <!-- Toolbar fixa no topo -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -19,7 +18,6 @@
         app:navigationIcon="@drawable/ic_arrow_back_white"
         app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-    <!-- Conteúdo principal da tela -->
     <FrameLayout
         android:id="@+id/historical_detail_container"
         android:layout_width="match_parent"
@@ -35,7 +33,7 @@
         android:layout_gravity="bottom"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="70dp"
-        android:text="Excluir Conexão"
+        android:text="Delete Connection"
         android:textAllCaps="true"
         android:textStyle="bold"
         android:backgroundTint="@color/red"

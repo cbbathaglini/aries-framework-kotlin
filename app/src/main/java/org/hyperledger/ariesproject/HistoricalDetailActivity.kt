@@ -22,7 +22,6 @@ class HistoricalDetailActivity : BaseActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.title_historical_detail)
 
-        // Deletar conexão
         binding.deleteConnection.setOnClickListener {
             deleteConnection()
         }
@@ -30,7 +29,7 @@ class HistoricalDetailActivity : BaseActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Detalhes da Conexão"
+        supportActionBar?.title = "Connection Details"
 
         toolbar.setNavigationOnClickListener {
             finish()
@@ -70,12 +69,15 @@ class HistoricalDetailActivity : BaseActivity() {
                 val app = application as WalletApp
                 val connectionId =
                     intent.getStringExtra(HistoricalDetailFragment.ARG_CONNECTION_ID)
+
                 connectionId?.let {
                     app.agent.connectionRepository.deleteById(it)
                     finish()
                 }
             } catch (e: Exception) {
-                Log.e("WalletApp", "Erro ao deletar conexão: ${e.message}")
+
+                // Log.e: Indicates an error occurred while trying to delete a connection.
+                Log.e("WalletApp", "Error deleting connection: ${e.message}")
             }
         }
     }
