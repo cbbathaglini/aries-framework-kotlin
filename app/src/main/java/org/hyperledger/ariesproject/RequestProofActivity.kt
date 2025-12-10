@@ -2,7 +2,6 @@ package org.hyperledger.ariesproject
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
@@ -13,7 +12,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.anoncreds.formats.AnoncredsProofFormatService
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
@@ -21,16 +19,16 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestr
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
-import org.hyperledger.ariesframework.proofs.models.*
+import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.repository.verifier.VerifierRecord
 import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
+import org.hyperledger.ariesproject.databinding.ActivityRequestProofBinding
 import java.util.Calendar
-import kotlin.String
 
-class RequestProofActivity : AppCompatActivity() {
+class RequestProofActivity : BaseActivity() {
 
     private var connectionId: String? = null
     private var offline: Boolean = true
@@ -42,29 +40,30 @@ class RequestProofActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var credentialDefInput: EditText
     private lateinit var toDateButton: Button
-    private var fromTimestamp: Int? = null
     private var toTimestamp: Int? = null
     private lateinit var statusText: TextView
     private lateinit var qrImageView: ImageView
+    private lateinit var binding: ActivityRequestProofBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_request_proof)
+
+        binding = ActivityRequestProofBinding.inflate(layoutInflater)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
         val backButton: Button = findViewById(R.id.backButton)
         backButton.setOnClickListener { finish() }
 
-        // ConnectionId agora é opcional
         connectionId = intent.getStringExtra("CONNECTION_ID")
 
-        if(intent.getStringExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF) != null) {
+        if (intent.getStringExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF) != null) {
             offline = intent.getStringExtra(HistoricalDetailFragment.ARG_OFFLINE_PROOF).toBoolean()
         }
 
         credentialDefInput = findViewById(R.id.credentialDefInput)
         toDateButton = findViewById(R.id.toDateButton)
+        toDateButton.setOnClickListener { pickDateTime() }
 
-        toDateButton.setOnClickListener { pickDateTime(true) }
         addAttributeButton = findViewById(R.id.addAttributeButton)
         addPredicateButton = findViewById(R.id.addPredicateButton)
         requestProofButton = findViewById(R.id.requestProofButton)
@@ -78,13 +77,12 @@ class RequestProofActivity : AppCompatActivity() {
         addPredicateButton.setOnClickListener { addPredicateField("", ">", "") }
         requestProofButton.setOnClickListener { requestProof() }
 
-        addAttributeField("nome")
+        addAttributeField("name")
         addAttributeField("email")
-        //addPredicateField("data_nascimento", ">=", "19970612")
-        //credentialDefInput.setText("did:ethr:serpro:0x95217b1537263d7312966fc6d152a8e7a1a5263d/anoncreds/v0/CLAIM_DEF/did:ethr:serpro:0x95217b1537263d7312966fc6d152a8e7a1a5263d:schema_revoked_7d72e495-3a77-43f0-b28e-eea2372b7198:1.0/default")
+        addPredicateField("birthdate", ">=", "19910612")
     }
 
-    private fun pickDateTime(isTo: Boolean) {
+    private fun pickDateTime() {
         val calendar = Calendar.getInstance()
 
         val datePicker = DatePickerDialog(
@@ -95,10 +93,8 @@ class RequestProofActivity : AppCompatActivity() {
                     { _, hour, minute ->
                         calendar.set(year, month, day, hour, minute, 0)
                         val timestamp = (calendar.timeInMillis / 1000).toInt()
-
                         toTimestamp = timestamp
-                        toDateButton.text = "Até: ${calendar.time}"
-
+                        toDateButton.text = "Until: ${calendar.time}"
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
                     calendar.get(Calendar.MINUTE),
@@ -122,14 +118,14 @@ class RequestProofActivity : AppCompatActivity() {
         }
 
         val attrInput = EditText(this).apply {
-            hint = "Nome do atributo"
+            hint = "Attribute name"
             setText(defaultName)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
 
         val removeButton = ImageButton(this).apply {
             setImageResource(android.R.drawable.ic_menu_delete)
-            setBackgroundColor(0x00000000)
+            setBackgroundColor(0)
             setOnClickListener { attributesContainer.removeView(layout) }
         }
 
@@ -148,26 +144,51 @@ class RequestProofActivity : AppCompatActivity() {
         }
 
         val nameInput = EditText(this).apply {
-            hint = "Nome"
+            hint = "Predicate name"
             setText(name)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
 
-        val opInput = EditText(this).apply {
-            hint = "Operador (>, >=, <, <=)"
-            setText(op)
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 0.5f)
+        val operatorOptions = listOf(
+            PredicateType.LessThanOrEqualTo,
+            PredicateType.LessThan,
+            PredicateType.GreaterThan,
+            PredicateType.GreaterThanOrEqualTo
+        )
+
+        val opInput = Spinner(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 0.7f)
+        }
+
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            operatorOptions.map { it.toSymbol() }
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        opInput.adapter = adapter
+
+        val initialType = when (op.trim()) {
+            ">=" -> PredicateType.GreaterThanOrEqualTo
+            ">" -> PredicateType.GreaterThan
+            "<" -> PredicateType.LessThan
+            "<=" -> PredicateType.LessThanOrEqualTo
+            else -> null
+        }
+        initialType?.let {
+            val index = operatorOptions.indexOf(it)
+            if (index >= 0) opInput.setSelection(index)
         }
 
         val valueInput = EditText(this).apply {
-            hint = "Valor"
+            hint = "Value"
             setText(value)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
 
         val removeButton = ImageButton(this).apply {
             setImageResource(android.R.drawable.ic_menu_delete)
-            setBackgroundColor(0x00000000)
+            setBackgroundColor(0)
             setOnClickListener { predicatesContainer.removeView(layout) }
         }
 
@@ -178,26 +199,28 @@ class RequestProofActivity : AppCompatActivity() {
         predicatesContainer.addView(layout)
     }
 
+    override fun onResume() {
+        super.onResume()
+        updateNotificationBadge()
+    }
+
     private fun requestProof() {
         lifecycleScope.launch {
             try {
                 val app = application as WalletApp
                 val credDefId = credentialDefInput.text.toString().trim()
-
                 val restrictions = buildRestrictions(credDefId)
 
-//                if (credDefId.isEmpty()) {
-//                    Toast.makeText(this@RequestProofActivity, "Informe o Credential Definition ID", Toast.LENGTH_SHORT).show()
-//                    return@launch
-//                }
-
                 progressBar.visibility = View.VISIBLE
-                statusText.text = "Enviando solicitação..."
+                statusText.text = "Sending request..."
                 requestProofButton.isEnabled = false
 
-                var revocationInterval : AnonCredsNonRevokedInterval? = null
-                if (toTimestamp !=null) {
-                    revocationInterval = AnonCredsNonRevokedInterval(from = 0.toULong(), to = toTimestamp!!.toULong())
+                var revocationInterval: AnonCredsNonRevokedInterval? = null
+                if (toTimestamp != null) {
+                    revocationInterval = AnonCredsNonRevokedInterval(
+                        from = 0.toULong(),
+                        to = toTimestamp!!.toULong()
+                    )
                 }
 
                 val attributes = mutableMapOf<String, AnonCredsRequestedAttribute>()
@@ -212,24 +235,25 @@ class RequestProofActivity : AppCompatActivity() {
                             name = name,
                             restrictions = restrictions,
                             nonRevoked = null
-
                         )
                     }
                 }
 
-                // Coleta predicados
                 for (i in 0 until predicatesContainer.childCount) {
                     val layout = predicatesContainer.getChildAt(i) as LinearLayout
+
                     val nameInput = layout.getChildAt(0) as EditText
-                    val opInput = layout.getChildAt(1) as EditText
+                    val opInput = layout.getChildAt(1) as Spinner
                     val valueInput = layout.getChildAt(2) as EditText
 
                     val name = nameInput.text.toString().trim()
-                    val op = opInput.text.toString().trim()
                     val value = valueInput.text.toString().trim()
 
-                    if (name.isNotEmpty() && op.isNotEmpty() && value.isNotEmpty()) {
-                        val type = mapPredicateType(op)
+                    if (name.isNotEmpty() && value.isNotEmpty()) {
+
+                        val symbol = opInput.selectedItem as String
+                        val type = symbolToPredicate(symbol)
+
                         predicates[name] = AnonCredsRequestedPredicate(
                             name = name,
                             pType = type,
@@ -240,8 +264,6 @@ class RequestProofActivity : AppCompatActivity() {
                     }
                 }
 
-
-
                 val proofRequest = AnonCredsProofRequest(
                     name = "Dynamic Proof Request",
                     nonce = ProofService.generateProofRequestNonce(),
@@ -251,24 +273,23 @@ class RequestProofActivity : AppCompatActivity() {
                     version = "1.0"
                 )
 
+                val jsonDebug = Json.encodeToString(AnonCredsProofRequest.serializer(), proofRequest)
+                Log.e("DEBUG_PROOF_JSON", jsonDebug)
+
                 val proofFormats: List<ProofFormatSpec> = listOf(
                     ProofFormatSpec(
                         attachmentId = RequestPresentationMessageV2.ANONCREDS_PROOF_REQUEST_ATTACHMENT_ID,
                         format = AnoncredsProofFormatService.ANONCREDS_PRESENTATION_REQUEST
-
                     )
                 )
 
-                var text :String = "Prova offline gerada!"
-                var result : Pair<ProofExchangeRecord, VerifierRecord>? = null
-                if (offline) {
-                    result = app.agent.proofCommandV2.requestProofOffline(
+                val result = if (offline) {
+                    app.agent.proofCommandV2.requestProofOffline(
                         proofRequest = proofRequest,
                         formats = proofFormats
                     )
-                }else{
-                    text = "Prova gerada!"
-                    result = app.agent.proofCommandV2.requestProof(
+                } else {
+                    app.agent.proofCommandV2.requestProof(
                         connectionId = connectionId!!,
                         proofRequest = proofRequest,
                         formats = proofFormats
@@ -278,26 +299,22 @@ class RequestProofActivity : AppCompatActivity() {
                 val record: ProofExchangeRecord = result.first
                 val verifierRecord: VerifierRecord = result.second
 
-                Log.d("ProofDebug", "Record.id = ${record.id}")
-                Log.d("ProofDebug", "VerifierRecord.requestMessage?.id = ${verifierRecord.requestMessage?.id}")
-
                 verifierRecord.requestMessage?.let { message ->
-                    val jsonString = Json.encodeToString(RequestPresentationMessageV2.serializer(), message)
+                    val jsonString = Json.encodeToString(
+                        RequestPresentationMessageV2.serializer(),
+                        message
+                    )
                     val qrBitmap = generateQRCode(jsonString)
                     qrImageView.setImageBitmap(qrBitmap)
-
-                }?: run {
-                    throw Exception("VerifierRecord não contém requestMessage")
-                }
+                } ?: throw Exception("No requestMessage found in VerifierRecord")
 
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
-                statusText.text = "✅ Prova gerada e QR Code disponível!"
-                Toast.makeText(this@RequestProofActivity, text, Toast.LENGTH_LONG).show()
+                statusText.text = "Proof generated and QR Code ready!"
 
             } catch (e: Exception) {
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
-                statusText.text = "❌ Erro req: ${e.message}"
-                e.printStackTrace()
+                statusText.text = "Request error: ${e.message}"
+                Log.e("error req", e.stackTraceToString())
             } finally {
                 progressBar.visibility = View.GONE
                 requestProofButton.isEnabled = true
@@ -307,12 +324,8 @@ class RequestProofActivity : AppCompatActivity() {
 
     private fun buildRestrictions(credDefId: String): List<AnonCredsProofRequestRestriction>? {
         val clean = credDefId.trim()
-
-        return if (clean.isEmpty()) {
-            null
-        } else {
-            listOf(AnonCredsProofRequestRestriction(credDefId = clean))
-        }
+        return if (clean.isEmpty()) null
+        else listOf(AnonCredsProofRequestRestriction(credDefId = clean))
     }
 
     private fun generateQRCode(data: String): Bitmap? {
@@ -329,18 +342,26 @@ class RequestProofActivity : AppCompatActivity() {
             }
             bitmap
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
 
-    private fun mapPredicateType(op: String): PredicateType {
-        return when (op.trim()) {
-            ">", "maior que" -> PredicateType.GreaterThan
-            ">=", "maior ou igual" -> PredicateType.GreaterThanOrEqualTo
-            "<", "menor que" -> PredicateType.LessThan
-            "<=", "menor ou igual" -> PredicateType.LessThanOrEqualTo
-            else -> throw IllegalArgumentException("Operador inválido: $op")
+    private fun symbolToPredicate(symbol: String): PredicateType {
+        return when (symbol) {
+            "<" -> PredicateType.LessThan
+            "<=" -> PredicateType.LessThanOrEqualTo
+            ">" -> PredicateType.GreaterThan
+            ">=" -> PredicateType.GreaterThanOrEqualTo
+            else -> throw IllegalArgumentException("Invalid predicate operator: $symbol")
+        }
+    }
+
+    private fun PredicateType.toSymbol(): String {
+        return when (this) {
+            PredicateType.LessThan -> "<"
+            PredicateType.LessThanOrEqualTo -> "<="
+            PredicateType.GreaterThan -> ">"
+            PredicateType.GreaterThanOrEqualTo -> ">="
         }
     }
 }

@@ -13,6 +13,14 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
         return getSingleByQuery("{\"credentialId\": \"$credentialId\"}")
     }
 
+    suspend fun getByW3cCredentialId(w3cId: String): CredentialExchangeRecord {
+        val all = getAll()
+
+        return all.firstOrNull { record ->
+            record.credentials.any { it.credentialRecordId == w3cId }
+        } ?: throw IllegalArgumentException("Credential not found for w3cCredentialId=$w3cId")
+    }
+
     suspend fun findByThreadAndConnectionId(threadId: String, connectionId: String?): CredentialExchangeRecord? {
         return if (connectionId != null) {
             findSingleByQuery("{\"threadId\": \"$threadId\", \"connectionId\": \"$connectionId\"}")

@@ -25,30 +25,26 @@ import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
-import kotlin.collections.iterator
-import kotlin.collections.set
 
 class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
+
     private val logger = LoggerFactory.getLogger(AnonCredsRsVerifierService::class.java)
 
-    override suspend fun verifyProof(
-        options: VerifyProofOptions,
-    ): Boolean {
+    override suspend fun verifyProof(options: VerifyProofOptions): Boolean {
         val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, _) = options
 
-        logger.info(">>> verifyProof() options = $options")
+        // logger.info("verifyProof() options = $options")
 
-        // --- Decodificar a presentation para pegar identifiers (revRegId / timestamp) ---
         val proofJson = presentationMessage.anoncredsProof()
         val partialProof = Json { ignoreUnknownKeys = true }
             .decodeFromString<PartialProof>(proofJson)
 
-        logger.info(">>> verifyProof() partialProof = $partialProof")
-        logger.info(">>> verifyProof() partialProof = ${partialProof.identifiers}")
+        // logger.info("verifyProof() partialProof = $partialProof")
+        // logger.info("verifyProof() identifiers = ${partialProof.identifiers}")
 
         val identifiers = partialProof.identifiers
         if (identifiers.isEmpty()) {
-            logger.error(">>> Nenhum identifier na prova – retornando false")
+            // logger.error("No identifiers found in the proof")
             return false
         }
 
@@ -56,30 +52,28 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val holderTimestamp: Int? = identifier.timestamp
         val revRegId = identifier.revocationRegistryId
 
-        logger.error(">>> VERIFIER identifier.revRegId  = $revRegId")
-        logger.error(">>> VERIFIER identifier.timestamp = $holderTimestamp")
+        // logger.error("Verifier revRegId  = $revRegId")
+        // logger.error("Verifier timestamp = $holderTimestamp")
 
         val presentationRequest = PresentationRequest(requestMessage.anoncredsProofRequest())
-        logger.error(">>> VERIFIER nonce = ${presentationRequest.toJson()}")
+        // logger.error("Verifier request nonce = ${presentationRequest.toJson()}")
+
         val presentation = Presentation(proofJson)
-
         val proofUniffi = presentation.proof()
-        val aggr = proofUniffi.aggregatedProof
+        val aggregated = proofUniffi.aggregatedProof
 
-        PrintLongLine.print("VERIFIER PRESENTATION.PROOF- $proofUniffi")
-        PrintLongLine.print("VERIFIER AGGREGATED- $aggr")
+        PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
+        PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
 
         val schemaIds: Set<String> = schemas.schemas.keys
-        val schemasAnoncreds: Map<String, Schema> =
-            RecoverFromLedger.getSchemas(schemaIds, agent)
+        val schemasAnoncreds: Map<String, Schema> = RecoverFromLedger.getSchemas(schemaIds, agent)
 
         val credDefIds: Set<String> = credentialDefinitions.credentialDefinitions.keys
         val credDefsAnoncreds: Map<String, CredentialDefinition> =
             RecoverFromLedger.getCredentialDefinitions(credDefIds, agent)
 
-        // ==== CASO SEM REVOGAÇÃO ======================================================
         if (holderTimestamp == null || revRegId == null) {
-            logger.info(">>> Prova NÃO usa revogação (timestamp ou revRegId nulos)")
+            // logger.info("Proof does not use revocation")
             return try {
                 Verifier().verifyPresentation(
                     presReq = presentationRequest,
@@ -88,67 +82,38 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
                     revRegDefs = null,
                     revStatusLists = null,
                     presentation = presentation,
-                    nonrevokeIntervalOverride = null,
+                    nonrevokeIntervalOverride = null
                 )
             } catch (e: Exception) {
-                logger.error(">>> ERRO verificando prova SEM revogação: $e")
+                // logger.error("Error verifying non-revoked proof: $e")
                 false
             }
         }
 
-        // ==== CASO COM REVOGAÇÃO ======================================================
         val ts: ULong = holderTimestamp.toULong()
 
-        // (1) RevocationRegistryDefinition do ledger
-        val revRegDefJson = agent.ledgerService.getRevocationRegistryDefinition(revRegId!!)
+        val revRegDefJson = agent.ledgerService.getRevocationRegistryDefinition(revRegId)
         val revRegDefUni = RevocationRegistryDefinition(revRegDefJson)
         val revRegDefsMap = mapOf(revRegId to revRegDefUni)
 
-        logger.error(">>> VERIFIER RevocationRegistryDefinition JSON = ${revRegDefUni.toJson()}")
+        // logger.error("RevocationRegistryDefinition JSON = ${revRegDefUni.toJson()}")
 
-        val ledgerStatusList =
-            agent.ledgerService.getRevocationStatusList(revRegId, ts)
+        val ledgerStatusList = agent.ledgerService.getRevocationStatusList(revRegId, ts)
 
-        logger.error(">>> VERIFIER LEDGER STATUS LIST (raw Kotlin) <<<")
-        logger.error("issuerId           = ${ledgerStatusList.issuerId}")
-        logger.error("revRegDefId        = ${ledgerStatusList.revRegDefId}")
-        logger.error("timestamp (raw)    = ${ledgerStatusList.timestamp}")
-        logger.error("currentAccumulator = ${ledgerStatusList.currentAccumulator}")
-        logger.error("revList size       = ${ledgerStatusList.revocationList.size}")
+        // logger.error("StatusList issuerId = ${ledgerStatusList.issuerId}")
+        // logger.error("StatusList timestamp = ${ledgerStatusList.timestamp}")
+        // logger.error("StatusList size = ${ledgerStatusList.revocationList.size}")
 
-//        val credRevIndex = identifier.cre  // <-- nome correto
-//        logger.error(">>> ver revRegIndex = $credRevIndex")
-//
-//        logger.error(
-//            "revList[$credRevIndex] = ${
-//                ledgerStatusList.revocationList
-//
-//            }"
-//        )
-
-        // (3) Converter Besu -> JSON compatível com anoncreds_uniffi.RevocationStatusList,
-        //     usando EXATAMENTE o revRegId e o holderTimestamp do proof
         val statusListJson = indyBesuRevocationStatusListToJson(
             src = ledgerStatusList,
             revRegDefId = revRegId,
-            targetTimestamp = ts,
+            targetTimestamp = ts
         )
 
         val statusListUniffi = anoncreds_uniffi.RevocationStatusList(statusListJson)
 
-        logger.error(">>> VERIFIER STATUS LIST (UNIFFI JSON) <<<")
-        val statusListUniffiJson = statusListUniffi.toJson()
-        logger.error(statusListUniffiJson)
+        // logger.error("UNIFFI StatusList JSON = ${statusListUniffi.toJson()}")
 
-        try {
-            val parsed = Json.parseToJsonElement(statusListUniffiJson).jsonObject
-            logger.error("VERIFIER UNIFFI revRegDefId = ${parsed["revRegDefId"]}")
-            logger.error("VERIFIER UNIFFI timestamp   = ${parsed["timestamp"]}")
-        } catch (e: Exception) {
-            logger.error("ERRO parseando UNIFFI statuslist no verifier: $e")
-        }
-
-        // (4) Chamar o verifier do anoncreds-rs
         return try {
             val verified = Verifier().verifyPresentation(
                 presReq = presentationRequest,
@@ -157,13 +122,13 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
                 revRegDefs = revRegDefsMap,
                 revStatusLists = listOf(statusListUniffi),
                 presentation = presentation,
-                nonrevokeIntervalOverride = null,
+                nonrevokeIntervalOverride = null
             )
 
-            logger.error(">>> VERIFIER RESULTADO FINAL = $verified")
+            // logger.error("Final verification result = $verified")
             verified
         } catch (e: Exception) {
-            logger.error(">>> ERRO VERIFICANDO PROVA: $e")
+            // logger.error("Error verifying revoked proof: $e")
             false
         }
     }
@@ -171,22 +136,14 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
     private fun indyBesuRevocationStatusListToJson(
         src: RevocationStatusList,
         revRegDefId: String,
-        targetTimestamp: ULong,
+        targetTimestamp: ULong
     ): String {
-        // Converter List<UInt> -> List<Int> (0/1)
-        val listAsInt: List<Int> = src.revocationList.map { it.toInt() }
 
+        val listAsInt: List<Int> = src.revocationList.map { it.toInt() }
         val revocationListJson = Json.encodeToString(listAsInt)
 
-        logger.error(">>> indyBesuRevocationStatusListToJson()")
-        logger.error("src.revRegDefId   = ${src.revRegDefId}")
-        logger.error("param.revRegDefId = $revRegDefId")
-        logger.error("src.timestamp     = ${src.timestamp}")
-        logger.error("targetTimestamp   = $targetTimestamp")
-        logger.error("revList.size      = ${listAsInt.size}")
-        logger.error("revList[0..5]     = ${listAsInt.take(6)}")
+        // logger.error("Converting Besu revocation list to UNIFFI JSON")
 
-        // IMPORTANTE: usamos SEMPRE o revRegDefId e timestamp do proof
         return """
         {
           "issuerId": "${src.issuerId}",
@@ -198,7 +155,9 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         """.trimIndent()
     }
 
-    suspend fun getRevocationRegistryDefinitions(revocationRegistryIds: Set<String>): Map<String, RevocationRegistryDefinition> {
+    suspend fun getRevocationRegistryDefinitions(
+        revocationRegistryIds: Set<String>
+    ): Map<String, RevocationRegistryDefinition> {
         val revocationRegistryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()
         val lock = Mutex()
 
@@ -220,44 +179,36 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
     private suspend fun verifyTimestamps(
         proof: AnonCredsProof,
-        proofRequest: AnonCredsProofRequest,
+        proofRequest: AnonCredsProofRequest
     ): TimestampVerificationResult {
+
         val nonRevokedIntervalOverrides = mutableListOf<NonRevokedIntervalOverride>()
-
-        // Intervalo global
         val globalNonRevokedInterval = proofRequest.nonRevoked
-
         val requestedNonRevokedRestrictions = mutableListOf<RequestedItem>()
 
-        // Agrega restrições de atributos e predicados
         val allRequestedValues = buildList {
             addAll(proofRequest.requestedAttributes.values)
             addAll(proofRequest.requestedPredicates.values)
         }
 
         for (value in allRequestedValues) {
-            val nonRevokedInterval = when (value) {
-                is AnonCredsRequestedAttribute -> value.nonRevoked
-                is AnonCredsRequestedPredicate -> value.nonRevoked
-                else -> globalNonRevokedInterval
-            }
+            val nonRevokedInterval =
+                (value as? AnonCredsRequestedAttribute)?.nonRevoked
+                    ?: (value as? AnonCredsRequestedPredicate)?.nonRevoked
+                    ?: globalNonRevokedInterval
 
             if (nonRevokedInterval != null) {
-                val restrictions = when (value) {
-                    is AnonCredsRequestedAttribute -> value.restrictions
-                    is AnonCredsRequestedPredicate -> value.restrictions
-                    else -> emptyList<AnonCredsProofRequestRestriction>()
-                }
+                val restrictions =
+                    (value as? AnonCredsRequestedAttribute)?.restrictions
+                        ?: (value as? AnonCredsRequestedPredicate)?.restrictions
 
-                if (restrictions != null) {
-                    for (restriction in restrictions) {
-                        requestedNonRevokedRestrictions += RequestedItem(
-                            nonRevokedInterval = nonRevokedInterval,
-                            schemaId = restriction.schemaId,
-                            credentialDefinitionId = restriction.credDefId,
-                            revocationRegistryDefinitionId = restriction.revRegId,
-                        )
-                    }
+                restrictions?.forEach { restriction ->
+                    requestedNonRevokedRestrictions += RequestedItem(
+                        nonRevokedInterval = nonRevokedInterval,
+                        schemaId = restriction.schemaId,
+                        credentialDefinitionId = restriction.credDefId,
+                        revocationRegistryDefinitionId = restriction.revRegId
+                    )
                 }
             }
         }
@@ -269,98 +220,35 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
             val related = requestedNonRevokedRestrictions.firstOrNull { item ->
                 item.revocationRegistryDefinitionId == revRegId ||
-                    item.credentialDefinitionId == identifier.credDefId ||
-                    item.schemaId == identifier.schemaId
+                        item.credentialDefinitionId == identifier.credDefId ||
+                        item.schemaId == identifier.schemaId
             }
 
             val requestedFrom = related?.nonRevokedInterval?.from
             if (requestedFrom != null && requestedFrom > timestamp.toULong()) {
-                // Consulta VDR para checar se a lista ativa em requestedFrom equivale ao timestamp informado
-                val revocationStatusList: RevocationStatusList = agent.ledgerService.getRevocationStatusList(
-                    id = revRegId,
-                    timestamp = requestedFrom,
-                )
+                val revocationStatusList: RevocationStatusList =
+                    agent.ledgerService.getRevocationStatusList(
+                        id = revRegId,
+                        timestamp = requestedFrom
+                    )
 
                 val vdrTimestamp = revocationStatusList.timestamp
-                if (timestamp != null && vdrTimestamp == timestamp.toULong()) {
+                if (timestamp.toULong() == vdrTimestamp) {
                     nonRevokedIntervalOverrides += NonRevokedIntervalOverride(
                         overrideRevocationStatusListTimestamp = timestamp.toULong(),
                         requestedFromTimestamp = requestedFrom.toULong(),
-                        revocationRegistryDefinitionId = revRegId,
+                        revocationRegistryDefinitionId = revRegId
                     )
                 } else {
-                    logger.debug(
-                        "VDR timestamp for $requestedFrom does not correspond to the one provided in proof identifiers. " +
-                            "Expected: $timestamp and received $vdrTimestamp",
-                    )
-                    return TimestampVerificationResult(verified = false)
+                    // logger.debug("VDR timestamp does NOT match the presented timestamp")
+                    return TimestampVerificationResult(false)
                 }
             }
         }
 
         return TimestampVerificationResult(
             verified = true,
-            nonRevokedIntervalOverrides = nonRevokedIntervalOverrides.takeIf { it.isNotEmpty() },
+            nonRevokedIntervalOverrides = nonRevokedIntervalOverrides.takeIf { it.isNotEmpty() }
         )
     }
-
-//    private suspend fun getRevocationMetadataForCredentials(
-//        credentialsWithMetadata: List<CredentialWithRevocationMetadata>
-//    ): List<RevocationMetadata>{
-//        val tasks = credentialsWithMetadata
-//            .filter { it.nonRevoked != null }
-//            .map { credentialWithMetadata ->
-//                val w3cJsonLdVerifiableCredential = JsonTransformer.toJSON(credentialWithMetadata.credential)
-//                val anonCreds = AnonCredsW3cCredential.fromJson(w3cJsonLdVerifiableCredential)
-//
-//                getRevocationMetadata(
-//                    params = GetRevocationMetadataParams(
-//                        nonRevokedInterval = credentialWithMetadata.nonRevoked as AnonCredsNonRevokedInterval,
-//                        timestamp = anonCreds.timestamp,
-//                        revocationRegistryId = anonCreds.revocationRegistryId,
-//                        revocationRegistryIndex = anonCreds.revocationRegistryIndex
-//                    )
-//                )
-//            }
-//
-//        tasks.awaitAllIfDeferredOrJustCollect()
-//    }
-
-//    override suspend fun verifyW3cPresentation(
-//        options: VerifyW3cPresentationOptions
-//    ): Boolean {
-//        val revocationMetadata = getRevocationMetadataForCredentials(
-//            options.credentialsWithRevocationMetadata
-//        )
-//
-//        val revocationRegistryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()
-//        for (rm in revocationMetadata) {
-//            revocationRegistryDefinitions[rm.revocationRegistryId] = rm.revocationRegistryDefinition
-//        }
-//
-//        val verificationOptions = VerifyAnonCredsW3cPresentationOptions(
-//            presentationRequest = options.proofRequest as JsonObject,
-//            schemas = options.schemas as Map<String, JsonObject>,
-//            credentialDefinitions = options.credentialDefinitions as Map<String, JsonObject>,
-//            revocationRegistryDefinitions = revocationRegistryDefinitions,
-//            revocationStatusLists = revocationMetadata.map { it.revocationStatusList },
-//            nonRevokedIntervalOverrides = revocationMetadata
-//                .mapNotNull { it.nonRevokedIntervalOverride }
-//        )
-//
-//        var result = false
-//        val presentationJson = JsonTransformer.toJSON(options.presentation).toMutableMap()
-//        if (presentationJson.containsKey("presentation_submission")) {
-//            presentationJson["presentation_submission"] = null
-//        }
-//
-//        var w3cPresentation: W3cPresentation? = null
-//        try {
-//            w3cPresentation = W3cPresentation.fromJson(presentationJson)
-//            result = w3cPresentation.verify(verificationOptions)
-//        } finally {
-//            w3cPresentation?.handle?.clear()
-//        }
-//        result
-//    }
 }

@@ -32,24 +32,30 @@ class PresentationListActivity : AppCompatActivity() {
         lastUpdatedText = findViewById(R.id.lastUpdatedText)
         emptyView = findViewById(R.id.emptyView)
         backButton = findViewById(R.id.backButton)
+
         backButton.setOnClickListener { finish() }
 
         listView.emptyView = emptyView
 
         agent = (application as? WalletApp)?.agent
 
-        adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mutableListOf()) {
-            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+        adapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            mutableListOf()
+        ) {
+            override fun getView(position: Int, convertView: android.view.View?, parent: ViewGroup): android.view.View {
                 val view = super.getView(position, convertView, parent)
                 val textView = view.findViewById<TextView>(android.R.id.text1)
 
-                // Aplica HTML estilizado
-                textView.text = android.text.Html.fromHtml(getItem(position) ?: "", android.text.Html.FROM_HTML_MODE_LEGACY)
+                textView.text = android.text.Html.fromHtml(
+                    getItem(position) ?: "",
+                    android.text.Html.FROM_HTML_MODE_LEGACY
+                )
 
-                // Ajusta espaçamento e layout
                 val padding = (8 * resources.displayMetrics.density).toInt()
                 textView.setPadding(padding, padding, padding, padding)
-                textView.textSize = 16f  // tamanho base
+                textView.textSize = 16f
 
                 val params = ViewGroup.MarginLayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -61,6 +67,7 @@ class PresentationListActivity : AppCompatActivity() {
                 return view
             }
         }
+
         listView.adapter = adapter
 
         refreshButton.setOnClickListener { refreshRecords() }
@@ -92,8 +99,8 @@ class PresentationListActivity : AppCompatActivity() {
                     """
                         <b>ID:</b> ${record.id}<br>
                         <font color="#777777" size="-1">
-                        Estado: ${record.state}<br>
-                        Criado em: $dateFormatted
+                        State: ${record.state}<br>
+                        Created at: $dateFormatted
                         </font>
                     """.trimIndent()
                 }
@@ -102,10 +109,14 @@ class PresentationListActivity : AppCompatActivity() {
                 adapter.addAll(items)
                 adapter.notifyDataSetChanged()
 
-                lastUpdatedText.text = "Última atualização: ${java.util.Date()}"
+                lastUpdatedText.text = "Last updated: ${java.util.Date()}"
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(this@PresentationListActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@PresentationListActivity,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

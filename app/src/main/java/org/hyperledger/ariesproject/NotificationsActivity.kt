@@ -23,17 +23,14 @@ class NotificationsActivity : BaseActivity() {
         binding = ActivityNotificationsBinding.inflate(inflater)
         baseContainer.addView(binding.root)
 
-        // ✅ Usa o NotificationHandler global do Application
         handler = (application as WalletApp).notificationHandler
         adapter = NotificationsAdapter(mutableListOf())
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
 
-        // Botão "Voltar"
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        // 🔔 Listener para mudanças
         handler.addOnNotificationsChangedListener {
             runOnUiThread { reloadNotifications() }
         }
@@ -48,7 +45,7 @@ class NotificationsActivity : BaseActivity() {
             val badge = bottomNavigationView.getOrCreateBadge(R.id.nav_notifications)
             badge.isVisible = false
         }
-        // Botão "Limpar todas"
+
         binding.clearAll.setOnClickListener {
             handler.clearAll()
             reloadNotifications()
@@ -58,7 +55,10 @@ class NotificationsActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.d("NOTIFICATIONS", "onResume chamado — recarregando lista")
+
+        // Log.d: Informs that the activity resumed and notifications will be reloaded.
+        Log.d("NOTIFICATIONS", "onResume called — reloading list")
+
         reloadNotifications()
         updateNotificationBadge()
     }
@@ -66,7 +66,9 @@ class NotificationsActivity : BaseActivity() {
     private fun reloadNotifications() {
         handler.loadFromStorage()
         val list = handler.notifications
-        Log.i("NOTIFICATIONS", "Carregadas ${list.size} notificações")
+
+        // Log.i: Shows how many notifications were loaded from storage.
+        Log.i("NOTIFICATIONS", "Loaded ${list.size} notifications")
 
         adapter.updateList(list)
         adapter.notifyDataSetChanged()

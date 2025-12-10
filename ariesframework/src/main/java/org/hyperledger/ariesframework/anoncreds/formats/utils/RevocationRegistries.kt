@@ -129,14 +129,15 @@ data class RevocationRegistries(val agent: Agent) {
                 )
             }
 
-            val timestampToFetch: ULong = (timestamp ?: nonRevoked?.to) as ULong
+            val timestampToFetch: ULong? = timestamp ?: nonRevoked?.to
 
             logger.info(
-                "FLAVIO referent '$referent',: " +
+                "referent '$referent',: " +
                     "revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
             )
 
-            if (revocationRegistryId != null &&
+            if (timestampToFetch != null &&
+                revocationRegistryId != null &&
                 revocationRegistries.isNotEmpty() &&
                 revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null
             ) {

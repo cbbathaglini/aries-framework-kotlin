@@ -21,9 +21,9 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesproject.databinding.ActivityVerifierProofBinding
 
-
-class VerifierProofActivity : AppCompatActivity() {
+class VerifierProofActivity : BaseActivity() {
 
     private lateinit var scannerView: DecoratedBarcodeView
     private lateinit var statusText: TextView
@@ -38,10 +38,13 @@ class VerifierProofActivity : AppCompatActivity() {
     private var selectedCredentialId: String? = null
     private var scannedJson: String? = null
     private var proofRecordId: String? = null
+    private lateinit var binding: ActivityVerifierProofBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_verifier_proof)
+
+        binding = ActivityVerifierProofBinding.inflate(layoutInflater)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
         scannerView = findViewById(R.id.scannerView)
         statusText = findViewById(R.id.statusText)
@@ -57,7 +60,6 @@ class VerifierProofActivity : AppCompatActivity() {
         generateButton.setOnClickListener {
             if (selectedCredentialId != null && proofRecordId != null) {
                 generatePresentation()
-
             }
         }
 
@@ -76,9 +78,10 @@ class VerifierProofActivity : AppCompatActivity() {
                 val text = result?.text ?: return
                 if (hasProcessed) return
                 hasProcessed = true
-                runOnUiThread { statusText.text = "📄 QR lido! Processando..." }
+                runOnUiThread { statusText.text = "📄 QR scanned! Processing..." }
                 processProof(text)
             }
+
             override fun possibleResultPoints(resultPoints: MutableList<com.google.zxing.ResultPoint>?) {}
         })
     }
@@ -87,9 +90,9 @@ class VerifierProofActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 101) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startScanner() // ✅ agora o scanner inicia imediatamente após permissão
+                startScanner()
             } else {
-                Toast.makeText(this, "Permissão de câmera negada.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Camera permission denied.", Toast.LENGTH_LONG).show()
                 finish()
             }
         }
@@ -97,6 +100,7 @@ class VerifierProofActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateNotificationBadge()
         scannerView.resume()
         hasProcessed = false
     }
@@ -110,28 +114,27 @@ class VerifierProofActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 progressBar.visibility = View.VISIBLE
-                statusText.text = "🔄 Processando solicitação..."
+                statusText.text = "🔄 Processing proof request..."
                 statusText.setTextColor(Color.LTGRAY)
 
                 scannedJson = json
 
-                val app = application as? WalletApp ?: throw IllegalStateException("WalletApp não inicializado!")
-                val agent = app.agent ?: throw IllegalStateException("Agent não inicializado!")
+                val app = application as? WalletApp ?: throw IllegalStateException("WalletApp not initialized!")
+                val agent = app.agent ?: throw IllegalStateException("Agent not initialized!")
 
                 val requestMsg = Json.decodeFromString(RequestPresentationMessageV2.serializer(), json)
                 val record = agent.proofCommandV2.processRequest(requestMsg)
                 proofRecordId = record.id
 
-                // Carrega a AnonCredsProofRequest do requestMessage
                 val anonCredsString = requestMsg.anoncredsProofRequest()
                 proofRequest = Json.decodeFromString(AnonCredsProofRequest.serializer(), anonCredsString)
 
-                statusText.text = "🔍 Carregando credenciais compatíveis..."
+                statusText.text = "🔍 Loading compatible credentials..."
                 loadCompatibleCredentials()
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                statusText.text = "❌ Erro: ${e.localizedMessage ?: e.toString()}"
+                statusText.text = "❌ Error: ${e.localizedMessage ?: e.toString()}"
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
                 progressBar.visibility = View.GONE
                 hasProcessed = false
@@ -141,8 +144,8 @@ class VerifierProofActivity : AppCompatActivity() {
 
     private suspend fun loadCompatibleCredentials() {
         try {
-            val app = application as? WalletApp ?: throw IllegalStateException("WalletApp não inicializado!")
-            val agent = app.agent ?: throw IllegalStateException("Agent não inicializado!")
+            val app = application as? WalletApp ?: throw IllegalStateException("WalletApp not initialized!")
+            val agent = app.agent ?: throw IllegalStateException("Agent not initialized!")
             val allRecords = agent.credentialExchangeRepository.getAll()
 
             val requestedCredDefIds = proofRequest?.requestedAttributes?.values
@@ -161,30 +164,33 @@ class VerifierProofActivity : AppCompatActivity() {
                 val recordCredDefId = record.credentialDefinitionId ?: return@filter false
                 val attrs = record.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
                 val hasAllAttributes = requestedAttrNames.all { attrs.containsKey(it) }
-                val matchesCredDef = requestedCredDefIds.isEmpty() || requestedCredDefIds.contains(recordCredDefId)
+                val matchesCredDef =
+                    requestedCredDefIds.isEmpty() || requestedCredDefIds.contains(recordCredDefId)
+
                 hasAllAttributes && matchesCredDef
             }
 
             runOnUiThread {
                 progressBar.visibility = View.GONE
                 if (compatibleCredentials.isEmpty()) {
-                    statusText.text = "⚠️ Nenhuma credencial compatível encontrada."
+                    statusText.text = "⚠️ No compatible credentials found."
                     credentialSpinner.visibility = View.GONE
                 } else {
-                    statusText.text = "✅ ${compatibleCredentials.size} credenciais compatíveis encontradas."
+                    statusText.text = "✅ ${compatibleCredentials.size} compatible credentials found."
                     credentialSpinner.visibility = View.VISIBLE
+
                     val adapter = ArrayAdapter(
                         this@VerifierProofActivity,
                         android.R.layout.simple_spinner_item,
-                        compatibleCredentials.map { "${it.id ?: "Sem id"} (${it.id.take(6)})" }
+                        compatibleCredentials.map { "${it.comment} ?: ${it.id} (${it.id.take(6)})" }
                     )
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     credentialSpinner.adapter = adapter
-                    println("🎯 Total de registros: ${allRecords.size}")
-                    println("🎯 CredDefs solicitadas: $requestedCredDefIds")
-                    println("🎯 Atributos solicitados: $requestedAttrNames")
-                    println("🎯 Compatíveis: ${compatibleCredentials.size}")
 
+                    println("🎯 Total records: ${allRecords.size}")
+                    println("🎯 Requested CredDefs: $requestedCredDefIds")
+                    println("🎯 Requested Attributes: $requestedAttrNames")
+                    println("🎯 Compatible: ${compatibleCredentials.size}")
 
                     credentialSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                         override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -192,6 +198,7 @@ class VerifierProofActivity : AppCompatActivity() {
                             Log.i("credential selected: ", selectedCredentialId.toString())
                             generateButton.visibility = View.VISIBLE
                         }
+
                         override fun onNothingSelected(parent: AdapterView<*>) {
                             selectedCredentialId = null
                             generateButton.visibility = View.GONE
@@ -204,7 +211,7 @@ class VerifierProofActivity : AppCompatActivity() {
             e.printStackTrace()
             runOnUiThread {
                 progressBar.visibility = View.GONE
-                statusText.text = "❌ Erro ao carregar credenciais: ${e.localizedMessage}"
+                statusText.text = "❌ Error loading credentials: ${e.localizedMessage}"
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
             }
         }
@@ -214,27 +221,30 @@ class VerifierProofActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 progressBar.visibility = View.VISIBLE
-                statusText.text = "⚙️ Gerando apresentação..."
-                val app = application as? WalletApp ?: throw IllegalStateException("WalletApp não inicializado!")
-                val agent = app.agent ?: throw IllegalStateException("Agent não inicializado!")
+                statusText.text = "⚙️ Generating presentation..."
+
+                val app = application as? WalletApp ?: throw IllegalStateException("WalletApp not initialized!")
+                val agent = app.agent ?: throw IllegalStateException("Agent not initialized!")
 
                 val record = agent.proofRepository.getById(proofRecordId!!)
                 val (_, presentation) = agent.proofCommandV2.createPresentation(record, selectedCredentialId!!)
 
                 val presentationJson = Json.encodeToString(PresentationMessageV2.serializer(), presentation)
-                //statusText.text = "✅ Apresentação gerada:\n${presentationJson.take(200)}..."
-                Snackbar.make(scannerView, "✅ Apresentação gerada com sucesso!", Snackbar.LENGTH_LONG)
-                    .setBackgroundTint(Color.parseColor("#2E7D32")) // verde bonito
+
+                Snackbar.make(scannerView, "✅ Presentation successfully generated!", Snackbar.LENGTH_LONG)
+                    .setBackgroundTint(Color.parseColor("#2E7D32"))
                     .setTextColor(Color.WHITE)
                     .show()
+
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
+
             } catch (e: Exception) {
                 e.printStackTrace()
-                Snackbar.make(scannerView, "❌ Erro ao gerar apresentação: ${e.localizedMessage}", Snackbar.LENGTH_LONG)
-                    .setBackgroundTint(Color.parseColor("#FF0000")) // verde bonito
+                Snackbar.make(scannerView, "❌ Error generating presentation: ${e.localizedMessage}", Snackbar.LENGTH_LONG)
+                    .setBackgroundTint(Color.parseColor("#FF0000"))
                     .setTextColor(Color.WHITE)
                     .show()
-                //statusText.text = "❌ Erro ao gerar apresentação: ${e.localizedMessage}"
+
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
             } finally {
                 progressBar.visibility = View.GONE

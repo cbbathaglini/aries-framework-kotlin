@@ -13,12 +13,12 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Cabeçalho -->
+        <!-- Header -->
         <TextView
             android:id="@+id/connection_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nome da conexão"
+            android:text="Connection Name"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/teal_700"
@@ -28,7 +28,7 @@
             android:id="@+id/connection_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Estado:"
+            android:text="State:"
             android:textSize="16sp"
             android:textColor="@color/gray_700" />
 
@@ -38,60 +38,74 @@
             android:layout_marginVertical="16dp"
             android:background="@color/gray_200" />
 
-        <!-- Bloco de detalhes -->
-        <TextView android:text="ID da Conexão"
+        <!-- Details Block -->
+        <TextView
+            android:text="Connection ID"
             style="@style/TextLabel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            />
-        <TextView android:id="@+id/connection_id"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/connection_id"
             style="@style/TextValue"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
-        <TextView android:text="DID Remoto"
+        <TextView
+            android:text="Remote DID"
             style="@style/TextLabel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <TextView android:id="@+id/connection_did"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/connection_did"
             style="@style/TextValue"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
-        <TextView android:text="Criado em"
+        <TextView
+            android:text="Created At"
             style="@style/TextLabel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <TextView android:id="@+id/connection_date"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/connection_date"
             style="@style/TextValue"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
-        <TextView android:text="Thread ID"
+        <TextView
+            android:text="Thread ID"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/TextLabel" />
-        <TextView android:id="@+id/threadId"
+
+        <TextView
+            android:id="@+id/threadId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/TextValue" />
 
-        <TextView android:text="Label"
+        <TextView
+            android:text="Label"
             style="@style/TextLabel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <TextView android:id="@+id/theirLabel"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/theirLabel"
             style="@style/TextValue"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
-        <!-- Botões -->
+        <!-- Buttons -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/copy_did_button"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Copiar DID"
+            android:text="Copy DID"
             android:textColor="@color/teal_700"
             app:strokeColor="@color/teal_700"
             android:layout_marginTop="16dp" />
@@ -101,7 +115,7 @@
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Solicitar Prova"
+            android:text="Request Proof"
             android:textAllCaps="false"
             android:layout_marginTop="12dp"
             android:backgroundTint="@color/teal_700"
@@ -112,7 +126,7 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Ver Credenciais Emitidas"
+            android:text="View Issued Credentials"
             android:textAllCaps="false"
             android:layout_marginTop="12dp"
             android:textColor="@color/teal_700"

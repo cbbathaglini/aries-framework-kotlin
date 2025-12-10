@@ -60,7 +60,7 @@ class ProofRequestDetailFragment : Fragment() {
                 try {
                     withContext(Dispatchers.Main) {
                         binding.loadingProgress.visibility = View.VISIBLE
-                        binding.proofStatusMessage.text = "Carregando detalhes da prova..."
+                        binding.proofStatusMessage.text = "Loading proof details..."
                     }
 
                     val record: ProofExchangeRecord = app.agent.proofRepository.getById(id)
@@ -78,7 +78,7 @@ class ProofRequestDetailFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         binding.loadingProgress.visibility = View.GONE
                         binding.proofStatusMessage.text =
-                            "Erro ao carregar prova: ${e.localizedMessage}"
+                            "Error loading proof: ${e.localizedMessage}"
                     }
                 }
             }
@@ -87,23 +87,19 @@ class ProofRequestDetailFragment : Fragment() {
 
     private fun showProof(record: ProofExchangeRecord, proofRequest: AnonCredsProofRequest?) {
         binding.proofId.text = "ID: ${record.id}"
-        binding.proofState.text = "Estado: ${record.state ?: "Desconhecido"}"
-        binding.proofConnection.text = "Conexão: ${record.connectionId ?: "N/A"}"
+        binding.proofState.text = "State: ${record.state ?: "Unknown"}"
+        binding.proofConnection.text = "Connection: ${record.connectionId ?: "N/A"}"
 
         updateStatusCard(record.state)
 
-        // Atributos solicitados
         val attrs = proofRequest?.requestedAttributes ?: emptyMap()
         populateRequestedAttributes(attrs)
 
-        // Predicados solicitados
         val predicates = proofRequest?.requestedPredicates ?: emptyMap()
         populateRequestedPredicates(predicates)
 
-        // Intervalo de não revogação
         showNonRevokedInterval(proofRequest)
 
-        // Carrega credenciais compatíveis
         if (record.state != ProofState.Declined && record.state != ProofState.Abandoned) {
             loadAvailableCredentials(proofRequest, record)
             binding.btnSendProof.apply {
@@ -111,13 +107,10 @@ class ProofRequestDetailFragment : Fragment() {
                 setOnClickListener { sendProof(record.id) }
             }
         } else {
-            // Oculta o seletor e botão se a prova foi recusada ou abandonada
-            binding.selectCredentialHeader.text = "❌ Prova recusada ou abandonada — não é possível selecionar credenciais."
+            binding.selectCredentialHeader.text = "❌ Proof declined or abandoned — cannot select credentials."
             binding.credentialSpinner.visibility = View.GONE
             binding.btnSendProof.visibility = View.GONE
         }
-
-
     }
 
     private fun populateRequestedAttributes(attrs: Map<String, AnonCredsRequestedAttribute>) {
@@ -125,7 +118,7 @@ class ProofRequestDetailFragment : Fragment() {
 
         if (attrs.isEmpty()) {
             val empty = TextView(requireContext()).apply {
-                text = "Nenhum atributo solicitado."
+                text = "No requested attributes."
                 setTextColor(Color.GRAY)
             }
             binding.requestedAttributesContainer.addView(empty)
@@ -183,14 +176,14 @@ class ProofRequestDetailFragment : Fragment() {
 
         if (predicates.isEmpty()) {
             val empty = TextView(requireContext()).apply {
-                text = "Nenhum predicado solicitado."
+                text = "No requested predicates."
                 setTextColor(Color.GRAY)
             }
             binding.requestedPredicatesContainer.addView(empty)
             return
         }
 
-        predicates.toSortedMap().forEach { (key, pred) ->
+        predicates.toSortedMap().forEach { (_, pred) ->
             val layout = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(0, 8, 0, 8)
@@ -204,10 +197,8 @@ class ProofRequestDetailFragment : Fragment() {
                 else -> "?"
             }
 
-
             val titleView = TextView(requireContext()).apply {
-
-                text = "• ${pred.name} ${symbol} ${pred.pValue}"
+                text = "• ${pred.name} $symbol ${pred.pValue}"
                 textSize = 16f
                 setTypeface(null, Typeface.BOLD)
             }
@@ -236,15 +227,14 @@ class ProofRequestDetailFragment : Fragment() {
         }
     }
 
-
     private fun showNonRevokedInterval(proofRequest: AnonCredsProofRequest?) {
         val interval = proofRequest?.nonRevoked
 
         fun formatTimestamp(timestamp: ULong?): String {
             return if (timestamp != null) {
-                val millis = timestamp.toLong() * 1000  // ULong → Long (segundos → ms)
+                val millis = timestamp.toLong() * 1000
                 val date = Date(millis)
-                val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm:ss", Locale.getDefault())
+                val sdf = SimpleDateFormat("MM/dd/yyyy - HH:mm:ss", Locale.getDefault())
                 sdf.format(date)
             } else "-"
         }
@@ -253,9 +243,9 @@ class ProofRequestDetailFragment : Fragment() {
         val toText = formatTimestamp(interval?.to)
 
         val text = if (interval != null) {
-            "Início: $fromText | Fim: $toText"
+            "From: $fromText | To: $toText"
         } else {
-            "Não especificado"
+            "Not specified"
         }
 
         binding.nonRevokedInterval.text = text
@@ -263,14 +253,14 @@ class ProofRequestDetailFragment : Fragment() {
 
     private fun updateStatusCard(state: ProofState?) {
         val (bgColor, message) = when (state) {
-            ProofState.Done -> Pair("#C8E6C9", "✅ Prova concluída.")
+            ProofState.Done -> Pair("#C8E6C9", "✅ Proof completed.")
             ProofState.PresentationSent, ProofState.PresentationReceived ->
-                Pair("#BBDEFB", "📤 Prova em apresentação.")
+                Pair("#BBDEFB", "📤 Proof being presented.")
             ProofState.RequestReceived ->
-                Pair("#E1BEE7", "📨 Solicitação de prova recebida.")
+                Pair("#E1BEE7", "📨 Proof request received.")
             ProofState.Abandoned, ProofState.Declined ->
-                Pair("#FFCDD2", "❌ Prova recusada ou abandonada.")
-            else -> Pair("#E0E0E0", "Estado: ${state ?: "Desconhecido"}")
+                Pair("#FFCDD2", "❌ Proof declined or abandoned.")
+            else -> Pair("#E0E0E0", "State: ${state ?: "Unknown"}")
         }
 
         binding.statusCard.apply {
@@ -291,6 +281,7 @@ class ProofRequestDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val allRecords = app.agent.credentialExchangeRepository.getAll()
+
                 val requestedCredDefIds = proofRequest.requestedAttributes.values
                     .flatMap { it.restrictions?.mapNotNull { r -> r.credDefId } ?: emptyList() }
 
@@ -336,7 +327,8 @@ class ProofRequestDetailFragment : Fragment() {
                             "attrs" to recordAttrs,
                             "schemaId" to cred.schemaId,
                             "credDefId" to cred.credentialDefinitionId,
-                            "createdAt" to cred.createdAt
+                            "createdAt" to cred.createdAt,
+                            "comment" to cred.comment,
                         )
                     } else null
                 }
@@ -347,13 +339,13 @@ class ProofRequestDetailFragment : Fragment() {
                     if (compatible.isEmpty()) {
                         binding.btnSendProof.visibility = View.GONE
                         binding.btnSendProof.isEnabled = false
-                        binding.selectCredentialHeader.text = "Nenhuma credencial compatível encontrada."
+                        binding.selectCredentialHeader.text = "No compatible credentials found."
                         binding.credentialSpinner.visibility = View.GONE
                     } else {
                         val spinnerItems = compatible.map {
-                            val schema = it["schemaId"] ?: "sem schema"
+                            val comment = (it["comment"] as? String)
                             val id = (it["id"] as? String)
-                            "Credencial ${id ?: ""}"
+                            "Credential ${comment ?: id}"
                         }
 
                         val adapter = android.widget.ArrayAdapter(
@@ -371,7 +363,7 @@ class ProofRequestDetailFragment : Fragment() {
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Erro ao carregar credenciais: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Error loading credentials: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -382,32 +374,31 @@ class ProofRequestDetailFragment : Fragment() {
         val selectedIndex = binding.credentialSpinner.selectedItemPosition
 
         if (selectedIndex == android.widget.AdapterView.INVALID_POSITION) {
-            Toast.makeText(requireContext(), "Selecione uma credencial compatível primeiro.", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Select a compatible credential first.", Toast.LENGTH_LONG).show()
             return
         }
 
         binding.btnSendProof.isEnabled = false
-        binding.proofStatusMessage.text = "🔄 Criando apresentação..."
+        binding.proofStatusMessage.text = "Creating presentation..."
         binding.loadingProgress.visibility = View.VISIBLE
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val record = app.agent.proofRepository.getById(proofRecordId)
                 val chosenCredentialId = compatibleCredentials[selectedIndex]["id"] as String
-                Log.i("ProofRequestDetail", "Chosen credential ID: $chosenCredentialId")
 
                 val presentationResult = app.agent.proofCommandV2.acceptRequest(record.id, chosenCredentialId)
 
                 withContext(Dispatchers.Main) {
                     binding.loadingProgress.visibility = View.GONE
-                    binding.proofStatusMessage.text = "✅ Apresentação criada e enviada com sucesso!"
+                    binding.proofStatusMessage.text = "Presentation created and sent successfully!"
                     binding.btnSendProof.visibility = View.GONE
                 }
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     binding.loadingProgress.visibility = View.GONE
-                    binding.proofStatusMessage.text = "❌ Erro ao criar/apresentar prova: ${e.localizedMessage}"
+                    binding.proofStatusMessage.text = "Error creating/sending presentation: ${e.localizedMessage}"
                     binding.btnSendProof.isEnabled = true
                 }
             }

@@ -26,7 +26,7 @@ class HomeFragment : Fragment() {
             if (!qrcodeData.isNullOrEmpty()) {
                 processQrCode(qrcodeData)
             } else {
-                (activity as? WalletMainActivity)?.showAlert("QR Code inválido.")
+                (activity as? WalletMainActivity)?.showAlert("Invalid QR Code.")
             }
         }
     }
@@ -43,7 +43,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         updateNotificationBadgeUI()
 
-        // Ações rápidas
+        // Quick actions
         binding.cardConnect.setOnClickListener {
             val intent = Intent(requireContext(), BarcodeScannerActivity::class.java)
             scanQrLauncher.launch(intent)
@@ -65,7 +65,7 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), InvitationActivity::class.java))
         }
 
-        // 🔹 Provas Offline
+        // Offline proofs
         binding.btnRequestProof.setOnClickListener {
             startActivity(Intent(requireContext(), RequestProofActivity::class.java))
         }
@@ -86,12 +86,11 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
         }
 
-
-        // 🔹 Conectar via URL
+        // 🔹 Connect using invitation URL
         binding.buttonConnect.setOnClickListener {
             val invitationUrl = binding.invitation.text.toString().trim()
             if (invitationUrl.isEmpty()) {
-                (activity as? WalletMainActivity)?.showAlert("Por favor, insira a URL do convite.")
+                (activity as? WalletMainActivity)?.showAlert("Please enter the invitation URL.")
                 return@setOnClickListener
             }
 
@@ -102,15 +101,16 @@ class HomeFragment : Fragment() {
 
                     val handler = NotificationHandler.getInstance(requireContext())
                     handler.addNotification(
-                        title = "Nova Conexão",
-                        message = "Conectado com ${connection?.theirLabel ?: "Desconhecido"}",
+                        title = "New Connection",
+                        message = "Connected with ${connection?.theirLabel ?: "Unknown"}",
                         type = NotificationType.CONNECTION,
                         connectionId = connection?.id
                     )
                     updateNotificationBadgeUI()
                     binding.invitation.text?.clear()
                 } catch (e: Exception) {
-                    (activity as? WalletMainActivity)?.showAlert("Falha ao conectar: ${e.localizedMessage}")
+                    (activity as? WalletMainActivity)
+                        ?.showAlert("Failed to connect: ${e.localizedMessage}")
                 }
             }
         }
@@ -139,8 +139,8 @@ class HomeFragment : Fragment() {
 
                 val handler = NotificationHandler.getInstance(requireContext())
                 handler.addNotification(
-                    title = "Nova Conexão",
-                    message = "Conectado com ${connection?.theirLabel ?: "Emissor desconhecido"}",
+                    title = "New Connection",
+                    message = "Connected with ${connection?.theirLabel ?: "Unknown issuer"}",
                     type = NotificationType.CONNECTION,
                     connectionId = connection?.id
                 )
@@ -148,14 +148,12 @@ class HomeFragment : Fragment() {
                 updateNotificationBadgeUI()
 
                 (activity as? WalletMainActivity)
-                    ?.showAlert("✅ Conectado com ${connection?.theirLabel ?: "Agente desconhecido"}")
+                    ?.showAlert("✅ Connected with ${connection?.theirLabel ?: "Unknown agent"}")
 
             } catch (e: Exception) {
                 (activity as? WalletMainActivity)
-                    ?.showAlert("❌ Falha ao processar QRCode: ${e.localizedMessage}")
+                    ?.showAlert("❌ Failed to process QR Code: ${e.localizedMessage}")
             }
         }
     }
-
-
 }

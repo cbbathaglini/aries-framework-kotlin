@@ -1,20 +1,10 @@
 package org.hyperledger.ariesproject.notifications
 
-import android.app.ProgressDialog
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOptionsV2
-import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesproject.NotificationItem
 import org.hyperledger.ariesproject.NotificationType
-import org.hyperledger.ariesproject.WalletApp
 
 class NotificationHandler private constructor(private val context: Context) {
 
@@ -51,7 +41,6 @@ class NotificationHandler private constructor(private val context: Context) {
         loadNotifications()
     }
 
-    // 🧠 Registro de callbacks (ouvintes)
     fun addOnNotificationsChangedListener(listener: () -> Unit) {
         listeners.add(listener)
     }
@@ -60,7 +49,6 @@ class NotificationHandler private constructor(private val context: Context) {
         listeners.forEach { it() }
     }
 
-    // 🟢 Adiciona nova notificação
     fun addNotification(
         title: String,
         message: String,
@@ -68,7 +56,7 @@ class NotificationHandler private constructor(private val context: Context) {
         credentialId: String? = null,
         proofRecordId: String? = null,
         presentationMessageId: String? = null,
-        connectionId:String? = null
+        connectionId: String? = null
     ) {
         val item = NotificationItem(
             title = title,
@@ -82,10 +70,9 @@ class NotificationHandler private constructor(private val context: Context) {
 
         _notifications.add(0, item)
         saveNotifications()
-        notifyListeners() // ✅ Atualiza a UI automaticamente
+        notifyListeners()
     }
 
-    // 🟡 Marca todas como lidas
     fun markAllAsRead() {
         _notifications.forEach { it.isRead = true }
         saveNotifications()
@@ -101,7 +88,8 @@ class NotificationHandler private constructor(private val context: Context) {
     fun saveNotifications() {
         val jsonString = json.encodeToString(_notifications)
         prefs.edit().putString("notifications_list", jsonString).apply()
-        android.util.Log.d("NOTIFICATION_HANDLER", "💾 Salvou ${_notifications.size} notificações")
+
+        Log.d("NOTIFICATION_HANDLER", "💾 Saved ${_notifications.size} notifications")
     }
 
     fun loadFromStorage() {
@@ -112,7 +100,8 @@ class NotificationHandler private constructor(private val context: Context) {
         val jsonString = prefs.getString("notifications_list", null)
         if (jsonString.isNullOrEmpty()) {
             _notifications = mutableListOf()
-            android.util.Log.d("NOTIFICATION_HANDLER", "⚠️ Nenhuma notificação salva")
+
+            Log.d("NOTIFICATION_HANDLER", "⚠️ No saved notifications")
             return
         }
 
@@ -120,11 +109,13 @@ class NotificationHandler private constructor(private val context: Context) {
             val loaded = json.decodeFromString<MutableList<NotificationItem>>(jsonString)
             _notifications.clear()
             _notifications.addAll(loaded)
-            android.util.Log.d("NOTIFICATION_HANDLER", "📥 Carregadas ${_notifications.size} notificações")
+
+            Log.d("NOTIFICATION_HANDLER", "📥 Loaded ${_notifications.size} notifications")
         } catch (e: Exception) {
             e.printStackTrace()
             _notifications = mutableListOf()
-            android.util.Log.e("NOTIFICATION_HANDLER", "❌ Erro ao carregar notificações: ${e.message}")
+
+            Log.e("NOTIFICATION_HANDLER", "❌ Error loading notifications: ${e.message}")
         }
     }
 }

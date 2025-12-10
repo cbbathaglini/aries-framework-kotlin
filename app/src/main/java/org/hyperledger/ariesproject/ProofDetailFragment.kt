@@ -36,7 +36,7 @@ class ProofDetailFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
         binding = ProofDetailBinding.inflate(inflater, container, false)
         loadProof()
@@ -59,7 +59,11 @@ class ProofDetailFragment : Fragment() {
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "Erro ao carregar prova: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Error loading proof: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -68,12 +72,11 @@ class ProofDetailFragment : Fragment() {
 
     private fun showProof(record: ProofExchangeRecord, proofRequest: AnonCredsProofRequest?) {
         binding.proofId.text = "ID: ${record.id}"
-        binding.connectionId.text = "Conexão: ${record.connectionId ?: "connectionless"}"
-        binding.state.text = "Estado: ${record.state ?: "Desconhecido"}"
+        binding.connectionId.text = "Connection: ${record.connectionId ?: "connectionless"}"
+        binding.state.text = "State: ${record.state ?: "Unknown"}"
         binding.threadId.text = "Thread ID: ${record.threadId ?: "N/A"}"
-        binding.verified.text = "Verificado: ${record.isVerified ?: "N/A"}"
+        binding.verified.text = "Verified: ${record.isVerified ?: "N/A"}"
 
-        // Mostra atributos e predicados solicitados
         populateRequestedAttributes(proofRequest?.requestedAttributes ?: emptyMap())
         populateRequestedPredicates(proofRequest?.requestedPredicates ?: emptyMap())
         showNonRevokedInterval(proofRequest)
@@ -84,7 +87,7 @@ class ProofDetailFragment : Fragment() {
 
         if (attrs.isEmpty()) {
             val empty = TextView(requireContext()).apply {
-                text = "Nenhum atributo solicitado."
+                text = "No requested attributes."
                 setTextColor(Color.GRAY)
             }
             binding.attributesContainer.addView(empty)
@@ -142,7 +145,7 @@ class ProofDetailFragment : Fragment() {
 
         if (predicates.isEmpty()) {
             val empty = TextView(requireContext()).apply {
-                text = "Nenhum predicado solicitado."
+                text = "No requested predicates."
                 setTextColor(Color.GRAY)
             }
             binding.predicatesContainer.addView(empty)
@@ -195,13 +198,12 @@ class ProofDetailFragment : Fragment() {
 
     private fun showNonRevokedInterval(proofRequest: AnonCredsProofRequest?) {
         val interval = proofRequest?.nonRevoked
-        val fromText = formatTimestamp(interval?.from)
         val toText = formatTimestamp(interval?.to)
 
         val text = if (interval != null) {
-            "Data: $toText"
+            "Date: $toText"
         } else {
-            "Não especificado"
+            "Not specified"
         }
 
         binding.nonRevokedInterval.text = text
@@ -209,9 +211,9 @@ class ProofDetailFragment : Fragment() {
 
     fun formatTimestamp(timestamp: ULong?): String {
         return if (timestamp != null) {
-            val millis = timestamp.toLong() * 1000  // ULong → Long (segundos → ms)
+            val millis = timestamp.toLong() * 1000
             val date = Date(millis)
-            val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm:ss", Locale.getDefault())
+            val sdf = SimpleDateFormat("MM/dd/yyyy - HH:mm:ss", Locale.getDefault())
             sdf.format(date)
         } else "-"
     }

@@ -18,12 +18,11 @@ import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
-import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialListContentBinding
 
 class CredentialListActivity : BaseActivity() {
     private lateinit var binding: ActivityCredentialListBinding
-    private lateinit var connectionId : String
+    private lateinit var connectionId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,6 @@ class CredentialListActivity : BaseActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
-        println("connectionId: ${connectionId}")
     }
 
     override fun onResume() {
@@ -56,28 +54,26 @@ class CredentialListActivity : BaseActivity() {
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
-        var credentialsRecords : List<CredentialExchangeRecord> = mutableListOf()
-        var credentialsRecordsConn: MutableList<CredentialExchangeRecord> = mutableListOf()
-        var credentialsExchange: List<CredentialExchangeRecord> = mutableListOf()
-        //var credentialsW3c: List<W3cCredentialRecord> = mutableListOf()
+        var credentialRecords: List<CredentialExchangeRecord> = mutableListOf()
+        var credentialRecordsByConnection: MutableList<CredentialExchangeRecord> = mutableListOf()
+        var credentialExchange: List<CredentialExchangeRecord> = mutableListOf()
 
-        //find all in the same connection if connection was send
-        if(connectionId != ""){
-            credentialsExchange = runBlocking { app.agent.credentialExchangeRepository.getByConnectionId(connectionId)};
-            credentialsExchange.forEach { credential ->
+        if (connectionId != "") {
+            credentialExchange = runBlocking { app.agent.credentialExchangeRepository.getByConnectionId(connectionId) }
+            credentialExchange.forEach { credential ->
                 val allCredentials = credential.credentials
                 allCredentials.forEach { cred ->
-                    val credential = runBlocking { app.agent.credentialExchangeRepository.getByCredentialId(cred.credentialRecordId)}
-                    credentialsRecordsConn.add(credential);
+                    val record = runBlocking {
+                        app.agent.credentialExchangeRepository.getByCredentialId(cred.credentialRecordId)
+                    }
+                    credentialRecordsByConnection.add(record)
                 }
-                recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecordsConn)
+                recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialRecordsByConnection)
             }
-        }else {
-            credentialsRecords = runBlocking { app.agent.credentialExchangeRepository.getAll()};
-
-            recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialsRecords)
+        } else {
+            credentialRecords = runBlocking { app.agent.credentialExchangeRepository.getAll() }
+            recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, credentialRecords)
         }
-
     }
 
     class SimpleItemRecyclerViewAdapter(
@@ -89,26 +85,21 @@ class CredentialListActivity : BaseActivity() {
             val item = v.tag
             val intent = when (item) {
                 is CredentialExchangeRecord -> Intent(v.context, CredentialDetailActivity::class.java).apply {
-                    //putExtra(CredentialDetailFragment.ARG_CREDENTIAL, item.credential)
                     putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, item.id)
 
                     val attributesDict = item.credentialAttributes?.associate { attr ->
                         attr.name to attr.value
                     } ?: emptyMap()
 
-                    //putExtra(CredentialDetailFragment.ARG_ATTR, attributesDict)
                     putExtra(CredentialDetailFragment.ARG_SCHEMA_NAME, item.schemaName)
                     putExtra(CredentialDetailFragment.ARG_SCHEMA_ID, item.schemaId)
                     putExtra(CredentialDetailFragment.ARG_CREDENTIAL_DEFINITION_ID, item.credentialDefinitionId)
                     putExtra(CredentialDetailFragment.ARG_REVOCATION_ID, item.revRegId)
-
                 }
-//                is W3cCredentialRecord -> Intent(v.context, CredentialW3cDetailActivity::class.java).apply {
-//                    putExtra(CredentialW3cDetailFragment.ARG_CREDENTIAL_W3C, item.credential.toString())
-//                    putExtra(CredentialW3cDetailFragment.ARG_CREDENTIAL_W3C_ID, item.id)
-//                }
+
                 else -> null
             }
+
             intent?.let { v.context.startActivity(it) }
         }
 
@@ -126,17 +117,9 @@ class CredentialListActivity : BaseActivity() {
                 is CredentialExchangeRecord -> {
                     holder.contentView.text = item.id
                     val date = item.createdAt ?: java.util.Date()
-                    holder.dateView.text = "Criado em: ${date}"
-                    val type = ""//item.credentials.first().credentialRecordType
+                    holder.dateView.text = "Created at: $date"
                     holder.typeView.text = "Is revoked?: ${item.state == CredentialState.Revoked}"
                 }
-
-//                is W3cCredentialRecord -> {
-//                    holder.contentView.text = "${item.id}"
-//                    val date = item.createdAt ?: java.util.Date()
-//                    holder.dateView.text = "Criado em: ${date}"
-//                    holder.typeView.text = "Tipo: W3C"
-//                }
             }
 
             with(holder.itemView) {

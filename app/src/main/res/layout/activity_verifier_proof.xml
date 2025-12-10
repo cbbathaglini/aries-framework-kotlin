@@ -4,20 +4,10 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- Scanner -->
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:id="@+id/scannerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
-    <!-- Moldura central -->
-<!--    <View-->
-<!--        android:id="@+id/scanFrame"-->
-<!--        android:layout_width="250dp"-->
-<!--        android:layout_height="250dp"-->
-<!--        android:layout_gravity="center"-->
-<!--        android:background="@drawable/qr_frame" />-->
-
 
     <View
         android:id="@+id/whiteMask"
@@ -25,7 +15,6 @@
         android:layout_height="match_parent"
         android:background="@drawable/scan_overlay" />
 
-    <!-- Status -->
     <TextView
         android:id="@+id/statusText"
         android:layout_width="match_parent"
@@ -36,21 +25,19 @@
         android:background="#AA000000"
         android:textColor="@android:color/white"
         android:textSize="16sp"
-        android:text="Aponte a câmera para o QR do solicitante" />
+        android:text="Point the camera at the requester's QR" />
 
-    <!-- Botão Voltar -->
     <Button
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:layout_gravity="top|start"
-        android:text="← Voltar"
+        android:text="← Back"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/teal_700" />
 
-    <!-- Loader central -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -58,7 +45,6 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
-    <!-- Container inferior: Spinner + Botão -->
     <LinearLayout
         android:id="@+id/bottomContainer"
         android:layout_width="match_parent"
@@ -68,7 +54,6 @@
         android:padding="16dp"
         android:background="#AA000000">
 
-        <!-- Lista de credenciais -->
         <Spinner
             android:id="@+id/credentialSpinner"
             android:layout_width="match_parent"
@@ -82,13 +67,12 @@
             android:layout_marginBottom="8dp"
             android:layout_marginTop="4dp" />
 
-        <!-- Botão para gerar apresentação -->
         <Button
             android:id="@+id/generateButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Gerar Apresentação"
+            android:text="Generate Presentation"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/teal_700"

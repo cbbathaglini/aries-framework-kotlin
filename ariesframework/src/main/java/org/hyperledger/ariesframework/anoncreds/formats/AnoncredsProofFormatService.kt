@@ -43,6 +43,7 @@ import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
+import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.PredicateType
@@ -75,29 +76,31 @@ class AnoncredsProofFormatService(
     }
 
     override suspend fun createProposal(
-        profRecord: ProofExchangeRecord,
+        proofRecord: ProofExchangeRecord,
         attachmentId: String?,
         proofFormats: Map<String, JsonElement>,
     ): ProofFormatCreateReturn {
+
         val format = ProofFormatSpec(
             attachmentId = attachmentId!!,
             format = ANONCREDS_PRESENTATION_PROPOSAL,
         )
 
-        val anoncredsFormat =
+        val anonCredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
 
         val proofRequest = createRequestFromPreview(
-            name = anoncredsFormat.name ?: "Proof request",
-            version = anoncredsFormat.version ?: "1.0",
-            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
-            attributes = anoncredsFormat.attributes ?: emptyList(),
-            predicates = anoncredsFormat.predicates ?: emptyList(),
-            nonRevokedInterval = anoncredsFormat.nonRevokedInterval,
+            name = anonCredsFormat.name ?: "Proof request",
+            version = anonCredsFormat.version ?: "1.0",
+            nonce = agent.anonCredsHolderService.generateNonce(),
+            attributes = anonCredsFormat.attributes ?: emptyList(),
+            predicates = anonCredsFormat.predicates ?: emptyList(),
+            nonRevokedInterval = anonCredsFormat.nonRevokedInterval,
         )
-        logger.info("proofRequest: ${proofRequest.toJson()}")
 
-        val attachment = this.getFormatData(proofRequest, format.attachmentId!!)
+        // logger.info("proofRequest: ${proofRequest.toJson()}")
+
+        val attachment = getFormatData(proofRequest, format.attachmentId!!)
 
         return ProofFormatCreateReturn(
             format = format,
@@ -106,7 +109,6 @@ class AnoncredsProofFormatService(
     }
 
     override suspend fun processProposal(attachment: Attachment, proofRecord: ProofExchangeRecord) {
-        val json = attachment.getDataAsJson()
         val proposalJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(attachment.getDataAsJson())
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(proposalJson)
@@ -118,10 +120,12 @@ class AnoncredsProofFormatService(
         proposalAttachment: Attachment,
         proofFormats: Map<String, JsonElement>?,
     ): ProofFormatCreateReturn {
+
         val format = ProofFormatSpec(
             attachmentId = attachmentId!!,
             format = ANONCREDS_PRESENTATION_REQUEST,
         )
+
         val proposalJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
 
@@ -129,7 +133,7 @@ class AnoncredsProofFormatService(
             nonce = agent.anonCredsHolderService.generateNonce(),
         )
 
-        val attachment = this.getFormatData(request, format.attachmentId!!)
+        val attachment = getFormatData(request, format.attachmentId!!)
 
         return ProofFormatCreateReturn(
             format = format,
@@ -142,33 +146,37 @@ class AnoncredsProofFormatService(
         attachmentId: String?,
         proofFormats: Map<String, JsonElement>?,
     ): ProofFormatCreateReturn {
-        logger.info("createRequest in anoncredsproof format service")
+
+        // logger.info("createRequest in anoncredsproof format service")
 
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION_REQUEST,
             attachmentId = attachmentId!!,
         )
 
-        logger.info("format: ${format.format}")
-        val anoncredsFormat =
+        // logger.info("format: ${format.format}")
+
+        val anonCredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
-        //val anoncredsFormat = anonFormat.normalizeFields()
 
-        logger.info("anoncredsFormat:>>>> $anoncredsFormat")
-        logger.info("anoncredsFormat.attributes:>>>> ${anoncredsFormat.attributes}")
+        // logger.info("anoncredsFormat:>>>> $anonCredsFormat")
+        // logger.info("anoncredsFormat.attributes:>>>> ${anoncredsFormat.attributes}")
 
-        val request: AnonCredsProofRequest = createRequestFromPreview(anoncredsFormat)
-        logger.info("AnonCredsProofRequest: ${request.toJson()}")
+        val request: AnonCredsProofRequest = createRequestFromPreview(anonCredsFormat)
 
-        // Assert attribute and predicate (group) names do not match
+        // logger.info("AnonCredsProofRequest: ${request.toJson()}")
+
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(request)
-        logger.info("after duplicate")
 
-        val anoncredsRequest: JsonElement = Json.encodeToJsonElement(AnonCredsProofRequest.serializer(), request)
-        logger.info("anoncreds request: $anoncredsRequest")
+        // logger.info("after duplicate")
 
-        logger.info("request: ${format.attachmentId}")
-        val attachment = this.getFormatData(anoncredsRequest, format.attachmentId!!)
+        val anonCredsRequest: JsonElement =
+            Json.encodeToJsonElement(AnonCredsProofRequest.serializer(), request)
+
+        // logger.info("anoncreds request: $anonCredsRequest")
+        // logger.info("request: ${format.attachmentId}")
+
+        val attachment = getFormatData(anonCredsRequest, format.attachmentId!!)
 
         return ProofFormatCreateReturn(
             attachment = attachment,
@@ -178,6 +186,7 @@ class AnoncredsProofFormatService(
 
     override suspend fun processRequest(options: ProofFormatProcessOptions) {
         val attachment = options.attachment
+
         val anonCredsProofRequest: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(attachment.getDataAsJson())
 
@@ -187,7 +196,8 @@ class AnoncredsProofFormatService(
         )
 
         agent.verifierRepository.save(verifierRecord)
-        logger.info("💾 Salvo verifier id=${verifierRecord.id} threadid=${verifierRecord.globalThreadId ?: "null"}")
+
+        // logger.info("Saved verifier id=${verifierRecord.id} threadId=${verifierRecord.globalThreadId ?: "null"}")
 
         DuplicateNames.assertNoDuplicateGroupsNamesInProofRequest(anonCredsProofRequest)
     }
@@ -201,49 +211,60 @@ class AnoncredsProofFormatService(
         proposalAttachment: Attachment?,
         chosenCredentialId: String?,
     ): ProofFormatCreateReturn {
-        logger.info("requestAttachment: ${requestAttachment.getDataAsJson()}")
+
+        // logger.info("requestAttachment: ${requestAttachment.getDataAsJson()}")
+
         val requestJson: AnonCredsProofRequest =
             Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
-        logger.info("AnonCredsProofRequest: $requestJson")
-        logger.info("AnonCredsProofRequest: ${requestJson.toJson()}")
 
-        val anoncredsSelected: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
-            proofRequest = requestJson,
-            chosenCredentialId = chosenCredentialId,
-            options = AnonCredsGetCredentialsForProofRequestOptions(
-                filterByNonRevocationRequirements = true,
-            ),
-        )
+        // logger.info("AnonCredsProofRequest: $requestJson")
+        // logger.info("AnonCredsProofRequest: ${requestJson.toJson()}")
 
-        val anoncredsFormat = AnonCredsSelectedCredentials.convert(proofFormats)
-        logger.info("anoncredsFormat: $anoncredsFormat")
-        anoncredsFormat.attributes.values.forEach { item ->
-            logger.info("item::::: ${item.credentialId}")
-            logger.info("item::::: ${item.revealed}")
-            logger.info("item::::: ${item.credentialInfo.toJsonElement()}")
+        val anonCredsSelected: AnonCredsSelectedCredentials =
+            _selectCredentialsForRequest(
+                proofRequest = requestJson,
+                chosenCredentialId = chosenCredentialId,
+                options = AnonCredsGetCredentialsForProofRequestOptions(
+                    filterByNonRevocationRequirements = true,
+                ),
+            )
+
+        validateCredentialChosen(chosenCredentialId, requestJson)
+
+        val anonCredsFormat = AnonCredsSelectedCredentials.convert(proofFormats)
+
+        // logger.info("anoncredsFormat: $anonCredsFormat")
+
+        anonCredsFormat?.attributes?.values?.forEach { item ->
+            // logger.info("item credentialId: ${item.credentialId}")
+            // logger.info("item revealed: ${item.revealed}")
+            // logger.info("item credentialInfo: ${item.credentialInfo.toJsonElement()}")
         }
 
-        val selectedCredentials: AnonCredsSelectedCredentials = anoncredsFormat ?: anoncredsSelected
-        logger.info("selectedCredentials: $selectedCredentials")
+        val selectedCredentials: AnonCredsSelectedCredentials =
+            anonCredsFormat ?: anonCredsSelected
+
+        // logger.info("selectedCredentials: $selectedCredentials")
+
         val format = ProofFormatSpec(
             format = ANONCREDS_PRESENTATION,
             attachmentId = attachmentId,
         )
 
-        val proof = createProof(requestMessage, requestJson, anoncredsSelected, proofFormats)
+        val proof = createProof(requestMessage, requestJson, anonCredsSelected, proofFormats)
 
-        val anonCredsProofjsonElement = Json.encodeToJsonElement(
+        val anonCredsProofJsonElement = Json.encodeToJsonElement(
             serializer<AnonCredsProof>(),
             proof,
         )
-        logger.info("anonCredsProofjsonElement: $anonCredsProofjsonElement")
-//        val json = Json.encodeToString(anonCredsProofjsonElement)
-//        val base64 = Base64.getEncoder().encodeToString(json.toByteArray())
+
+        // logger.info("anonCredsProofjsonElement: $anonCredsProofJsonElement")
+
         val attachment = Attachment(
             id = attachmentId,
             mimetype = "application/json",
             data = AttachmentData(
-                base64 = JsonEncoder.toBase64(anonCredsProofjsonElement),
+                base64 = JsonEncoder.toBase64(anonCredsProofJsonElement),
             ),
         )
 
@@ -253,6 +274,78 @@ class AnoncredsProofFormatService(
         )
     }
 
+    private suspend fun validateCredentialChosen(
+        chosenCredentialId: String?,
+        proofRequest: AnonCredsProofRequest
+    ) {
+        require(!chosenCredentialId.isNullOrBlank()) {
+            "No credential was selected."
+        }
+
+        val credential: CredentialExchangeRecord =
+            agent.credentialExchangeRepository.getByW3cCredentialId(chosenCredentialId)
+
+        val recordAttrs = credential.credentialAttributes
+            ?.associate { it.name to it.value }
+            ?: emptyMap()
+
+        val credDefId = credential.credentialDefinitionId
+
+        val requestedAttrNames: Set<String> =
+            proofRequest.requestedAttributes.values
+                .flatMap { it.names ?: emptyList() }
+                .toSet()
+
+        val missingAttrs = requestedAttrNames.filter { !recordAttrs.containsKey(it) }
+
+        if (missingAttrs.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "The selected credential does not contain the required attributes: $missingAttrs"
+            )
+        }
+
+        val requestedCredDefIds = proofRequest.requestedAttributes.values
+            .mapNotNull { it.restrictions?.firstOrNull()?.credDefId }
+            .toSet()
+
+        if (requestedCredDefIds.isNotEmpty() && credDefId !in requestedCredDefIds) {
+            throw IllegalArgumentException(
+                "The selected credential has an unexpected credentialDefinitionId. " +
+                        "Expected: $requestedCredDefIds | Found: $credDefId"
+            )
+        }
+
+        val predicates = proofRequest.requestedPredicates.values
+
+        predicates.forEach { predicate ->
+            val attrName = predicate.name
+            val rawValue = recordAttrs[attrName]
+                ?: throw IllegalArgumentException(
+                    "The credential does not contain the required attribute for predicate: $attrName"
+                )
+
+            val attrValue = rawValue.toIntOrNull()
+                ?: throw IllegalArgumentException(
+                    "The attribute '$attrName' is not numeric, making predicate validation impossible."
+                )
+
+            val satisfied = when (predicate.pType) {
+                PredicateType.GreaterThanOrEqualTo -> attrValue >= predicate.pValue
+                PredicateType.GreaterThan -> attrValue > predicate.pValue
+                PredicateType.LessThanOrEqualTo -> attrValue <= predicate.pValue
+                PredicateType.LessThan -> attrValue < predicate.pValue
+                else -> false
+            }
+
+            if (!satisfied) {
+                throw IllegalArgumentException(
+                    "Predicate failed for attribute '$attrName'. " +
+                            "Value: $attrValue | Rule: ${predicate.pType} ${predicate.pValue}"
+                )
+            }
+        }
+    }
+
     override suspend fun processPresentation(
         requestAttachment: Attachment,
         presentationAttachment: Attachment,
@@ -260,31 +353,31 @@ class AnoncredsProofFormatService(
         presentationMessage: PresentationMessageV2,
         requestMessage: RequestPresentationMessageV2,
     ): Boolean {
+
         val requestJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
-        logger.info("request json: $requestJson")
+            Json.decodeFromString(requestAttachment.getDataAsJson())
+
+        // logger.info("request json: $requestJson")
 
         val anonCredsProof: AnonCredsProof =
-            Json.decodeFromString<AnonCredsProof>(presentationAttachment.getDataAsJson())
-        logger.info("anonCredsProof: $anonCredsProof")
+            Json.decodeFromString(presentationAttachment.getDataAsJson())
 
-        for ((referent, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
+        // logger.info("anonCredsProof: $anonCredsProof")
+
+        for ((_, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
             if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
                 throw CredoError(
-                    "The encoded value for '$referent' is invalid. " +
-                        "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
-                        "Actual '${attribute.encoded}'",
+                    "Invalid encoded value for attribute. Raw='${attribute.raw}', Expected='${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}', Actual='${attribute.encoded}'"
                 )
             }
         }
 
-        for ((_, attributeGroup) in anonCredsProof.requestedProof.revealedAttrGroups.orEmpty()) {
-            for ((attributeName, attribute) in attributeGroup.values) {
+        for ((_, group) in anonCredsProof.requestedProof.revealedAttrGroups.orEmpty()) {
+            for ((attributeName, attribute) in group.values) {
                 if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
                     throw CredoError(
-                        "The encoded value for '$attributeName' is invalid. " +
-                            "Expected '${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}'. " +
-                            "Actual '${attribute.encoded}'",
+                        "Invalid encoded value for attribute '$attributeName'. Raw='${attribute.raw}', " +
+                                "Expected='${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}', Actual='${attribute.encoded}'"
                     )
                 }
             }
@@ -292,28 +385,34 @@ class AnoncredsProofFormatService(
 
         val schemasMap: Map<String, AnonCredsSchema> =
             agent.ledgerService.getSchemas(anonCredsProof.identifiers.map { it.schemaId }.toSet())
+
         val schemas = AnonCredsSchemas(schemasMap)
-        logger.info("schemas: $schemas")
+
+        // logger.info("schemas: $schemas")
 
         val credentialDefinitionsMap: Map<String, AnonCredsCredentialDefinition> =
             ProofUtils.getCredentialDefinitions(
                 agent,
-                anonCredsProof.identifiers.map { it.credDefId }.toSet(),
+                anonCredsProof.identifiers.map { it.credDefId }.toSet()
             )
 
-        logger.info("credentialDefinitionsMap: $credentialDefinitionsMap")
+        // logger.info("credentialDefinitionsMap: $credentialDefinitionsMap")
+
         val credentialDefinitionUniffiMap: Map<String, CredentialDefinition> =
             convert(credentialDefinitionsMap)
-        logger.info("credentialDefinitionUniffiMap: $credentialDefinitionUniffiMap")
+
+        // logger.info("credentialDefinitionUniffiMap: $credentialDefinitionUniffiMap")
 
         val revocationRegistries =
             RevocationRegistries(agent).getRevocationRegistriesForProof(anonCredsProof)
-        logger.info("revocationRegistries: $revocationRegistries")
+
+        // logger.info("revocationRegistries: $revocationRegistries")
 
         val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
-            credentialDefinitions = credentialDefinitionsMap,
+            credentialDefinitions = credentialDefinitionsMap
         )
-        logger.info("anonCredsCredentialDefinitions: $anonCredsCredentialDefinitions")
+
+        // logger.info("anonCredsCredentialDefinitions: $anonCredsCredentialDefinitions")
 
         proofRecord.isVerified = agent.anoncredsVerifierService.verifyProof(
             options = VerifyProofOptions(
@@ -324,71 +423,38 @@ class AnoncredsProofFormatService(
                 credentialDefinitions = anonCredsCredentialDefinitions,
                 revocationRegistries = revocationRegistries,
                 requestMessage = requestMessage,
-            ),
+            )
         )
-        logger.info("is verified: ${proofRecord.isVerified}")
+
+        // logger.info("is verified: ${proofRecord.isVerified}")
+
         return proofRecord.isVerified!!
     }
 
     suspend fun convert(
         input: Map<String, AnonCredsCredentialDefinition>,
     ): Map<String, CredentialDefinition> {
-        return input.mapValues { (credDefId, def) ->
+        return input.mapValues { (credDefId, _) ->
             val credDef = agent.ledgerService.getCredentialDefinition(credDefId)
             CredentialDefinition(credDef)
         }
     }
 
-//    suspend fun verifyProof(proofRequest: String, proof: String): Boolean = coroutineScope {
-//        logger.debug("verifying proof: $proof")
-//        val partialProof = Json { ignoreUnknownKeys = true }.decodeFromString<PartialProof>(proof)
-//        val schemas = async { getSchemas(partialProof.identifiers.map { it.schemaId }.toSet()) }
-//        val credentialDefinitions = async {
-//            getCredentialDefinitions(partialProof.identifiers.map { it.credentialDefinitionId }
-//                .toSet())
-//        }
-//        val revocationRegistryDefinitions =
-//            async {
-//                getRevocationRegistryDefinitions(partialProof.identifiers.mapNotNull { it.revocationRegistryId }
-//                    .toSet())
-//            }
-//        val revocationStatusLists = agent.revocationService.getRevocationStatusLists(
-//            partialProof,
-//            revocationRegistryDefinitions.await()
-//        )
-//
-//        val credentialDefinitionUniffiMap : Map<String, CredentialDefinition> = convert(credentialDefinitions)
-//
-//        return@coroutineScope try {
-//            Verifier().verifyPresentation(
-//                Presentation(proof),
-//                PresentationRequest(proofRequest),
-//                schemas.await(),
-//                credentialDefinitions.await(),
-//                revocationRegistryDefinitions.await(),
-//                revocationStatusLists,
-//                null,
-//            )
-//        } catch (e: Exception) {
-//            logger.error("Error verifying proof: $e")
-//            false
-//        }
-//    }
-
-    suspend fun getRevocationRegistryDefinitions(revocationRegistryIds: Set<String>): Map<String, RevocationRegistryDefinition> {
-        val revocationRegistryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()
+    suspend fun getRevocationRegistryDefinitions(
+        revocationRegistryIds: Set<String>
+    ): Map<String, RevocationRegistryDefinition> {
+        val registryDefinitions = mutableMapOf<String, RevocationRegistryDefinition>()
         val lock = Mutex()
 
-        revocationRegistryIds.concurrentForEach { revocationRegistryId ->
-            val revocationRegistryDefinition =
-                agent.ledgerService.getRevocationRegistryDefinition(revocationRegistryId)
+        revocationRegistryIds.concurrentForEach { registryId ->
+            val definitionJson = agent.ledgerService.getRevocationRegistryDefinition(registryId)
             lock.withLock {
-                revocationRegistryDefinitions[revocationRegistryId] =
-                    RevocationRegistryDefinition(revocationRegistryDefinition)
+                registryDefinitions[registryId] =
+                    RevocationRegistryDefinition(definitionJson)
             }
         }
 
-        return revocationRegistryDefinitions
+        return registryDefinitions
     }
 
     override suspend fun getCredentialsForRequest(
@@ -397,24 +463,20 @@ class AnoncredsProofFormatService(
         requestAttachment: Attachment,
         proposalAttachment: Attachment?,
     ): AnonCredsCredentialsForProofRequest {
-        val proofRequestJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
-        // TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
-        // um filterByNonRevocationRequirements
-        val anoncredsFormat =
+        val proofRequestJson: AnonCredsProofRequest =
+            Json.decodeFromString(requestAttachment.getDataAsJson())
+
+        val format =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsSelectedCredentials>(proofFormats)
 
-        val anonCredsCredentialsForProofRequest: AnonCredsCredentialsForProofRequest =
-            GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
-                agent = agent,
-                proofRequest = proofRequestJson,
-                options = AnonCredsGetCredentialsForProofRequestOptions(
-                    filterByNonRevocationRequirements = true,
-                ),
+        return GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
+            agent = agent,
+            proofRequest = proofRequestJson,
+            options = AnonCredsGetCredentialsForProofRequestOptions(
+                filterByNonRevocationRequirements = true
             )
-
-        return anonCredsCredentialsForProofRequest
+        )
     }
 
     override suspend fun selectCredentialsForRequest(
@@ -423,22 +485,19 @@ class AnoncredsProofFormatService(
         requestAttachment: Attachment,
         proposalAttachment: Attachment?,
     ): AnonCredsSelectedCredentials {
-        val proofRequestJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
-        // TODO se o valor de filterByNonRevocationRequirements for false vem ele, senao por padrao é true, achar dentro
-        // um filterByNonRevocationRequirements
-        val anoncredsFormat =
+        val proofRequestJson: AnonCredsProofRequest =
+            Json.decodeFromString(requestAttachment.getDataAsJson())
+
+        val format =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsSelectedCredentials>(proofFormats)
 
-        val selectedCredentials: AnonCredsSelectedCredentials = _selectCredentialsForRequest(
+        return _selectCredentialsForRequest(
             proofRequest = proofRequestJson,
             options = AnonCredsGetCredentialsForProofRequestOptions(
-                filterByNonRevocationRequirements = true,
-            ),
+                filterByNonRevocationRequirements = true
+            )
         )
-
-        return selectedCredentials
     }
 
     override suspend fun shouldAutoRespondToProposal(
@@ -446,16 +505,18 @@ class AnoncredsProofFormatService(
         proposalAttachment: Attachment,
         requestAttachment: Attachment,
     ): Boolean {
-        val proposalJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
-        val requestJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
 
-        val areRequestsEquals =
+        val proposalJson: AnonCredsProofRequest =
+            Json.decodeFromString(proposalAttachment.getDataAsJson())
+
+        val requestJson: AnonCredsProofRequest =
+            Json.decodeFromString(requestAttachment.getDataAsJson())
+
+        val equal =
             RequestsEquals.areAnonCredsProofRequestsEqual(proposalJson, requestJson)
 
-        logger.debug("AnonCreds request and proposal are are equal: $areRequestsEquals > proposal: $proposalJson || request: $requestJson")
-        return areRequestsEquals
+        // logger.debug("Proposal equals request: $equal")
+        return equal
     }
 
     override suspend fun shouldAutoRespondToRequest(
@@ -463,10 +524,12 @@ class AnoncredsProofFormatService(
         requestAttachment: Attachment,
         proposalAttachment: Attachment,
     ): Boolean {
+
         val proposalJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(proposalAttachment.getDataAsJson())
+            Json.decodeFromString(proposalAttachment.getDataAsJson())
+
         val requestJson: AnonCredsProofRequest =
-            Json.decodeFromString<AnonCredsProofRequest>(requestAttachment.getDataAsJson())
+            Json.decodeFromString(requestAttachment.getDataAsJson())
 
         return RequestsEquals.areAnonCredsProofRequestsEqual(proposalJson, requestJson)
     }
@@ -481,29 +544,33 @@ class AnoncredsProofFormatService(
     }
 
     override fun supportsFormat(formatIdentifier: String): Boolean {
-        val supportedFormats = listOf(
+        return formatIdentifier in listOf(
             ANONCREDS_PRESENTATION_PROPOSAL,
             ANONCREDS_PRESENTATION_REQUEST,
-            ANONCREDS_PRESENTATION,
+            ANONCREDS_PRESENTATION
         )
-        return formatIdentifier in supportedFormats
     }
 
     private fun createRequestFromPreview(
-        anoncredsFormat: AnonCredsProposeProofFormat): AnonCredsProofRequest {
+        anoncredsFormat: AnonCredsProposeProofFormat
+    ): AnonCredsProofRequest {
 
-        val requestedAttributes : Map<String, AnonCredsRequestedAttribute> = anoncredsFormat.requestedAttributes ?: emptyMap()
-        val requestedPredicates : Map<String, AnonCredsRequestedPredicate> = anoncredsFormat.requestedPredicates ?: emptyMap()
+        val requestedAttributes =
+            anoncredsFormat.requestedAttributes ?: emptyMap()
+
+        val requestedPredicates =
+            anoncredsFormat.requestedPredicates ?: emptyMap()
 
         return AnonCredsProofRequest(
             name = anoncredsFormat.name ?: "Proof request",
             version = anoncredsFormat.version ?: "1.0",
-            nonce = agent.anonCredsHolderService.generateNonce(), // revisar implementacao
+            nonce = agent.anonCredsHolderService.generateNonce(),
             requestedAttributes = requestedAttributes,
             requestedPredicates = requestedPredicates,
-            nonRevoked = anoncredsFormat.nonRevokedInterval,
+            nonRevoked = anoncredsFormat.nonRevokedInterval
         )
     }
+
     private fun createRequestFromPreview(
         name: String,
         version: String,
@@ -512,56 +579,56 @@ class AnoncredsProofFormatService(
         predicates: List<AnonCredsPresentationPreviewPredicate> = emptyList(),
         nonRevokedInterval: AnonCredsNonRevokedInterval? = null,
     ): AnonCredsProofRequest {
-        // Agrupa atributos por referent (gerando um se faltar)
-        val attributesByReferent =
+
+        val groupedAttributes =
             mutableMapOf<String, MutableList<AnonCredsPresentationPreviewAttribute>>()
+
         for (attr in attributes) {
             val referent = attr.referent ?: attr.name
-            attributesByReferent.getOrPut(referent) { mutableListOf() }.add(attr)
+            groupedAttributes.getOrPut(referent) { mutableListOf() }.add(attr)
         }
 
-        // Converte grupos em requestedAttributes
         val requestedAttributes = mutableMapOf<String, AnonCredsRequestedAttribute>()
-        for ((referent, props) in attributesByReferent) {
-            val attributeName: String? = if (props.size == 1) props[0].name else null
-            val attributeNames: List<String>? = if (props.size > 1) props.map { it.name } else null
+
+        for ((referent, props) in groupedAttributes) {
+            val singleName: String? = if (props.size == 1) props[0].name else null
+            val nameList: List<String>? = if (props.size > 1) props.map { it.name } else null
 
             requestedAttributes[referent] = AnonCredsRequestedAttribute(
-                name = attributeName,
-                names = attributeNames,
+                name = singleName,
+                names = nameList,
                 restrictions = listOf(
                     AnonCredsProofRequestRestriction(
-                        credDefId = props.first().credentialDefinitionId,
-                    ),
+                        credDefId = props.first().credentialDefinitionId
+                    )
                 ),
-                nonRevoked = nonRevokedInterval,
+                nonRevoked = nonRevokedInterval
             )
         }
 
-        // Converte predicados pro requestedPredicates
         val requestedPredicates = mutableMapOf<String, AnonCredsRequestedPredicate>()
+
         for (pred in predicates) {
             requestedPredicates[pred.name] = AnonCredsRequestedPredicate(
                 name = pred.name,
                 pType = PredicateType.fromString(pred.predicateType),
-                pValue = pred.threshold, // ajuste para .toLong() se seu tipo for Long
+                pValue = pred.threshold,
                 restrictions = listOf(
                     AnonCredsProofRequestRestriction(
-                        credDefId = pred.credentialDefinitionId,
-                    ),
+                        credDefId = pred.credentialDefinitionId
+                    )
                 ),
-                nonRevoked = nonRevokedInterval,
+                nonRevoked = nonRevokedInterval
             )
         }
 
-        // Monta o objeto final
         return AnonCredsProofRequest(
             name = name,
             version = version,
             nonce = nonce,
             requestedAttributes = requestedAttributes,
             requestedPredicates = requestedPredicates,
-            nonRevoked = nonRevokedInterval,
+            nonRevoked = nonRevokedInterval
         )
     }
 
@@ -570,8 +637,8 @@ class AnoncredsProofFormatService(
             id = id,
             mimetype = "application/json",
             data = AttachmentData(
-                base64 = JsonEncoder.toBase64(data),
-            ),
+                base64 = JsonEncoder.toBase64(data)
+            )
         )
     }
 
@@ -580,35 +647,34 @@ class AnoncredsProofFormatService(
         chosenCredentialId: String? = null,
         options: AnonCredsGetCredentialsForProofRequestOptions,
     ): AnonCredsSelectedCredentials {
+
         val credentialsForRequest =
             GetCredentialsForProofRequestReferent.getCredentialsForAnonCredsProofRequest(
                 agent = agent,
                 proofRequest = proofRequest,
                 chosenCredentialId = chosenCredentialId,
-                options = options,
+                options = options
             )
 
         val selectedAttributes = mutableMapOf<String, AnonCredsRequestedAttributeMatch>()
         val selectedPredicates = mutableMapOf<String, AnonCredsRequestedPredicateMatch>()
 
-        // Seleciona o primeiro match disponível para cada atributo
         for ((name, matches) in credentialsForRequest.attributes) {
-            val first = matches.firstOrNull()
+            val selected = matches.firstOrNull()
                 ?: throw CredoError("Unable to automatically select requested attributes.")
-            selectedAttributes[name] = first
+            selectedAttributes[name] = selected
         }
 
-        // Seleciona o primeiro match disponível para cada predicado
         for ((name, matches) in credentialsForRequest.predicates) {
-            val first = matches.firstOrNull()
+            val selected = matches.firstOrNull()
                 ?: throw CredoError("Unable to automatically select requested predicates.")
-            selectedPredicates[name] = first
+            selectedPredicates[name] = selected
         }
 
         return AnonCredsSelectedCredentials(
             attributes = selectedAttributes,
             predicates = selectedPredicates,
-            selfAttestedAttributes = emptyMap(),
+            selfAttestedAttributes = emptyMap()
         )
     }
 
@@ -618,118 +684,95 @@ class AnoncredsProofFormatService(
         selectedCredentials: AnonCredsSelectedCredentials,
         proofFormats: Map<String, JsonElement>?,
     ): AnonCredsProof = coroutineScope {
-        // attributes + predicates -> lista única
+
         val selectedEntries = buildList {
             addAll(selectedCredentials.attributes.values)
             addAll(selectedCredentials.predicates.values)
         }
 
-        logger.info("selectedEntries: $selectedEntries")
+        // logger.info("selectedEntries: $selectedEntries")
 
-        val credentialObjects = selectedEntries.map { c ->
+        val credentialObjects = selectedEntries.map { entry ->
             async {
-                val id = when (c) {
-                    is AnonCredsRequestedAttributeMatch -> c.credentialId
-                    is AnonCredsRequestedPredicateMatch -> c.credentialId
-                    else -> error("Tipo inesperado: ${c::class}")
+                val id = when (entry) {
+                    is AnonCredsRequestedAttributeMatch -> entry.credentialId
+                    is AnonCredsRequestedPredicateMatch -> entry.credentialId
+                    else -> error("Unexpected type: ${entry::class}")
                 }
+
                 agent.anonCredsHolderService.getCredential(
                     credentialId = id,
                     useUnqualifiedIdentifiersIfPresent =
-                    ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest),
+                        ProofRequestOperations.proofRequestUsesUnqualifiedIdentifiers(proofRequest)
                 )
             }
         }.awaitAll()
 
-        val schemaIds: Set<String> = credentialObjects.map { it.schemaId }.toSet()
-        val credDefIds: Set<String> = credentialObjects.map { it.credentialDefinitionId }.toSet()
+        val schemaIds = credentialObjects.map { it.schemaId }.toSet()
+        val credDefIds = credentialObjects.map { it.credentialDefinitionId }.toSet()
 
-        val schemas: Map<String, AnonCredsSchema> =
-            ProofUtils.getSchemas(agent, schemaIds)
+        val schemas = ProofUtils.getSchemas(agent, schemaIds)
+        val credentialDefinitions = ProofUtils.getCredentialDefinitions(agent, credDefIds)
 
-        val credentialDefinitions: Map<String, AnonCredsCredentialDefinition> =
-            ProofUtils.getCredentialDefinitions(agent, credDefIds)
-
-        val revocationRegistriesForRequestResult: RevocationRegistriesForRequestResult =
+        val revocationData =
             RevocationRegistries(agent).getRevocationRegistriesForRequest(
                 proofRequest,
-                selectedCredentials,
+                selectedCredentials
             )
 
-        val updatedSelectedCredentials =
-            revocationRegistriesForRequestResult.updatedSelectedCredentials
-        val revocationRegistries = revocationRegistriesForRequestResult.revocationRegistries
+        val updatedSelected = revocationData.updatedSelectedCredentials
+        val revocationRegistries = revocationData.revocationRegistries
 
-        val anonCredsRevocationRegistries: MutableMap<String, AnonCredsRevocationRegistryEntry> =
-            mutableMapOf()
+        val anonCredsRevocationRegistries = mutableMapOf<String, AnonCredsRevocationRegistryEntry>()
 
         revocationRegistries.mapValues { (key, value) ->
-
-            val revRegValue: RevocationRegistryValue =
+            val revRegValue =
                 Json.decodeFromString<RevocationRegistryValue>(value.definition.value.toString())
 
-            val anonCredsRevocationRegistryDefinition = AnonCredsRevocationRegistryDefinition(
+            val anonDef = AnonCredsRevocationRegistryDefinition(
                 issuerId = value.definition.issuerId,
                 revocDefType = value.definition.revocDefType,
                 credDefId = value.definition.credDefId,
                 tag = value.definition.tag,
-                value = revRegValue,
+                value = revRegValue
             )
 
-            val revocationStatusListsAnoncreds: MutableMap<ULong, AnonCredsRevocationStatusList> =
-                value.revocationStatusLists
-                    ?.mapValues { (_, v) -> AnonCredsRevocationStatusList.toAnonCreds(v) }
-                    ?.toMutableMap()
-                    ?: mutableMapOf()
-            logger.info("status list: $revocationStatusListsAnoncreds")
+            val statusLists =
+                value.revocationStatusLists?.mapValues { (_, v) ->
+                    AnonCredsRevocationStatusList.toAnonCreds(v)
+                }?.toMutableMap() ?: mutableMapOf()
 
-            anonCredsRevocationRegistries.put(
-                key,
-                AnonCredsRevocationRegistryEntry(
-                    tailsFilePath = agent.ledgerService.getTailsPath(),
-                    tailsHash = value.tailsHash,
-                    definition = anonCredsRevocationRegistryDefinition,
-                    revocationStatusLists = revocationStatusListsAnoncreds,
-                ),
+            anonCredsRevocationRegistries[key] = AnonCredsRevocationRegistryEntry(
+                tailsFilePath = agent.ledgerService.getTailsPath(),
+                tailsHash = value.tailsHash,
+                definition = anonDef,
+                revocationStatusLists = statusLists
             )
         }
 
-        val anonCredsSchema = AnonCredsSchemas(
-            schemas = schemas,
-        )
+        val anonSchemas = AnonCredsSchemas(schemas)
+        val anonCredDefs = AnonCredsCredentialDefinitions(credentialDefinitions)
 
-        val anonCredsCredentialDefinitions = AnonCredsCredentialDefinitions(
-            credentialDefinitions = credentialDefinitions,
-        )
-
-        // Criar a prova
         agent.anonCredsHolderService.createProof(
             options = CreateProofOptions(
                 requestMessage = requestMessage,
                 proofRequest = proofRequest,
-                selectedCredentials = updatedSelectedCredentials,
-                schemas = anonCredsSchema,
-                credentialDefinitions = anonCredsCredentialDefinitions,
+                selectedCredentials = updatedSelected,
+                schemas = anonSchemas,
+                credentialDefinitions = anonCredDefs,
                 revocationRegistries = anonCredsRevocationRegistries,
-                proofFormats = proofFormats,
-            ),
+                proofFormats = proofFormats
+            )
         )
     }
-
-//    private suspend fun getCredentialDefinitions(
-//        credentialDefinitionIds: Set<String>
-//    ): Map<String, AnonCredsCredentialDefinition> {
-//        val credentialDefinitions = mutableMapOf<String, AnonCredsCredentialDefinition>()
-//        for (credDefId in credentialDefinitionIds) {
-//            val credentialDefinitionResult =
-//                agent.ledgerService.getCredentialDefinition(credDefId)
-//            val anonCredsCredentialDefinition: AnonCredsCredentialDefinition = Json.decodeFromString(credentialDefinitionResult)
-//            credentialDefinitions[credDefId] = anonCredsCredentialDefinition
-//        }
-//        return credentialDefinitions
-//    }
 
     private fun checkValidCredentialValueEncoding(raw: Any, encoded: String): Boolean {
         return encoded == AnonCredsEncoder.encodeCredentialValue(raw)
     }
+
 }
+
+
+
+
+

@@ -25,12 +25,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Carregando detalhes da prova..."
+            android:text="Loading proof details..."
             android:textSize="14sp"
             android:padding="8dp"
             android:textColor="@android:color/darker_gray" />
 
-        <!-- Card de status -->
         <LinearLayout
             android:id="@+id/statusCard"
             android:layout_width="match_parent"
@@ -56,7 +55,6 @@
                 android:textColor="@android:color/black" />
         </LinearLayout>
 
-        <!-- DIVISÓRIA -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -67,7 +65,7 @@
             android:id="@+id/headerProofInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Informações da Prova"
+            android:text="Proof Information"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="12dp"
@@ -85,17 +83,16 @@
             android:id="@+id/proofConnection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Conexão: "
+            android:text="Connection: "
             android:paddingBottom="4dp" />
 
         <TextView
             android:id="@+id/proofState"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Estado: "
+            android:text="State: "
             android:paddingBottom="12dp" />
 
-        <!-- DIVISÓRIA -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -106,7 +103,7 @@
             android:id="@+id/requestedAttributesHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Atributos Solicitados"
+            android:text="Requested Attributes"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingBottom="8dp" />
@@ -117,19 +114,17 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- DIVISÓRIA -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@android:color/darker_gray"
             android:layout_marginVertical="8dp" />
 
-        <!-- Predicados Solicitados -->
         <TextView
             android:id="@+id/requestedPredicatesHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Predicados Solicitados"
+            android:text="Requested Predicates"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -141,19 +136,17 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- DIVISÓRIA -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@android:color/darker_gray"
             android:layout_marginVertical="8dp" />
 
-        <!-- Intervalo de Não Revogação -->
         <TextView
             android:id="@+id/nonRevokedHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Intervalo de Não Revogação"
+            android:text="Non-Revocation Interval"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -163,11 +156,10 @@
             android:id="@+id/nonRevokedInterval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Início: - | Fim: -"
+            android:text="Start: - | End: -"
             android:textColor="@android:color/darker_gray"
             android:paddingBottom="12dp" />
 
-        <!-- DIVISÓRIA -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -178,7 +170,7 @@
             android:id="@+id/selectCredentialHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Selecionar Credencial"
+            android:text="Select Credential"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -195,7 +187,7 @@
             android:id="@+id/btnSendProof"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="✅ Accept and send proof"
+            android:text="Accept and send proof"
             android:backgroundTint="@color/teal_700"
             android:textColor="@android:color/white"
             android:layout_marginTop="20dp"

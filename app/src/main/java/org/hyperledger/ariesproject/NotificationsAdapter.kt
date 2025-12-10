@@ -29,7 +29,7 @@ class NotificationsAdapter(
             binding.title.text = item.title
             binding.message.text = item.message
 
-            val dateFormatted = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            val dateFormatted = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
                 .format(Date(item.date))
             binding.date.text = dateFormatted
 
@@ -43,8 +43,8 @@ class NotificationsAdapter(
             binding.actionButtons.visibility = View.VISIBLE
 
             when (item.type) {
+
                 NotificationType.ISSUE_CREDENTIAL_V2 -> {
-                    // Verifica se já existe uma notificação de credencial recebida
                     val credentialReceived = notifications.any { notif ->
                         notif.type == NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 &&
                                 notif.credentialId == item.credentialId
@@ -57,29 +57,26 @@ class NotificationsAdapter(
 
                     when {
                         credentialReceived -> {
-                            // Já foi recebida: mostra status verde
                             binding.btnAccept.visibility = View.GONE
                             binding.btnDecline.visibility = View.GONE
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "✅ Credencial recebida"
+                                text = "✅ Credential received"
                                 setTextColor(context.getColor(R.color.teal_700))
                             }
                         }
                         credentialDeclined -> {
-                            // Já foi recusada: mostra status vermelho
                             binding.btnAccept.visibility = View.GONE
                             binding.btnDecline.visibility = View.GONE
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "❌ Credencial recusada"
+                                text = "❌ Credential declined"
                                 setTextColor(context.getColor(android.R.color.holo_red_dark))
                             }
                         }
                         else -> {
-                            // Oferta pendente: mostrar botões
                             binding.btnAccept.visibility = View.VISIBLE
                             binding.btnDecline.visibility = View.VISIBLE
                             binding.btnCheck.visibility = View.GONE
@@ -87,22 +84,21 @@ class NotificationsAdapter(
                         }
                     }
                 }
+
                 NotificationType.ISSUED_CREDENTIAL_DETAIL_V2 -> {
-                    // Credencial recebida — exibe botão para ver os detalhes
                     binding.btnAccept.visibility = View.GONE
                     binding.btnDecline.visibility = View.GONE
                     binding.btnCheck.visibility = View.VISIBLE
                     binding.txtStatus.visibility = View.GONE
-                    binding.btnCheck.text = "Ver credencial"
+                    binding.btnCheck.text = "View credential"
                 }
 
                 NotificationType.CREDENTIAL_DECLINED -> {
-                    // Credencial recebida — exibe botão para ver os detalhes
                     binding.btnAccept.visibility = View.GONE
                     binding.btnDecline.visibility = View.GONE
                     binding.btnCheck.visibility = View.VISIBLE
                     binding.txtStatus.visibility = View.GONE
-                    binding.btnCheck.text = "Ver credencial recusada"
+                    binding.btnCheck.text = "View declined credential"
                 }
 
                 NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
@@ -123,40 +119,39 @@ class NotificationsAdapter(
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "✅ Prova concluída"
+                                text = "✅ Proof completed"
                                 setTextColor(context.getColor(R.color.teal_700))
                             }
                         }
+
                         proofDeclinedExists -> {
                             binding.btnAccept.visibility = View.GONE
                             binding.btnDecline.visibility = View.GONE
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "❌ Prova recusada"
+                                text = "❌ Proof declined"
                                 setTextColor(context.getColor(android.R.color.holo_red_dark))
                             }
                         }
+
                         else -> {
-                            // Mostrar botões: conferir detalhes e recusar prova
                             binding.btnAccept.visibility = View.VISIBLE
                             binding.btnDecline.visibility = View.VISIBLE
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.visibility = View.GONE
-                            binding.btnAccept.text = "Conferir detalhes"
-                            binding.btnDecline.text = "Recusar"
+                            binding.btnAccept.text = "View details"
+                            binding.btnDecline.text = "Decline"
                         }
                     }
                 }
 
-
                 NotificationType.PROOF_REQUEST_V2 -> {
-                    // Prova concluída, mostrar botão de “Conferir prova”
                     binding.btnAccept.visibility = View.GONE
                     binding.btnDecline.visibility = View.GONE
                     binding.btnCheck.visibility = View.VISIBLE
                     binding.txtStatus.visibility = View.GONE
-                    binding.btnCheck.text = "Conferir prova"
+                    binding.btnCheck.text = "View proof"
                 }
 
                 else -> {
@@ -193,6 +188,7 @@ class NotificationsAdapter(
 
             val bottomNavigationView =
                 (context as? BaseActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigation)
+
             bottomNavigationView?.let {
                 val badge = it.getOrCreateBadge(R.id.nav_notifications)
                 val unreadCount = handler.notifications.count { n -> !n.isRead }
@@ -207,13 +203,8 @@ class NotificationsAdapter(
                     }
                     context.startActivity(intent)
                 }
-                NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
-                    val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
-                        putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    context.startActivity(intent)
-                }
+
+                NotificationType.ACCEPT_PROOF_REQUEST_V2,
                 NotificationType.PROOF_REQUEST_V2 -> {
                     val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
                         putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
@@ -221,8 +212,9 @@ class NotificationsAdapter(
                     }
                     context.startActivity(intent)
                 }
+
                 else -> {
-                    Log.d("NotificationsAdapter", "Type of notification without an action: ${notification.type}")
+                    Log.d("NotificationsAdapter", "Notification type with no direct action: ${notification.type}")
                 }
             }
         }
@@ -231,6 +223,7 @@ class NotificationsAdapter(
             GlobalScope.launch(Dispatchers.Main) {
                 try {
                     when (notification.type) {
+
                         NotificationType.ISSUE_CREDENTIAL_V2 -> {
                             val record =
                                 app.agent.credentialsV2.getById(notification.credentialId!!)
@@ -238,25 +231,17 @@ class NotificationsAdapter(
                         }
 
                         NotificationType.ACCEPT_PROOF_REQUEST_V2 -> {
-                            // Abre a tela de detalhes da prova
-                            val intent =
-                                Intent(context, ProofRequestDetailActivity::class.java).apply {
-                                    putExtra(
-                                        ProofRequestDetailFragment.ARG_PROOF_ID,
-                                        notification.proofRecordId
-                                    )
-                                    putExtra(
-                                        ProofRequestDetailFragment.ARG_TYPE,
-                                        notification.type.name
-                                    )
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
+                            val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
+                                putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
+                                putExtra(ProofRequestDetailFragment.ARG_TYPE, notification.type.name)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
                             context.startActivity(intent)
                         }
-                        else -> {
-                            Log.d("NotificationsAdapter", "btnAccept clicked for type: ${notification.type}")
-                        }
 
+                        else -> {
+                            Log.d("NotificationsAdapter", "btnAccept clicked for: ${notification.type}")
+                        }
                     }
 
                     notification.isRead = true
@@ -265,16 +250,14 @@ class NotificationsAdapter(
                 } catch (e: Exception) {
                     android.widget.Toast.makeText(
                         context,
-                        "Error processing action: ${e.localizedMessage}",
+                        "Error: ${e.localizedMessage}",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                 }
             }
         }
 
-
         holder.itemView.findViewById<View?>(R.id.btnDecline)?.setOnClickListener {
-
             if (notification.type == NotificationType.ACCEPT_PROOF_REQUEST_V2) {
                 val appContext = context.applicationContext
                 if (appContext is WalletApp && notification.proofRecordId != null) {
@@ -282,41 +265,44 @@ class NotificationsAdapter(
                         try {
                             appContext.agent.proofCommandV2.declineRequest(notification.proofRecordId!!)
                             handler.addNotification(
-                                title = "Declined proof",
+                                title = "Proof declined",
                                 message = "Proof (${notification.proofRecordId}) was declined",
                                 type = NotificationType.PROOF_DECLINED,
                                 connectionId = notification.connectionId,
                                 proofRecordId = notification.proofRecordId
                             )
                         } catch (e: Exception) {
-                            Log.e("NotificationsAdapter", "Erro ao recusar prova: ${e.localizedMessage}")
+                            Log.e("NotificationsAdapter", "Decline error: ${e.localizedMessage}")
                         }
                     }
                 }
 
                 notification.isRead = true
                 notifyItemChanged(position)
+
             } else {
-                // mantém o código existente de recusa de credencial
                 val appContext = context.applicationContext
                 if (appContext is WalletApp) {
                     appContext.declineCredentialV2(notification.credentialId!!)
                 }
                 handler.addNotification(
                     title = "Credential Declined",
-                    message = "The credential was declined by user",
+                    message = "The credential was declined by the user",
                     type = NotificationType.CREDENTIAL_DECLINED,
                     connectionId = notification.connectionId,
                     credentialId = notification.credentialId
                 )
+
                 notification.isRead = true
                 notifyItemChanged(position)
             }
-
         }
+
         holder.itemView.findViewById<View?>(R.id.btnCheck)?.setOnClickListener {
             when (notification.type) {
-                NotificationType.ISSUED_CREDENTIAL_DETAIL_V2, NotificationType.CREDENTIAL_DECLINED -> {
+
+                NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
+                NotificationType.CREDENTIAL_DECLINED -> {
                     val intent = Intent(context, CredentialDetailActivity::class.java).apply {
                         putExtra(CredentialDetailFragment.ARG_CREDENTIAL_ID, notification.credentialId)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -326,7 +312,7 @@ class NotificationsAdapter(
 
                 NotificationType.PROOF_REQUEST_V2,
                 NotificationType.ACCEPT_PROOF_REQUEST_V2,
-                NotificationType.PROOF_DECLINED-> {
+                NotificationType.PROOF_DECLINED -> {
                     val intent = Intent(context, ProofRequestDetailActivity::class.java).apply {
                         putExtra(ProofRequestDetailFragment.ARG_PROOF_ID, notification.proofRecordId)
                         putExtra(ProofRequestDetailFragment.ARG_TYPE, notification.type)
@@ -336,7 +322,7 @@ class NotificationsAdapter(
                 }
 
                 else -> {
-                    Log.d("NotificationsAdapter", "btnCheck clicked for ${notification.type}")
+                    Log.d("NotificationsAdapter", "btnCheck clicked for: ${notification.type}")
                 }
             }
         }
@@ -348,7 +334,10 @@ class NotificationsAdapter(
         notifyDataSetChanged()
     }
 
-    private fun getCredentialV2(context: android.content.Context, credentialExchangeRecord: CredentialExchangeRecord) {
+    private fun getCredentialV2(
+        context: android.content.Context,
+        credentialExchangeRecord: CredentialExchangeRecord
+    ) {
         val app = context.applicationContext as WalletApp
         val progress = ProgressDialog(context)
         progress.setTitle("Loading...")
@@ -367,7 +356,11 @@ class NotificationsAdapter(
             } catch (e: Exception) {
                 GlobalScope.launch(Dispatchers.Main) {
                     progress.dismiss()
-                    android.widget.Toast.makeText(context, "Error accepting credential: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(
+                        context,
+                        "Error accepting credential: ${e.localizedMessage}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 

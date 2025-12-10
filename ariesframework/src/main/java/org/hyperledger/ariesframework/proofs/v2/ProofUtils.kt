@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinit
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
+import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCreds
@@ -150,7 +151,7 @@ class ProofUtils {
 
         fun getProofFormats(proofRequest: AnonCredsProofRequest, format: String): Map<String, JsonElement> {
             val (name, version, nonce, requestedAttributes, requestedPredicates, nonRevoked, ver) = proofRequest
-            return mapOf(
+            val returnVal =  mapOf(
                 format to buildJsonObject {
                     put("name", JsonPrimitive(name))
                     put("version", JsonPrimitive(version))
@@ -206,7 +207,7 @@ class ProofUtils {
                                     key,
                                     buildJsonObject {
                                         put("name", JsonPrimitive(pred.name))
-                                        put("p_type", JsonPrimitive(pred.pType.toString()))
+                                        put("p_type",  JsonPrimitive(pred.pType.toSymbol()))
                                         put("p_value", JsonPrimitive(pred.pValue))
                                         pred.restrictions?.takeIf { it.isNotEmpty() }?.let { restrictions ->
                                             put(
@@ -232,6 +233,16 @@ class ProofUtils {
                     )
                 },
             )
+            return returnVal
+        }
+
+        private fun PredicateType.toSymbol(): String {
+            return when (this) {
+                PredicateType.LessThan -> "<"
+                PredicateType.LessThanOrEqualTo -> "<="
+                PredicateType.GreaterThan -> ">"
+                PredicateType.GreaterThanOrEqualTo -> ">="
+            }
         }
 
         private fun restrictionToJson(r: AnonCredsProofRequestRestriction): JsonObject =

@@ -11,21 +11,19 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Botão voltar -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/backButton"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="← Voltar"
+            android:text="← Back"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/gray_500"
             android:layout_marginBottom="12dp" />
 
-        <!-- Título -->
         <TextView
-            android:text="Solicitação de Prova"
+            android:text="Proof Request"
             android:textSize="22sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -33,9 +31,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
-        <!-- Atributos -->
         <TextView
-            android:text="Atributos Solicitados"
+            android:text="Requested Attributes"
             android:textStyle="bold"
             android:layout_marginTop="16dp"
             android:textSize="16sp"
@@ -45,7 +42,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/addAttributeButton"
             style="@style/Widget.MaterialComponents.Button"
-            android:text="Adicionar Atributo"
+            android:text="Add Attribute"
             android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -59,7 +56,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <!-- Credential Definition -->
         <EditText
             android:id="@+id/credentialDefInput"
             android:hint="Credential Definition ID"
@@ -68,9 +64,8 @@
             android:inputType="textUri"
             android:autofillHints="credentialDefinitionId" />
 
-        <!-- Predicados -->
         <TextView
-            android:text="Predicados"
+            android:text="Predicates"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_marginTop="20dp"
@@ -80,7 +75,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/addPredicateButton"
             style="@style/Widget.MaterialComponents.Button"
-            android:text="Adicionar Predicado"
+            android:text="Add Predicate"
             android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -94,9 +89,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <!-- Intervalo de Revogação -->
         <TextView
-            android:text="Intervalo de Revogação"
+            android:text="Revocation Interval"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_marginTop="20dp"
@@ -113,7 +107,7 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/toDateButton"
                 style="@style/Widget.MaterialComponents.Button"
-                android:text="Selecionar data"
+                android:text="Select date"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -121,7 +115,6 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!-- Loader e status -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -139,24 +132,22 @@
             android:textColor="@android:color/black"
             android:textSize="14sp" />
 
-        <!-- Enviar -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/requestProofButton"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Enviar Solicitação de Prova"
+            android:text="Send Proof Request"
             android:backgroundTint="@color/teal_600"
             android:textColor="@android:color/white"
             android:layout_marginTop="24dp" />
 
-        <!-- QR -->
         <ImageView
             android:id="@+id/qrImageView"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_gravity="center"
             android:visibility="visible"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="24dp" />
     </LinearLayout>
 </ScrollView>

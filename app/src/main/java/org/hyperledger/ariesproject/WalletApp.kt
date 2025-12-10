@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 import java.io.File
-import java.util.Date
 
 const val PREFERENCE_NAME = "aries-framework-kotlin-sample"
 const val genesisPath = "von.txn"
@@ -51,6 +49,7 @@ class WalletApp : Application() {
             key = Agent.generateWalletKey()
             pref.edit().putString("walletKey", key).apply()
         }
+
         copyResourceFile(genesisPath)
         val properties = ConfigLoader.loadProperties(this)
         val invitationUrl = properties.getProperty("invitation_url")
@@ -60,15 +59,13 @@ class WalletApp : Application() {
             Settings.Secure.ANDROID_ID
         )
 
-        // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
         val agentLabel = "SimpleApp-1X_$androidId"
-        Log.e("app---------------", agentLabel)
+        // Log.e("app---------------", agentLabel)
 
-        val besuLedgerContig = BesuLedgerConfig(
-            configFile =  "besu_config.json",
+        val besuLedgerConfig = BesuLedgerConfig(
+            configFile = "besu_config.json",
             multiledger = true
         )
-
 
         val config = AgentConfig(
             walletKey = key,
@@ -78,33 +75,18 @@ class WalletApp : Application() {
             label = agentLabel,
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = false, // indy
-            useBesuLedger =  true, //besu
-            besuLedgerConfig = besuLedgerContig,
+            useLedgerService = false,
+            useBesuLedger = true,
+            besuLedgerConfig = besuLedgerConfig,
         )
+
         agent = Agent(applicationContext, config)
         agent.initialize()
 
         walletOpened = true
 
-        Log.d("demo", "Agent initialized")
+        // Log.d("demo", "Agent initialized")
     }
-
-//    override fun onCreate() {
-//        super.onCreate()
-//        notificationHandler = NotificationHandler.getInstance(this)
-//        GlobalScope.launch(Dispatchers.IO) {
-//            openWallet()
-//            agent.eventBus.subscribe<AgentEvents.AgentReadyEvent> {
-//                subscribeAgentEvents()
-//                walletOpened = true
-//                Log.d("WalletApp", "✅ AgentReadyEvent recebido — assinaturas ativas")
-//            }
-//            agent.eventBus.publish(AgentEvents.AgentReadyEvent())
-//            Log.d("WalletApp", "🚀 AgentReadyEvent publicado")
-//        }
-//
-//    }
 
     override fun onCreate() {
         super.onCreate()
@@ -112,16 +94,12 @@ class WalletApp : Application() {
 
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                // 1️⃣ Inicializa o agente
                 openWallet()
-
-                // 2️⃣ Depois que o agente estiver pronto, registre os listeners
                 subscribeAgentEvents()
                 walletOpened = true
-                Log.d("WalletApp", "✅ Agent inicializado e listeners registrados")
-
+                // Log.d("WalletApp", "Agent initialized and listeners registered")
             } catch (e: Exception) {
-                Log.e("WalletApp", "Erro ao inicializar o agente: ${e.message}", e)
+                // Log.e("WalletApp", "Error initializing agent: ${e.message}", e)
             }
         }
     }
@@ -141,7 +119,7 @@ class WalletApp : Application() {
         agent.eventBus.subscribe<AgentEvents.CredentialEventV2> {
             if (it.record.state == CredentialState.OfferReceived) {
                 handler.addNotification(
-                    title = "Nova oferta de credencial (2.0)",
+                    title = "New credential offer (2.0)",
                     message = "Credential ID: ${it.record.id}",
                     type = NotificationType.ISSUE_CREDENTIAL_V2,
                     credentialId = it.record.id
@@ -149,7 +127,7 @@ class WalletApp : Application() {
                 notifyBadgeUpdate()
             } else if (it.record.state == CredentialState.Done) {
                 handler.addNotification(
-                    title = "Credencial 2.0 recebida",
+                    title = "Credential 2.0 received",
                     message = "Credential ID: ${it.record.id}",
                     type = NotificationType.ISSUED_CREDENTIAL_DETAIL_V2,
                     credentialId = it.record.id
@@ -167,6 +145,7 @@ class WalletApp : Application() {
                     proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
+
             } else if (it.record.state == ProofState.PresentationSent) {
                 handler.addNotification(
                     title = "Proof sent",
@@ -175,15 +154,17 @@ class WalletApp : Application() {
                     proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
-            }else if (it.record.state == ProofState.PresentationReceived) {
-                receivePresentation(record= it.record)
+
+            } else if (it.record.state == ProofState.PresentationReceived) {
+                receivePresentation(record = it.record)
                 handler.addNotification(
                     title = "Proof received",
                     message = "Proof ID: ${it.record.id} | Verified? ${it.record.isVerified ?: false}",
                     proofRecordId = it.record.id
                 )
                 notifyBadgeUpdate()
-            }else if (it.record.state == ProofState.Done) {
+
+            } else if (it.record.state == ProofState.Done) {
                 handler.addNotification(
                     title = "Proof done",
                     message = "Proof ID: ${it.record.id}",
@@ -196,18 +177,15 @@ class WalletApp : Application() {
 
         agent.eventBus.subscribe<AgentEvents.RevocationNotificationReceivedEventV2> {
             handler.addNotification(
-                title = "Revogação recebida",
-                message = "A credencial (${it.record.id}) foi revogada.",
+                title = "Revocation received",
+                message = "The credential (${it.record.id}) was revoked.",
                 type = NotificationType.OTHER
             )
-            //agent.credentialsV2.revokeCredential(it.record)
             notifyBadgeUpdate()
         }
-
-        //updateNotificationBadge()
     }
 
-     fun declineCredentialV2(id: String) {
+    fun declineCredentialV2(id: String) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 val decline = DeclineCredentialOfferOptions(
@@ -218,36 +196,26 @@ class WalletApp : Application() {
                     options = decline,
                 )
             } catch (e: Exception) {
-                Log.d("demo", e.localizedMessage)
+                // Log.d("demo", e.localizedMessage)
             }
         }
-
     }
 
     fun receivePresentation(record: ProofExchangeRecord) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                // 1️⃣ Cria uma cópia mutável (equivalente ao "var mutable = proofRecord" no Swift)
                 var mutableRecord = record
-
-                // 2️⃣ Cria a mensagem de ACK via ProofServiceV2
                 val (message, updatedRecord) = agent.proofServiceV2.createAck(mutableRecord)
-
-                // 3️⃣ Busca a conexão associada
                 val connection = agent.connectionRepository.getById(updatedRecord.connectionId)
-
-                // 4️⃣ Envia o ACK de volta
                 agent.messageSender.send(OutboundMessage(message, connection))
-
-                Log.d("WalletApp", "✅ ACK enviado para apresentação ${updatedRecord.threadId}")
-
+                // Log.d("WalletApp", "ACK sent for presentation ${updatedRecord.threadId}")
             } catch (e: Exception) {
                 launch(Dispatchers.Main) {
                     notificationHandler.addNotification(
-                        title = "❌ Erro ao receber apresentação",
-                        message = e.localizedMessage ?: "Erro desconhecido"
+                        title = "Error receiving presentation",
+                        message = e.localizedMessage ?: "Unknown error"
                     )
-                    Log.e("WalletApp", "❌ Falha ao processar apresentação: ${e.localizedMessage}", e)
+                    // Log.e("WalletApp", "Error processing presentation: ${e.localizedMessage}", e)
                 }
             }
         }
@@ -258,7 +226,7 @@ class WalletApp : Application() {
             try {
                 agent.proofCommandV2.declineRequest(id)
             } catch (e: Exception) {
-                Log.d("demo", e.localizedMessage)
+                // Log.d("demo", e.localizedMessage)
             }
         }
     }

@@ -23,7 +23,7 @@
         android:id="@+id/date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Criado em: —"
+        android:text="Created at: —"
         android:textSize="13sp"
         android:textColor="@android:color/darker_gray"
         android:layout_marginTop="4dp" />
@@ -32,7 +32,7 @@
         android:id="@+id/type"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Estado: —"
+        android:text="State: —"
         android:textSize="13sp"
         android:textColor="@android:color/darker_gray"
         android:layout_marginTop="4dp" />

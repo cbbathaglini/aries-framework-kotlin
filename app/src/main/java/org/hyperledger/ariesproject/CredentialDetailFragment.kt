@@ -49,7 +49,11 @@ class CredentialDetailFragment : Fragment() {
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         if (isAdded) {
-                            Toast.makeText(requireContext(), "Erro ao carregar credencial ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireContext(),
+                                "Error loading credential: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -69,12 +73,14 @@ class CredentialDetailFragment : Fragment() {
 
     private fun showCredential(record: CredentialExchangeRecord) {
         binding.credentialId.text = record.id
+        binding.name.text = "Name: ${record.comment ?: "No name"}"
         binding.schemaId.text = "Schema ID: ${record.schemaId ?: "N/A"}"
         binding.credDefId.text =
             "Credential Definition ID: ${record.credentialDefinitionId ?: "N/A"}"
         binding.revRegId.text = "Revocation Registry: ${record.revRegId ?: "N/A"}"
-        binding.w3cCredentialId.text = "W3cCredential ID: ${record.w3cCredentialId ?: "N/A"}"
-        binding.isRevoked.text = "Is revoked?: ${record.state == CredentialState.Revoked ?: "N/A"}"
+        binding.w3cCredentialId.text = "W3C Credential ID: ${record.w3cCredentialId ?: "N/A"}"
+        binding.isRevoked.text =
+            "Is revoked?: ${record.state == CredentialState.Revoked ?: "N/A"}"
 
         val attributes = record.credentialAttributes?.associate { it.name to it.value } ?: emptyMap()
         populateAttributes(attributes)

@@ -3,26 +3,25 @@ package org.hyperledger.ariesframework.credentials.models
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 
 /**
- * Configurações para o módulo de credenciais.
+ * Configuration options for the credential module.
  *
- * @property autoAcceptCredentials Define se as credenciais devem ser aceitas automaticamente.
- * @property credentialProtocols Lista de protocolos de credencial disponíveis.
+ * @property autoAcceptCredentials Defines whether credentials should be automatically accepted.
  */
 data class CredentialsModuleConfigOptions(
     val autoAcceptCredentials: AutoAcceptCredential? = null,
 )
 
 /**
- * Classe de configuração para o módulo de credenciais.
- * Aceita um conjunto de opções e expõe getters para leitura.
+ * Configuration class for the credential module.
+ * Accepts a set of options and exposes getters for read access.
  */
 class CredentialsModuleConfig(
     private val options: CredentialsModuleConfigOptions,
 ) {
 
     /**
-     * Define se o módulo deve aceitar automaticamente mensagens de credenciais.
-     * Padrão: [AutoAcceptCredential.Never]
+     * Defines whether the module should automatically accept credential messages.
+     * Default: [AutoAcceptCredential.Never]
      */
     val autoAcceptCredentials: AutoAcceptCredential
         get() = options.autoAcceptCredentials ?: AutoAcceptCredential.Never

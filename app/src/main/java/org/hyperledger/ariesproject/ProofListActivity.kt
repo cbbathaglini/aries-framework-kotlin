@@ -30,7 +30,7 @@ class ProofListActivity : BaseActivity() {
         findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-        binding.toolbar.title = "Provas Recebidas"
+        binding.toolbar.title = "Received Proofs"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""

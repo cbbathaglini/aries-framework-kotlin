@@ -11,7 +11,7 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:text="Informações da Prova"
+            android:text="Proof Information"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingBottom="8dp"
@@ -27,14 +27,14 @@
 
         <TextView
             android:id="@+id/connectionId"
-            android:text="Conexão: -"
+            android:text="Connection: -"
             android:paddingVertical="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/state"
-            android:text="Estado: -"
+            android:text="State: -"
             android:paddingVertical="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
@@ -65,7 +65,7 @@
             android:id="@+id/attributesHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Atributos Solicitados"
+            android:text="Requested Attributes"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -81,7 +81,7 @@
             android:id="@+id/predicatesHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Predicados Solicitados"
+            android:text="Requested Predicates"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -97,7 +97,7 @@
             android:id="@+id/nonRevokedHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Intervalo de Não Revogação"
+            android:text="Non-Revocation Interval"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingTop="16dp"
@@ -107,7 +107,7 @@
             android:id="@+id/nonRevokedInterval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Início: - | Fim: -"
+            android:text="Start: - | End: -"
             android:textColor="@android:color/darker_gray"
             android:paddingBottom="12dp" />
 

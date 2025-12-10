@@ -186,7 +186,7 @@
         <activity
             android:name=".NotificationsActivity"
             android:exported="true"
-            android:label="Notificações"
+            android:label="Notifications"
             android:theme="@style/AppTheme.NoActionBar" />
 
     </application>

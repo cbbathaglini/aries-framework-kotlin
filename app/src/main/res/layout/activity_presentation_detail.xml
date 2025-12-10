@@ -10,20 +10,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- 🔙 Botão de voltar -->
         <Button
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="← Voltar"
+            android:text="Back"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/teal_600"
             android:layout_marginBottom="16dp" />
 
-        <!-- 🪪 Cabeçalho -->
         <TextView
-            android:text="Detalhes da Apresentação"
+            android:text="Presentation Details"
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
@@ -31,7 +29,6 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp" />
 
-        <!-- 🧾 Informações -->
         <TextView
             android:id="@+id/txtRecordId"
             android:layout_width="match_parent"
@@ -45,14 +42,13 @@
             android:id="@+id/txtCreatedAt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Criado em: —"
+            android:text="Created at: —"
             android:textSize="14sp"
             android:textColor="@android:color/darker_gray"
             android:layout_marginBottom="16dp" />
 
-        <!-- 🧩 Conteúdo JSON -->
         <TextView
-            android:text="Conteúdo JSON"
+            android:text="JSON Content"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_width="wrap_content"
@@ -81,15 +77,14 @@
             android:id="@+id/btnCopyJson"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📋 Copiar conteúdo"
+            android:text="Copy Content"
             android:layout_marginBottom="20dp"
             android:backgroundTint="@color/teal_700"
             android:textAllCaps="false"
             android:textColor="@android:color/white" />
 
-        <!-- 🔍 Lista de dispositivos BLE -->
         <TextView
-            android:text="Dispositivos disponíveis"
+            android:text="Available Devices"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_width="wrap_content"
@@ -100,7 +95,7 @@
             android:id="@+id/btnScanDevices"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🔍 Buscar dispositivos"
+            android:text="Scan Devices"
             android:textAllCaps="false"
             android:backgroundTint="@color/teal_700"
             android:textColor="@android:color/white"
@@ -118,7 +113,7 @@
             android:id="@+id/txtBluetoothStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Bluetooth: Aguardando..."
+            android:text="Bluetooth: Waiting..."
             android:textColor="@android:color/darker_gray"
             android:textSize="14sp"
             android:layout_marginBottom="12dp" />
@@ -127,22 +122,12 @@
             android:id="@+id/btnSendBluetooth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📡 Enviar via Bluetooth"
+            android:text="Send via Bluetooth"
             android:textAllCaps="false"
             android:backgroundTint="@color/teal_600"
             android:textColor="@android:color/white"
             android:layout_marginBottom="20dp" />
-<!--        <Button-->
-<!--            android:id="@+id/btnSendBluetoothAndroid"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="📡 Enviar via Bluetooth Android"-->
-<!--            android:textAllCaps="false"-->
-<!--            android:backgroundTint="@color/teal_600"-->
-<!--            android:textColor="@android:color/white"-->
-<!--            android:layout_marginBottom="20dp" />-->
 
-        <!-- 🧾 Logs -->
         <TextView
             android:text="Logs"
             android:textStyle="bold"
@@ -163,7 +148,7 @@
             android:id="@+id/btnCopyLogs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📋 Copiar Logs"
-            android:layout_marginTop="8dp"/>
+            android:text="Copy Logs"
+            android:layout_marginTop="8dp" />
     </LinearLayout>
 </ScrollView>

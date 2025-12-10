@@ -394,6 +394,7 @@ class CredentialServiceV2(val agent: Agent) {
 
             credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
             credentialExchangeRecord.assertState(CredentialState.ProposalSent)
+            credentialExchangeRecord.updateComment(offerMessage.comment)
 
             agent.connectionService.assertConnectionOrOutOfBandExchange(
                 messageContext = messageContext,
@@ -428,6 +429,7 @@ class CredentialServiceV2(val agent: Agent) {
             role = CredentialRole.Holder,
             protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
             formats = offerMessage.formats,
+            comment = offerMessage.comment
         )
 
         val processOfferParams = ProcessOfferParams(

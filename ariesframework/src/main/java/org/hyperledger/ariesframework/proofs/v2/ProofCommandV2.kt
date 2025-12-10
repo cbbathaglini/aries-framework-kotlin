@@ -53,16 +53,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         )
     }
 
-    /**
-     * Initiate a new presentation exchange as verifier by sending a presentation request message
-     * to the connection with the specified connection id.
-     *
-     * @param connectionId the connection to send the proof request to.
-     * @param proofRequest the proof request to send.
-     * @param comment a comment to include in the proof request message.
-     * @param autoAcceptProof whether to automatically accept the proof message.
-     * @return a new proof record for the proof exchange.
-     */
     suspend fun requestProof(
         connectionId: String,
         proofRequest: AnonCredsProofRequest,
@@ -73,11 +63,12 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
     ): Pair<ProofExchangeRecord, VerifierRecord> {
         val connection = agent.connectionRepository.getById(connectionId)
 
-        val format: String = formats.first().attachmentId ?: throw CredoError("Formato de prova não informado")
+        val format: String = formats.first().attachmentId ?: throw CredoError("Proof format not informed")
 
         val proofFormats: Map<String, JsonElement> = ProofUtils.getProofFormats(proofRequest, format)
-        logger.info("proof formats: $proofFormats")
-        logger.info("proof request >>> ${proofRequest.toJson()}")
+        // logger.info("proof formats: $proofFormats")
+        // logger.info("proof request >>> ${proofRequest.toJson()}")
+
         val (message, record) = agent.proofServiceV2.createRequest(
             CreateProofRequestOptions(
                 connectionRecord = connection,
@@ -90,7 +81,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             ),
         )
 
-        Log.d("MAIN_MESSAGE", "requestProof")
+        // Log.d("MAIN_MESSAGE", "requestProof")
         agent.messageSender.send(OutboundMessage(message, connection))
 
         val verifierRecord = VerifierRecord(
@@ -105,11 +96,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return Pair(record, verifierRecord)
     }
 
-    /**
-     * Cria uma requisição de prova offline (sem conexão) e salva o VerifierRecord.
-     *
-     * Equivalente a `requestProofOffline` no código Swift.
-     */
     suspend fun requestProofOffline(
         proofRequest: AnonCredsProofRequest,
         formats: List<ProofFormatSpec> = emptyList(),
@@ -118,7 +104,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         comment: String? = null,
     ): Pair<ProofExchangeRecord, VerifierRecord> {
         try {
-            // Verifica se há formato informado
             val format = formats.firstOrNull()?.attachmentId
                 ?: throw Exception("Proof format not informed")
 
@@ -150,7 +135,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
             return Pair(record, verifierRecord)
         } catch (e: Exception) {
-            logger.error("Erro ao criar prova offline: ${e.message}", e)
+            // logger.error("Error creating offline proof: ${e.message}", e)
             throw e
         }
     }
@@ -185,7 +170,8 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             chosenCredential =
                 agent.credentialExchangeRepository.getById(chosenCredentialId)
         }
-        logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
+
+        // logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
 
         val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
             proofRecordId = record.id,
@@ -193,7 +179,8 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             credentialW3cId = chosenCredential?.w3cCredentialId,
         )
 
-        val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        val requestedCredentials: RequestedCredentialsAnoncreds =
+            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
         val params = AcceptProofRequestOptions(
             proofRecord = record,
@@ -205,15 +192,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return Pair(record, message)
     }
 
-    /**
-     * Accept a presentation request as prover (by sending a presentation message) to the connection
-     * associated with the proof record.
-     *
-     * @param proofRecordId the id of the proof record for which to accept the request.
-     * @param requestedCredentials the requested credentials object specifying which credentials to use for the proof.
-     * @param comment a comment to include in the presentation message.
-     * @return proof record associated with the sent presentation message.
-     */
     suspend fun acceptRequest(
         proofRecordId: String,
         chosenCredentialId: String? = null,
@@ -232,7 +210,8 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 credentialW3cId = chosenCredential?.w3cCredentialId,
             )
 
-        val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
+        val requestedCredentials: RequestedCredentialsAnoncreds =
+            agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
         val msg = agent.didCommMessageRepository.getAgentMessage(
             proofRecordId,
@@ -270,13 +249,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         return proofRecord
     }
 
-    /**
-     * Decline a presentation request as prover (by sending a problem report message) to the connection
-     * associated with the proof record.
-     *
-     * @param proofRecordId the id of the proof record for which to decline the request.
-     * @return proof record associated with the sent presentation request message.
-     */
     suspend fun declineRequest(
         proofRecordId: String,
     ): ProofExchangeRecord {
@@ -299,20 +271,4 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
         return proofRecord
     }
-
-    /**
-     * Accept a presentation as verifier (by sending a presentation acknowledgement message) to the connection
-     * associated with the proof record.
-     *
-     * @param proofRecordId the id of the proof record for which to accept the presentation.
-     * @return proof record associated with the sent presentation acknowledgement message.
-     */
-//    suspend fun acceptPresentation(proofRecordId: String): ProofExchangeRecord {
-//        val record = agent.proofRepository.getById(proofRecordId)
-//        val connection = agent.connectionRepository.getById(record.connectionId)
-//        val (message, proofRecord) = agent.proofService.createAck(record)
-//        Log.d("MAIN_MESSAGE", "acceptPresentation")
-//        agent.messageSender.send(OutboundMessage(message, connection))
-//        return proofRecord
-//    }
 }

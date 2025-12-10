@@ -7,17 +7,15 @@
     android:layout_height="match_parent"
     tools:context=".NotificationsActivity">
 
-    <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/teal_700"
-        app:title="Notificações"
+        app:title="Notifications"
         app:titleTextColor="@android:color/white"
         app:navigationIcon="@drawable/ic_arrow_back" />
 
-    <!-- Conteúdo principal -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,7 +24,6 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:padding="16dp">
 
-        <!-- Linha de botões -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -39,7 +36,7 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Marcar todas como lidas"
+                android:text="Mark all as read"
                 android:textAllCaps="false"
                 android:textColor="@color/teal_700"
                 app:strokeColor="@color/teal_700"
@@ -53,8 +50,7 @@
                 app:icon="@drawable/ic_delete"
                 app:iconTint="@android:color/white"
                 android:backgroundTint="@color/red"
-                android:contentDescription="Clear all"
-                />
+                android:contentDescription="Clear all" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -69,7 +65,7 @@
             android:id="@+id/emptyView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nenhuma notificação no momento."
+            android:text="No notifications at the moment."
             android:textAlignment="center"
             android:textSize="16sp"
             android:padding="24dp"
