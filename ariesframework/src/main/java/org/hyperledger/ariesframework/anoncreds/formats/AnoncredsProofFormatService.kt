@@ -158,6 +158,7 @@ class AnoncredsProofFormatService(
 
         val anonCredsFormat =
             FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeProofFormat>(proofFormats)
+        // val anoncredsFormat = anonFormat.normalizeFields()
 
         // logger.info("anoncredsFormat:>>>> $anonCredsFormat")
         // logger.info("anoncredsFormat.attributes:>>>> ${anoncredsFormat.attributes}")
@@ -552,14 +553,10 @@ class AnoncredsProofFormatService(
     }
 
     private fun createRequestFromPreview(
-        anoncredsFormat: AnonCredsProposeProofFormat
+        anoncredsFormat: AnonCredsProposeProofFormat,
     ): AnonCredsProofRequest {
-
-        val requestedAttributes =
-            anoncredsFormat.requestedAttributes ?: emptyMap()
-
-        val requestedPredicates =
-            anoncredsFormat.requestedPredicates ?: emptyMap()
+        val requestedAttributes: Map<String, AnonCredsRequestedAttribute> = anoncredsFormat.requestedAttributes ?: emptyMap()
+        val requestedPredicates: Map<String, AnonCredsRequestedPredicate> = anoncredsFormat.requestedPredicates ?: emptyMap()
 
         return AnonCredsProofRequest(
             name = anoncredsFormat.name ?: "Proof request",
