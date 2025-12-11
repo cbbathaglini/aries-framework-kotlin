@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.proofs.v2
 
-import android.util.Log
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent

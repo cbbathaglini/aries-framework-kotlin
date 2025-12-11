@@ -31,7 +31,7 @@ data class CredentialExchangeRecord(
     override val createdAt: Instant = Clock.System.now(),
     override var updatedAt: Instant? = null,
 
-    var comment: String?=null,
+    var comment: String? = null,
     var connectionId: String?,
     var threadId: String,
     var parentThreadId: String? = null,
@@ -96,8 +96,6 @@ data class CredentialExchangeRecord(
     fun updateComment(comment: String?) {
         this.comment = comment
     }
-
-
 
     fun setToState(newState: CredentialState) {
         this.state = newState

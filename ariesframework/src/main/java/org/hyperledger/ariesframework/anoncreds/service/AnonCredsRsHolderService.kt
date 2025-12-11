@@ -69,7 +69,6 @@ import org.hyperledger.ariesframework.proofs.utils.W3cUtils
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.Base58
-import org.hyperledger.ariesframework.util.JsonUtils.Companion.parseJsonMap
 import org.hyperledger.ariesframework.util.JsonUtils.Companion.toJsonMap
 import org.hyperledger.ariesframework.util.JsonUtils.Companion.toJsonString
 import org.hyperledger.ariesframework.util.PrintLongLine
@@ -257,7 +256,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
                 val statusList: AnonCredsRevocationStatusList = revocationStatusLists[timestamp]
                     ?: throw CredoError(
-                        "Revocation status list for registry $revocationRegistryId and timestamp $timestamp not found"
+                        "Revocation status list for registry $revocationRegistryId and timestamp $timestamp not found",
                     )
 
                 val valueJsonElement: JsonElement =
@@ -396,7 +395,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
             val existingIndex = credentials.indexOfFirst {
                 it.credentialId == attribute.credentialId &&
-                        it.credentialEntry.timestamp == attribute.timestamp
+                    it.credentialEntry.timestamp == attribute.timestamp
             }
 
             if (existingIndex >= 0) {
@@ -428,7 +427,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
             val existingIndex = credentials.indexOfFirst {
                 it.credentialId == predicate.credentialId &&
-                        it.credentialEntry.timestamp == predicate.timestamp
+                    it.credentialEntry.timestamp == predicate.timestamp
             }
 
             if (existingIndex >= 0) {
@@ -607,7 +606,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         crew3cJsonLdVC: W3cJsonLdVerifiableCredential,
         processOptions: ProcessOptions,
     ): W3cJsonLdVerifiableCredential {
-
         val mapper: ObjectMapper = jacksonObjectMapper()
         val (credentialDefinition, credentialRequestMetadata, revocationRegistryDefinition) =
             processOptions
@@ -767,14 +765,18 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         }
 
         val entropy =
-            if ((useLegacyProverDid != null && !useLegacyProverDid) || !isLegacyIdentifier)
+            if ((useLegacyProverDid != null && !useLegacyProverDid) || !isLegacyIdentifier) {
                 Verifier().generateNonce()
-            else null
+            } else {
+                null
+            }
 
         val proverDid =
             if (useLegacyProverDid == true) {
                 Base58.encode(Verifier().generateNonce().substring(0, 16).toByteArray())
-            } else null
+            } else {
+                null
+            }
 
         val linkSecret = agent.anoncredsService.getLinkSecret(linkSecretId!!)
 
@@ -941,7 +943,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
     private suspend fun getLegacyCredentialsForProofRequest(
         options: GetCredentialsForProofRequestOptions,
     ): GetCredentialsForProofRequestReturn {
-
         val proofRequest = options.proofRequest
         val referent = options.attributeReferent
 
@@ -1060,11 +1061,10 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
             if (extra.isNotEmpty()) queries += extra
         }
 
-        return if (queries.size == 1) queries.first()
-        else mapOf("\$or" to queries)
+        return if (queries.size == 1) {
+            queries.first()
+        } else {
+            mapOf("\$or" to queries)
+        }
     }
-
-
-
-
 }
