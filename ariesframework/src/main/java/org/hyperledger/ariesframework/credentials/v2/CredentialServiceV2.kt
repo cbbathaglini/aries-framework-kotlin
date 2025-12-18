@@ -429,7 +429,7 @@ class CredentialServiceV2(val agent: Agent) {
             role = CredentialRole.Holder,
             protocolVersion = CredentialsConstants.PROTOCOL_VERSION_V2,
             formats = offerMessage.formats,
-            comment = offerMessage.comment
+            comment = offerMessage.comment,
         )
 
         val processOfferParams = ProcessOfferParams(

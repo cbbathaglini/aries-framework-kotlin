@@ -151,7 +151,7 @@ class ProofUtils {
 
         fun getProofFormats(proofRequest: AnonCredsProofRequest, format: String): Map<String, JsonElement> {
             val (name, version, nonce, requestedAttributes, requestedPredicates, nonRevoked, ver) = proofRequest
-            val returnVal =  mapOf(
+            val returnVal = mapOf(
                 format to buildJsonObject {
                     put("name", JsonPrimitive(name))
                     put("version", JsonPrimitive(version))
@@ -207,7 +207,7 @@ class ProofUtils {
                                     key,
                                     buildJsonObject {
                                         put("name", JsonPrimitive(pred.name))
-                                        put("p_type",  JsonPrimitive(pred.pType.toSymbol()))
+                                        put("p_type", JsonPrimitive(pred.pType.toSymbol()))
                                         put("p_value", JsonPrimitive(pred.pValue))
                                         pred.restrictions?.takeIf { it.isNotEmpty() }?.let { restrictions ->
                                             put(

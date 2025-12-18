@@ -119,7 +119,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
             val revocationStatusList: RevocationStatusList =
                 agent.ledgerService.getRevocationStatusList(
                     revocationRegistryId,
-                    timestamp.toULong(),
+                    timestamp,
                 )
 
             val revocationStatusListInts: List<Int> =

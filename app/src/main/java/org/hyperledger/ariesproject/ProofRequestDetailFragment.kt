@@ -336,12 +336,17 @@ class ProofRequestDetailFragment : Fragment() {
                 compatibleCredentials = compatible
 
                 withContext(Dispatchers.Main) {
-                    if (compatible.isEmpty()) {
+                    if (compatible.isEmpty() && !record.state.equals(ProofState.Done)) {
                         binding.btnSendProof.visibility = View.GONE
                         binding.btnSendProof.isEnabled = false
                         binding.selectCredentialHeader.text = "No compatible credentials found."
                         binding.credentialSpinner.visibility = View.GONE
-                    } else {
+                    } else if(record.state.equals(ProofState.Done)){
+                        binding.btnSendProof.visibility = View.GONE
+                        binding.btnSendProof.isEnabled = false
+                        binding.selectCredentialHeader.text = "W3C id: "+ record.chosenCredentialId
+                        binding.credentialSpinner.visibility = View.GONE
+                    } else{
                         val spinnerItems = compatible.map {
                             val comment = (it["comment"] as? String)
                             val id = (it["id"] as? String)

@@ -4,7 +4,6 @@ import android.util.Log
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlin.math.log
 
 class FormatGeneric {
     companion object {
@@ -17,7 +16,7 @@ class FormatGeneric {
 
             val anonCredsJson = formats?.get("anoncreds")
                 ?: throw IllegalArgumentException("Missing 'anoncreds' format")
-            Log.e("anonjson", "anon: ${anonCredsJson}", )
+            Log.e("anonjson", "anon: $anonCredsJson")
             return json.decodeFromJsonElement(anonCredsJson)
         }
 
