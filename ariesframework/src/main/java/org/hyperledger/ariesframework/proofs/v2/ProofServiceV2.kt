@@ -476,6 +476,7 @@ class ProofServiceV2(val agent: Agent) {
             throw CredoError("Unable to accept request. No supported formats provided as input or in request message")
         }
 
+        logger.info("[acceptRequest] params.chosenCredentialId: $params.chosenCredentialId")
         val acceptRequestParams = AcceptProofRequestParams(
             proofRecord = proofRecord,
             proofFormats = requestedCredentials,

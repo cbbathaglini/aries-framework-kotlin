@@ -98,6 +98,18 @@ class VerifierProofActivity : BaseActivity() {
         }
     }
 
+    private fun showSnack(message: String, ok: Boolean) {
+        val root = binding.root
+        val snack = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
+            .setTextColor(Color.WHITE)
+            .setBackgroundTint(if (ok) Color.parseColor("#2E7D32") else Color.parseColor("#FF0000"))
+
+        val bottomBar = findViewById<View?>(R.id.bottomNavigation)
+        if (bottomBar != null) snack.setAnchorView(bottomBar)
+
+        snack.show()
+    }
+
     override fun onResume() {
         super.onResume()
         updateNotificationBadge()
@@ -221,30 +233,37 @@ class VerifierProofActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 progressBar.visibility = View.VISIBLE
+                statusText.setTextColor(Color.LTGRAY)
                 statusText.text = "⚙️ Generating presentation..."
 
+                Log.i("VERIFIER", "step 1 - get app/agent")
                 val app = application as? WalletApp ?: throw IllegalStateException("WalletApp not initialized!")
                 val agent = app.agent ?: throw IllegalStateException("Agent not initialized!")
 
+                Log.i("VERIFIER", "step 2 - get record id=$proofRecordId")
+                statusText.text = "📦 Loading proof record..."
                 val record = agent.proofRepository.getById(proofRecordId!!)
+
+                val selected = compatibleCredentials.firstOrNull { it.id == selectedCredentialId }
+                Log.i("VERIFIER", "Selected record id=${selected?.id} credDef=${selected?.credentialDefinitionId} attrs=${selected?.credentialAttributes?.size}")
+                Log.i("VERIFIER", "Selected credentialId field? ${selected?.id}")
+
+                Log.i("VERIFIER", "step 3 - createPresentation selectedCredentialId=$selectedCredentialId")
+                statusText.text = "🧠 Creating presentation..."
                 val (_, presentation) = agent.proofCommandV2.createPresentation(record, selectedCredentialId!!)
 
-                val presentationJson = Json.encodeToString(PresentationMessageV2.serializer(), presentation)
+                Log.i("VERIFIER", "step 4 - encode presentation")
+                statusText.text = "🧾 Encoding..."
+                Json.encodeToString(PresentationMessageV2.serializer(), presentation)
 
-                Snackbar.make(scannerView, "✅ Presentation successfully generated!", Snackbar.LENGTH_LONG)
-                    .setBackgroundTint(Color.parseColor("#2E7D32"))
-                    .setTextColor(Color.WHITE)
-                    .show()
-
+                showSnack("✅ Presentation successfully generated!", ok = true)
+                statusText.text = "✅ Done!"
                 statusText.setTextColor(getColor(android.R.color.holo_green_dark))
 
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Snackbar.make(scannerView, "❌ Error generating presentation: ${e.localizedMessage}", Snackbar.LENGTH_LONG)
-                    .setBackgroundTint(Color.parseColor("#FF0000"))
-                    .setTextColor(Color.WHITE)
-                    .show()
-
+            } catch (t: Throwable) {
+                Log.e("VERIFIER", "generatePresentation failed", t)
+                showSnack("❌ Error generating presentation: ${t.localizedMessage ?: t}", ok = false)
+                statusText.text = "❌ Error: ${t.localizedMessage ?: t}"
                 statusText.setTextColor(getColor(android.R.color.holo_red_dark))
             } finally {
                 progressBar.visibility = View.GONE

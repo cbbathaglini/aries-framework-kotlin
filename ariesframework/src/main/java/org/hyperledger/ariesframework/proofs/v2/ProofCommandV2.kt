@@ -170,7 +170,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
                 agent.credentialExchangeRepository.getById(chosenCredentialId)
         }
 
-        // logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
+        logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
 
         val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
             proofRecordId = record.id,
@@ -185,6 +185,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             proofRecord = record,
             proofFormats = record.formats ?: emptyList(),
             requestedCredentials = requestedCredentials.toMap(),
+            chosenCredentialId = chosenCredential?.w3cCredentialId
         )
 
         val (message, _) = agent.proofServiceV2.acceptRequest(params)

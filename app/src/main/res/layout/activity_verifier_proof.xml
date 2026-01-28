@@ -77,6 +77,12 @@
             android:textColor="@android:color/white"
             android:backgroundTint="@color/teal_700"
             android:visibility="gone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="64dp" />
     </LinearLayout>
+
+
 
 </FrameLayout>

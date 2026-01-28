@@ -16,6 +16,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
+import org.hyperledger.ariesframework.cache.AsyncTtlCache
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
@@ -50,11 +51,18 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-    // Load configuration JSON path from Agent configuration
+    // TTLs (ajuste ao seu gosto)
+    private val rawSchemaCache =
+        AsyncTtlCache<String, uniffi.indy_besu_vdr.Schema>(ttlMillis = 10 * 60 * 1000L)
+    private val credDefCache = AsyncTtlCache<String, String>(ttlMillis = 10 * 60 * 1000L)
+    private val credDefVdrCache =
+        AsyncTtlCache<String, uniffi.indy_besu_vdr.CredentialDefinition>(ttlMillis = 10 * 60 * 1000L)
     private val configFilePath: String =
         agent.agentConfig.besuLedgerConfig?.configFile ?: "besu_config.json"
     private val isMultiLedger: Boolean =
         agent.agentConfig.besuLedgerConfig?.multiledger ?: false
+
+
 
     /**
      * Load JSON configuration for all networks and contracts.
@@ -202,37 +210,44 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getSchema(schemaId: String): Pair<String, Int> {
-        val client = ledgerClient ?: getLedgerClient(schemaId)
-            ?: throw Exception("Ledger not initialized")
+        val start = System.nanoTime()
+        logger.info("[CALL] getSchema(schemaId=$schemaId)")
 
-        val schema = resolveSchema(client, schemaId)
+        val schema = getRawSchema(schemaId)
         val seqNo = 0
-        val attrNames = schema.attrNames
-        val issuer = schema.issuerId
+
         val schemaMap = mapOf(
             "name" to JsonPrimitive(schema.name),
             "version" to JsonPrimitive(schema.version),
-            "issuerId" to JsonPrimitive(issuer),
-            "attrNames" to JsonArray(attrNames.map { JsonPrimitive(it) }),
+            "issuerId" to JsonPrimitive(schema.issuerId),
+            "attrNames" to JsonArray(schema.attrNames.map { JsonPrimitive(it) }),
         )
-        val schemaJson = Json.encodeToString(schemaMap)
-        return Pair(schemaJson, seqNo)
+
+        val result = Pair(Json.encodeToString(schemaMap), seqNo)
+
+        val ms = (System.nanoTime() - start) / 1_000_000
+        logger.info("[RETURN] getSchema(schemaId=$schemaId) took ${ms}ms")
+
+        return result
     }
 
     override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
-        val client = ledgerClient ?: getLedgerClient(schemaId)
-            ?: throw Exception("Ledger not initialized")
-        val schema = resolveSchema(client, schemaId)
-        val seqNo = 0
+        val start = System.nanoTime()
+        logger.info("[CALL] getSchemaObj(schemaId=$schemaId)")
 
-        val anonSchema = AnonCredsSchema(
+        val schema = getRawSchema(schemaId)
+
+        val result = AnonCredsSchema(
             issuerId = schema.issuerId,
             name = schema.name,
             version = schema.version,
             attrNames = schema.attrNames,
         )
 
-        return anonSchema
+        val ms = (System.nanoTime() - start) / 1_000_000
+        logger.info("[RETURN] getSchemaObj(schemaId=$schemaId) took ${ms}ms")
+
+        return result
     }
 
     override suspend fun getSchemas(
@@ -256,43 +271,82 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         throw Exception("registerCredentialDefinition not implemented for Besu")
     }
 
-    override suspend fun getCredentialDefinitionvVdr(credentialId: String): uniffi.indy_besu_vdr.CredentialDefinition {
-        val client = ledgerClient ?: getLedgerClient(credentialId)
+    override suspend fun getCredentialDefinitionvVdr(
+        credentialId: String
+    ): uniffi.indy_besu_vdr.CredentialDefinition {
+        val start = System.nanoTime()
+
+        val cached = credDefVdrCache.getIfFresh(credentialId)
+        if (cached != null) {
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE HIT] getCredentialDefinitionvVdr($credentialId) took ${ms}ms")
+            return cached
+        }
+
+        logger.info("[CACHE MISS] getCredentialDefinitionvVdr($credentialId) → fetching from ledger")
+
+        return credDefVdrCache.getOrLoad(credentialId) {
+            logger.info("[LEDGER CALL] resolveCredentialDefinition(vdr)($credentialId)")
+
+            val client = ledgerClient ?: getLedgerClient(credentialId)
             ?: throw Exception("Ledger not initialized")
 
-        try {
-            return resolveCredentialDefinition(client, credentialId)
-        } catch (e: Throwable) {
-            logger.error("error cred def >>> ${e.message}")
-            throw Exception("credential definition not found")
+            try {
+                val result = resolveCredentialDefinition(client, credentialId)
+
+                val ms = (System.nanoTime() - start) / 1_000_000
+                logger.info("[CACHE STORE] getCredentialDefinitionvVdr($credentialId) stored in cache (${ms}ms)")
+
+                result
+            } catch (e: Throwable) {
+                logger.error("error cred def >>> ${e.message}")
+                throw Exception("credential definition not found")
+            }
         }
     }
 
     override suspend fun getCredentialDefinition(credentialId: String): String {
-        val client = ledgerClient ?: getLedgerClient(credentialId)
-            ?: throw Exception("Ledger not initialized")
-        var credentialDefinition: uniffi.indy_besu_vdr.CredentialDefinition? = null
-        try {
-            credentialDefinition = resolveCredentialDefinition(client, credentialId)
-        } catch (e: Throwable) {
-            logger.error("error cred def >>> ${e.message}")
-        }
-        logger.info("credentialDefinition >>> $credentialDefinition")
+        val start = System.nanoTime()
 
-        val json = Json { ignoreUnknownKeys = true }
-        val innerJson = json.parseToJsonElement(credentialDefinition!!.value)
-        logger.info("innerJson >>> $innerJson")
-        val credDef = mapOf(
-            "issuerId" to JsonPrimitive(credentialDefinition!!.issuerId),
-            "schemaId" to JsonPrimitive(credentialDefinition!!.schemaId),
-            "type" to JsonPrimitive(credentialDefinition!!.credDefType),
-            "tag" to JsonPrimitive(credentialDefinition!!.tag),
-            "value" to innerJson,
-        )
-        logger.info("credDef >>> $credDef")
-        var encode: String = Json.encodeToString(credDef)
-        logger.info("encode >>> $encode")
-        return encode
+        val cached = credDefCache.getIfFresh(credentialId)
+        if (cached != null) {
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE HIT] getCredentialDefinition($credentialId) took ${ms}ms")
+            return cached
+        }
+
+        logger.info("[CACHE MISS] getCredentialDefinition($credentialId) → fetching from ledger")
+
+        return credDefCache.getOrLoad(credentialId) {
+            logger.info("[LEDGER CALL] resolveCredentialDefinition($credentialId)")
+
+            val client = ledgerClient ?: getLedgerClient(credentialId)
+            ?: throw Exception("Ledger not initialized")
+
+            val credentialDefinition = try {
+                resolveCredentialDefinition(client, credentialId)
+            } catch (e: Throwable) {
+                logger.error("error cred def >>> ${e.message}")
+                throw Exception("credential definition not found")
+            }
+
+            val innerJson = jsonIgnoreUnknown.parseToJsonElement(credentialDefinition.value)
+
+            val credDef = mapOf(
+                "issuerId" to JsonPrimitive(credentialDefinition.issuerId),
+                "schemaId" to JsonPrimitive(credentialDefinition.schemaId),
+                "type" to JsonPrimitive(credentialDefinition.credDefType),
+                "tag" to JsonPrimitive(credentialDefinition.tag),
+                "value" to innerJson,
+            )
+
+            val result = Json.encodeToString(credDef)
+
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE STORE] getCredentialDefinition($credentialId) stored in cache (${ms}ms)")
+
+            result
+        }
     }
 
     override suspend fun registerRevocationRegistryDefinition(
@@ -435,4 +489,40 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     fun close() {
         logger.warn("Do not call close on LedgerBesuService. It will be auto closed")
     }
+
+    private suspend fun getRawSchema(schemaId: String): uniffi.indy_besu_vdr.Schema {
+        val start = System.nanoTime()
+
+        val cached = rawSchemaCache.getIfFresh(schemaId)
+        if (cached != null) {
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE HIT][RAW] schemaId=$schemaId took ${ms}ms")
+            return cached
+        }
+
+        logger.info("[CACHE MISS][RAW] schemaId=$schemaId → fetching from ledger")
+
+        return rawSchemaCache.getOrLoad(schemaId) {
+            logger.info("[LEDGER CALL][RAW] resolveSchema($schemaId)")
+
+            val client = ledgerClient ?: getLedgerClient(schemaId)
+            ?: throw Exception("Ledger not initialized")
+
+            val schema = resolveSchema(client, schemaId)
+
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE STORE][RAW] schemaId=$schemaId stored (${ms}ms)")
+
+            schema
+        }
+    }
+
+    // cache functions
+    fun clearLedgerCaches() {
+        rawSchemaCache.clear()
+        credDefCache.clear()
+    }
+
+    fun invalidateSchema(schemaId: String) = rawSchemaCache.invalidate(schemaId)
+    fun invalidateCredDef(credDefId: String) = credDefCache.invalidate(credDefId)
 }

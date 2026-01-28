@@ -225,6 +225,7 @@ class AnoncredsProofFormatService(
                 ),
             )
 
+        logger.info("validateCredentialChosen: $chosenCredentialId")
         validateCredentialChosen(chosenCredentialId, requestJson)
 
         val anonCredsFormat = AnonCredsSelectedCredentials.convert(proofFormats)
