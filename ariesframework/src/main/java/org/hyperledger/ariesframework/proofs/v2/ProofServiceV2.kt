@@ -1035,7 +1035,6 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun updateState(proofRecord: ProofExchangeRecord, newState: ProofState) {
         proofRecord.state = newState
         val a = agent.proofRepository.findById(proofRecord.id)
-        logger.info("agent 00000: ${a?.state} ${a?.threadId}")
         agent.proofRepository.update(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
     }
@@ -1081,6 +1080,7 @@ class ProofServiceV2(val agent: Agent) {
             requestedCredentials.requestedPredicates[predicateName] = nonRevokedPredicates[0]
         }
 
+        logger.info("[RC] requestedCredentials: ${requestedCredentials}")
         return requestedCredentials
     }
 
@@ -1154,6 +1154,8 @@ class ProofServiceV2(val agent: Agent) {
         val retrieved = RetrievedCredentialsAnonCreds()
         retrieved.requestedAttributes.putAll(attrDeferred.awaitAll().toMap())
         retrieved.requestedPredicates.putAll(predDeferred.awaitAll().toMap())
+
+        logger.info("rrequestedAttributesssssssss >>> ${retrieved.requestedAttributes}")
         retrieved
     }
 

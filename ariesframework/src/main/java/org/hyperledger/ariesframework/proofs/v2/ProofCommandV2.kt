@@ -181,10 +181,12 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val requestedCredentials: RequestedCredentialsAnoncreds =
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
+        val requestedCredentialsMap = requestedCredentials.toMap()
+        logger.info("map requested: ${requestedCredentialsMap}")
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats ?: emptyList(),
-            requestedCredentials = requestedCredentials.toMap(),
+            requestedCredentials = requestedCredentialsMap,
             chosenCredentialId = chosenCredential?.w3cCredentialId
         )
 
@@ -221,6 +223,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val record = agent.proofRepository.getById(proofRecordId)
 
         val requestedCredentialsMap = requestedCredentials.toMap()
+        logger.info("map requested: ${requestedCredentialsMap}")
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats!!,
@@ -234,6 +237,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val connection = agent.connectionRepository.getById(record.connectionId)
 
         requestedCredentials.normalizeAllAttributes()
+        logger.info("requestedCredentials: ${requestedCredentials}")
 
         agent.historyRepository.save(
             HistoryRecord(

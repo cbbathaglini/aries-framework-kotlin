@@ -5,7 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
-public class AsyncTtlCache<K, V>(
+class RAMAsyncTtlCache<K, V>(
     private val ttlMillis: Long,
     private val nowMillis: () -> Long = { System.currentTimeMillis() },
 ) {

@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import anoncreds_uniffi.Issuer
 import indy_vdr_uniffi.Pool
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -16,7 +17,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
-import org.hyperledger.ariesframework.cache.AsyncTtlCache
+import org.hyperledger.ariesframework.cache.LedgerCacheDefaults
+import org.hyperledger.ariesframework.cache.DiskOnlyAsyncTtlCache
+import org.hyperledger.ariesframework.cache.RevRegDefDto
+import org.hyperledger.ariesframework.cache.LedgerCacheConfig // ✅ NEW
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
@@ -51,18 +55,105 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
-    // TTLs (ajuste ao seu gosto)
-    private val rawSchemaCache =
-        AsyncTtlCache<String, uniffi.indy_besu_vdr.Schema>(ttlMillis = 10 * 60 * 1000L)
-    private val credDefCache = AsyncTtlCache<String, String>(ttlMillis = 10 * 60 * 1000L)
-    private val credDefVdrCache =
-        AsyncTtlCache<String, uniffi.indy_besu_vdr.CredentialDefinition>(ttlMillis = 10 * 60 * 1000L)
+    private val DAY_MS = 24L * 60 * 60 * 1000
+
+    private val cacheCfg: LedgerCacheConfig by lazy {
+        LedgerCacheConfig.load(appContext, assetFileName = "config.properties")
+    }
+
+    private fun credDefTtlDaysFor(credDefId: String): Long =
+        cacheCfg.credDefTtlDaysById[credDefId]
+            ?: cacheCfg.credDefDefaultDays
+
+    private val credDefJsonCachesByDays =
+        mutableMapOf<Long, DiskOnlyAsyncTtlCache<String, String>>()
+
+    private fun credDefJsonCacheFor(credDefId: String): DiskOnlyAsyncTtlCache<String, String> {
+        val days = credDefTtlDaysFor(credDefId).coerceAtLeast(1L)
+        return credDefJsonCachesByDays.getOrPut(days) {
+            DiskOnlyAsyncTtlCache(
+                context = appContext,
+                cacheName = "${LedgerCacheDefaults.CRED_DEF_JSON}_$days",
+                ttlMillis = days * DAY_MS,
+                keyToString = { it },
+                valueSerializer = String.serializer(),
+            )
+        }
+    }
+
+    private val credDefVdrCachesByDays =
+        mutableMapOf<Long, DiskOnlyAsyncTtlCache<String, String>>()
+
+    private fun credDefVdrCacheFor(credDefId: String): DiskOnlyAsyncTtlCache<String, String> {
+        val days = credDefTtlDaysFor(credDefId).coerceAtLeast(1L)
+        return credDefVdrCachesByDays.getOrPut(days) {
+            DiskOnlyAsyncTtlCache(
+                context = appContext,
+                cacheName = "${LedgerCacheDefaults.CRED_DEF_VDR_JSON}_$days",
+                ttlMillis = days * DAY_MS,
+                keyToString = { it },
+                valueSerializer = String.serializer(),
+            )
+        }
+    }
+
+    private data class CredDefVdrCacheDto(
+        val issuerId: String,
+        val schemaId: String,
+        val credDefType: String,
+        val tag: String,
+        val value: String,
+    )
+
+    private fun toDto(v: uniffi.indy_besu_vdr.CredentialDefinition): CredDefVdrCacheDto =
+        CredDefVdrCacheDto(
+            issuerId = v.issuerId,
+            schemaId = v.schemaId,
+            credDefType = v.credDefType,
+            tag = v.tag,
+            value = v.value,
+        )
+
+    private fun fromDto(dto: CredDefVdrCacheDto): uniffi.indy_besu_vdr.CredentialDefinition =
+        uniffi.indy_besu_vdr.CredentialDefinition(
+            issuerId = dto.issuerId,
+            schemaId = dto.schemaId,
+            credDefType = dto.credDefType,
+            tag = dto.tag,
+            value = dto.value,
+        )
+
+    private val TTL_30_DAYS_MS = 30L * 24 * 60 * 60 * 1000
+
+    private val schemaJsonCache = DiskOnlyAsyncTtlCache<String, String>(
+        context = appContext,
+        cacheName = LedgerCacheDefaults.SCHEMA_JSON,
+        ttlMillis = TTL_30_DAYS_MS,
+        keyToString = { it },
+        valueSerializer = String.serializer(),
+    )
+
+    private val revRegDefCache: DiskOnlyAsyncTtlCache<String, RevRegDefDto> =
+        DiskOnlyAsyncTtlCache(
+            context = appContext,
+            cacheName = LedgerCacheDefaults.REG_DEF,
+            ttlMillis = TTL_30_DAYS_MS,
+            keyToString = { it },
+            valueSerializer = RevRegDefDto.serializer(),
+        )
+
+    private val tailsPathCache = DiskOnlyAsyncTtlCache<String, String>(
+        context = appContext,
+        cacheName = "tailsPath",
+        ttlMillis = TTL_30_DAYS_MS,
+        keyToString = { it },
+        valueSerializer = String.serializer(),
+    )
+
     private val configFilePath: String =
         agent.agentConfig.besuLedgerConfig?.configFile ?: "besu_config.json"
     private val isMultiLedger: Boolean =
         agent.agentConfig.besuLedgerConfig?.multiledger ?: false
-
-
 
     /**
      * Load JSON configuration for all networks and contracts.
@@ -213,35 +304,32 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val start = System.nanoTime()
         logger.info("[CALL] getSchema(schemaId=$schemaId)")
 
-        val schema = getRawSchema(schemaId)
+        val schemaJson = getRawSchemaJson(schemaId)
         val seqNo = 0
-
-        val schemaMap = mapOf(
-            "name" to JsonPrimitive(schema.name),
-            "version" to JsonPrimitive(schema.version),
-            "issuerId" to JsonPrimitive(schema.issuerId),
-            "attrNames" to JsonArray(schema.attrNames.map { JsonPrimitive(it) }),
-        )
-
-        val result = Pair(Json.encodeToString(schemaMap), seqNo)
 
         val ms = (System.nanoTime() - start) / 1_000_000
         logger.info("[RETURN] getSchema(schemaId=$schemaId) took ${ms}ms")
 
-        return result
+        return Pair(schemaJson, seqNo)
     }
 
     override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
         val start = System.nanoTime()
         logger.info("[CALL] getSchemaObj(schemaId=$schemaId)")
 
-        val schema = getRawSchema(schemaId)
+        val schemaJson = getRawSchemaJson(schemaId)
+        val obj = jsonIgnoreUnknown.parseToJsonElement(schemaJson).jsonObject
+
+        val issuerId = obj["issuerId"]!!.jsonPrimitive.content
+        val name = obj["name"]!!.jsonPrimitive.content
+        val version = obj["version"]!!.jsonPrimitive.content
+        val attrNames = obj["attrNames"]!!.jsonArray.map { it.jsonPrimitive.content }
 
         val result = AnonCredsSchema(
-            issuerId = schema.issuerId,
-            name = schema.name,
-            version = schema.version,
-            attrNames = schema.attrNames,
+            issuerId = issuerId,
+            name = name,
+            version = version,
+            attrNames = attrNames,
         )
 
         val ms = (System.nanoTime() - start) / 1_000_000
@@ -274,54 +362,61 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     override suspend fun getCredentialDefinitionvVdr(
         credentialId: String
     ): uniffi.indy_besu_vdr.CredentialDefinition {
-        val start = System.nanoTime()
 
-        val cached = credDefVdrCache.getIfFresh(credentialId)
+        val start = System.nanoTime()
+        val ttlDays = credDefTtlDaysFor(credentialId)
+        val cache = credDefVdrCacheFor(credentialId)
+
+        val cached = cache.getIfFresh(credentialId)
         if (cached != null) {
+            val dto = jsonIgnoreUnknown.decodeFromString<CredDefVdrCacheDto>(cached)
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE HIT] getCredentialDefinitionvVdr($credentialId) took ${ms}ms")
-            return cached
+            logger.info("[DISK CACHE HIT] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays took ${ms}ms")
+            return fromDto(dto)
         }
 
-        logger.info("[CACHE MISS] getCredentialDefinitionvVdr($credentialId) → fetching from ledger")
+        logger.info("[DISK CACHE MISS] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays → fetching from ledger")
 
-        return credDefVdrCache.getOrLoad(credentialId) {
-            logger.info("[LEDGER CALL] resolveCredentialDefinition(vdr)($credentialId)")
-
+        val json = cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
             ?: throw Exception("Ledger not initialized")
 
-            try {
-                val result = resolveCredentialDefinition(client, credentialId)
-
-                val ms = (System.nanoTime() - start) / 1_000_000
-                logger.info("[CACHE STORE] getCredentialDefinitionvVdr($credentialId) stored in cache (${ms}ms)")
-
-                result
+            val vdr = try {
+                resolveCredentialDefinition(client, credentialId)
             } catch (e: Throwable) {
-                logger.error("error cred def >>> ${e.message}")
+                logger.error("error cred def vdr >>> ${e.message}", e)
                 throw Exception("credential definition not found")
             }
+
+            val dtoJson = jsonIgnoreUnknown.encodeToString(toDto(vdr))
+
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[DISK CACHE STORE] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays stored (${ms}ms)")
+
+            dtoJson
         }
+
+        val dto = jsonIgnoreUnknown.decodeFromString<CredDefVdrCacheDto>(json)
+        return fromDto(dto)
     }
 
     override suspend fun getCredentialDefinition(credentialId: String): String {
         val start = System.nanoTime()
 
-        val cached = credDefCache.getIfFresh(credentialId)
+        val ttlDays = credDefTtlDaysFor(credentialId)
+        val cache = credDefJsonCacheFor(credentialId)
+
+        val cached = cache.getIfFresh(credentialId)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE HIT] getCredentialDefinition($credentialId) took ${ms}ms")
+            logger.info("[DISK CACHE HIT] getCredentialDefinition($credentialId) ttlDays=$ttlDays took ${ms}ms")
             return cached
         }
 
-        logger.info("[CACHE MISS] getCredentialDefinition($credentialId) → fetching from ledger")
+        logger.info("[DISK CACHE MISS] getCredentialDefinition($credentialId) ttlDays=$ttlDays → fetching from ledger")
 
-        return credDefCache.getOrLoad(credentialId) {
-            logger.info("[LEDGER CALL] resolveCredentialDefinition($credentialId)")
-
+        return cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
-            ?: throw Exception("Ledger not initialized")
 
             val credentialDefinition = try {
                 resolveCredentialDefinition(client, credentialId)
@@ -343,7 +438,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val result = Json.encodeToString(credDef)
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE STORE] getCredentialDefinition($credentialId) stored in cache (${ms}ms)")
+            logger.info("[DISK CACHE STORE] getCredentialDefinition($credentialId) ttlDays=$ttlDays stored (${ms}ms)")
 
             result
         }
@@ -359,7 +454,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     override suspend fun getRevocationRegistryDefinition(id: String): String {
         logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
         val client = ledgerClient ?: getLedgerClient(id)
-            ?: throw Exception("Ledger not initialized")
+        ?: throw Exception("Ledger not initialized")
         val revocationRD = resolveRevocationRegistryDefinition(client, id)
         logger.info("revocationrd: $revocationRD")
         val jsonObject = mapOf(
@@ -367,28 +462,67 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
             "credDefId" to JsonPrimitive(revocationRD.credDefId),
             "tag" to JsonPrimitive(revocationRD.tag),
-            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
+            "value" to Json.parseToJsonElement(revocationRD.value),
         )
 
         logger.info("revocationrd: $revocationRD")
         return Json.encodeToString(JsonObject(jsonObject))
     }
 
-    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): RevocationRegistryDefinition {
-        logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
-        val client = ledgerClient ?: getLedgerClient(id)
-            ?: throw Exception("Ledger not initialized")
-        // val revocationRD = resolveRevocationRegistryDefinition(this.ledgerBesu!!, id)
-//        logger.info("revocarionrd: ${revocationRD.toString()}")
-//        val jsonObject = mapOf(
-//            "issuerId" to JsonPrimitive(revocationRD.issuerId),
-//            "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
-//            "credDefId" to JsonPrimitive(revocationRD.credDefId),
-//            "tag" to JsonPrimitive(revocationRD.tag),
-//            "value" to Json.parseToJsonElement(revocationRD.value), // Agora tratado corretamente
-//        )
+    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(
+        id: String
+    ): RevocationRegistryDefinition {
+        val start = System.nanoTime()
+        logger.info("[CALL] getRevocationRegistryDefinitionIndyBesuLib(id=$id)")
 
-        return resolveRevocationRegistryDefinition(client, id)
+        val cached = revRegDefCache.getIfFresh(id)
+        if (cached != null) {
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE HIT] revRegDef($id) took ${ms}ms")
+
+            return RevocationRegistryDefinition(
+                issuerId = cached.issuerId,
+                revocDefType = cached.revocDefType,
+                credDefId = cached.credDefId,
+                tag = cached.tag,
+                value = cached.value,
+            )
+        }
+
+        logger.info("[CACHE MISS] revRegDef($id) → fetching from ledger")
+
+        val dto: RevRegDefDto = revRegDefCache.getOrLoad(id) {
+            logger.info("[LEDGER CALL] resolveRevocationRegistryDefinition($id)")
+
+            val client = ledgerClient ?: getLedgerClient(id)
+            ?: throw Exception("Ledger not initialized")
+
+            val rr = resolveRevocationRegistryDefinition(client, id)
+
+            val created = RevRegDefDto(
+                issuerId = rr.issuerId,
+                revocDefType = rr.revocDefType,
+                credDefId = rr.credDefId,
+                tag = rr.tag,
+                value = rr.value,
+            )
+
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE STORE] revRegDef($id) stored (${ms}ms)")
+
+            created
+        }
+
+        val ms = (System.nanoTime() - start) / 1_000_000
+        logger.info("[RETURN] revRegDef($id) took ${ms}ms")
+
+        return RevocationRegistryDefinition(
+            issuerId = dto.issuerId,
+            revocDefType = dto.revocDefType,
+            credDefId = dto.credDefId,
+            tag = dto.tag,
+            value = dto.value,
+        )
     }
 
     override suspend fun getRevocationRegistryDelta(
@@ -397,9 +531,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         from: Int,
     ): Pair<String, Int> {
         val client = ledgerClient ?: getLedgerClient(id)
-            ?: throw Exception("Ledger not initialized")
-
-        // val correct = "did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7/anoncreds/v0/REV_REG_DEF/did:ethr:0x16bfab61:0x6487221A2b1dc46c1CF1cE6B5420E91a28453AD7:identidade_v2:1.0:default/CL_ACCUM/0"
+        ?: throw Exception("Ledger not initialized")
 
         val def = resolveRevocationRegistryDefinition(
             client = client,
@@ -407,7 +539,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         )
         logger.info("def: $def")
         ensureRevRegId(id)
-        // val toSeconds = toSecondsULong(to.toLong())
 
         val revocationStatusList =
             resolveRevocationRegistryStatusListFull(
@@ -417,19 +548,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             )
 
         logger.info("rev status list: $revocationStatusList")
-        // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
         val revocationRegistryDelta = RevocationRegistryDelta(
-            // prevAccum = revocationStatusList.currentAccumulator,
             accum = revocationStatusList.currentAccumulator,
-            // issued = revocationDelta!!.issued.map { it.toInt() },
             revoked = revocationStatusList.revocationList.map { it.toInt() },
         )
         val deltaTimestamp = revocationStatusList.timestamp
         return Pair(revocationRegistryDelta.toJsonString(), deltaTimestamp.toInt())
     }
-
-    fun toSecondsULong(ts: Long): ULong =
-        if (ts > 10_000_000_000L) (ts / 1000L).toULong() else ts.toULong()
 
     fun ensureRevRegId(id: String) {
         require(
@@ -439,18 +564,16 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {
         val client = ledgerClient ?: getLedgerClient(id)
-            ?: throw Exception("Ledger not initialized")
+        ?: throw Exception("Ledger not initialized")
         val revocationStatusList = revocationStatusListFromString(
             resolveRevocationRegistryStatusList(
                 client,
                 id,
                 timestamp.toULong(),
             ),
-        ) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
+        )
         val revocationRegistryDelta = RevocationRegistryDelta(
-            // prevAccum = revocationStatusList.currentAccumulator,
             accum = revocationStatusList.currentAccumulator,
-            // issued = revocationDelta!!.issued.map { it.toInt() },
             revoked = revocationStatusList.revocationList.map { it.toInt() },
         )
         val deltaTimestamp = revocationStatusList.timestamp
@@ -462,24 +585,42 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         timestamp: ULong,
     ): uniffi.indy_besu_vdr.RevocationStatusList {
         val client = ledgerClient ?: getLedgerClient(id)
-            ?: throw Exception("Ledger not initialized")
-        val revocationStatusList: uniffi.indy_besu_vdr.RevocationStatusList =
-            resolveRevocationRegistryStatusListFull(
-                client,
-                id,
-                timestamp,
-
-            ) // val revocationDelta = fetchRevocationDelta(this.ledgerBesu!!, id,  to.toULong())
-
-        return revocationStatusList
+        ?: throw Exception("Ledger not initialized")
+        return resolveRevocationRegistryStatusListFull(
+            client,
+            id,
+            timestamp,
+        )
     }
 
     override suspend fun getTailsPath(): String {
-        val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
-        if (!tailsFolder.exists()) {
-            tailsFolder.mkdir()
+        val start = System.nanoTime()
+        logger.info("[CALL] getTailsPath()")
+
+        val cached = tailsPathCache.getIfFresh(LedgerCacheDefaults.TAILS_PATH)
+        if (cached != null) {
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[CACHE HIT] getTailsPath took ${ms}ms")
+            return cached
         }
-        return tailsFolder.path
+
+        logger.info("[CACHE MISS] getTailsPath → creating folder if needed")
+
+        val path = tailsPathCache.getOrLoad(LedgerCacheDefaults.TAILS_PATH) {
+            val tailsFolder = File(agent.context.filesDir, "tails")
+            if (!tailsFolder.exists()) {
+                tailsFolder.mkdir()
+                logger.info("[FS] tails directory created at ${tailsFolder.absolutePath}")
+            } else {
+                logger.info("[FS] tails directory already exists at ${tailsFolder.absolutePath}")
+            }
+            tailsFolder.absolutePath
+        }
+
+        val ms = (System.nanoTime() - start) / 1_000_000
+        logger.info("[CACHE STORE] getTailsPath stored (${ms}ms)")
+
+        return path
     }
 
     override suspend fun revokeCredential(did: DidInfo, credDefId: String, revocationIndex: Int) {
@@ -490,39 +631,57 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         logger.warn("Do not call close on LedgerBesuService. It will be auto closed")
     }
 
-    private suspend fun getRawSchema(schemaId: String): uniffi.indy_besu_vdr.Schema {
+    private suspend fun getRawSchemaJson(schemaId: String): String {
         val start = System.nanoTime()
 
-        val cached = rawSchemaCache.getIfFresh(schemaId)
+        val cached = schemaJsonCache.getIfFresh(schemaId)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE HIT][RAW] schemaId=$schemaId took ${ms}ms")
+            logger.info("[DISK CACHE HIT][SCHEMA] schemaId=$schemaId took ${ms}ms")
             return cached
         }
 
-        logger.info("[CACHE MISS][RAW] schemaId=$schemaId → fetching from ledger")
+        logger.info("[DISK CACHE MISS][SCHEMA] schemaId=$schemaId → fetching from ledger")
 
-        return rawSchemaCache.getOrLoad(schemaId) {
-            logger.info("[LEDGER CALL][RAW] resolveSchema($schemaId)")
+        return schemaJsonCache.getOrLoad(schemaId) {
+            logger.info("[LEDGER CALL][SCHEMA] resolveSchema($schemaId)")
 
             val client = ledgerClient ?: getLedgerClient(schemaId)
-            ?: throw Exception("Ledger not initialized")
-
             val schema = resolveSchema(client, schemaId)
 
-            val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE STORE][RAW] schemaId=$schemaId stored (${ms}ms)")
+            val schemaMap = mapOf(
+                "name" to JsonPrimitive(schema.name),
+                "version" to JsonPrimitive(schema.version),
+                "issuerId" to JsonPrimitive(schema.issuerId),
+                "attrNames" to JsonArray(schema.attrNames.map { JsonPrimitive(it) }),
+            )
 
-            schema
+            val json = Json.encodeToString(schemaMap)
+
+            val ms = (System.nanoTime() - start) / 1_000_000
+            logger.info("[DISK CACHE STORE][SCHEMA] schemaId=$schemaId stored (${ms}ms)")
+
+            json
         }
     }
 
     // cache functions
     fun clearLedgerCaches() {
-        rawSchemaCache.clear()
-        credDefCache.clear()
+        schemaJsonCache.clear()
+
+        credDefJsonCachesByDays.values.forEach { it.clear() }
+        credDefJsonCachesByDays.clear()
+
+        credDefVdrCachesByDays.values.forEach { it.clear() }
+        credDefVdrCachesByDays.clear()
+
+        revRegDefCache.clear()
+        tailsPathCache.clear()
     }
 
-    fun invalidateSchema(schemaId: String) = rawSchemaCache.invalidate(schemaId)
-    fun invalidateCredDef(credDefId: String) = credDefCache.invalidate(credDefId)
+    fun invalidateCredDef(credDefId: String) =
+        credDefJsonCacheFor(credDefId).invalidate(credDefId)
+
+    fun invalidateCredDefVdr(credDefId: String) =
+        credDefVdrCacheFor(credDefId).invalidate(credDefId)
 }
