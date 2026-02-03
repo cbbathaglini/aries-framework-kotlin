@@ -333,13 +333,11 @@ class ProofServiceV2(val agent: Agent) {
 
         var connection: ConnectionRecord? = null
 
-
-
         var requestMessage = requestMessage
         if (messageContext != null) {
             requestMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
             logger.info("[TAG100]messageContext.plaintextMessage: ${messageContext.plaintextMessage}")
-            logger.info("[TAG100]requestMessage: ${requestMessage}")
+            logger.info("[TAG100]requestMessage: $requestMessage")
             logger.debug("Processing proof request with id ${requestMessage.id}")
             connection = messageContext.connection
         }
@@ -1084,7 +1082,7 @@ class ProofServiceV2(val agent: Agent) {
             requestedCredentials.requestedPredicates[predicateName] = nonRevokedPredicates[0]
         }
 
-        logger.info("[RC] requestedCredentials: ${requestedCredentials}")
+        logger.info("[RC] requestedCredentials: $requestedCredentials")
         return requestedCredentials
     }
 

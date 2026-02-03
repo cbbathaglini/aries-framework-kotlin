@@ -14,6 +14,7 @@ import org.hyperledger.ariesframework.agent.AgentConfig
 import org.hyperledger.ariesframework.agent.AgentEvents
 import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.MediatorPickupStrategy
+import org.hyperledger.ariesframework.cache.CacheOperations
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOfferOptions
@@ -82,11 +83,16 @@ class WalletApp : Application() {
 
         agent = Agent(applicationContext, config)
         agent.initialize()
-
         walletOpened = true
 
-        // Log.d("demo", "Agent initialized")
+        //updateCache(agent)
+
+        Log.d("demo", "Agent initialized")
     }
+    suspend fun updateCache(agent: Agent) {
+        CacheOperations().updateCache(agent)
+    }
+
 
     override fun onCreate() {
         super.onCreate()

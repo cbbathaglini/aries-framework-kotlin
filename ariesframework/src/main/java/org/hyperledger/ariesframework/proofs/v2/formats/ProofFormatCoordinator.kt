@@ -263,7 +263,7 @@ class ProofFormatCoordinator(
                 null
             }
 
-            logger.info("accept chosenCredentialId: ${chosenCredentialId}")
+            logger.info("accept chosenCredentialId: $chosenCredentialId")
             val proofAccepted: ProofFormatCreateReturn = formatService.acceptRequest(
                 requestMessage = requestMessage,
                 proofFormats = proofFormats,

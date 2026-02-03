@@ -19,7 +19,6 @@ data class LedgerCacheConfig(
             context: Context,
             assetFileName: String = "config.properties",
         ): LedgerCacheConfig {
-
             val props = Properties()
 
             try {
@@ -27,7 +26,7 @@ data class LedgerCacheConfig(
                 logger.info("[CACHE CONFIG] Loaded $assetFileName from assets")
             } catch (e: Throwable) {
                 logger.warn(
-                    "[CACHE CONFIG] Could not load $assetFileName. Using defaults. err=${e.message}"
+                    "[CACHE CONFIG] Could not load $assetFileName. Using defaults. err=${e.message}",
                 )
             }
 
@@ -62,7 +61,7 @@ data class LedgerCacheConfig(
                     ?: 30L
 
             logger.info(
-                "[CACHE CONFIG] defaultDays=$defaultDays | credDefOverrides=${parsedMap.size} | schemaDays=$schemaDays | revRegDays=$revRegDays | tailsDays=$tailsDays"
+                "[CACHE CONFIG] defaultDays=$defaultDays | credDefOverrides=${parsedMap.size} | schemaDays=$schemaDays | revRegDays=$revRegDays | tailsDays=$tailsDays",
             )
 
             return LedgerCacheConfig(

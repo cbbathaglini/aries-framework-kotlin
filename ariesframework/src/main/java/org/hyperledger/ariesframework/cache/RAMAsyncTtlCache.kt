@@ -18,7 +18,9 @@ class RAMAsyncTtlCache<K, V>(
 
     fun getIfFresh(key: K): V? {
         val e = store[key] ?: return null
-        return if (nowMillis() < e.expiresAt) e.value else {
+        return if (nowMillis() < e.expiresAt) {
+            e.value
+        } else {
             store.remove(key, e)
             null
         }

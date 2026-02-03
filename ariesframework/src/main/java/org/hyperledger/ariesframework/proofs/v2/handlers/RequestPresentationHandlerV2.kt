@@ -39,7 +39,7 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
         val requestedCredentials: RequestedCredentialsAnoncreds = agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
         val mapRequested = requestedCredentials.toMap()
-        logger.info("map requested: ${mapRequested}")
+        logger.info("map requested: $mapRequested")
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats!!,
