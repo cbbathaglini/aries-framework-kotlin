@@ -7,6 +7,10 @@ import java.util.Properties
 data class LedgerCacheConfig(
     val credDefTtlDaysById: Map<String, Long>,
     val credDefDefaultDays: Long,
+
+    val schemaTtlDays: Long,
+    val revRegTtlDays: Long,
+    val tailsTtlDays: Long,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(LedgerCacheConfig::class.java)
@@ -39,13 +43,34 @@ data class LedgerCacheConfig(
 
             val parsedMap = parseCredDefTtlMap(rawMap)
 
+            val schemaDays =
+                props.getProperty("cache.schema.ttl.days", "30")
+                    .trim()
+                    .toLongOrNull()
+                    ?: 30L
+
+            val revRegDays =
+                props.getProperty("cache.revreg.ttl.days", "30")
+                    .trim()
+                    .toLongOrNull()
+                    ?: 30L
+
+            val tailsDays =
+                props.getProperty("cache.tails.ttl.days", "30")
+                    .trim()
+                    .toLongOrNull()
+                    ?: 30L
+
             logger.info(
-                "[CACHE CONFIG] defaultDays=$defaultDays | credDefOverrides=${parsedMap.size}"
+                "[CACHE CONFIG] defaultDays=$defaultDays | credDefOverrides=${parsedMap.size} | schemaDays=$schemaDays | revRegDays=$revRegDays | tailsDays=$tailsDays"
             )
 
             return LedgerCacheConfig(
                 credDefTtlDaysById = parsedMap,
                 credDefDefaultDays = defaultDays,
+                schemaTtlDays = schemaDays,
+                revRegTtlDays = revRegDays,
+                tailsTtlDays = tailsDays,
             )
         }
 

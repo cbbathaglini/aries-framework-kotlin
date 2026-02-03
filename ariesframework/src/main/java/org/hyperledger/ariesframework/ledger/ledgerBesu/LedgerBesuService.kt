@@ -123,12 +123,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             value = dto.value,
         )
 
-    private val TTL_30_DAYS_MS = 30L * 24 * 60 * 60 * 1000
-
     private val schemaJsonCache = DiskOnlyAsyncTtlCache<String, String>(
         context = appContext,
         cacheName = LedgerCacheDefaults.SCHEMA_JSON,
-        ttlMillis = TTL_30_DAYS_MS,
+        ttlMillis = cacheCfg.schemaTtlDays * DAY_MS,
         keyToString = { it },
         valueSerializer = String.serializer(),
     )
@@ -137,7 +135,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         DiskOnlyAsyncTtlCache(
             context = appContext,
             cacheName = LedgerCacheDefaults.REG_DEF,
-            ttlMillis = TTL_30_DAYS_MS,
+            ttlMillis = cacheCfg.revRegTtlDays * DAY_MS,
             keyToString = { it },
             valueSerializer = RevRegDefDto.serializer(),
         )
@@ -145,7 +143,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val tailsPathCache = DiskOnlyAsyncTtlCache<String, String>(
         context = appContext,
         cacheName = "tailsPath",
-        ttlMillis = TTL_30_DAYS_MS,
+        ttlMillis = cacheCfg.tailsTtlDays * DAY_MS,
         keyToString = { it },
         valueSerializer = String.serializer(),
     )
