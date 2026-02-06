@@ -339,6 +339,7 @@ class ProofServiceV2(val agent: Agent) {
             logger.info("[TAG100]messageContext.plaintextMessage: ${messageContext.plaintextMessage}")
             logger.info("[TAG100]requestMessage: $requestMessage")
             logger.debug("Processing proof request with id ${requestMessage.id}")
+            logger.info("[TAG100]messageContext.connection: ${messageContext.connection}")
             connection = messageContext.connection
         }
 

@@ -2,9 +2,7 @@ package org.hyperledger.ariesframework.cache
 
 import android.util.Log
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.proofs.v2.handlers.RequestPresentationHandlerV2
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class CacheOperations {
 
@@ -18,7 +16,7 @@ class CacheOperations {
         val credDefIds = all.mapNotNull { it.credentialDefinitionId }.toSet()
         val revRegIds = all.mapNotNull { it.revRegDefId }.toSet()
 
-        logger.info("-> schemaIds: ${schemaIds} |  credDefIds: ${credDefIds} |  revRegIds: ${revRegIds} ")
+        logger.info("-> schemaIds: $schemaIds |  credDefIds: $credDefIds |  revRegIds: $revRegIds ")
 
         for (schemaId in schemaIds) {
             runCatching { agent.ledgerService.getSchema(schemaId) }
@@ -37,5 +35,4 @@ class CacheOperations {
         runCatching { agent.ledgerService.getTailsPath() }
             .onFailure { e -> Log.w("Cache", "Falha getTailsPath(): ${e.message}", e) }
     }
-
 }
