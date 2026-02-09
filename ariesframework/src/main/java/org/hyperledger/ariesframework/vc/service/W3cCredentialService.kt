@@ -14,8 +14,6 @@ class W3cCredentialService(
     private val w3cJwtCredentialService: W3cJwtCredentialService,
 ) {
 
-    private val logger = LoggerFactory.getLogger(W3cCredentialService::class.java)
-
     /**
      * Writes a credential to storage
      *
@@ -24,7 +22,7 @@ class W3cCredentialService(
      */
     suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
         val expandedTypes: Map<String, List<String>> = w3cJsonLdCredentialService.getExpandedTypesForCredential(jsonLdVerifiableCredential)
-        PrintLongLine.print("verifiable: $jsonLdVerifiableCredential")
+        //PrintLongLine.print("verifiable: $jsonLdVerifiableCredential")
 
 //        val expandedTypes: Map<String, String> = mapOf("type" to "https://www.w3.org/2018/credentials#VerifiableCredential")
 //        logger.info("expandedTypes: ${expandedTypes.toString()}")
@@ -48,7 +46,7 @@ class W3cCredentialService(
             credential = w3cCredential,
         )
 
-        logger.info("w3cCredentialRecord =====> $w3cCredentialRecord")
+        //logger.info("w3cCredentialRecord =====> $w3cCredentialRecord")
         w3cCredentialRepository.save(w3cCredentialRecord)
         return w3cCredentialRecord
     }

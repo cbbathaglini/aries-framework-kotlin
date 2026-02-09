@@ -8,6 +8,7 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
 
@@ -17,9 +18,9 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = IssueCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("IssueCredentialHandlerV2 init")
+        LogUtil.info(this) { "issue credential - issue step" }
 
-        PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // aq ja tem o encode
+        //PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // aq ja tem o encode
         val credentialRecord = agent.credentialServiceV2.processCredential(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToCredential(
@@ -29,7 +30,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         if (shouldAutoRespond) {
             val message = acceptCredential(credentialRecord)
-            logger.info("message accepted: $message")
+            //logger.info("message accepted: $message")
             return OutboundMessage(message, messageContext.connection!!)
         }
 
@@ -37,7 +38,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     private suspend fun acceptCredential(credentialRecord: CredentialExchangeRecord): CredentialAckMessageV2 {
-        logger.info("Automatically sending acknowledgement with autoAccept")
+        //logger.info("Automatically sending acknowledgement with autoAccept")
 
         val (_, ackMessage) = agent.credentialServiceV2.acceptCredential(credentialRecord)
             ?: throw CredoError("Failed to accept credential for record ID ${credentialRecord.id}")
@@ -46,10 +47,8 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
             throw CredoError("No acknowledgement message found for credential record ID ${credentialRecord.id}")
         }
 
-        logger.info("Searching for request message")
         val request = agent.credentialServiceV2.findRequestMessage(credentialRecord.id)
             ?: throw CredoError("No request message found for credential record ID ${credentialRecord.id}")
-        logger.info("request: $request")
 
         return ackMessage
     }

@@ -1,10 +1,10 @@
 package org.hyperledger.ariesframework.agent
 
 import org.hyperledger.ariesframework.InboundMessageContext
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class Dispatcher(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(Dispatcher::class.java)
     var handlers = mutableMapOf<String, MessageHandler>()
 
     fun registerHandler(handler: MessageHandler) {
@@ -12,11 +12,8 @@ class Dispatcher(val agent: Agent) {
     }
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
-        logger.info("Dispatching message of type: ${messageContext.message.type}")
+        LogUtil.info(this) {"Dispatching message of type: ${messageContext.message.type}"}
 
-        // printDispatcherMessages(messageContext)
-
-        logger.info("message aaaa: ${messageContext.message}")
         val handler = handlers[messageContext.message.type]
             ?: throw Exception("No handler for message type: ${messageContext.message.type} - ${messageContext.plaintextMessage}")
 
@@ -24,27 +21,27 @@ class Dispatcher(val agent: Agent) {
             val outboundMessage = handler.handle(messageContext)
 
             if (outboundMessage != null) {
-                logger.debug("Finishing dispatch with message of type: ${outboundMessage.payload.type}")
+                LogUtil.info(this) {"Finishing dispatch with message of type: ${outboundMessage.payload.type}"}
                 agent.messageSender.send(outboundMessage)
             } else {
-                logger.debug("Finishing dispatch without response")
+                LogUtil.info(this) {"Finishing dispatch without response"}
             }
         } catch (e: Exception) {
-            logger.error("Failed to dispatch message of type: ${messageContext.message.type}")
+            LogUtil.error(this, e) {"Failed to dispatch message of type: ${messageContext.message.type}"}
             throw e
         }
     }
 
-    private fun printDispatcherMessages(messageContext: InboundMessageContext) {
-        logger.info("message: ${messageContext.message}")
-        logger.info("plaintextMessage: ${messageContext.plaintextMessage}")
-        logger.info("type of message: ${messageContext.message.type}")
-
-        logger.info("all handlers available -->")
-        handlers.forEach { (key, value) ->
-            logger.info("Type = $key, Handler = $value")
-        }
-    }
+//    private fun printDispatcherMessages(messageContext: InboundMessageContext) {
+//        logger.info("message: ${messageContext.message}")
+//        logger.info("plaintextMessage: ${messageContext.plaintextMessage}")
+//        logger.info("type of message: ${messageContext.message.type}")
+//
+//        logger.info("all handlers available -->")
+//        handlers.forEach { (key, value) ->
+//            logger.info("Type = $key, Handler = $value")
+//        }
+//    }
 
     fun getHandlerForType(messageType: String): MessageHandler? {
         return handlers[messageType]

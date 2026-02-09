@@ -7,7 +7,6 @@ import java.util.UUID
 class StoreCredential {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StoreCredential::class.java)
         fun getStoreCredentialOptions(
             options: StoreCredentialOptions,
             indyNamespace: String? = null,
@@ -18,10 +17,6 @@ class StoreCredential {
             val credential = options.credential
             val credentialDefinition = options.credentialDefinition
             var revocationRegistry: RevocationRegistryInfo? = options.revocationRegistry
-
-            logger.info("revocationRegistry>> $revocationRegistry")
-            logger.info("credentialDefinition>> $credentialDefinition")
-            logger.info("schema>> $schema")
 
             val credDefId =
                 if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialDefinitionId)) {
@@ -42,32 +37,28 @@ class StoreCredential {
                 } else {
                     credentialDefinition
                 }
-            logger.info("credDef>> $credDef")
+
             val schemaParam = if (Indyidentifiers.isUnqualifiedDidIndySchema(schema)) {
                 Indyidentifiers.getQualifiedDidIndySchema(schema, indyNamespace ?: "")
             } else {
                 schema
             }
 
-            logger.info("schemaParam>> $schemaParam")
-            // logger.info("revocationRegistry?.definition?: ${revocationRegistry?.definition?.toString()} ")
-            // logger.info("Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)>> ${Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(revocationRegistry?.definition!!)}")
-
             if (revocationRegistry != null) {
-                logger.info("revocationRegistry>> $revocationRegistry")
                 val a = revocationRegistry.definition
 
-                if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(a)) {
-                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(1) ${Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(a, indyNamespace ?: "")}")
-                } else {
-                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(2) $a")
-                }
+//                if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(a)) {
+//                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(1) ${Indyidentifiers.getQualifiedDidIndyRevocationRegistryDefinition(a, indyNamespace ?: "")}")
+//                } else {
+//                    logger.info("getQualifiedDidIndyRevocationRegistryDefinition(2) $a")
+//                }
 
-                if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
-                    logger.info("getQualifiedDidIndyDid(1) ${Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")}")
-                } else {
-                    logger.info("getQualifiedDidIndyDid(2) ${revocationRegistry.id}")
-                }
+//                if (Indyidentifiers.isUnqualifiedRevocationRegistryId(revocationRegistry.id)) {
+//                    logger.info("getQualifiedDidIndyDid(1) ${Indyidentifiers.getQualifiedDidIndyDid(revocationRegistry.id, indyNamespace ?: "")}")
+//                } else {
+//                    logger.info("getQualifiedDidIndyDid(2) ${revocationRegistry.id}")
+//                }
+
                 revocationRegistry.definition.let {
                     RevocationRegistryInfo(
                         definition = if (Indyidentifiers.isUnqualifiedDidIndyRevocationRegistryDefinition(it)) {
@@ -101,7 +92,6 @@ class StoreCredential {
                 revocationRegistry = revocationRegistry,
             )
 
-            logger.info("sotore: $options")
             return options
         }
     }

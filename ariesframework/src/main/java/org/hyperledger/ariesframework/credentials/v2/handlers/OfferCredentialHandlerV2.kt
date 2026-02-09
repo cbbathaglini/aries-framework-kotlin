@@ -8,6 +8,7 @@ import org.hyperledger.ariesframework.credentials.models.AcceptCredentialOfferOp
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
 
@@ -17,8 +18,8 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = OfferCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("OfferCredentialHandlerV2 init")
-        PrintLongLine.print("OfferCredentialHandlerV2 init: ${messageContext.plaintextMessage}")
+        LogUtil.info(this) { "issue credential - offer step" }
+
         val credentialRecord = agent.credentialServiceV2.processOffer(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToOffer(
@@ -28,7 +29,6 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         if (shouldAutoRespond) {
             val message = this.acceptOffer(credentialRecord)
-            logger.info("accept offer message =>> $message")
             return OutboundMessage(message, messageContext.connection!!)
         }
 
@@ -36,13 +36,13 @@ class OfferCredentialHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     private suspend fun acceptOffer(credentialRecord: CredentialExchangeRecord): RequestCredentialMessageV2 {
-        logger.info("Automatically sending request with autoAccept")
+        //logger.info("Automatically sending request with autoAccept")
 
         val acceptCredentialOfferOptions = AcceptCredentialOfferOptionsV2(
             credentialExchangeRecord = credentialRecord,
         )
         val (credentialExchange, requestCredentialMessageV2) = agent.credentialServiceV2.acceptOffer(acceptCredentialOfferOptions)
-        logger.info("requestCredentialMessageV2 =>> $requestCredentialMessageV2")
+        //logger.info("requestCredentialMessageV2 =>> $requestCredentialMessageV2")
 
         return requestCredentialMessageV2
     }

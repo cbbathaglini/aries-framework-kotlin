@@ -7,15 +7,16 @@ import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.Routing
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class MessageReceiver(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(MessageReceiver::class.java)
 
     suspend fun receiveMessage(encryptedMessage: EncryptedMessage) {
         try {
             val decryptedMessage = agent.wallet.unpack(encryptedMessage)
-            logger.info("decrypted message: $decryptedMessage")
+            LogUtil.info(this) { "decrypted message: $decryptedMessage" }
+
             val message = MessageSerializer.decodeFromString(decryptedMessage.plaintextMessage)
             val connection = findConnection(decryptedMessage, message)
             val messageContext = InboundMessageContext(
@@ -28,12 +29,11 @@ class MessageReceiver(val agent: Agent) {
 
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
-            logger.error("failed to receive message: $e")
+            LogUtil.error(this, e) { "failed to receive message: ${e.message}" }
         }
     }
 
     suspend fun receivePlaintextMessage(plaintextMessage: String, connection: ConnectionRecord) {
-        logger.info("receivePlaintextMessage method")
         try {
             val message = MessageSerializer.decodeFromString(plaintextMessage)
             val messageContext = InboundMessageContext(
@@ -45,12 +45,11 @@ class MessageReceiver(val agent: Agent) {
             )
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
-            logger.error("[2]failed to receive message: $e")
+            LogUtil.error(this, e) { "failed to receive message: ${e.message}" }
         }
     }
 
     private suspend fun findConnection(decryptedMessage: DecryptedMessageContext, message: AgentMessage): ConnectionRecord? {
-        logger.info("findConnection method")
         var connection = findConnectionByMessageKeys(decryptedMessage)
         if (connection == null) {
             connection = findConnectionByMessageThreadId(message)
@@ -62,7 +61,6 @@ class MessageReceiver(val agent: Agent) {
     }
 
     private suspend fun findConnectionByMessageThreadId(message: AgentMessage): ConnectionRecord? {
-        logger.info("findConnectionByMessageThreadId method")
         val pthId = message.thread?.parentThreadId ?: ""
         val oobRecord = agent.outOfBandService.findByInvitationId(pthId)
         val invitationKey = oobRecord?.outOfBandInvitation?.invitationKey() ?: ""
@@ -90,15 +88,14 @@ class MessageReceiver(val agent: Agent) {
     }
 
     private suspend fun findConnectionByMessageKeys(decryptedMessage: DecryptedMessageContext): ConnectionRecord? {
-        logger.info("findConnectionByMessageKeys method")
-        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey}")
-        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey}")
+//        logger.info("findConnectionByMessageKeys method")
+//        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey}")
+//        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey}")
 
         val conn = agent.connectionService.findByKeys(
             decryptedMessage.senderKey ?: "",
             decryptedMessage.recipientKey ?: "",
         )
-        logger.info("conn: $conn")
 
         return conn
     }

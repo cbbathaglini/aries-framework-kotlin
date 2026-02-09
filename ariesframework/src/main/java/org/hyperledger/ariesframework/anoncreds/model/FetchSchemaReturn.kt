@@ -15,12 +15,9 @@ data class FetchSchemaReturn(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(FetchSchemaReturn::class.java)
 
         fun fromJson(jsonElementSchema: JsonElement, schemaId: String): FetchSchemaReturn {
             val objectSchema = jsonElementSchema.jsonObject
-
-            logger.info("objectSchema $objectSchema")
 
             val attrNamesList: List<String> = objectSchema["attrNames"]
                 ?.jsonArray // Ensure it's a JsonArray

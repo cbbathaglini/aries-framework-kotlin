@@ -11,6 +11,7 @@ import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.toJsonString
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
@@ -89,12 +90,12 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun findByQuery(query: String): List<T> {
         return try {
-            logger.info("find by query: $query")
+            LogUtil.info(this) { "find by query: $query" }
             val scan = wallet.store!!.scan(null, type.simpleName!!, query, null, null)
             val records = scan.fetchAll()
             records.map { recordToInstance(it) }
         } catch (e: Exception) {
-            logger.debug("Query $query failed with error: ${e.message}")
+            LogUtil.error(this) { "Query $query failed with error: ${e.message}" }
             emptyList()
         }
     }

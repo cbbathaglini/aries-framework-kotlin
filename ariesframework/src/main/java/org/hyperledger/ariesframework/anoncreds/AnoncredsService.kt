@@ -9,7 +9,6 @@ import org.hyperledger.ariesframework.toJsonString
 import org.slf4j.LoggerFactory
 
 class AnoncredsService(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(AnoncredsService::class.java)
     private val secretCategory = "link-secret-category"
 
     suspend fun createLinkSecret(): String {

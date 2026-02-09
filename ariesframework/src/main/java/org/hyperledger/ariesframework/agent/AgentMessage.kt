@@ -14,6 +14,7 @@ import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
 import org.hyperledger.ariesframework.agent.decorators.TransportDecorator
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import kotlin.reflect.KClass
@@ -88,18 +89,17 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     @OptIn(ExperimentalSerializationApi::class)
     override fun selectDeserializer(element: JsonElement): KSerializer<AgentMessage> {
         val type = element.jsonObject["@type"]?.jsonPrimitive?.content
-        logger.info(" ==>>>> serializers: $serializers")
-        logger.info("type: $type")
+        LogUtil.info(this) { "type of message: $type" }
 
         return serializers[type] ?: run {
-            logger.error("Message type $type is not registered for JSON decoding")
+            LogUtil.error(this) { "Message type $type is not registered for JSON decoding" }
             serializer<AgentMessage>() // <- em vez de AgentMessage.serializer()
         }
     }
 
     fun encodeToString(message: AgentMessage): String {
         if (!serializers.containsKey(message.type)) {
-            logger.error("Message type ${message.type} is not registered for JSON encoding")
+            LogUtil.error(this) { "Message type ${message.type} is not registered for JSON encoding" }
             return Json.encodeToString(message)
         }
         return encoder.encodeToString(serializers[message.type]!!, message)

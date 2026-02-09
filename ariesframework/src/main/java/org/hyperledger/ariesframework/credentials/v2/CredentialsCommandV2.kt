@@ -12,10 +12,13 @@ import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOff
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
+import org.hyperledger.ariesframework.util.LogUtil
+import org.hyperledger.ariesframework.util.Session
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
-    private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
+    //private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
 
     /**
      * Initiate a new credential exchange as holder by sending a credential proposal message
@@ -42,9 +45,11 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      *
      */
     suspend fun negotiateProposal(options: NegotiateCredentialProposalOptions): CredentialExchangeRecord {
+        LogUtil.info(this) { "negotiate proposal" }
         val credentialExchangeRecord = getById(options.credentialExchangeRecord.id)
 
         if (credentialExchangeRecord.connectionId == null) {
+            LogUtil.error(this) { "No connection id for credential record ${credentialExchangeRecord.id} not found. Connection-less issuance does not support negotiation" }
             throw CredoError("No connection id for credential record ${credentialExchangeRecord.id} not found. Connection-less issuance does not support negotiation")
         }
 
@@ -65,8 +70,8 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
      * @returns Credential exchange record associated with the sent credential offer message
      */
     suspend fun offerCredential(options: OfferCredentialOptions): CredentialExchangeRecord {
+        LogUtil.info(this) { "offer credential" }
         val connectionRecord = agent.connectionService.getById(options.connectionId)
-        logger.debug("Got a credentialProtocol object for version ${options.protocolVersion}")
 
         val createOfferCredentialOptions =
             org.hyperledger.ariesframework.credentials.models.CreateCredentialOfferOptionsV2(
@@ -78,16 +83,19 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
                 connectionRecord = connectionRecord,
             )
         val (credentialExchangeRecord, offerCredentialMessageV2) = agent.credentialServiceV2.createOffer(createOfferCredentialOptions)
-        logger.debug("Offer Message successfully created; message= $offerCredentialMessageV2")
+        LogUtil.info(this) { "Offer Message successfully created; message= $offerCredentialMessageV2" }
 
         agent.messageSender.send(OutboundMessage(offerCredentialMessageV2, connectionRecord))
+        LogUtil.info(this) { "credential offered" }
         return credentialExchangeRecord
     }
 
     suspend fun negotiateOffer(options: NegotiateCredentialOfferOptions): CredentialExchangeRecord {
+        LogUtil.info(this) { "negotiate offer" }
         val credentialExchangeRecord = getById(options.credentialExchangeRecord.id)
 
         if (credentialExchangeRecord.connectionId == null) {
+            LogUtil.error(this) { "No connection id for credential record ${credentialExchangeRecord.id} not found. Connection-less issuance does not support negotiation" }
             throw CredoError("No connection id for credential record ${credentialExchangeRecord.id} not found. Connection-less issuance does not support negotiation")
         }
 
@@ -99,6 +107,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
         )
 
         agent.messageSender.send(OutboundMessage(proposeCredentialMessageV2, connectionRecord))
+        LogUtil.info(this) { "offer negotiated" }
         return credentialExchangeRecord
     }
 
@@ -115,12 +124,15 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): CredentialExchangeRecord {
+        LogUtil.info(this){ "accepting offer" }
         val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
+        LogUtil.info(this){ "connection: ${credentialExchange.connectionId!!}"}
         val connectionRecord =
             agent.connectionRepository.getById(credentialExchange.connectionId!!)
 
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
+        LogUtil.info(this){ "saving history" }
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.CredentialOfferAccepted.name,
@@ -132,6 +144,7 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
             ),
         )
 
+        LogUtil.info(this) { "offer accepted and history type [${HistoryType.CredentialOfferAccepted}] saved" }
         return credentialExchange
     }
 

@@ -12,14 +12,12 @@ import org.slf4j.LoggerFactory
  */
 class AnonCredsRegistryService(val agent: Agent) {
 
-    private val logger = LoggerFactory.getLogger(AnonCredsRegistryService::class.java)
-
     fun getRegistryForIdentifier(identifier: String): AnonCredsRegistry {
         val registries = agent.anoncredsmodulesconfig.registries
-        logger.info("registries: $registries") // only the "ethr"
+        //logger.info("registries: $registries") // only the "ethr"
 
         val registry = registries.find { it.supportedIdentifier.matches(identifier) }
-        logger.info("registry: $registry")
+        //logger.info("registry: $registry")
 
         return registry ?: throw AnonCredsError("No AnonCredsRegistry registered for identifier '$identifier'")
     }

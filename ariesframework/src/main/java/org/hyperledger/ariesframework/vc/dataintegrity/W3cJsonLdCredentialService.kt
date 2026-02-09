@@ -13,13 +13,11 @@ class W3cJsonLdCredentialService(
     private val context: Context,
 
 ) {
-    private val logger = LoggerFactory.getLogger(W3cJsonLdCredentialService::class.java)
     private val appContext: Context = context.applicationContext
 
     suspend fun getExpandedTypesForCredential(
         credential: W3cJsonLdVerifiableCredential,
     ): Map<String, List<String>> {
-        logger.info("credential2 => $credential")
 
         val contextList = credential.context
         val types = credential.type

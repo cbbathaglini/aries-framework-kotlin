@@ -23,6 +23,7 @@ import org.hyperledger.ariesframework.credentials.v2.models.CredentialPreviewV2
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
 
@@ -33,9 +34,9 @@ class CredentialFormatCoordinator(
         LegacyIndyCredentialFormatService(agent = agent),
     ),
 ) {
-    private val logger = LoggerFactory.getLogger(CredentialFormatCoordinator::class.java)
 
     suspend fun createProposal(params: CreateProposalParams): ProposeCredentialMessageV2 {
+        LogUtil.info(this) { "creating proposal" }
         val (credentialFormats, formatServices, credentialRecord, comment, goalCode, goal) = params
 
         val formats = mutableListOf<Format>()
@@ -81,6 +82,7 @@ class CredentialFormatCoordinator(
             agentMessage = message,
             associatedRecordId = credentialRecord.id,
         )
+        LogUtil.info(this) { "proposal created" }
         return message
     }
 
@@ -89,6 +91,7 @@ class CredentialFormatCoordinator(
         message: ProposeCredentialMessageV2,
         formatServices: List<CredentialFormatService<*>>,
     ) {
+        LogUtil.info(this) { "process proposal" }
         for (formatService in formatServices) {
             val attachment = getAttachmentForService(
                 credentialFormatService = formatService,
@@ -107,9 +110,11 @@ class CredentialFormatCoordinator(
             role = DidCommMessageRole.Receiver,
             associatedRecordId = credentialExchangeRecord.id,
         )
+        LogUtil.info(this) { "processed proposal" }
     }
 
     suspend fun acceptProposal(acceptProposalParams: AcceptProposalParams): OfferCredentialMessageV2 {
+        LogUtil.info(this) { "accepting proposal" }
         val credentialExchangeRecord = acceptProposalParams.credentialRecord
 
         val formats = mutableListOf<Format>()
@@ -175,6 +180,7 @@ class CredentialFormatCoordinator(
             associatedRecordId = credentialExchangeRecord.id,
         )
 
+        LogUtil.info(this) { "proposal accepted" }
         return message
     }
 
@@ -186,6 +192,7 @@ class CredentialFormatCoordinator(
      *
      */
     suspend fun createOffer(params: CreateCredentialParams): OfferCredentialMessageV2 {
+        LogUtil.info(this) { "creating offer" }
         val formats = mutableListOf<Format>()
         val offerAttachments = mutableListOf<Attachment>()
         var credentialPreview: CredentialPreviewV2? = null
@@ -234,11 +241,12 @@ class CredentialFormatCoordinator(
             associatedRecordId = credentialExchangeRecord.id,
         )
 
+        LogUtil.info(this) { "offer created" }
         return message
     }
 
     suspend fun processOffer(processOfferParams: ProcessOfferParams) {
-        logger.info("processing offer: $processOfferParams")
+        LogUtil.info(this) { "processing offer ${processOfferParams}" }
         val credentialExchangeRecord = processOfferParams.credentialExchangeRecord
         val formatServices = processOfferParams.formatService
         val message = processOfferParams.message
@@ -254,12 +262,13 @@ class CredentialFormatCoordinator(
             agentMessage = message,
             associatedRecordId = credentialExchangeRecord.id,
         )
-        logger.info("savedOrUpdatedAgentMessage")
+        LogUtil.info(this) { "offer processed" }
     }
 
     suspend fun acceptOffer(params: AcceptOfferParams): RequestCredentialMessageV2 {
+        LogUtil.info(this) { "accepting offer" }
         val credentialExchangeRecord = params.credentialRecord
-        logger.info("credentialExchangeRecord: $credentialExchangeRecord")
+        LogUtil.info(this) { "credential = ${credentialExchangeRecord.logSummary()}" }
 
         val formats = mutableListOf<Format>()
         val requestAttachment = mutableListOf<Attachment>()
@@ -271,8 +280,6 @@ class CredentialFormatCoordinator(
                 messageType = OfferCredentialMessageV2.type,
                 role = DidCommMessageRole.Receiver,
             ) ?: throw CredoError("Offer message not found")
-
-        logger.info("formatServices: $formatServices")
 
         var service: CredentialFormatService<*>? = null
         for (format in offerMessage.formats) {
@@ -294,7 +301,6 @@ class CredentialFormatCoordinator(
                 formats.add(acceptedOffer.format)
                 requestAppendAttachments.addAll(acceptedOffer.appendAttachment ?: emptyList())
 
-                logger.info("credentialExchangeRecord ====>> $credentialExchangeRecord")
             }
         }
 
@@ -308,8 +314,6 @@ class CredentialFormatCoordinator(
             goal = params.goal,
             comment = params.comment,
         )
-        logger.info("requestMessage created: $requestMessage")
-        logger.info("credentialExchangeRecord.credentialAttributes: ${credentialExchangeRecord.credentialAttributes}")
 
         requestMessage.setThread(
             threadId = credentialExchangeRecord.threadId,
@@ -321,8 +325,8 @@ class CredentialFormatCoordinator(
             agentMessage = requestMessage,
             associatedRecordId = credentialExchangeRecord.id,
         )
-        logger.info("saveOrUpdateAgentMessage in acceptoffer credentialformatcoordinator")
 
+        LogUtil.info(this) { "offer accepted" }
         return requestMessage
     }
 
@@ -338,17 +342,16 @@ class CredentialFormatCoordinator(
      *
      */
     suspend fun createRequest(params: RequestCredentialParams): RequestCredentialMessageV2 {
+        LogUtil.info(this) { "creating request" }
         val credentialExchangeRecord = params.credentialRecord
         val formats = mutableListOf<Format>()
         val requestAttachment = mutableListOf<Attachment>()
 
-        logger.info("-create request-")
         for (formatService in formatServices) {
             val credentialFormatCreateReturn = formatService.createRequest(
                 credentialFormats = params.credentialFormats,
                 credentialExchangeRecord = params.credentialRecord,
             )
-            logger.info("credentialFormatCreateReturn: $credentialFormatCreateReturn")
             requestAttachment.add(credentialFormatCreateReturn.attachment)
             formats.add(credentialFormatCreateReturn.format)
         }
@@ -372,10 +375,12 @@ class CredentialFormatCoordinator(
             associatedRecordId = credentialExchangeRecord.id,
         )
 
+        LogUtil.info(this) { "request created" }
         return requestCredentialMessageV2
     }
 
     suspend fun processRequest(params: ProcessRequestParams) {
+        LogUtil.info(this) { "processing request" }
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
         val requestMessage = params.message
@@ -397,9 +402,12 @@ class CredentialFormatCoordinator(
             agentMessage = requestMessage,
             associatedRecordId = credentialExchangeRecord.id,
         )
+
+        LogUtil.info(this) { "request processed" }
     }
 
     suspend fun acceptRequest(params: AcceptRequestParams): IssueCredentialMessageV2 {
+        LogUtil.info(this) { "accepting request" }
         val credentialExchangeRecord = params.credentialExchangeRecord
         val credentialFormats = params.credentialFormat
 
@@ -466,6 +474,7 @@ class CredentialFormatCoordinator(
             associatedRecordId = credentialExchangeRecord.id,
         )
 
+        LogUtil.info(this) { "request accepted" }
         return issueMessage
     }
 
@@ -481,21 +490,17 @@ class CredentialFormatCoordinator(
      *
      */
     suspend fun processCredential(params: ProcessCredentialParams) {
+        LogUtil.info(this) { "process credential ${params}" }
         val issueMessage = params.message
-        logger.info("issue message >> $issueMessage")
-        logger.info("issue message >> ${issueMessage.formats.first()}")
-        logger.info("issue message >> ${issueMessage.credentialAttachments.first()}")
         val requestMessage = params.requestCredentialMessageV2
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
 
-        logger.info(
-            "credentialExchange AnonCredsCredentialRequestMetadataKey => ${
-                credentialExchangeRecord.metadata.get(
-                    MetadataKeys.AnonCredsCredentialRequestMetadataKey,
-                )
-            }",
-        )
+        LogUtil.info(this) { "credentialExchange AnonCredsCredentialRequestMetadataKey => ${
+            credentialExchangeRecord.metadata.get(
+                MetadataKeys.AnonCredsCredentialRequestMetadataKey,
+            )
+        }" }
 
         val offerMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
@@ -510,21 +515,19 @@ class CredentialFormatCoordinator(
                 formats = offerMessage.formats,
                 attachments = offerMessage.offerAttachments,
             )
-            logger.info("offerAttachment: $offerAttachment")
 
             val issueAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = issueMessage.formats,
                 attachments = issueMessage.credentialAttachments,
             )
-            PrintLongLine.print("issueAttachment enco: $issueAttachment")
+            //PrintLongLine.print("issueAttachment enco: $issueAttachment")
 
             val requestAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = requestMessage.formats,
                 attachments = requestMessage.requestAttachments,
             )
-            logger.info("requestAttachment: $requestAttachment")
 
             formatService.processCredential(
                 attachment = issueAttachment,
@@ -540,6 +543,8 @@ class CredentialFormatCoordinator(
             agentMessage = issueMessage,
             associatedRecordId = credentialExchangeRecord.id,
         )
+
+        LogUtil.info(this) { "credential processed" }
     }
 
     /*
@@ -554,7 +559,6 @@ class CredentialFormatCoordinator(
         val attachmentId = getAttachmentIdForService(credentialFormatService, formats)
         val attachment = attachments.find { it.id == attachmentId }
             ?: throw CredoError("Attachment with id $attachmentId not found in attachments.")
-        logger.info("attttt: ${attachment.data}")
         return attachment
     }
 

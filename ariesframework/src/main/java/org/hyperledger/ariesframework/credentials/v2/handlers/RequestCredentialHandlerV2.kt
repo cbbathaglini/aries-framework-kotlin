@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.RequestCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
@@ -17,7 +18,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = RequestCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("RequestCredentialHandlerV2 init")
+        LogUtil.info(this) { "issue credential - request step" }
         val credentialRecord = agent.credentialServiceV2.processRequest(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToRequest(
@@ -34,7 +35,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     private suspend fun acceptRequest(credentialRecord: CredentialExchangeRecord): IssueCredentialMessageV2 {
-        logger.info("Automatically sending credential with autoAccept")
+        //logger.info("Automatically sending credential with autoAccept")
 
         val offerMessage = agent.credentialServiceV2.findOfferMessage(credentialRecord.id)
         if (offerMessage == null) {

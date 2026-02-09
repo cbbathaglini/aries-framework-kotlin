@@ -25,6 +25,7 @@ import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
@@ -47,7 +48,6 @@ import java.io.File
  * Contract addresses and specs are loaded from a JSON configuration file.
  */
 class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
-    private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
     private val appContext: Context = context.applicationContext
     private var pool: Pool? = null
     private var ledgerClient: LedgerClient? = null
@@ -157,7 +157,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
      * Load JSON configuration for all networks and contracts.
      */
     private fun loadLedgerConfig(): JsonObject {
-        logger.info("Loading ledger configuration from $configFilePath")
+        LogUtil.info(this) { "Loading ledger configuration from $configFilePath" }
         val inputStream = appContext.assets.open(configFilePath.trimStart('/'))
         val content = inputStream.bufferedReader().use { it.readText() }
         return Json.parseToJsonElement(content).jsonObject
@@ -185,7 +185,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 val spec = ContractSpec(contractName, abi)
                 contracts.add(ContractConfig(address = address, specPath = null, spec = spec))
             } catch (e: Exception) {
-                logger.error("Failed to load contract spec from $specPath: ${e.message}")
+                LogUtil.error(this, e) { "Failed to load contract spec from $specPath: ${e.message}" }
             }
         }
         return contracts
@@ -196,10 +196,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun initialize() {
-        logger.info("Initializing Besu Ledger Service...")
+        LogUtil.info(this) { "Initializing Besu Ledger Service..." }
 
         if (pool != null) {
-            logger.warn("Pool already initialized.")
+            LogUtil.warn(this) { "Pool already initialized" }
             return
         }
 
@@ -211,16 +211,16 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
         // Se não for multiledger, considera apenas a primeira rede
         val targetNetworks = if (isMultiLedger) {
-            logger.info("Multiledger mode enabled: loading all ${networksArray.size} networks")
+            LogUtil.info(this) { "Multiledger mode enabled: loading all ${networksArray.size} networks" }
             networksArray
         } else {
-            logger.info("Single-ledger mode enabled: using only the first network entry")
+            LogUtil.info(this) { "Single-ledger mode enabled: using only the first network entry" }
             listOf(networksArray.first())
         }
 
         for (networkElement in targetNetworks) {
             if (networkElement !is JsonObject) {
-                logger.warn("Skipping invalid network entry (not an object)")
+                LogUtil.warn(this) { "Skipping invalid network entry (not an object)" }
                 continue
             }
 
@@ -229,26 +229,26 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val chainIdStr = networkElement["chainId"]?.jsonPrimitive?.contentOrNull
             val chainId = chainIdStr?.toULongOrNull()
             if (chainId == null) {
-                logger.warn("Network $networkName has no valid 'chainId', skipping")
+                LogUtil.warn(this) { "Network $networkName has no valid 'chainId', skipping" }
                 continue
             }
 
             val nodeAddress = networkElement["nodeAddress"]?.jsonPrimitive?.contentOrNull
             if (nodeAddress == null) {
-                logger.warn("Network $networkName has no valid 'nodeAddress', skipping")
+                LogUtil.warn(this) { "Network $networkName has no valid 'nodeAddress', skipping" }
                 continue
             }
 
             val contractsElem = networkElement["contracts"]
             val contractsSection = if (contractsElem is JsonObject) contractsElem else null
             if (contractsSection == null) {
-                logger.warn("Network $networkName has no 'contracts' section, skipping")
+                LogUtil.warn(this) { "Network $networkName has no 'contracts' section, skipping" }
                 continue
             }
 
             val contractConfigs = loadContractConfigsForNetwork(contractsSection)
 
-            logger.info("Loaded ${contractConfigs.size} contracts for network $networkName")
+            LogUtil.info(this) { "Loaded ${contractConfigs.size} contracts for network $networkName" }
 
             val ledgerConfig = LedgerConfiguration(
                 chainId = chainId,
@@ -267,7 +267,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
         if (isMultiLedger) {
             ledgerRouter = LedgerRouter(clients.toList())
-            logger.info("LedgerRouter initialized with ${clients.size} networks.")
+            LogUtil.info(this) { "LedgerRouter initialized with ${clients.size} networks." }
         } else {
             val firstConfig = clients.first()
             ledgerClient = LedgerClient(
@@ -277,7 +277,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 network = firstConfig.network,
                 quorumConfig = null,
             )
-            logger.info("LedgerClient initialized in single-ledger mode (network=${firstConfig.network}).")
+            LogUtil.info(this) { "LedgerClient initialized in single-ledger mode (network=${firstConfig.network})." }
         }
     }
 
@@ -300,20 +300,17 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getSchema(schemaId: String): Pair<String, Int> {
         val start = System.nanoTime()
-        logger.info("[CALL] getSchema(schemaId=$schemaId)")
-
         val schemaJson = getRawSchemaJson(schemaId)
         val seqNo = 0
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        logger.info("[RETURN] getSchema(schemaId=$schemaId) took ${ms}ms")
+        LogUtil.info(this) { "schema= ${schemaId} took ${ms}ms" }
 
         return Pair(schemaJson, seqNo)
     }
 
     override suspend fun getSchemaObj(schemaId: String): AnonCredsSchema {
         val start = System.nanoTime()
-        logger.info("[CALL] getSchemaObj(schemaId=$schemaId)")
 
         val schemaJson = getRawSchemaJson(schemaId)
         val obj = jsonIgnoreUnknown.parseToJsonElement(schemaJson).jsonObject
@@ -331,7 +328,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         )
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        logger.info("[RETURN] getSchemaObj(schemaId=$schemaId) took ${ms}ms")
+        LogUtil.info(this) { "schema= ${schemaId} took ${ms}ms" }
 
         return result
     }
@@ -368,11 +365,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         if (cached != null) {
             val dto = jsonIgnoreUnknown.decodeFromString<CredDefVdrCacheDto>(cached)
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE HIT] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays took ${ms}ms")
+            LogUtil.info(this) { "[cache hit] credential definition vdr= ${credentialId} ttlDays=$ttlDays took ${ms}ms" }
             return fromDto(dto)
         }
 
-        logger.info("[DISK CACHE MISS] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays → fetching from ledger")
+        LogUtil.info(this) { "[cache miss] credential definition vdr= ${credentialId} ttlDays=$ttlDays → fetching from ledger" }
 
         val json = cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
@@ -381,14 +378,14 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val vdr = try {
                 resolveCredentialDefinition(client, credentialId)
             } catch (e: Throwable) {
-                logger.error("error cred def vdr >>> ${e.message}", e)
+                LogUtil.error(this, e) { "error cred def vdr >>> ${e.message}" }
                 throw Exception("credential definition not found")
             }
 
             val dtoJson = jsonIgnoreUnknown.encodeToString(toDto(vdr))
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE STORE] getCredentialDefinitionvVdr($credentialId) ttlDays=$ttlDays stored (${ms}ms)")
+            LogUtil.info(this) { "[cache store] credential definition vdr= ${credentialId} ttlDays=$ttlDays stored (${ms}ms)" }
 
             dtoJson
         }
@@ -406,11 +403,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val cached = cache.getIfFresh(credentialId)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE HIT] getCredentialDefinition($credentialId) ttlDays=$ttlDays took ${ms}ms")
+            LogUtil.info(this) { "[cache hit] credential definition = ${credentialId} ttlDays=$ttlDays took (${ms}ms)" }
             return cached
         }
 
-        logger.info("[DISK CACHE MISS] getCredentialDefinition($credentialId) ttlDays=$ttlDays → fetching from ledger")
+        LogUtil.info(this) { "[cache miss] credential definition = ${credentialId} ttlDays=$ttlDays → fetching from ledger" }
 
         return cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
@@ -418,7 +415,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val credentialDefinition = try {
                 resolveCredentialDefinition(client, credentialId)
             } catch (e: Throwable) {
-                logger.error("error cred def >>> ${e.message}")
+                LogUtil.error(this, e) { "error credential definition = ${e.message}" }
                 throw Exception("credential definition not found")
             }
 
@@ -435,8 +432,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val result = Json.encodeToString(credDef)
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE STORE] getCredentialDefinition($credentialId) ttlDays=$ttlDays stored (${ms}ms)")
-
+            LogUtil.info(this) { "[cache store] credential definition = ${credentialId} ttlDays=$ttlDays (${ms}ms)" }
             result
         }
     }
@@ -449,11 +445,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     override suspend fun getRevocationRegistryDefinition(id: String): String {
-        logger.info("[Besu] Get RevocationRegistryDefinition with id: $id")
+        LogUtil.info(this) { "get RevocationRegistryDefinition with id: $id" }
         val client = ledgerClient ?: getLedgerClient(id)
             ?: throw Exception("Ledger not initialized")
         val revocationRD = resolveRevocationRegistryDefinition(client, id)
-        logger.info("revocationrd: $revocationRD")
+
         val jsonObject = mapOf(
             "issuerId" to JsonPrimitive(revocationRD.issuerId),
             "revocDefType" to JsonPrimitive(revocationRD.revocDefType),
@@ -462,7 +458,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             "value" to Json.parseToJsonElement(revocationRD.value),
         )
 
-        logger.info("revocationrd: $revocationRD")
+        LogUtil.info(this) { "get RevocationRegistryDefinition: $revocationRD" }
         return Json.encodeToString(JsonObject(jsonObject))
     }
 
@@ -470,12 +466,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         id: String,
     ): RevocationRegistryDefinition {
         val start = System.nanoTime()
-        logger.info("[CALL] getRevocationRegistryDefinitionIndyBesuLib(id=$id)")
+        LogUtil.info(this) { "get getRevocationRegistryDefinitionIndyBesuLib with id: $id" }
 
         val cached = revRegDefCache.getIfFresh(id)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE HIT] revRegDef($id) took ${ms}ms")
+            LogUtil.info(this) { "[cache hit] revRegDef($id) took ${ms}ms" }
 
             return RevocationRegistryDefinition(
                 issuerId = cached.issuerId,
@@ -486,10 +482,10 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             )
         }
 
-        logger.info("[CACHE MISS] revRegDef($id) → fetching from ledger")
+        LogUtil.info(this) { "[cache miss] revRegDef($id) → fetching from ledger" }
 
         val dto: RevRegDefDto = revRegDefCache.getOrLoad(id) {
-            logger.info("[LEDGER CALL] resolveRevocationRegistryDefinition($id)")
+            LogUtil.info(this) { "resolveRevocationRegistryDefinition id = $id" }
 
             val client = ledgerClient ?: getLedgerClient(id)
                 ?: throw Exception("Ledger not initialized")
@@ -505,13 +501,12 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             )
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE STORE] revRegDef($id) stored (${ms}ms)")
+            LogUtil.info(this) { "[cache store] revRegDef($id) stored (${ms}ms)" }
 
             created
         }
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        logger.info("[RETURN] revRegDef($id) took ${ms}ms")
 
         return RevocationRegistryDefinition(
             issuerId = dto.issuerId,
@@ -534,7 +529,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             client = client,
             revRegDefId = id,
         )
-        logger.info("def: $def")
         ensureRevRegId(id)
 
         val revocationStatusList =
@@ -544,7 +538,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
                 to.toULong(),
             )
 
-        logger.info("rev status list: $revocationStatusList")
         val revocationRegistryDelta = RevocationRegistryDelta(
             accum = revocationStatusList.currentAccumulator,
             revoked = revocationStatusList.revocationList.map { it.toInt() },
@@ -592,30 +585,29 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getTailsPath(): String {
         val start = System.nanoTime()
-        logger.info("[CALL] getTailsPath()")
 
         val cached = tailsPathCache.getIfFresh(LedgerCacheDefaults.TAILS_PATH)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[CACHE HIT] getTailsPath took ${ms}ms")
+            LogUtil.info(this) { "[cache hit] getTailsPath took ${ms}ms" }
             return cached
         }
 
-        logger.info("[CACHE MISS] getTailsPath → creating folder if needed")
+        LogUtil.info(this) { "[cache miss] getTailsPath → creating folder if needed" }
 
         val path = tailsPathCache.getOrLoad(LedgerCacheDefaults.TAILS_PATH) {
             val tailsFolder = File(agent.context.filesDir, "tails")
             if (!tailsFolder.exists()) {
                 tailsFolder.mkdir()
-                logger.info("[FS] tails directory created at ${tailsFolder.absolutePath}")
+                LogUtil.info(this) { "tails directory created at ${tailsFolder.absolutePath}" }
             } else {
-                logger.info("[FS] tails directory already exists at ${tailsFolder.absolutePath}")
+                LogUtil.info(this) { "tails directory already exists at ${tailsFolder.absolutePath}" }
             }
             tailsFolder.absolutePath
         }
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        logger.info("[CACHE STORE] getTailsPath stored (${ms}ms)")
+        LogUtil.info(this) { "[cache store] getTailsPath stored (${ms}ms)" }
 
         return path
     }
@@ -625,7 +617,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     }
 
     fun close() {
-        logger.warn("Do not call close on LedgerBesuService. It will be auto closed")
+        LogUtil.warn(this) { "Do not call close on LedgerBesuService. It will be auto closed" }
     }
 
     private suspend fun getRawSchemaJson(schemaId: String): String {
@@ -634,15 +626,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val cached = schemaJsonCache.getIfFresh(schemaId)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE HIT][SCHEMA] schemaId=$schemaId took ${ms}ms")
+            LogUtil.info(this) { "[cache hit] schemaId=$schemaId took ${ms}ms" }
             return cached
         }
 
-        logger.info("[DISK CACHE MISS][SCHEMA] schemaId=$schemaId → fetching from ledger")
+        LogUtil.info(this) { "[cache miss] schemaId=$schemaId → fetching from ledger" }
 
         return schemaJsonCache.getOrLoad(schemaId) {
-            logger.info("[LEDGER CALL][SCHEMA] resolveSchema($schemaId)")
-
             val client = ledgerClient ?: getLedgerClient(schemaId)
             val schema = resolveSchema(client, schemaId)
 
@@ -656,7 +646,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val json = Json.encodeToString(schemaMap)
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            logger.info("[DISK CACHE STORE][SCHEMA] schemaId=$schemaId stored (${ms}ms)")
+            LogUtil.info(this) { "[cache store] schemaId=$schemaId stored (${ms}ms)" }
 
             json
         }

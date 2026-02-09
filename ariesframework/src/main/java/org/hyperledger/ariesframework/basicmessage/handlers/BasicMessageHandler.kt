@@ -9,11 +9,13 @@ import org.hyperledger.ariesframework.basicmessage.messages.BasicMessage
 import org.hyperledger.ariesframework.basicmessage.repository.BasicMessageRecord
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
+import org.hyperledger.ariesframework.util.LogUtil
 
 class BasicMessageHandler(val agent: Agent) : MessageHandler {
     override val messageType = BasicMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
+        LogUtil.info(this) { "basic message handling"}
         val message = messageContext.message as BasicMessage
 
         val basicMessageRecord = BasicMessageRecord(

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 class Credential {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(Credential::class.java)
 
         fun convertAttributesToCredentialValues(
             attributes: List<CredentialPreviewAttribute>,
@@ -29,9 +28,6 @@ class Credential {
             val firstKeys = firstValues.keys
             val secondKeys = secondValues.keys
 
-            logger.info("firstValues: $firstValues")
-            logger.info("secondValues: $secondValues")
-
             if (firstKeys.size != secondKeys.size) {
                 throw IllegalArgumentException(
                     "Number of values in first entry (${firstKeys.size}) does not match number of values in second entry (${secondKeys.size})",
@@ -41,9 +37,6 @@ class Credential {
             for (key in firstKeys) {
                 val firstValue = firstValues[key]
                 val secondValue = secondValues[key]
-
-                logger.info("firstValue: $firstValue")
-                logger.info("secondValue: $secondValue")
 
                 if (secondValue == null) {
                     throw IllegalArgumentException("Second cred values object has no value for key '$key'")

@@ -53,6 +53,7 @@ import org.hyperledger.ariesframework.proofs.v2.ProofServiceV2
 import org.hyperledger.ariesframework.proofs.v2.verifier.AnonCredsRsVerifierService
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
@@ -62,7 +63,7 @@ import org.hyperledger.ariesframework.wallet.Wallet
 import org.slf4j.LoggerFactory
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
-    private val logger = LoggerFactory.getLogger(LedgerBesuService::class.java)
+
     val wallet: Wallet = Wallet(this)
     val eventBus = EventBus()
     val dispatcher = Dispatcher(this)
@@ -136,6 +137,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     private var _isInitialized = false
 
     private fun initializeLedgerService(): ILedgerService {
+        LogUtil.info(this) { "initializing ledger service" }
         return if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
             LedgerBesuService(this, context)
         } else {
@@ -148,7 +150,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
      * It will also connect to the mediator if configured and connect to the ledger.
      */
     suspend fun initialize() {
-        logger.info("Initializing o LedgerService")
+        LogUtil.info(this) { "initializing agent" }
         wallet.initialize()
 
         agentConfig.publicDidSeed?.let {
@@ -203,6 +205,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
      * Remove the wallet and ledger data. This makes the agent as if it was never initialized.
      */
     suspend fun reset() {
+        LogUtil.info(this) { "resetting agent" }
         runCatching { mediationRecipient.close() }
         runCatching { messageSender.close() }
         runCatching { wallet.close() }

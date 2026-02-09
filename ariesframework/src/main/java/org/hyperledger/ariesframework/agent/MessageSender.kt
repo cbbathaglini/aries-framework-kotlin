@@ -12,10 +12,10 @@ import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.messages.BatchPickupMessage
 import org.hyperledger.ariesframework.routing.messages.ForwardMessage
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class MessageSender(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(MessageSender::class.java)
     private var defaultOutboundTransport: OutboundTransport? = null
     private val httpOutboundTransport = HttpOutboundTransport(agent)
     private val wsOutboundTransport = WsOutboundTransport(agent)
@@ -75,25 +75,25 @@ class MessageSender(val agent: Agent) {
 
         val services = findDidCommServices(message.connection!!)
         if (services.isEmpty()) {
-            logger.error("Cannot find services for message of type ${agentMessage.type}")
+            LogUtil.error(this) { "Cannot find services for message of type ${agentMessage.type}" }
         }
 
         for (service in services) {
             if (endpointPrefix != null && !service.serviceEndpoint.startsWith(endpointPrefix)) {
                 continue
             }
-            logger.info("agent type:: ${agentMessage.type}")
-            logger.debug("Send outbound message of type ${agentMessage.type} to endpoint ${service.serviceEndpoint}")
-            logger.debug("Message value ${agentMessage.toJsonString()} to endpoint ${service.serviceEndpoint}")
+
+            LogUtil.info(this) { "Send outbound message of type ${agentMessage.type} to endpoint ${service.serviceEndpoint}" }
+            LogUtil.info(this) { "Message value ${agentMessage.toJsonString()} to endpoint ${service.serviceEndpoint}" }
             if (endpointPrefix == null && outboundTransportForEndpoint(service.serviceEndpoint) == null) {
-                logger.debug("endpoint is not supported")
+                LogUtil.warn(this) { "Endpoint is not supported" }
                 continue
             }
             try {
                 sendMessageToService(agentMessage, service, message.connection.verkey, message.connection.id)
                 return
             } catch (e: Exception) {
-                logger.info("Sending outbound message to service ${service.serviceEndpoint} failed with the following error: ${e.message}")
+                LogUtil.info(this) { "Sending outbound message to service ${service.serviceEndpoint} failed with the following error: ${e.message}" }
             }
         }
 
@@ -140,7 +140,7 @@ class MessageSender(val agent: Agent) {
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }
-        logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
+        //logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
         return OutboundPackage(encryptedMessage, message.requestResponse(), endpoint, connectionId)
     }
 

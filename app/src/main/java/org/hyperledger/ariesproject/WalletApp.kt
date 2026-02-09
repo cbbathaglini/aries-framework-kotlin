@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.credentials.v2.models.DeclineCredentialOff
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.util.Session
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 import java.io.File
 
@@ -129,6 +130,8 @@ class WalletApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        Session.startNewSession()
         notificationHandler = NotificationHandler.getInstance(this)
 
         val prefs = getSharedPreferences("wallet_prefs", MODE_PRIVATE)

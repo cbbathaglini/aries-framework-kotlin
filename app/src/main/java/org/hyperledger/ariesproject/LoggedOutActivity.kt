@@ -19,6 +19,9 @@ class LoggedOutActivity : AppCompatActivity() {
         binding = ActivityLoggedOutBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val app = application as WalletApp
+        val prefs = getSharedPreferences("wallet_prefs", MODE_PRIVATE)
+
         binding.startAgainButton.setOnClickListener {
             startWalletAgain()
         }
