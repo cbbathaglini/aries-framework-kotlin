@@ -192,10 +192,22 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     /**
      * Remove the wallet and ledger data. This makes the agent as if it was never initialized.
      */
+//    suspend fun reset() {
+//        if (isInitialized()) {
+//            shutdown()
+//        }
+//        wallet.delete()
+//    }
+
+    /**
+     * Remove the wallet and ledger data. This makes the agent as if it was never initialized.
+     */
     suspend fun reset() {
-        if (isInitialized()) {
-            shutdown()
-        }
+        runCatching { mediationRecipient.close() }
+        runCatching { messageSender.close() }
+        runCatching { wallet.close() }
+
+        _isInitialized = false
         wallet.delete()
     }
 

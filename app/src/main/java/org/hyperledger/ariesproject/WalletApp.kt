@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
@@ -32,8 +33,16 @@ class WalletApp : Application() {
     lateinit var notificationHandler: NotificationHandler
     var walletOpened: Boolean = false
 
+    private val appJob = SupervisorJob()
+    val appScope = kotlinx.coroutines.CoroutineScope(appJob + Dispatchers.IO)
+
+    override fun onTerminate() {
+        super.onTerminate()
+        appJob.cancel()
+    }
+
     fun isAgentInitialized(): Boolean {
-        return this::agent.isInitialized
+        return this::agent.isInitialized && agent.isInitialized()
     }
 
     private fun copyResourceFile(resource: String) {
@@ -94,20 +103,97 @@ class WalletApp : Application() {
     }
 
 
+//    override fun onCreate() {
+//        super.onCreate()
+//        notificationHandler = NotificationHandler.getInstance(this)
+//
+//        GlobalScope.launch(Dispatchers.IO) {
+//            try {
+//                openWallet()
+//                subscribeAgentEvents()
+//                walletOpened = true
+//
+//                // Log.d("WalletApp", "Agent initialized and listeners registered")
+//            } catch (e: Exception) {
+//                // Log.e("WalletApp", "Error initializing agent: ${e.message}", e)
+//            }
+//        }
+//    }
+//
+
+
+    fun clearAllNotifications() {
+        runCatching { notificationHandler.clearAll() }
+        notifyBadgeUpdate()
+    }
+
     override fun onCreate() {
         super.onCreate()
         notificationHandler = NotificationHandler.getInstance(this)
 
-        GlobalScope.launch(Dispatchers.IO) {
+        val prefs = getSharedPreferences("wallet_prefs", MODE_PRIVATE)
+
+        appScope.launch {
             try {
+                val resetPending = prefs.getBoolean("RESET_PENDING", false)
+                if (resetPending) {
+                    prefs.edit().putBoolean("RESET_PENDING", false).apply()
+                    Log.i("WalletApp", "RESET_PENDING detected → resetting agent")
+
+                    val tempAgent = Agent(applicationContext, createAgentConfig())
+                    runCatching { tempAgent.reset() }
+                        .onFailure { Log.e("WalletApp", "Reset failed", it) }
+
+                    Log.i("WalletApp", "Reset finished")
+                }
+
                 openWallet()
                 subscribeAgentEvents()
                 walletOpened = true
-                // Log.d("WalletApp", "Agent initialized and listeners registered")
+
             } catch (e: Exception) {
-                // Log.e("WalletApp", "Error initializing agent: ${e.message}", e)
+                Log.e("WalletApp", "Fatal error during startup", e)
+                walletOpened = false
             }
         }
+    }
+
+    private fun createAgentConfig(): AgentConfig {
+        val pref = getSharedPreferences(PREFERENCE_NAME, 0)
+        var key = pref.getString("walletKey", null)
+
+        if (key == null) {
+            key = Agent.generateWalletKey()
+            pref.edit().putString("walletKey", key).apply()
+        }
+
+        copyResourceFile(genesisPath)
+
+        val properties = ConfigLoader.loadProperties(this)
+        val invitationUrl = properties.getProperty("invitation_url")
+
+        val androidId = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ANDROID_ID
+        )
+
+        val besuLedgerConfig = BesuLedgerConfig(
+            configFile = "besu_config.json",
+            multiledger = true
+        )
+
+        return AgentConfig(
+            walletKey = key,
+            genesisPath = File(filesDir, genesisPath).absolutePath,
+            mediatorConnectionsInvite = invitationUrl,
+            mediatorPickupStrategy = MediatorPickupStrategy.Implicit,
+            label = "SimpleApp-1X_$androidId",
+            autoAcceptCredential = AutoAcceptCredential.Never,
+            autoAcceptProof = AutoAcceptProof.Never,
+            useLedgerService = false,
+            useBesuLedger = true,
+            besuLedgerConfig = besuLedgerConfig,
+        )
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

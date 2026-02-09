@@ -1,7 +1,9 @@
 package org.hyperledger.ariesproject
 
 import android.app.Activity
+import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.PendingIntent
 import android.app.ProgressDialog
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,8 +11,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -20,6 +25,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
@@ -55,27 +62,61 @@ class WalletMainActivity : BaseActivity() {
     private var credentialProgress: ProgressDialog? = null
     private var proofProgress: ProgressDialog? = null
 
+    private var isResetting = false
+    private var isLoggingOut = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setChildContent(R.layout.activity_wallet_main)
         binding = ActivityWalletMainBinding.bind(findViewById(R.id.baseContainer))
         setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
 
         openFragment(HomeFragment())
-        updateToolbarAndBackground(R.color.teal_700, R.color.white)
+        updateToolbarAndBackground(
+            R.color.teal_700
+        )
+
         waitForAgentInitialize()
         updateNotificationBadge()
     }
+
+    private fun updateToolbarAndBackground(toolbarColor: Int) {
+        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.wallet_main_menu, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.action_reset)?.isEnabled = !(isResetting || isLoggingOut)
+        menu.findItem(R.id.action_logout)?.isEnabled = !(isResetting || isLoggingOut)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_reset -> {
+                showResetConfirmDialog()
+                true
+            }
+            R.id.action_logout -> {
+                performLogout()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
 
     private fun openFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
-    }
-
-    private fun updateToolbarAndBackground(toolbarColor: Int, backgroundColor: Int) {
-        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor))
     }
 
     private suspend fun receivePresentationProof(
@@ -197,21 +238,17 @@ class WalletMainActivity : BaseActivity() {
 
     private fun waitForAgentInitialize() {
         val app = application as WalletApp
-        val progress = ProgressDialog(this)
-        progress.setTitle("Initializing agent...")
-        progress.setCancelable(false)
-        progress.show()
+        val progress = ProgressDialog(this).apply {
+            setTitle("Initializing agent…")
+            setCancelable(false)
+            show()
+        }
 
-        val timer = object : CountDownTimer(20000, 1000) {
+        val timer = object : CountDownTimer(20_000, 1_000) {
             override fun onTick(ms: Long) {
                 if (app.isAgentInitialized() && app.walletOpened) {
-                    try {
-                        Log.d(TAG, "Agent initialized")
-                        progress.dismiss()
-                        updateNotificationBadge()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Initialization error: ${e.message}", e)
-                    }
+                    progress.dismiss()
+                    updateNotificationBadge()
                     cancel()
                 }
             }
@@ -373,4 +410,56 @@ class WalletMainActivity : BaseActivity() {
             return agent.proofRepository.getByThreadAndConnectionId(threadId, null)
         }
     }
+
+    private fun showResetConfirmDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Reset wallet?")
+            .setMessage(
+                "This will permanently remove all locally stored wallet data (Askar) and reset " +
+                        "connections, credentials, and proof records. Wallet initialization will be required again."
+            )
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Reset") { _, _ ->
+                performReset()
+            }
+            .show()
+    }
+
+    private fun performReset() {
+        if (isResetting) return
+        isResetting = true
+
+        val app = application as WalletApp
+        app.clearAllNotifications()
+
+        getSharedPreferences("wallet_prefs", MODE_PRIVATE)
+            .edit()
+            .putBoolean("RESET_PENDING", true)
+            .apply()
+
+        val intent = Intent(this, LoggedOutActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun performLogout() {
+        if (isLoggingOut) return
+        isLoggingOut = true
+        invalidateOptionsMenu()
+
+        lifecycleScope.launch(Dispatchers.Main.immediate) {
+            goToLoggedOutClearingBackstack()
+        }
+    }
+
+    private fun goToLoggedOutClearingBackstack() {
+        val intent = Intent(this, LoggedOutActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+    }
+
+
 }
