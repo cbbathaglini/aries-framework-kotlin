@@ -69,13 +69,12 @@ data class LedgerCacheConfig(
             val cacheNameBase =
                 props.getProperty("cache.name.base", "ledger_cache").trim().ifBlank { "ledger_cache" }
 
-
             return LedgerCacheConfig(
                 credDefTtlDaysById = parsedMap,
                 credDefDefaultDays = defaultDays,
                 schemaTtlDays = schemaDays,
                 revRegTtlDays = revRegDays,
-                tailsTtlDays = tailsDays
+                tailsTtlDays = tailsDays,
             )
         }
 

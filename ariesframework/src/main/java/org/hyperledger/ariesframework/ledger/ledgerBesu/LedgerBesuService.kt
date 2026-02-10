@@ -212,7 +212,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
         val clients = mutableListOf<LedgerConfiguration>()
 
-        // Se não for multiledger, considera apenas a primeira rede
         val targetNetworks = if (isMultiLedger) {
             logger.info("Multiledger mode enabled: loading all ${networksArray.size} networks")
             networksArray

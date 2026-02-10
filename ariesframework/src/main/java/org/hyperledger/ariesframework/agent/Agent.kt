@@ -203,7 +203,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         runCatching { messageSender.close() }
         runCatching { wallet.close() }
 
-        //double check
+        // double check
         runCatching { credentialExchangeRepository.deleteAll() }
         runCatching { w3cCredentialRepository.deleteAll() }
         runCatching { proofRepository.deleteAll() }

@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.agent
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.cache.LedgerCacheConfig
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.oob.models.HandshakeProtocol
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
@@ -72,7 +71,7 @@ data class AgentConfig(
     var preferredHandshakeProtocol: HandshakeProtocol = HandshakeProtocol.Connections,
     var useBesuLedger: Boolean = false,
     var besuLedgerConfig: BesuLedgerConfig? = null,
-    var cacheConfigFile: String? = null
+    var cacheConfigFile: String? = null,
 ) {
     val endpoints: List<String>
         get() = agentEndpoints ?: listOf(Routing.DID_COMM_TRANSPORT_QUEUE)
