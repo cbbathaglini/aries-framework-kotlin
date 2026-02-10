@@ -71,6 +71,7 @@ data class AgentConfig(
     var preferredHandshakeProtocol: HandshakeProtocol = HandshakeProtocol.Connections,
     var useBesuLedger: Boolean = false,
     var besuLedgerConfig: BesuLedgerConfig? = null,
+    var cacheConfigFile: String? = null,
 ) {
     val endpoints: List<String>
         get() = agentEndpoints ?: listOf(Routing.DID_COMM_TRANSPORT_QUEUE)

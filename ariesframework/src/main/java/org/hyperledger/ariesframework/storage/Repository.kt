@@ -46,6 +46,13 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         inline operator fun <reified T : BaseRecord> invoke(agent: Agent) = Repository(T::class, agent)
     }
 
+    suspend fun deleteAll() {
+        val allRecords = getAll()
+        allRecords.forEach { record ->
+            delete(record)
+        }
+    }
+
     @OptIn(InternalSerializationApi::class)
     fun recordToInstance(record: AskarEntry): T {
         val instance = jsonFormat.decodeFromString(type.serializer(), String(record.value()))
