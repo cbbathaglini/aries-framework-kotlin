@@ -91,4 +91,5 @@ class CredentialExchangeRepository(agent: Agent) : Repository<CredentialExchange
         }
         return getSingleByQuery("{\"anonCredsCredentialRevocationId\": \"$credentialRevocationId\", \"anonCredsRevocationRegistryId\": \"$revocationRegistryId\"}")
     }
+
 }

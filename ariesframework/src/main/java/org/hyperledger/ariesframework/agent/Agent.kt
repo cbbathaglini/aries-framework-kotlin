@@ -116,10 +116,6 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry()),
         ),
     )
-
-//    val w3cCredentialsModuleConfigOptions = W3cCredentialsModuleConfigOptions(
-//        documentLoader = TODO()
-//    )
     val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
     val w3cJsonLdCredentialService = W3cJsonLdCredentialService(this, w3cCredentialsModuleConfig, context)
     val w3cJwtCredentialService = W3cJwtCredentialService(this)
@@ -206,6 +202,25 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         runCatching { mediationRecipient.close() }
         runCatching { messageSender.close() }
         runCatching { wallet.close() }
+
+        //double check
+        runCatching { credentialExchangeRepository.deleteAll() }
+        runCatching { w3cCredentialRepository.deleteAll() }
+        runCatching { proofRepository.deleteAll() }
+        runCatching { connectionRepository.deleteAll() }
+        runCatching { connectionRepository.deleteAll() }
+        runCatching { credentialDefinitionRepository.deleteAll() }
+        runCatching { revocationRegistryRepository.deleteAll() }
+        runCatching { credentialRepository.deleteAll() }
+        runCatching { historyRepository.deleteAll() }
+        runCatching { anonCredsCredentialDefinitionPrivateRepository.deleteAll() }
+        runCatching { anonCredsLinkSecretRepository.deleteAll() }
+        runCatching { anonCredsKeyCorrectnessProofRepository.deleteAll() }
+        runCatching { anonCredsRevocationRegistryDefinitionPrivateRepository.deleteAll() }
+        runCatching { anoncredsCredentialDefinitionRepository.deleteAll() }
+        runCatching { verifierRepository.deleteAll() }
+        runCatching { didCommMessageRepository.deleteAll() }
+        runCatching { outOfBandRepository.deleteAll() }
 
         _isInitialized = false
         wallet.delete()

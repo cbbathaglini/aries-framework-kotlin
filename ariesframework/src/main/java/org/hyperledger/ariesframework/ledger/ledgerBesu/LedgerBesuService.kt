@@ -55,10 +55,13 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     private val issuer = Issuer()
     private val jsonIgnoreUnknown = Json { ignoreUnknownKeys = true }
 
+    private val cacheConfigFile: String =
+        agent.agentConfig.cacheConfigFile ?: "config.properties"
+
     private val DAY_MS = 24L * 60 * 60 * 1000
 
     private val cacheCfg: LedgerCacheConfig by lazy {
-        LedgerCacheConfig.load(appContext, assetFileName = "config.properties")
+        LedgerCacheConfig.load(appContext, assetFileName = cacheConfigFile)
     }
 
     private fun credDefTtlDaysFor(credDefId: String): Long =

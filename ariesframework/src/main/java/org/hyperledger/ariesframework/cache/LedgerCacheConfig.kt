@@ -1,16 +1,18 @@
 package org.hyperledger.ariesframework.cache
 
 import android.content.Context
+import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.util.Properties
 
+@Serializable
 data class LedgerCacheConfig(
-    val credDefTtlDaysById: Map<String, Long>,
-    val credDefDefaultDays: Long,
+    val credDefTtlDaysById: Map<String, Long> = emptyMap(),
+    val credDefDefaultDays: Long = 1L,
 
-    val schemaTtlDays: Long,
-    val revRegTtlDays: Long,
-    val tailsTtlDays: Long,
+    val schemaTtlDays: Long = 1L,
+    val revRegTtlDays: Long = 1L,
+    val tailsTtlDays: Long = 1L,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(LedgerCacheConfig::class.java)
@@ -64,12 +66,16 @@ data class LedgerCacheConfig(
                 "[CACHE CONFIG] defaultDays=$defaultDays | credDefOverrides=${parsedMap.size} | schemaDays=$schemaDays | revRegDays=$revRegDays | tailsDays=$tailsDays",
             )
 
+            val cacheNameBase =
+                props.getProperty("cache.name.base", "ledger_cache").trim().ifBlank { "ledger_cache" }
+
+
             return LedgerCacheConfig(
                 credDefTtlDaysById = parsedMap,
                 credDefDefaultDays = defaultDays,
                 schemaTtlDays = schemaDays,
                 revRegTtlDays = revRegDays,
-                tailsTtlDays = tailsDays,
+                tailsTtlDays = tailsDays
             )
         }
 
