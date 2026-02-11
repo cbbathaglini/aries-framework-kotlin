@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory
 
 class W3cAnonCredsUtils {
     companion object {
-        private val logger = LoggerFactory.getLogger(W3cAnonCredsUtils::class.java)
         fun getW3cRecordAnonCredsTags(
             credentialSubject: W3cCredentialSubject,
             issuerId: String,
@@ -93,7 +92,7 @@ class W3cAnonCredsUtils {
             }
 
             val anonCredsTags = getAnonCredsTagsFromRecord(w3cCredentialRecord)
-            logger.info("tags: $anonCredsTags")
+
             if (anonCredsTags == null) {
                 throw CredoError("AnonCreds tags not found on credential record.")
             }
@@ -105,7 +104,6 @@ class W3cAnonCredsUtils {
                 serializer<W3cAnonCredsCredentialMetadata>(),
                 w3cAnonCredsCredentialMetadataElement,
             )
-            logger.info("w3cAnonCredsCredentialMetadata: $w3cAnonCredsCredentialMetadata")
 
             val credentialDefinitionId = anonCredsTags.unqualifiedCredentialDefinitionId
                 ?.takeIf { useUnqualifiedIdentifiers == true }
@@ -134,15 +132,12 @@ class W3cAnonCredsUtils {
         }
 
         fun getAnonCredsTagsFromRecord(record: W3cCredentialRecord): AnonCredsCredentialTags? {
-            logger.info("record: $record")
 
             val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) // as? W3cAnonCredsCredentialMetadata
-            logger.info("metadata: $metadata")
             if (metadata == null) return null
 
             val tags = record.getTags() as? Map<String, String?> ?: return null
 
-            logger.info("taaaags: $tags")
             val requiredKeys = listOf(
                 "anonCredsLinkSecretId",
                 "anonCredsMethodName",

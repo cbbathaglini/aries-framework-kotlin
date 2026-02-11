@@ -31,7 +31,6 @@ import kotlin.collections.component2
 class ProofUtils {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProofUtils::class.java)
 
         suspend fun getSchemas(agent: Agent, schemaIds: Set<String>): Map<String, AnonCredsSchema> {
             val schemas = mutableMapOf<String, AnonCredsSchema>()
@@ -125,7 +124,6 @@ class ProofUtils {
             updateProofFormat(record, proofRequestMessage.formats, agent)
 
             val proofRequestJson = proofRequestMessage.anoncredsProofRequest()
-            logger.debug("Proof request json: $proofRequestJson")
             val proofRequest = Json.decodeFromString<AnonCredsProofRequest>(proofRequestJson)
 
             return agent.proofServiceV2.getRequestedCredentialsForProofRequest(proofRequest, credentialW3cId = credentialW3cId)

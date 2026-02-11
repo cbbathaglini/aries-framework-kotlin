@@ -1319,9 +1319,9 @@ class CredentialServiceV2(val agent: Agent) {
     }
 
     suspend fun updateState(credentialRecord: CredentialExchangeRecord, newState: CredentialState) {
-        LogUtil.info(this) { "Updating credential record ${credentialRecord.id} to state $newState (previous=${credentialRecord.state}" }
         credentialRecord.setToState(newState)
         credentialExchangeRepository.update(credentialRecord)
+        LogUtil.info(this) { "Update credential record ${credentialRecord.id} to state $newState (previous=${credentialRecord.state})" }
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialRecord.copy()))
     }
 }

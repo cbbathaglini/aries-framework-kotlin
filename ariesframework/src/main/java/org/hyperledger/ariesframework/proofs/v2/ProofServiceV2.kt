@@ -65,6 +65,7 @@ import org.hyperledger.ariesframework.proofs.v2.messages.ProposePresentationMess
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
@@ -72,7 +73,7 @@ import kotlin.collections.component2
 import kotlin.math.max
 
 class ProofServiceV2(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
+    //private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
 
     private val proofRepository = agent.proofRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
@@ -82,7 +83,7 @@ class ProofServiceV2(val agent: Agent) {
     private val proofFormatCoordinator = ProofFormatCoordinator(agent, proofFormats)
 
     suspend fun createProposal(options: CreateProposalProofOptionsV2): Pair<ProposePresentationMessageV2, ProofExchangeRecord> {
-        logger.debug("Get the Format Service and Create Proposal Message")
+        LogUtil.info(this) { "creating proposal" }
 
         val (connectionRecord, proofFormats, comment, autoAcceptProof, goalCode, goal, parentThreadId) = options
 
@@ -113,20 +114,21 @@ class ProofServiceV2(val agent: Agent) {
         val proposalMessage: ProposePresentationMessageV2 =
             this.proofFormatCoordinator.createProposal(createProposalParams)
 
-        logger.debug("Save record and emit state change event")
         proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
 
+        LogUtil.info(this) { "Save record and emit state change event - ${proofRecord.state}" }
         return Pair(proposalMessage, proofRecord)
     }
 
     suspend fun processProposal(messageContext: InboundMessageContext): ProofExchangeRecord {
-        logger.info("PROCESS PROPOSAL -------------------------")
+        LogUtil.info(this) { "process proposal" }
+
         val proofProposalMessage =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as ProposePresentationMessageV2
         val connection = messageContext.assertReadyConnection()
 
-        logger.debug("Processing presentation proposal with id ${proofProposalMessage.id}")
+        LogUtil.info(this) { "presentation proposal with id ${proofProposalMessage.id}" }
 
         var proofRecord: ProofExchangeRecord? = proofRepository.findByThreadRoleAndConnection(
             threadId = proofProposalMessage.threadId,
@@ -204,7 +206,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun acceptProposal(params: AcceptProofProposalServiceParams): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
-        logger.info("ACCEPT PROPOSAL -------------------------")
+        LogUtil.info(this) { "accepting proposal" }
         val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof, willConfirm) = params
 
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
@@ -247,6 +249,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun negotiateProposal(params: NegotiateProofProposalOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "negotiating proposal" }
         val (proofRecord, proofFormats, autoAcceptProof, comment, goalCode, goal, willConfirm) = params
 
         // Assert
@@ -289,6 +292,7 @@ class ProofServiceV2(val agent: Agent) {
      * @throws CredoError if no supported proof formats are found
      */
     suspend fun createRequest(params: CreateProofRequestOptions): Pair<RequestPresentationMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "create request" }
         val (anoncredsProofRequest, formats, proofFormats, parentThreadId, connectionRecord, comment, goalCode, goal, autoAcceptProof: AutoAcceptProof, willConfirm) = params
 
         val formatServices = getFormatServicesByList(formats)
@@ -296,7 +300,8 @@ class ProofServiceV2(val agent: Agent) {
             throw CredoError("Unable to create request. No supported formats")
         }
 
-        logger.info("connnnnnid: ${connectionRecord?.id ?: "connectionless-proof-request"}")
+        LogUtil.info(this) { "request with connection = ${connectionRecord?.id ?: "connectionless-proof-request"}" }
+
         val proofRecord = ProofExchangeRecord(
             connectionId = connectionRecord?.id ?: "connectionless-proof-request",
             threadId = BaseRecord.generateId(),
@@ -320,26 +325,20 @@ class ProofServiceV2(val agent: Agent) {
         val requestMessage: RequestPresentationMessageV2 =
             proofFormatCoordinator.createRequest(requestParams)
 
-        logger.info("request message: ${requestMessage.requestPresentationAttachments.size}")
-        logger.debug("Saving record and emitting state changed for proof exchange record ${proofRecord.id}")
         agent.proofRepository.save(proofRecord)
         agent.eventBus.publish(AgentEvents.ProofEventV2(proofRecord.copy()))
-
+        LogUtil.info(this) { "Saving record and emitting state changed for proof exchange record ${proofRecord.id}" }
         return Pair(requestMessage, proofRecord)
     }
 
     suspend fun processRequest(messageContext: InboundMessageContext? = null, requestMessage: RequestPresentationMessageV2? = null): ProofExchangeRecord {
-        logger.info("PROCESS REQUEST -------------------------")
+        LogUtil.info(this) { "processing request" }
 
         var connection: ConnectionRecord? = null
 
         var requestMessage = requestMessage
         if (messageContext != null) {
             requestMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as RequestPresentationMessageV2
-            logger.info("[TAG100]messageContext.plaintextMessage: ${messageContext.plaintextMessage}")
-            logger.info("[TAG100]requestMessage: $requestMessage")
-            logger.debug("Processing proof request with id ${requestMessage.id}")
-            logger.info("[TAG100]messageContext.connection: ${messageContext.connection}")
             connection = messageContext.connection
         }
 
@@ -348,15 +347,14 @@ class ProofServiceV2(val agent: Agent) {
             connectionId = connection?.id,
             threadId = requestMessage!!.threadId,
         )
-        logger.info("proofRecord-proofRecord: ${proofRecord?.state}")
 
         val formatServices = getFormatServicesFromMessage(requestMessage.formats)
         if (formatServices.isEmpty()) {
             throw CredoError("Unable to process request. No supported formats")
         }
-        logger.info("[TAG10]")
+
         if (proofRecord != null) {
-            logger.info("[TAG11]")
+
             val lastSentMessage =
                 agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                     associatedRecordId = proofRecord.id,
@@ -370,12 +368,9 @@ class ProofServiceV2(val agent: Agent) {
                     messageType = RequestPresentationMessageV2.type,
                     role = DidCommMessageRole.Receiver,
                 )
-            logger.info("[TAG20]")
-            // assert
             proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
             proofRecord.assertState(ProofState.ProposalSent)
-            logger.info("[TAG30]")
-//            agent.connectionService.assertConnectionOrOutOfBandExchange(
+           //   agent.connectionService.assertConnectionOrOutOfBandExchange(
 //                messageContext = messageContext,
 //                lastReceivedMessage = lastReceivedMessage,
 //                lastSentMessage = lastSentMessage,
@@ -387,11 +382,10 @@ class ProofServiceV2(val agent: Agent) {
                 message = requestMessage,
                 formatServices = formatServices,
             )
-            logger.info("Requested processed")
 
             proofRepository.save(proofRecord)
             updateState(proofRecord, ProofState.RequestReceived)
-            logger.info("Update record")
+            LogUtil.info(this) { "request processed" }
             return proofRecord
         }
 
@@ -399,12 +393,7 @@ class ProofServiceV2(val agent: Agent) {
 //            messageContext = messageContext,
 //        )
 
-        logger.info("[TAG100]")
-        logger.info("[TAG100]message: ${requestMessage.threadId}")
-        logger.info("[TAG100]con: ${connection?.id}")
-        logger.debug("No proof record found for request, creating a new one")
-
-        logger.info("connnnnnid: ${connection?.id ?: "connectionless"}")
+        LogUtil.info(this) { "No proof record found for request, creating a new one with connection ${connection?.id ?: "connectionless"} " }
         val record = ProofExchangeRecord(
             connectionId = connection?.id ?: "connectionless",
             threadId = requestMessage.threadId,
@@ -413,18 +402,15 @@ class ProofServiceV2(val agent: Agent) {
             role = ProofRole.Prover,
             protocolVersion = ProofConstants.PROTOCOL_VERSION_V2,
         )
-        logger.info("record ------> ${record.connectionId}")
+
         proofFormatCoordinator.processRequest(
             proofRecord = record,
             message = requestMessage,
             formatServices = formatServices,
         )
-        logger.info("[TAG120]")
-        logger.debug("Saving proof record and emit request-received event")
 
         // save new registry and emit an event
         agent.proofRepository.save(record)
-        logger.info("[TAG130]")
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.ProofRequestReceived.name,
@@ -435,9 +421,8 @@ class ProofServiceV2(val agent: Agent) {
             ),
         )
 
-        logger.info("[TAG140]")
         agent.eventBus.publish(AgentEvents.ProofEventV2(record.copy()))
-        logger.info("Saved new proof record successfully")
+        LogUtil.info(this) { "Saving proof record and emit request-received event" }
         return record
     }
 
@@ -448,6 +433,7 @@ class ProofServiceV2(val agent: Agent) {
      * @return the presentation problem report message and an associated proof record.
      */
     suspend fun createPresentationDeclinedProblemReport(proofRecord: ProofExchangeRecord): Pair<PresentationProblemReportMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "creating presentation declined problem report" }
         proofRecord.assertState(ProofState.RequestReceived)
 
         val probMessage = PresentationProblemReportMessageV2(proofRecord.threadId)
@@ -457,6 +443,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun acceptRequest(params: AcceptProofRequestOptions): Pair<PresentationMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "accepting request" }
         val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof, requestedCredentials) = params
 
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
@@ -479,7 +466,6 @@ class ProofServiceV2(val agent: Agent) {
             throw CredoError("Unable to accept request. No supported formats provided as input or in request message")
         }
 
-        logger.info("[acceptRequest] params.chosenCredentialId: $params.chosenCredentialId")
         val acceptRequestParams = AcceptProofRequestParams(
             proofRecord = proofRecord,
             proofFormats = requestedCredentials,
@@ -497,10 +483,12 @@ class ProofServiceV2(val agent: Agent) {
         proofRecord.presentationMessage = message
         updateState(proofRecord, ProofState.PresentationSent)
 
+        LogUtil.info(this) { "proof accepted - ${ProofState.PresentationSent}" }
         return Pair(message, proofRecord)
     }
 
     suspend fun negotiateRequest(params: NegotiateProofRequestParams): Pair<ProposePresentationMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "negotiating request" }
         val (proofRecord, proofFormats, comment, goalCode, goal, autoAcceptProof) = params
 
         // Assert
@@ -531,6 +519,7 @@ class ProofServiceV2(val agent: Agent) {
         proofRecord.autoAcceptProof = autoAcceptProof ?: proofRecord.autoAcceptProof
         updateState(proofRecord, ProofState.ProposalSent)
 
+        LogUtil.info(this) { "request negotiated - ProofState.ProposalSent" }
         return Pair(proposalMessage, proofRecord)
     }
 
@@ -603,13 +592,12 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processPresentation(messageContext: InboundMessageContext): ProofExchangeRecord {
-        logger.info("path = processPresentation")
+        LogUtil.info(this) { "processing presentation" }
         val connection = messageContext.connection
 
         val presentationMessage =
             MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationMessageV2
-
-        logger.debug("Processing presentation with id ${presentationMessage.id}")
+        LogUtil.info(this) { "processing presentation with id ${presentationMessage.id}" }
 
         val proofRecord = proofRepository.findByThreadRoleAndConnection(
             threadId = presentationMessage.threadId,
@@ -688,7 +676,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processPresentationOffline(message: PresentationMessageV2): ProofExchangeRecord? {
-        logger.info("[init] Processing presentation in ProcessPresentationProofProcessor")
+        LogUtil.info(this) { "processing offline presentation" }
 
         val presentationMessage = message
         val formatServices = getFormatServicesFromMessage(presentationMessage.formats)
@@ -713,7 +701,7 @@ class ProofServiceV2(val agent: Agent) {
             lastSentMessage,
             formatServices,
         )
-        logger.info("result: ${result.isValid}")
+        LogUtil.info(this) { "processing offline presentation result = ${result}" }
 
         val presentationVerifier = PresentationVerifier(
             presentationMessage = message,
@@ -722,17 +710,20 @@ class ProofServiceV2(val agent: Agent) {
             proofRecordId = proofRecord.id,
         )
 
+        LogUtil.info(this) {
+            "presentation is verified = ${proofRecord.isVerified}"
+        }
         verifierRecord.addPresentation(presentationVerifier)
         agent.verifierRepository.update(verifierRecord)
         verifierRecord.printDetails()
 
-        logger.info("[end] Finished processing presentation for proof ${proofRecord.id}")
-
         agent.proofRepository.save(proofRecord)
+        LogUtil.info(this) { "finished processing presentation for proof ${proofRecord.id}" }
         return proofRecord
     }
 
     suspend fun acceptPresentation(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "accepting presentation" }
         proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
         proofRecord.assertState(ProofState.PresentationReceived)
 
@@ -766,7 +757,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun createAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
-        logger.info("path = createAck")
+        LogUtil.info(this) { "creating ack" }
         proofRecord.assertState(ProofState.PresentationReceived)
 
         val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
@@ -776,6 +767,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processOfflineAck(proofRecord: ProofExchangeRecord): Pair<PresentationAckMessageV2, ProofExchangeRecord> {
+        LogUtil.info(this) { "processing offline ack" }
         val ackMessage = PresentationAckMessageV2(proofRecord.threadId, AckStatus.OK)
         updateState(proofRecord, ProofState.Done)
 
@@ -783,7 +775,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     suspend fun processAck(messageContext: InboundMessageContext? = null, message: PresentationAckMessageV2? = null): ProofExchangeRecord {
-        logger.info("path = processAck")
+        LogUtil.info(this) { "processing ack" }
 
         var presentationAckMessage: PresentationAckMessageV2? = message
         var connection: ConnectionRecord? = null
@@ -793,8 +785,7 @@ class ProofServiceV2(val agent: Agent) {
             presentationAckMessage =
                 MessageSerializer.decodeFromString(messageContext.plaintextMessage) as PresentationAckMessageV2
         }
-
-        logger.info("Processing proof ack with id ${presentationAckMessage?.id}")
+        LogUtil.info(this) { "processing proof ack with id ${presentationAckMessage?.id}" }
 
         val proofRecord = proofRepository.findByThreadRoleAndConnection(
             threadId = presentationAckMessage?.threadId,
@@ -1002,7 +993,7 @@ class ProofServiceV2(val agent: Agent) {
         return runCatching {
             MessageSerializer.decodeFromString(messageStr) as T
         }.getOrElse {
-            logger.warn("Failed to deserialize ${T::class.simpleName} for record ID $proofRecordId: ${it.message}")
+            LogUtil.warn(this) { "Failed to deserialize ${T::class.simpleName} for record ID $proofRecordId: ${it.message}" }
             null
         }
     }
@@ -1015,9 +1006,7 @@ class ProofServiceV2(val agent: Agent) {
     }
 
     private fun getFormatServiceForFormatKey(formatKey: String): ProofFormatService<*>? {
-        logger.info("format key: $formatKey")
-        val finded = proofFormats.find { formatService -> formatService.formatKey == formatKey }
-        return finded
+        return proofFormats.find { formatService -> formatService.formatKey == formatKey }
     }
 
     private fun getFormatServiceForFormat(format: String): ProofFormatService<*>? {
@@ -1083,7 +1072,6 @@ class ProofServiceV2(val agent: Agent) {
             requestedCredentials.requestedPredicates[predicateName] = nonRevokedPredicates[0]
         }
 
-        logger.info("[RC] requestedCredentials: $requestedCredentials")
         return requestedCredentials
     }
 
@@ -1158,7 +1146,6 @@ class ProofServiceV2(val agent: Agent) {
         retrieved.requestedAttributes.putAll(attrDeferred.awaitAll().toMap())
         retrieved.requestedPredicates.putAll(predDeferred.awaitAll().toMap())
 
-        logger.info("rrequestedAttributesssssssss >>> ${retrieved.requestedAttributes}")
         retrieved
     }
 
@@ -1212,7 +1199,6 @@ class ProofServiceV2(val agent: Agent) {
         proofRequest: String,
         requestedCredentials: RequestedCredentialsAnoncreds,
     ): ByteArray {
-        logger.debug("Validating predicates of credentials: ${requestedCredentials.toJsonString()}")
         val anoncredsCreds = mutableListOf<RequestedCredential>()
         val credentialIds = requestedCredentials.getCredentialIdentifiers()
         val schemaIds = mutableSetOf<String>()

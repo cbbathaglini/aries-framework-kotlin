@@ -19,6 +19,7 @@ import org.hyperledger.ariesframework.proofs.models.PartialProof
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
@@ -26,23 +27,17 @@ import uniffi.indy_besu_vdr.RevocationStatusList
 
 class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
-    private val logger = LoggerFactory.getLogger(AnonCredsRsVerifierService::class.java)
 
     override suspend fun verifyProof(options: VerifyProofOptions): Boolean {
+        LogUtil.info(this) { "verifying proof" }
         val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, _) = options
-
-        // logger.info("verifyProof() options = $options")
 
         val proofJson = presentationMessage.anoncredsProof()
         val partialProof = Json { ignoreUnknownKeys = true }
             .decodeFromString<PartialProof>(proofJson)
 
-        // logger.info("verifyProof() partialProof = $partialProof")
-        // logger.info("verifyProof() identifiers = ${partialProof.identifiers}")
-
         val identifiers = partialProof.identifiers
         if (identifiers.isEmpty()) {
-            // logger.error("No identifiers found in the proof")
             return false
         }
 
@@ -50,18 +45,14 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val holderTimestamp: Int? = identifier.timestamp
         val revRegId = identifier.revocationRegistryId
 
-        // logger.error("Verifier revRegId  = $revRegId")
-        // logger.error("Verifier timestamp = $holderTimestamp")
-
         val presentationRequest = PresentationRequest(requestMessage.anoncredsProofRequest())
-        // logger.error("Verifier request nonce = ${presentationRequest.toJson()}")
 
         val presentation = Presentation(proofJson)
         val proofUniffi = presentation.proof()
         val aggregated = proofUniffi.aggregatedProof
 
-        PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
-        PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
+        //PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
+        //PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
 
         val schemaIds: Set<String> = schemas.schemas.keys
         val schemasAnoncreds: Map<String, Schema> = RecoverFromLedger.getSchemas(schemaIds, agent)
@@ -83,6 +74,7 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
                     nonrevokeIntervalOverride = null,
                 )
             } catch (e: Exception) {
+                LogUtil.error(this, e) { "Error verifying non-revoked proof: ${e.message}" }
                 // logger.error("Error verifying non-revoked proof: $e")
                 false
             }
@@ -94,14 +86,8 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val revRegDefUni = RevocationRegistryDefinition(revRegDefJson)
         val revRegDefsMap = mapOf(revRegId to revRegDefUni)
 
-        // logger.error("RevocationRegistryDefinition JSON = ${revRegDefUni.toJson()}")
 
         val ledgerStatusList = agent.ledgerService.getRevocationStatusList(revRegId, ts)
-
-        // logger.error("StatusList issuerId = ${ledgerStatusList.issuerId}")
-        // logger.error("StatusList timestamp = ${ledgerStatusList.timestamp}")
-        // logger.error("StatusList size = ${ledgerStatusList.revocationList.size}")
-
         val statusListJson = indyBesuRevocationStatusListToJson(
             src = ledgerStatusList,
             revRegDefId = revRegId,
@@ -109,8 +95,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         )
 
         val statusListUniffi = anoncreds_uniffi.RevocationStatusList(statusListJson)
-
-        // logger.error("UNIFFI StatusList JSON = ${statusListUniffi.toJson()}")
 
         return try {
             val verified = Verifier().verifyPresentation(
@@ -127,6 +111,7 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
             verified
         } catch (e: Exception) {
             // logger.error("Error verifying revoked proof: $e")
+            LogUtil.error(this, e) { "Error verifying revoked proof: ${e.message}" }
             false
         }
     }

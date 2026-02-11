@@ -5,14 +5,14 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class PresentationAckHandlerV2(val agent: Agent) : MessageHandler {
-    private val logger = LoggerFactory.getLogger(PresentationAckHandlerV2::class.java)
     override val messageType = PresentationAckMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("Entering in PresentationAckHandlerV2")
+        LogUtil.info(this) { "handler presentation ack" }
         agent.proofServiceV2.processAck(messageContext)
         return null
     }

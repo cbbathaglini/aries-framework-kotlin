@@ -6,6 +6,7 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class PresentationHandlerV2(val agent: Agent) : MessageHandler {
@@ -14,10 +15,9 @@ class PresentationHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = PresentationMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("Entering in PresentationHandlerV2")
+        LogUtil.info(this) { "handler presentation" }
         val presentationRecord = agent.proofServiceV2.processPresentation(messageContext)
 
-        logger.info("prseentarecord: ${presentationRecord.isVerified} $presentationRecord")
         if (presentationRecord.autoAcceptProof == AutoAcceptProof.Always ||
             agent.agentConfig.autoAcceptProof == AutoAcceptProof.Always
         ) {

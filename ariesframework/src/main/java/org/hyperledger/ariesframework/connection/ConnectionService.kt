@@ -31,6 +31,7 @@ import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.routing.Routing
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class ConnectionService(val agent: Agent) {
@@ -223,7 +224,7 @@ class ConnectionService(val agent: Agent) {
         imageUrl: String? = null,
         autoAcceptConnection: Boolean? = null,
     ): OutboundMessage {
-        logger.debug("Creating connection request for connection: $connectionId")
+        LogUtil.info(this) { "Creating connection request for connection: $connectionId" }
         var connectionRecord = connectionRepository.getById(connectionId)
         assert(connectionRecord.state == ConnectionState.Invited)
         assert(connectionRecord.role == ConnectionRole.Invitee)

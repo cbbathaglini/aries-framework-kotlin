@@ -11,6 +11,7 @@ import org.hyperledger.ariesframework.proofs.models.RetrievedCredentialsAnonCred
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.v2.ProofUtils
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
@@ -18,7 +19,7 @@ class RequestPresentationHandlerV2(val agent: Agent) : MessageHandler {
     private val logger = LoggerFactory.getLogger(RequestPresentationHandlerV2::class.java)
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("Entering in RequestPresentationHandlerV2")
+        LogUtil.info(this) { "handler request presentation" }
         val proofRecord = agent.proofServiceV2.processRequest(messageContext)
 
         if (proofRecord.autoAcceptProof == AutoAcceptProof.Always ||

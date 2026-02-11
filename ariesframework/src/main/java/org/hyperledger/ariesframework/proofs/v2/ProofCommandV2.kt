@@ -24,10 +24,10 @@ import org.hyperledger.ariesframework.proofs.v2.handlers.RequestPresentationHand
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
-    private val logger = LoggerFactory.getLogger(ProofCommandV2::class.java)
 
     init {
         registerHandlers(dispatcher)
@@ -60,6 +60,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         willConfirm: Boolean? = null,
         comment: String? = null,
     ): Pair<ProofExchangeRecord, VerifierRecord> {
+        LogUtil.info(this) { "Requesting proof" }
         val connection = agent.connectionRepository.getById(connectionId)
 
         val format: String = formats.first().attachmentId ?: throw CredoError("Proof format not informed")
@@ -91,7 +92,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         )
 
         agent.verifierRepository.save(verifierRecord)
-
+        LogUtil.info(this) { "verifier record = ${verifierRecord}" }
         return Pair(record, verifierRecord)
     }
 
@@ -164,13 +165,14 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         record: ProofExchangeRecord,
         chosenCredentialId: String? = null,
     ): Pair<ProofExchangeRecord, PresentationMessageV2> {
+        LogUtil.info(this) { "creating presentation" }
         var chosenCredential: CredentialExchangeRecord? = null
         if (chosenCredentialId != null) {
             chosenCredential =
                 agent.credentialExchangeRepository.getById(chosenCredentialId)
         }
 
-        logger.info("Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}")
+        LogUtil.info(this) { "Chosen credential: ${chosenCredential?.w3cCredentialId ?: "none credential"}" }
 
         val retrievedCredentials = ProofUtils.getRequestedCredentialsForProofRequest(
             proofRecordId = record.id,
@@ -182,7 +184,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
             agent.proofServiceV2.autoSelectCredentialsForProofRequest(retrievedCredentials)
 
         val requestedCredentialsMap = requestedCredentials.toMap()
-        logger.info("map requested: $requestedCredentialsMap")
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats ?: emptyList(),
@@ -199,6 +200,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         chosenCredentialId: String? = null,
         comment: String? = null,
     ): ProofExchangeRecord {
+        LogUtil.info(this) { "accepting request" }
         var chosenCredential: CredentialExchangeRecord? = null
         if (chosenCredentialId != null) {
             chosenCredential =
@@ -223,7 +225,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val record = agent.proofRepository.getById(proofRecordId)
 
         val requestedCredentialsMap = requestedCredentials.toMap()
-        logger.info("map requested: $requestedCredentialsMap")
+
         val params = AcceptProofRequestOptions(
             proofRecord = record,
             proofFormats = record.formats!!,
@@ -237,7 +239,6 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         val connection = agent.connectionRepository.getById(record.connectionId)
 
         requestedCredentials.normalizeAllAttributes()
-        logger.info("requestedCredentials: $requestedCredentials")
 
         agent.historyRepository.save(
             HistoryRecord(

@@ -113,25 +113,20 @@ object Indyidentifiers {
 
         return when {
             isUnqualifiedSchemaId(identifier) -> {
-                logger.info("isUnqualifiedSchemaId")
                 val (namespaceIdentifier, schemaName, schemaVersion) = parseIndySchemaId(identifier)
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/SCHEMA/$schemaName/$schemaVersion"
             }
             isUnqualifiedCredentialDefinitionId(identifier) -> {
-                logger.info("isUnqualifiedCredentialDefinitionId")
                 val (namespaceIdentifier, schemaSeqNo, tag) = parseIndyCredentialDefinitionId(identifier)
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/CLAIM_DEF/$schemaSeqNo/$tag"
             }
             isUnqualifiedRevocationRegistryId(identifier) -> {
-                logger.info("isUnqualifiedRevocationRegistryId")
 
                 val (did, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag, namespace) =
                     parseIndyRevocationRegistryId(identifier)
-                logger.info("did:indy:------:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag")
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag"
             }
             isUnqualifiedIndyDid(identifier) -> {
-                logger.info("isUnqualifiedIndyDid")
                 "did:indy:$namespace:$identifier"
             }
             else -> throw IllegalArgumentException("Cannot create qualified indy identifier for '$identifier' with namespace '$namespace'")
@@ -227,9 +222,7 @@ object Indyidentifiers {
     }
 
     fun parseIndyRevocationRegistryId(revocationRegistryId: String): ParsedIndyRevocationRegistryId {
-        logger.info("parseIndyRevocationRegistryId:::: $revocationRegistryId")
         val didIndyMatch = didIndyRevocationRegistryIdRegex.matcher(revocationRegistryId)
-        logger.info("didIndyMatch1:::: $didIndyMatch")
 
         if (didIndyMatch != null) {
             val did = didIndyMatch.group(1)

@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.v2.verifier.RevocationRegistryEntry
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationRegistryDefinition
 import uniffi.indy_besu_vdr.RevocationStatusList
@@ -32,7 +33,7 @@ data class RevocationRegistries(val agent: Agent) {
         val updatedSelectedCredentials = selectedCredentials
         val revocationRegistries: MutableMap<String, RevocationRegistryBucket> = mutableMapOf()
 
-        logger.debug("Retrieving revocation registries for proof request $proofRequest $selectedCredentials")
+        LogUtil.info(this) {"Retrieving revocation registries for proof request $proofRequest $selectedCredentials"}
         val referentCredentials = mutableListOf<Map<String, Any?>>()
 
         for ((referent, selectedCredential) in selectedCredentials.attributes) {
@@ -97,10 +98,9 @@ data class RevocationRegistries(val agent: Agent) {
             }
 
             if (nonRevoked != null && credentialRevocationId != null && revocationRegistryId != null) {
-                logger.trace(
-                    "Presentation is requesting proof of non revocation for referent '$referent', creating revocation state for credential: " +
-                        "nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
-                )
+                LogUtil.info(this) {
+                    "Presentation is requesting proof of non revocation for referent '$referent', creating revocation state for credential: nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp"
+                }
 
                 // descomentar depois? ver oq fazer
                 // RevocationInterval.assertBestPracticeRevocationInterval(nonRevoked)
@@ -131,10 +131,9 @@ data class RevocationRegistries(val agent: Agent) {
 
             val timestampToFetch: ULong? = timestamp ?: nonRevoked?.to
 
-            logger.info(
-                "referent '$referent',: " +
-                    "revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp",
-            )
+            LogUtil.info(this) {
+                "referent '$referent',: revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp"
+            }
 
             if (timestampToFetch != null &&
                 revocationRegistryId != null &&
@@ -185,9 +184,9 @@ data class RevocationRegistries(val agent: Agent) {
             }
         }
 
-        logger.debug(
-            "Retrieved revocation registries for proof request: $revocationRegistries",
-        )
+        LogUtil.info(this) {
+            "Retrieved revocation registries for proof request: $revocationRegistries"
+        }
 
         return RevocationRegistriesForRequestResult(
             revocationRegistries = revocationRegistries,

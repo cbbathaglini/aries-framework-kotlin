@@ -5,6 +5,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
@@ -12,12 +13,7 @@ class RevocationNotificationHandlerV2(val agent: Agent) : MessageHandler {
     private val logger = LoggerFactory.getLogger(RevocationNotificationHandlerV2::class.java)
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.info("message: ${messageContext.message}")
-        logger.info("plaintextMessage: ${messageContext.plaintextMessage}")
-
-//        val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
-//            ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
-//        logger.info("revocationMessage: ${revocationMessage.toString()}")
+        LogUtil.info(this) { "handle revocation notification -  ${messageContext.plaintextMessage}" }
 
         agent.revocationNotificationServicev2.processRevocationNotification(messageContext)
         return null

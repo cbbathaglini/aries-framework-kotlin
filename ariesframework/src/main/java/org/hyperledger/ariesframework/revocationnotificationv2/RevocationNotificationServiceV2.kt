@@ -13,11 +13,11 @@ import org.hyperledger.ariesframework.revocationnotification.model.RevocationNot
 import org.hyperledger.ariesframework.revocationnotificationv2.handler.RevocationNotificationHandlerV2
 import org.hyperledger.ariesframework.revocationnotificationv2.message.RevocationNotificationMessageV2
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.RevocationIdentifier
 import org.slf4j.LoggerFactory
 
 class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatcher) {
-    private val logger = LoggerFactory.getLogger(RevocationNotificationServiceV2::class.java)
 
     private val credentialRepository = agent.credentialExchangeRepository
 
@@ -43,7 +43,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
     }
 
     suspend fun processRevocationNotification(messageContext: InboundMessageContext) {
-        logger.info("Processing revocation notification v2")
+        LogUtil.info(this) { "processing revocation notification" }
 
         val revocationMessage = messageContext.message as? RevocationNotificationMessageV2
             ?: throw CredoError("Invalid message type: Expected RevocationNotificationMessageV2")
@@ -106,7 +106,7 @@ class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatch
                     anoncredsType,
                 )
         } catch (e: Exception) {
-            logger.warn("Not found credential record by CredentialRevocationId and RevocationRegistryId")
+            LogUtil.warn(this) { "Not found credential record by CredentialRevocationId and RevocationRegistryId" }
             error = true
         }
 

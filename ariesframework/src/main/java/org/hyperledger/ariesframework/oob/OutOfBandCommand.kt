@@ -22,6 +22,7 @@ import org.hyperledger.ariesframework.oob.models.OutOfBandState
 import org.hyperledger.ariesframework.oob.models.ReceiveOutOfBandInvitationConfig
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.util.DIDParser
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class OutOfBandCommand(val agent: Agent, private val dispatcher: Dispatcher) {
@@ -127,7 +128,7 @@ class OutOfBandCommand(val agent: Agent, private val dispatcher: Dispatcher) {
 
         agent.outOfBandRepository.save(outOfBandRecord)
         agent.eventBus.publish(AgentEvents.OutOfBandEvent(outOfBandRecord.copy()))
-        logger.debug("OutOfBandInvitation created with id: ${outOfBandInvitation.id}")
+        LogUtil.info(this) { "OutOfBandInvitation created with id: ${outOfBandInvitation.id}" }
 
         return outOfBandRecord
     }

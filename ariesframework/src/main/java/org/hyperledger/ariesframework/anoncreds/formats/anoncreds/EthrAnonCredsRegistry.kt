@@ -15,6 +15,7 @@ import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionRet
 import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
 import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
 
@@ -135,7 +136,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
                 revocationStatusList = anoncredsRevocationStatusList,
             )
         } catch (e: Exception) {
-            logger.info("getRevocationStatusList error: ${e.message}")
+            LogUtil.error(this, e) {"getRevocationStatusList error: ${e.message}"}
             throw e
         }
     }

@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -33,7 +34,6 @@ private data class ReferentCredential(
 )
 
 class RevocationService(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(RevocationService::class.java)
 
     suspend fun getRevocationRegistries(proof: PartialProof): String {
         val revocationRegistries = mutableMapOf<String, MutableMap<String, JsonObject>>()
@@ -74,7 +74,8 @@ class RevocationService(val agent: Agent) {
                     identifier.timestamp,
                 )
                 val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryJson)
-                logger.debug("Revocation registry at time ${identifier.timestamp}: $revocationRegistryJson")
+
+                LogUtil.warn(this) { "Revocation registry at time ${identifier.timestamp}: $revocationRegistryJson" }
                 val revocationStatusList = RevocationStatusList(
                     revocationRegistryDefinition.issuerId(),
                     revocationRegistryDelta.accum,
@@ -216,7 +217,8 @@ class RevocationService(val agent: Agent) {
     }
 
     suspend fun downloadTails(revocationRegistryDefinition: RevocationRegistryDefinition): File {
-        logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}")
+        LogUtil.info(this) { "Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}" }
+
         val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
         if (!tailsFolder.exists()) {
             tailsFolder.mkdir()

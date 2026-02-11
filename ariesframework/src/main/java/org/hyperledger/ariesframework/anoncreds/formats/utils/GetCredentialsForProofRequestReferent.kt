@@ -17,6 +17,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusL
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.GetCredentialsForProofRequestReturn
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import java.util.Date
 
@@ -82,10 +83,8 @@ class GetCredentialsForProofRequestReferent {
                 return RevocationStatusResult(isRevoked = null, timestamp = null)
             }
 
-            logger.trace(
-                "Fetching credential revocation status for credential revocation id '$credentialRevocationId' " +
-                    "with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'",
-            )
+            LogUtil.info(this) { "Fetching credential revocation status for credential revocation id '$credentialRevocationId' with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
+            }
 
             // Boas práticas (Aries RFC 0441) <<< DESCOMENTAR?
             // RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
@@ -101,11 +100,9 @@ class GetCredentialsForProofRequestReferent {
             val index = credentialRevocationId.toInt()
             val isRevoked = revocationStatusList.revocationList[index] == 1
 
-            logger.trace(
-                "Credential with credential revocation index '$credentialRevocationId' is " +
-                    (if (isRevoked) "" else "not ") +
-                    "revoked with revocation interval to '${requestNonRevoked.to}' & from '${requestNonRevoked.from}'",
-            )
+            LogUtil.info(this) {
+                "Credential with credential revocation index '$credentialRevocationId' is " + (if (isRevoked) "" else "not ") + "revoked with revocation interval to '${requestNonRevoked.to}' & from '${requestNonRevoked.from}'"
+            }
 
             return RevocationStatusResult(
                 isRevoked = isRevoked,
