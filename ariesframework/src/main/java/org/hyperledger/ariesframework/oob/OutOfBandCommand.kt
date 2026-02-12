@@ -167,7 +167,7 @@ class OutOfBandCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     }
 
     private fun getSupportedHandshakeProtocols(): List<HandshakeProtocol> {
-        return listOf(HandshakeProtocol.Connections, HandshakeProtocol.DidExchange11)
+        return listOf(HandshakeProtocol.DidExchange11)
     }
 
     /**
