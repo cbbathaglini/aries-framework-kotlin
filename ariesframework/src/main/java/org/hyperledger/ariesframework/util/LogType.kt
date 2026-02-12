@@ -12,7 +12,7 @@ enum class LogType {
     ERROR {
         override fun isEnabled(logger: org.slf4j.Logger) =
             logger.isErrorEnabled
-    };
+    }, ;
 
     abstract fun isEnabled(logger: org.slf4j.Logger): Boolean
 }

@@ -25,7 +25,6 @@ import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
 
@@ -92,7 +91,7 @@ class ProofCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
         )
 
         agent.verifierRepository.save(verifierRecord)
-        LogUtil.info(this) { "verifier record = ${verifierRecord}" }
+        LogUtil.info(this) { "verifier record = $verifierRecord" }
         return Pair(record, verifierRecord)
     }
 

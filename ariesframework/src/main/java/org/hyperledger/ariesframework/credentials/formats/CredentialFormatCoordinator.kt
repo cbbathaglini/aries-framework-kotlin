@@ -24,8 +24,6 @@ import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.PrintLongLine
-import org.slf4j.LoggerFactory
 
 class CredentialFormatCoordinator(
     val agent: Agent,
@@ -246,7 +244,7 @@ class CredentialFormatCoordinator(
     }
 
     suspend fun processOffer(processOfferParams: ProcessOfferParams) {
-        LogUtil.info(this) { "processing offer ${processOfferParams}" }
+        LogUtil.info(this) { "processing offer $processOfferParams" }
         val credentialExchangeRecord = processOfferParams.credentialExchangeRecord
         val formatServices = processOfferParams.formatService
         val message = processOfferParams.message
@@ -300,7 +298,6 @@ class CredentialFormatCoordinator(
                 requestAttachment.add(acceptedOffer.attachment)
                 formats.add(acceptedOffer.format)
                 requestAppendAttachments.addAll(acceptedOffer.appendAttachment ?: emptyList())
-
             }
         }
 
@@ -490,17 +487,19 @@ class CredentialFormatCoordinator(
      *
      */
     suspend fun processCredential(params: ProcessCredentialParams) {
-        LogUtil.info(this) { "process credential ${params}" }
+        LogUtil.info(this) { "process credential $params" }
         val issueMessage = params.message
         val requestMessage = params.requestCredentialMessageV2
         val credentialExchangeRecord = params.credentialExchangeRecord
         val formatServices = params.formatService
 
-        LogUtil.info(this) { "credentialExchange AnonCredsCredentialRequestMetadataKey => ${
-            credentialExchangeRecord.metadata.get(
-                MetadataKeys.AnonCredsCredentialRequestMetadataKey,
-            )
-        }" }
+        LogUtil.info(this) {
+            "credentialExchange AnonCredsCredentialRequestMetadataKey => ${
+                credentialExchangeRecord.metadata.get(
+                    MetadataKeys.AnonCredsCredentialRequestMetadataKey,
+                )
+            }"
+        }
 
         val offerMessage =
             agent.didCommMessageRepository.getTypedAgentMessage<OfferCredentialMessageV2>(
@@ -521,7 +520,7 @@ class CredentialFormatCoordinator(
                 formats = issueMessage.formats,
                 attachments = issueMessage.credentialAttachments,
             )
-            //PrintLongLine.print("issueAttachment enco: $issueAttachment")
+            // PrintLongLine.print("issueAttachment enco: $issueAttachment")
 
             val requestAttachment = getAttachmentForService(
                 credentialFormatService = formatService,

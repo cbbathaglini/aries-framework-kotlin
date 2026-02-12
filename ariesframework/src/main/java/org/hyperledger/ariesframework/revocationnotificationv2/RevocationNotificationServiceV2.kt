@@ -15,7 +15,6 @@ import org.hyperledger.ariesframework.revocationnotificationv2.message.Revocatio
 import org.hyperledger.ariesframework.revocationnotificationv2.model.RevocationNotificationMessageV2Options
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.RevocationIdentifier
-import org.slf4j.LoggerFactory
 
 class RevocationNotificationServiceV2(val agent: Agent, val dispatcher: Dispatcher) {
 

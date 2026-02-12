@@ -136,7 +136,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
                 revocationStatusList = anoncredsRevocationStatusList,
             )
         } catch (e: Exception) {
-            LogUtil.error(this, e) {"getRevocationStatusList error: ${e.message}"}
+            LogUtil.error(this, e) { "getRevocationStatusList error: ${e.message}" }
             throw e
         }
     }

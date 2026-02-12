@@ -121,7 +121,6 @@ object Indyidentifiers {
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/CLAIM_DEF/$schemaSeqNo/$tag"
             }
             isUnqualifiedRevocationRegistryId(identifier) -> {
-
                 val (did, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag, namespace) =
                     parseIndyRevocationRegistryId(identifier)
                 "did:indy:$namespace:$namespaceIdentifier/anoncreds/v0/REV_REG_DEF/$schemaSeqNo/$credentialDefinitionTag/$revocationRegistryTag"

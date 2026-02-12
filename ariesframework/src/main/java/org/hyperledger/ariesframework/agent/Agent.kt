@@ -60,7 +60,6 @@ import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.hyperledger.ariesframework.vc.service.W3cCredentialService
 import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
-import org.slf4j.LoggerFactory
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
 

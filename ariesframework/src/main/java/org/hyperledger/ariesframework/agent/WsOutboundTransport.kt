@@ -14,7 +14,6 @@ import okio.ByteString.Companion.encodeUtf8
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.OutboundPackage
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class WsOutboundTransport(val agent: Agent) : OutboundTransport, WebSocketListener() {
     private var socket: WebSocket? = null
@@ -25,7 +24,7 @@ class WsOutboundTransport(val agent: Agent) : OutboundTransport, WebSocketListen
     override suspend fun sendPackage(_package: OutboundPackage) {
         lock.withLock {
             LogUtil.info(this) { "Sending outbound package to endpoint: ${_package.endpoint}" }
-            //logger.debug("_package.responseRequested: {}", _package.responseRequested)
+            // logger.debug("_package.responseRequested: {}", _package.responseRequested)
             if (socket == null || endpoint != _package.endpoint) {
                 socket = createSocket(_package.endpoint)
             }
@@ -36,7 +35,7 @@ class WsOutboundTransport(val agent: Agent) : OutboundTransport, WebSocketListen
     }
 
     private suspend fun createSocket(endpoint: String): WebSocket {
-        LogUtil.info(this) { "Creating socket for endpoint: ${endpoint}" }
+        LogUtil.info(this) { "Creating socket for endpoint: $endpoint" }
         socket?.close(CLOSE_BY_CLIENT, null)
         val request = okhttp3.Request.Builder().url(endpoint).build()
         socket = AgentHttpClient.client.newWebSocket(request, this)
@@ -52,11 +51,11 @@ class WsOutboundTransport(val agent: Agent) : OutboundTransport, WebSocketListen
     }
 
     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-        LogUtil.info(this) { "Socket open for endpoint: ${endpoint}"}
+        LogUtil.info(this) { "Socket open for endpoint: $endpoint" }
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        LogUtil.info(this) { "Agent ${agent.agentConfig.label} received a message string"}
+        LogUtil.info(this) { "Agent ${agent.agentConfig.label} received a message string" }
         val encryptedMessage = Json.decodeFromString<EncryptedMessage>(text)
         GlobalScope.launch {
             agent.receiveMessage(encryptedMessage)
@@ -72,14 +71,14 @@ class WsOutboundTransport(val agent: Agent) : OutboundTransport, WebSocketListen
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-        LogUtil.info(this) { "Socket closing with code, reason: ${code} ${reason}"}
+        LogUtil.info(this) { "Socket closing with code, reason: $code $reason" }
         if (code != CLOSE_BY_CLIENT) {
             socket = null
         }
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        LogUtil.info(this) { "Socket closed for endpoint: ${endpoint}" }
+        LogUtil.info(this) { "Socket closed for endpoint: $endpoint" }
         if (code != CLOSE_BY_CLIENT) {
             socket = null
         }

@@ -15,7 +15,7 @@ class BasicMessageHandler(val agent: Agent) : MessageHandler {
     override val messageType = BasicMessage.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        LogUtil.info(this) { "basic message handling"}
+        LogUtil.info(this) { "basic message handling" }
         val message = messageContext.message as BasicMessage
 
         val basicMessageRecord = BasicMessageRecord(

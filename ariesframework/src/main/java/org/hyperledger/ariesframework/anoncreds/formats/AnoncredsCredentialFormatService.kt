@@ -58,8 +58,6 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.util.Base64Operations
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.PrintLongLine
-import org.slf4j.LoggerFactory
 import java.util.Date
 
 class AnoncredsCredentialFormatService(
@@ -88,7 +86,7 @@ class AnoncredsCredentialFormatService(
     ): CredentialFormatCreateProposalReturn {
         LogUtil.info(this) { "creating proposal" }
         val format = Format(format = ANONCREDS_CREDENTIAL_FILTER)
-        //PrintLongLine.print("credentialFormats------- $credentialFormats")
+        // PrintLongLine.print("credentialFormats------- $credentialFormats")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeCredentialFormat>(credentialFormats)
 
         val proposal = AnonCredsCredentialProposal(
@@ -153,7 +151,7 @@ class AnoncredsCredentialFormatService(
         proposalAttachments: Attachment,
     ): CredentialFormatCreateOfferReturn {
         LogUtil.info(this) { "accepting proposal" }
-        //PrintLongLine.print("credentialFormats------- $credentialFormats")
+        // PrintLongLine.print("credentialFormats------- $credentialFormats")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val proposalJson = proposalAttachments.getDataAsJson() // <AnonCredsCredentialProposalFormat>()
@@ -195,7 +193,7 @@ class AnoncredsCredentialFormatService(
         attachmentId: String?,
     ): CredentialFormatCreateOfferReturn {
         LogUtil.info(this) { "creating offer" }
-        //PrintLongLine.print("credentialFormats------- $credentialFormats")
+        // PrintLongLine.print("credentialFormats------- $credentialFormats")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val createAnoncredsOffer = CreateAnoncredsOffer(
@@ -255,7 +253,7 @@ class AnoncredsCredentialFormatService(
         try {
             credentialDefinitionUniffi =
                 CredentialDefinition(credentialDefinition)
-            //PrintLongLine.print(">>>> cred def uniffi: ${credentialDefinitionUniffi.toJson()}")
+            // PrintLongLine.print(">>>> cred def uniffi: ${credentialDefinitionUniffi.toJson()}")
         } catch (e: Throwable) {
             LogUtil.error(this, e) { "error anoncred uniffi: ${e.message}" }
         }
@@ -422,7 +420,6 @@ class AnoncredsCredentialFormatService(
         )
 
         val attachment = FormatDataUtil.getFormatData(credential, format.attachId)
-
 
         LogUtil.info(this) { "request accepted" }
         return CredentialFormatCreateReturn(

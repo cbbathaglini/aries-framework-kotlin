@@ -4,14 +4,14 @@ object LogUtil {
 
     inline fun info(
         caller: Any,
-        noinline message: () -> String
+        noinline message: () -> String,
     ) {
         log(caller, LogType.INFO, null, message)
     }
 
     inline fun warn(
         caller: Any,
-        noinline message: () -> String
+        noinline message: () -> String,
     ) {
         log(caller, LogType.WARN, null, message)
     }
@@ -19,7 +19,7 @@ object LogUtil {
     inline fun error(
         caller: Any,
         throwable: Throwable? = null,
-        noinline message: () -> String
+        noinline message: () -> String,
     ) {
         log(caller, LogType.ERROR, throwable, message)
     }
@@ -29,7 +29,7 @@ object LogUtil {
         caller: Any,
         type: LogType,
         throwable: Throwable?,
-        message: () -> String
+        message: () -> String,
     ) {
         val clazz = caller::class.java
         val logger = org.slf4j.LoggerFactory.getLogger(clazz)
@@ -44,8 +44,9 @@ object LogUtil {
             LogType.INFO -> logger.info(finalMessage)
             LogType.WARN -> logger.warn(finalMessage)
             LogType.ERROR ->
-                if (throwable != null) logger.error(finalMessage, throwable)
-                else logger.error(finalMessage)
+                if (throwable != null) {
+                    logger.error(finalMessage, throwable)
+                } else logger.error(finalMessage)
         }
     }
 
@@ -53,7 +54,7 @@ object LogUtil {
         Throwable().stackTrace
             .firstOrNull {
                 it.className == clazz.name &&
-                        it.methodName !in setOf("info", "warn", "error", "log")
+                    it.methodName !in setOf("info", "warn", "error", "log")
             }
             ?.methodName ?: "unknown"
 }

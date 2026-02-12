@@ -9,7 +9,6 @@ import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessa
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.PrintLongLine
 import org.slf4j.LoggerFactory
 
 class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
@@ -20,7 +19,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         LogUtil.info(this) { "issue credential - issue step" }
 
-        //PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // aq ja tem o encode
+        // PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // aq ja tem o encode
         val credentialRecord = agent.credentialServiceV2.processCredential(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToCredential(
@@ -30,7 +29,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
         if (shouldAutoRespond) {
             val message = acceptCredential(credentialRecord)
-            //logger.info("message accepted: $message")
+            // logger.info("message accepted: $message")
             return OutboundMessage(message, messageContext.connection!!)
         }
 
@@ -38,7 +37,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     private suspend fun acceptCredential(credentialRecord: CredentialExchangeRecord): CredentialAckMessageV2 {
-        //logger.info("Automatically sending acknowledgement with autoAccept")
+        // logger.info("Automatically sending acknowledgement with autoAccept")
 
         val (_, ackMessage) = agent.credentialServiceV2.acceptCredential(credentialRecord)
             ?: throw CredoError("Failed to accept credential for record ID ${credentialRecord.id}")

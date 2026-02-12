@@ -6,7 +6,6 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationAckMessageV2
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class PresentationAckHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = PresentationAckMessageV2.type

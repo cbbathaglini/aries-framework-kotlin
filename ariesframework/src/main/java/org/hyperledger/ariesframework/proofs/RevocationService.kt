@@ -18,7 +18,6 @@ import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
 

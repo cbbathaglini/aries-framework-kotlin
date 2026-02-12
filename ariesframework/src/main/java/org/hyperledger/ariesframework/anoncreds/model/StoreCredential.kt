@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
-import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class StoreCredential {

@@ -5,7 +5,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.slf4j.LoggerFactory
 
 @Serializable
 data class FetchSchemaReturn(

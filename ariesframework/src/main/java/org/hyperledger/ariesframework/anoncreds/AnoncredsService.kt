@@ -6,7 +6,6 @@ import org.hyperledger.ariesframework.proofs.models.AttributeFilter
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.toJsonString
-import org.slf4j.LoggerFactory
 
 class AnoncredsService(val agent: Agent) {
     private val secretCategory = "link-secret-category"

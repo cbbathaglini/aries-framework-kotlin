@@ -35,7 +35,6 @@ import org.hyperledger.ariesframework.credentials.models.problemreport.Credentia
 import org.hyperledger.ariesframework.credentials.operation.CreateProposalParams
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
-import org.hyperledger.ariesframework.credentials.v2.handlers.OfferCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialProblemReportMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
@@ -52,13 +51,11 @@ import org.hyperledger.ariesframework.problemreports.messages.DescriptionOptions
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.composeAutoAccept
-import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class CredentialServiceV2(val agent: Agent) {
-    //private val logger = LoggerFactory.getLogger(CredentialServiceV2::class.java)
+    // private val logger = LoggerFactory.getLogger(CredentialServiceV2::class.java)
     private val credentialExchangeRepository = agent.credentialExchangeRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
     private val credentialFormats = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent = agent), LegacyIndyCredentialFormatService(agent = agent))
@@ -102,7 +99,7 @@ class CredentialServiceV2(val agent: Agent) {
 
         val proposalCredentialMessageV2 = this.credentialFormatCoordinator.createProposal(createProposalParams)
 
-        LogUtil.info(this) { "Save record and emit state change event: ${proposalCredentialMessageV2}" }
+        LogUtil.info(this) { "Save record and emit state change event: $proposalCredentialMessageV2" }
         credentialExchangeRepository.save(credentialExchangeRecord)
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy()))
 
@@ -116,10 +113,10 @@ class CredentialServiceV2(val agent: Agent) {
      * @returns credential record appropriate for this incoming message (once accepted)
      */
     suspend fun processProposal(messageContext: InboundMessageContext): CredentialExchangeRecord {
-        LogUtil.info(this) { "Processing credential proposal"}
+        LogUtil.info(this) { "Processing credential proposal" }
         val connection = messageContext.connection
         val proposalMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as ProposeCredentialMessageV2
-        LogUtil.info(this) { "credential proposal id = ${proposalMessage.id}"}
+        LogUtil.info(this) { "credential proposal id = ${proposalMessage.id}" }
 
         val credentialRecord = agent.credentialExchangeRepository.getByThreadAndRole(proposalMessage.threadId, CredentialRole.Issuer)
 
@@ -129,8 +126,10 @@ class CredentialServiceV2(val agent: Agent) {
         }
 
         if (credentialRecord != null) {
-            LogUtil.info(this) { "Credential record already exists " +
-                    "[id=${credentialRecord.id} | w3cid=${credentialRecord.w3cCredentialId} | revReg=${credentialRecord.revRegId}]" }
+            LogUtil.info(this) {
+                "Credential record already exists " +
+                    "[id=${credentialRecord.id} | w3cid=${credentialRecord.w3cCredentialId} | revReg=${credentialRecord.revRegId}]"
+            }
             val proposalCredentialMessage = agent.didCommMessageRepository.getTypedAgentMessage<ProposeCredentialMessageV2>(
                 associatedRecordId = credentialRecord.id,
                 messageType = ProposeCredentialMessageV2.type,
@@ -353,7 +352,6 @@ class CredentialServiceV2(val agent: Agent) {
         )
         val offerMessage = credentialFormatCoordinator.createOffer(createCredential)
 
-
         agent.credentialExchangeRepository.save(credentialExchangeRecord)
         agent.eventBus.publish(AgentEvents.CredentialEventV2(credentialExchangeRecord.copy()))
 
@@ -371,9 +369,9 @@ class CredentialServiceV2(val agent: Agent) {
         LogUtil.info(this) { "processing offer" }
         val connection = messageContext.connection
         val offerMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as OfferCredentialMessageV2
-        //PrintLongLine.print("offer message long: $offerMessage")
+        // PrintLongLine.print("offer message long: $offerMessage")
 
-        LogUtil.info(this) { "Processing credential offer with id ${offerMessage.id}"}
+        LogUtil.info(this) { "Processing credential offer with id ${offerMessage.id}" }
 
         var credentialExchangeRecord = agent.credentialExchangeRepository.findByThreadRoleAndConnectionId(
             threadId = offerMessage.threadId,
@@ -381,7 +379,7 @@ class CredentialServiceV2(val agent: Agent) {
             connectionId = connection?.id,
         )
 
-        LogUtil.info(this) { "Processing credential ${credentialExchangeRecord?.logSummary()}"}
+        LogUtil.info(this) { "Processing credential ${credentialExchangeRecord?.logSummary()}" }
 
         val formatServices = getFormatServicesFromMessage(offerMessage.formats)
         if (formatServices.isEmpty()) {
@@ -421,7 +419,7 @@ class CredentialServiceV2(val agent: Agent) {
 
             credentialExchangeRepository.save(credentialExchangeRecord)
             updateState(credentialExchangeRecord, CredentialState.OfferReceived)
-            LogUtil.info(this) { "Processed credential ${credentialExchangeRecord?.logSummary()}"}
+            LogUtil.info(this) { "Processed credential ${credentialExchangeRecord?.logSummary()}" }
             return credentialExchangeRecord
         }
 
@@ -440,7 +438,7 @@ class CredentialServiceV2(val agent: Agent) {
             formats = offerMessage.formats,
             comment = offerMessage.comment,
         )
-        LogUtil.info(this) { "Credential created = ${credentialExchangeRecord.logSummary()}"}
+        LogUtil.info(this) { "Credential created = ${credentialExchangeRecord.logSummary()}" }
 
         val processOfferParams = ProcessOfferParams(
             credentialExchangeRecord = credentialExchangeRecord,
@@ -743,7 +741,6 @@ class CredentialServiceV2(val agent: Agent) {
         val issueCredential = MessageSerializer.decodeFromString(message) as IssueCredentialMessageV2
         LogUtil.info(this) { "Processing credential with id ${issueCredential.id}" }
 
-
         val credentialExchangeRecord = agent.credentialExchangeRepository.getByThreadAndRoleAndConnectionId(
             threadId = issueCredential.threadId,
             connectionId = connection?.id,
@@ -782,8 +779,8 @@ class CredentialServiceV2(val agent: Agent) {
             requestCredentialMessageV2 = requestMessage,
             message = issueCredential,
         )
-        //PrintLongLine.print("processCredentialParams ==> $processCredentialParams")
-        //PrintLongLine.print("processCredentialParams message==> ${processCredentialParams.message.credentialAttachments}")
+        // PrintLongLine.print("processCredentialParams ==> $processCredentialParams")
+        // PrintLongLine.print("processCredentialParams message==> ${processCredentialParams.message.credentialAttachments}")
 
         credentialFormatCoordinator.processCredential(processCredentialParams)
         updateState(credentialExchangeRecord, CredentialState.CredentialReceived)
@@ -791,7 +788,6 @@ class CredentialServiceV2(val agent: Agent) {
         LogUtil.info(this) { "request accepted" }
         return credentialExchangeRecord
     }
-
 
     /**
      * Create a {@link CredentialAckMessageV2} as response to a received credential.
@@ -817,13 +813,12 @@ class CredentialServiceV2(val agent: Agent) {
                 parentThreadId = credentialExchangeRecord.parentThreadId,
             )
         }
-        LogUtil.info(this) { "ack message generated = ${ackMessage}" }
+        LogUtil.info(this) { "ack message generated = $ackMessage" }
 
         updateState(
             credentialRecord = credentialExchangeRecord,
             newState = CredentialState.Done,
         )
-
 
         LogUtil.info(this) { "credential accepted = Done" }
         return credentialExchangeRecord to ackMessage
@@ -841,7 +836,7 @@ class CredentialServiceV2(val agent: Agent) {
         val connection = messageContext.connection
 
         val ackMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as CredentialAckMessageV2
-        LogUtil.info(this) { "Processing credential ack with id ${ackMessage.id}"}
+        LogUtil.info(this) { "Processing credential ack with id ${ackMessage.id}" }
 
         var credentialExchangeRecord = agent.credentialExchangeRepository.getSingleByQuery(
             "{\"threadId\": \"${ackMessage.threadId}\", \"role\": \"${CredentialRole.Issuer}\", \"connectionId\": \"${connection?.id}\"}",
@@ -1292,7 +1287,7 @@ class CredentialServiceV2(val agent: Agent) {
         return runCatching {
             MessageSerializer.decodeFromString(messageStr) as T
         }.getOrElse {
-            LogUtil.warn(this) { "Failed to deserialize ${T::class.simpleName} for record ID $credentialExchangeId: ${it.message}"}
+            LogUtil.warn(this) { "Failed to deserialize ${T::class.simpleName} for record ID $credentialExchangeId: ${it.message}" }
             null
         }
     }

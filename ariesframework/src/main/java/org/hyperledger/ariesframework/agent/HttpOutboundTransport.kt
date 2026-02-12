@@ -12,7 +12,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.OutboundPackage
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 enum class DidCommMimeType(val value: String) {
     V0("application/ssi-agent-wire"),
@@ -22,7 +21,7 @@ enum class DidCommMimeType(val value: String) {
 class HttpOutboundTransport(val agent: Agent) : OutboundTransport {
 
     override suspend fun sendPackage(_package: OutboundPackage) {
-        LogUtil.info(this) {"Sending outbound message to endpoint: ${_package.endpoint}"}
+        LogUtil.info(this) { "Sending outbound message to endpoint: ${_package.endpoint}" }
 
         val responseText = withContext(Dispatchers.IO) {
             val request = okhttp3.Request.Builder()
@@ -35,7 +34,7 @@ class HttpOutboundTransport(val agent: Agent) : OutboundTransport {
                 .build()
             val response = AgentHttpClient.client.newCall(request).execute()
 
-            LogUtil.info(this) {"response with status code: ${response.code}" }
+            LogUtil.info(this) { "response with status code: ${response.code}" }
             response.body?.string() ?: ""
         }
 

@@ -35,7 +35,7 @@ class RequestCredentialHandlerV2(val agent: Agent) : MessageHandler {
     }
 
     private suspend fun acceptRequest(credentialRecord: CredentialExchangeRecord): IssueCredentialMessageV2 {
-        //logger.info("Automatically sending credential with autoAccept")
+        // logger.info("Automatically sending credential with autoAccept")
 
         val offerMessage = agent.credentialServiceV2.findOfferMessage(credentialRecord.id)
         if (offerMessage == null) {

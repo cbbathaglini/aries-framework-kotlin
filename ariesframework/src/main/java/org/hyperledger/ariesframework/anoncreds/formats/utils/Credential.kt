@@ -4,7 +4,6 @@ import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredential
 import org.hyperledger.ariesframework.anoncreds.model.issuer.AnonCredsCredentialValues
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
-import org.slf4j.LoggerFactory
 
 class Credential {
 

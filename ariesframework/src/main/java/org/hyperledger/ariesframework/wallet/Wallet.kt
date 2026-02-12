@@ -58,9 +58,9 @@ class Wallet(private val agent: Agent) {
         }
 
     suspend fun initialize() {
-        LogUtil.info(this) {"Initializing wallet for ${agent.agentConfig.label}"}
+        LogUtil.info(this) { "Initializing wallet for ${agent.agentConfig.label}" }
         if (store != null) {
-            LogUtil.warn(this) {"Wallet already initialized."}
+            LogUtil.warn(this) { "Wallet already initialized." }
             close()
         }
 
@@ -91,7 +91,7 @@ class Wallet(private val agent: Agent) {
     }
 
     suspend fun close() {
-        LogUtil.info(this) {"Closing wallet"}
+        LogUtil.info(this) { "Closing wallet" }
         session?.close()
         store?.close()
 
@@ -101,7 +101,7 @@ class Wallet(private val agent: Agent) {
     }
 
     suspend fun delete() {
-        LogUtil.info(this) {"Deleting wallet"}
+        LogUtil.info(this) { "Deleting wallet" }
         if (store != null) {
             close()
         }
@@ -112,7 +112,7 @@ class Wallet(private val agent: Agent) {
                 throw RuntimeException("remove() returned false")
             }
         } catch (e: Exception) {
-            LogUtil.error(this, e) {"Wallet deletion failed: ${e.message}"}
+            LogUtil.error(this, e) { "Wallet deletion failed: ${e.message}" }
             File(storePath).delete()
         }
 
@@ -141,9 +141,9 @@ class Wallet(private val agent: Agent) {
         try {
             session!!.insertKey(verkey, key, null, null, null)
         } catch (e: Exception) {
-            LogUtil.error(this, e) {"Ignoring error. Failed to insert key: ${e.message}"}
+            LogUtil.error(this, e) { "Ignoring error. Failed to insert key: ${e.message}" }
         }
-        LogUtil.info(this) {"Created DID $did with verkey $verkey"}
+        LogUtil.info(this) { "Created DID $did with verkey $verkey" }
 
         return DidInfo(did, verkey)
     }

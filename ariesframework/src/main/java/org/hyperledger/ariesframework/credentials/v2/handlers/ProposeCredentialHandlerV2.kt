@@ -35,11 +35,11 @@ class ProposeCredentialHandlerV2(val agent: Agent) : MessageHandler {
         credentialRecord: CredentialExchangeRecord,
         messageContext: InboundMessageContext,
     ): OutboundMessage {
-        //logger.info("Automatically sending offer with autoAccept")
+        // logger.info("Automatically sending offer with autoAccept")
 
         val connection = messageContext.connection
         if (connection == null) {
-            LogUtil.error(this) { "No connection on the messageContext, aborting auto accept"}
+            LogUtil.error(this) { "No connection on the messageContext, aborting auto accept" }
             throw IllegalStateException("Missing connection for auto-accept proposal")
         }
 

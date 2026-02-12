@@ -33,7 +33,7 @@ data class RevocationRegistries(val agent: Agent) {
         val updatedSelectedCredentials = selectedCredentials
         val revocationRegistries: MutableMap<String, RevocationRegistryBucket> = mutableMapOf()
 
-        LogUtil.info(this) {"Retrieving revocation registries for proof request $proofRequest $selectedCredentials"}
+        LogUtil.info(this) { "Retrieving revocation registries for proof request $proofRequest $selectedCredentials" }
         val referentCredentials = mutableListOf<Map<String, Any?>>()
 
         for ((referent, selectedCredential) in selectedCredentials.attributes) {

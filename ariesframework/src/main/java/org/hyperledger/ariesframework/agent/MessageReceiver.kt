@@ -8,7 +8,6 @@ import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.Routing
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class MessageReceiver(val agent: Agent) {
 

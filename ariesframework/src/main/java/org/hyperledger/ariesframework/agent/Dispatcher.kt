@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.agent
 
 import org.hyperledger.ariesframework.InboundMessageContext
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class Dispatcher(val agent: Agent) {
     var handlers = mutableMapOf<String, MessageHandler>()
@@ -12,7 +11,7 @@ class Dispatcher(val agent: Agent) {
     }
 
     suspend fun dispatch(messageContext: InboundMessageContext) {
-        LogUtil.info(this) {"Dispatching message of type: ${messageContext.message.type}"}
+        LogUtil.info(this) { "Dispatching message of type: ${messageContext.message.type}" }
 
         val handler = handlers[messageContext.message.type]
             ?: throw Exception("No handler for message type: ${messageContext.message.type} - ${messageContext.plaintextMessage}")
@@ -21,13 +20,13 @@ class Dispatcher(val agent: Agent) {
             val outboundMessage = handler.handle(messageContext)
 
             if (outboundMessage != null) {
-                LogUtil.info(this) {"Finishing dispatch with message of type: ${outboundMessage.payload.type}"}
+                LogUtil.info(this) { "Finishing dispatch with message of type: ${outboundMessage.payload.type}" }
                 agent.messageSender.send(outboundMessage)
             } else {
-                LogUtil.info(this) {"Finishing dispatch without response"}
+                LogUtil.info(this) { "Finishing dispatch without response" }
             }
         } catch (e: Exception) {
-            LogUtil.error(this, e) {"Failed to dispatch message of type: ${messageContext.message.type}"}
+            LogUtil.error(this, e) { "Failed to dispatch message of type: ${messageContext.message.type}" }
             throw e
         }
     }

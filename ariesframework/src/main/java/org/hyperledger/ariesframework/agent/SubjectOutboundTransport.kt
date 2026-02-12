@@ -2,7 +2,6 @@ package org.hyperledger.ariesframework.agent
 
 import org.hyperledger.ariesframework.OutboundPackage
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class SubjectOutboundTransport(private val subject: Agent) : OutboundTransport {
 

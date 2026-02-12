@@ -16,7 +16,6 @@ import org.hyperledger.ariesframework.vc.model.AnonCredsCredentialTags
 import org.hyperledger.ariesframework.vc.model.W3cAnonCredsCredentialMetadata
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
-import org.slf4j.LoggerFactory
 
 class W3cAnonCredsUtils {
     companion object {
@@ -132,7 +131,6 @@ class W3cAnonCredsUtils {
         }
 
         fun getAnonCredsTagsFromRecord(record: W3cCredentialRecord): AnonCredsCredentialTags? {
-
             val metadata = record.metadata.get(MetadataKeys.W3cAnonCredsCredentialMetadataKey) // as? W3cAnonCredsCredentialMetadata
             if (metadata == null) return null
 

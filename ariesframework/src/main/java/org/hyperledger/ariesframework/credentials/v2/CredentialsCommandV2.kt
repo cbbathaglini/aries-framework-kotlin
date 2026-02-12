@@ -13,12 +13,9 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.history.models.HistoryType
 import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.Session
-import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher) {
-    //private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
+    // private val logger = LoggerFactory.getLogger(CredentialsCommandV2::class.java)
 
     /**
      * Initiate a new credential exchange as holder by sending a credential proposal message
@@ -124,15 +121,15 @@ class CredentialsCommandV2(val agent: Agent, private val dispatcher: Dispatcher)
     }
 
     suspend fun acceptOffer(options: AcceptCredentialOfferOptionsV2): CredentialExchangeRecord {
-        LogUtil.info(this){ "accepting offer" }
+        LogUtil.info(this) { "accepting offer" }
         val (credentialExchange, message) = agent.credentialServiceV2.acceptOffer(options)
-        LogUtil.info(this){ "connection: ${credentialExchange.connectionId!!}"}
+        LogUtil.info(this) { "connection: ${credentialExchange.connectionId!!}" }
         val connectionRecord =
             agent.connectionRepository.getById(credentialExchange.connectionId!!)
 
         agent.messageSender.send(OutboundMessage(message, connectionRecord))
 
-        LogUtil.info(this){ "saving history" }
+        LogUtil.info(this) { "saving history" }
         agent.historyRepository.save(
             HistoryRecord(
                 historyType = HistoryType.CredentialOfferAccepted.name,

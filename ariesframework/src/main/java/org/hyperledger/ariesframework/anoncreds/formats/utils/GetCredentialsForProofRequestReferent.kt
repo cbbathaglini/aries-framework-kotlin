@@ -83,7 +83,8 @@ class GetCredentialsForProofRequestReferent {
                 return RevocationStatusResult(isRevoked = null, timestamp = null)
             }
 
-            LogUtil.info(this) { "Fetching credential revocation status for credential revocation id '$credentialRevocationId' with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
+            LogUtil.info(this) {
+                "Fetching credential revocation status for credential revocation id '$credentialRevocationId' with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
             }
 
             // Boas práticas (Aries RFC 0441) <<< DESCOMENTAR?

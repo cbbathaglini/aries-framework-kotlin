@@ -28,7 +28,6 @@ import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
-import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.ContractConfig
 import uniffi.indy_besu_vdr.ContractSpec
 import uniffi.indy_besu_vdr.LedgerClient
@@ -306,7 +305,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val seqNo = 0
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        LogUtil.info(this) { "schema= ${schemaId} took ${ms}ms" }
+        LogUtil.info(this) { "schema= $schemaId took ${ms}ms" }
 
         return Pair(schemaJson, seqNo)
     }
@@ -330,7 +329,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         )
 
         val ms = (System.nanoTime() - start) / 1_000_000
-        LogUtil.info(this) { "schema= ${schemaId} took ${ms}ms" }
+        LogUtil.info(this) { "schema= $schemaId took ${ms}ms" }
 
         return result
     }
@@ -367,11 +366,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         if (cached != null) {
             val dto = jsonIgnoreUnknown.decodeFromString<CredDefVdrCacheDto>(cached)
             val ms = (System.nanoTime() - start) / 1_000_000
-            LogUtil.info(this) { "[cache hit] credential definition vdr= ${credentialId} ttlDays=$ttlDays took ${ms}ms" }
+            LogUtil.info(this) { "[cache hit] credential definition vdr= $credentialId ttlDays=$ttlDays took ${ms}ms" }
             return fromDto(dto)
         }
 
-        LogUtil.info(this) { "[cache miss] credential definition vdr= ${credentialId} ttlDays=$ttlDays → fetching from ledger" }
+        LogUtil.info(this) { "[cache miss] credential definition vdr= $credentialId ttlDays=$ttlDays → fetching from ledger" }
 
         val json = cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
@@ -387,7 +386,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val dtoJson = jsonIgnoreUnknown.encodeToString(toDto(vdr))
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            LogUtil.info(this) { "[cache store] credential definition vdr= ${credentialId} ttlDays=$ttlDays stored (${ms}ms)" }
+            LogUtil.info(this) { "[cache store] credential definition vdr= $credentialId ttlDays=$ttlDays stored (${ms}ms)" }
 
             dtoJson
         }
@@ -405,11 +404,11 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val cached = cache.getIfFresh(credentialId)
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
-            LogUtil.info(this) { "[cache hit] credential definition = ${credentialId} ttlDays=$ttlDays took (${ms}ms)" }
+            LogUtil.info(this) { "[cache hit] credential definition = $credentialId ttlDays=$ttlDays took (${ms}ms)" }
             return cached
         }
 
-        LogUtil.info(this) { "[cache miss] credential definition = ${credentialId} ttlDays=$ttlDays → fetching from ledger" }
+        LogUtil.info(this) { "[cache miss] credential definition = $credentialId ttlDays=$ttlDays → fetching from ledger" }
 
         return cache.getOrLoad(credentialId) {
             val client = ledgerClient ?: getLedgerClient(credentialId)
@@ -434,7 +433,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             val result = Json.encodeToString(credDef)
 
             val ms = (System.nanoTime() - start) / 1_000_000
-            LogUtil.info(this) { "[cache store] credential definition = ${credentialId} ttlDays=$ttlDays (${ms}ms)" }
+            LogUtil.info(this) { "[cache store] credential definition = $credentialId ttlDays=$ttlDays (${ms}ms)" }
             result
         }
     }

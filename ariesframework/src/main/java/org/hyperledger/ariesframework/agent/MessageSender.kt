@@ -13,7 +13,6 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.messages.BatchPickupMessage
 import org.hyperledger.ariesframework.routing.messages.ForwardMessage
 import org.hyperledger.ariesframework.util.LogUtil
-import org.slf4j.LoggerFactory
 
 class MessageSender(val agent: Agent) {
     private var defaultOutboundTransport: OutboundTransport? = null
@@ -140,7 +139,7 @@ class MessageSender(val agent: Agent) {
             recipientKeys = listOf(routingKey)
             encryptedMessage = agent.wallet.pack(forwardMessage, recipientKeys, keys.senderKey)
         }
-        //logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
+        // logger.debug("recipientKeys: $recipientKeys endpoint: $endpoint requestResponse: ${message.requestResponse()}")
         return OutboundPackage(encryptedMessage, message.requestResponse(), endpoint, connectionId)
     }
 

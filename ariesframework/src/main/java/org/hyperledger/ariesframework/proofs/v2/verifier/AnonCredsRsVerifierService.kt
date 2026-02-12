@@ -20,13 +20,10 @@ import org.hyperledger.ariesframework.proofs.models.RequestedItem
 import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
-import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
 
 class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
-
 
     override suspend fun verifyProof(options: VerifyProofOptions): Boolean {
         LogUtil.info(this) { "verifying proof" }
@@ -51,8 +48,8 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val proofUniffi = presentation.proof()
         val aggregated = proofUniffi.aggregatedProof
 
-        //PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
-        //PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
+        // PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
+        // PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
 
         val schemaIds: Set<String> = schemas.schemas.keys
         val schemasAnoncreds: Map<String, Schema> = RecoverFromLedger.getSchemas(schemaIds, agent)
@@ -85,7 +82,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val revRegDefJson = agent.ledgerService.getRevocationRegistryDefinition(revRegId)
         val revRegDefUni = RevocationRegistryDefinition(revRegDefJson)
         val revRegDefsMap = mapOf(revRegId to revRegDefUni)
-
 
         val ledgerStatusList = agent.ledgerService.getRevocationStatusList(revRegId, ts)
         val statusListJson = indyBesuRevocationStatusListToJson(

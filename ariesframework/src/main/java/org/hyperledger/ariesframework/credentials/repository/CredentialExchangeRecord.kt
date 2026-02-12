@@ -58,8 +58,8 @@ data class CredentialExchangeRecord(
 
     fun logSummary(): String =
         "id=$id state=$state role=$role threadId=$threadId connId=$connectionId " +
-                "schemaId=$schemaId credDefId=$credentialDefinitionId revRegId=$revRegId " +
-                "w3cId=$w3cCredentialId"
+            "schemaId=$schemaId credDefId=$credentialDefinitionId revRegId=$revRegId " +
+            "w3cId=$w3cCredentialId"
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
@@ -140,6 +140,4 @@ data class CredentialExchangeRecord(
             )
         }
     }
-
-
 }

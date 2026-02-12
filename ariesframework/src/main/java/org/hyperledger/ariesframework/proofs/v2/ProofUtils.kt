@@ -24,7 +24,6 @@ import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.util.concurrentForEach
-import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
 

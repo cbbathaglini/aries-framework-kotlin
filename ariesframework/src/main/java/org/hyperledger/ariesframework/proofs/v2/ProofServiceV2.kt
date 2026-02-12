@@ -67,13 +67,12 @@ import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
-import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.max
 
 class ProofServiceV2(val agent: Agent) {
-    //private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
+    // private val logger = LoggerFactory.getLogger(ProofServiceV2::class.java)
 
     private val proofRepository = agent.proofRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
@@ -354,7 +353,6 @@ class ProofServiceV2(val agent: Agent) {
         }
 
         if (proofRecord != null) {
-
             val lastSentMessage =
                 agent.didCommMessageRepository.getTypedAgentMessage<ProposePresentationMessageV2>(
                     associatedRecordId = proofRecord.id,
@@ -370,7 +368,7 @@ class ProofServiceV2(val agent: Agent) {
                 )
             proofRecord.assertProtocolVersion(ProofConstants.PROTOCOL_VERSION_V2)
             proofRecord.assertState(ProofState.ProposalSent)
-           //   agent.connectionService.assertConnectionOrOutOfBandExchange(
+            //   agent.connectionService.assertConnectionOrOutOfBandExchange(
 //                messageContext = messageContext,
 //                lastReceivedMessage = lastReceivedMessage,
 //                lastSentMessage = lastSentMessage,
@@ -701,7 +699,7 @@ class ProofServiceV2(val agent: Agent) {
             lastSentMessage,
             formatServices,
         )
-        LogUtil.info(this) { "processing offline presentation result = ${result}" }
+        LogUtil.info(this) { "processing offline presentation result = $result" }
 
         val presentationVerifier = PresentationVerifier(
             presentationMessage = message,

@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.anoncreds.service
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.exception.AnonCredsError
-import org.slf4j.LoggerFactory
 
 /**
  * @internal
@@ -14,10 +13,10 @@ class AnonCredsRegistryService(val agent: Agent) {
 
     fun getRegistryForIdentifier(identifier: String): AnonCredsRegistry {
         val registries = agent.anoncredsmodulesconfig.registries
-        //logger.info("registries: $registries") // only the "ethr"
+        // logger.info("registries: $registries") // only the "ethr"
 
         val registry = registries.find { it.supportedIdentifier.matches(identifier) }
-        //logger.info("registry: $registry")
+        // logger.info("registry: $registry")
 
         return registry ?: throw AnonCredsError("No AnonCredsRegistry registered for identifier '$identifier'")
     }

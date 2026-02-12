@@ -5,7 +5,6 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
 import org.hyperledger.ariesframework.vc.util.W3cTypeExpander
-import org.slf4j.LoggerFactory
 
 class W3cJsonLdCredentialService(
     private val agent: Agent,
@@ -18,7 +17,6 @@ class W3cJsonLdCredentialService(
     suspend fun getExpandedTypesForCredential(
         credential: W3cJsonLdVerifiableCredential,
     ): Map<String, List<String>> {
-
         val contextList = credential.context
         val types = credential.type
 
