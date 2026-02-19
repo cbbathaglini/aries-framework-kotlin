@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollViewProof"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/proofContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone"
+            android:indeterminate="true" />
+
+        <TextView
+            android:id="@+id/proofStatusMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Loading proof details..."
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+        <LinearLayout
+            android:id="@+id/statusCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/status_card_background"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/statusIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="14sp"
+                android:textColor="@android:color/black" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <TextView
+            android:id="@+id/headerProofInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Proof Information"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/proofId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ID: "
+            android:textColor="@android:color/black"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/proofConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connection: "
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/proofState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="State: "
+            android:paddingBottom="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <TextView
+            android:id="@+id/requestedAttributesHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Requested Attributes"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/requestedAttributesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <TextView
+            android:id="@+id/requestedPredicatesHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Requested Predicates"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/requestedPredicatesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <TextView
+            android:id="@+id/nonRevokedHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Non-Revocation Interval"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/nonRevokedInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start: - | End: -"
+            android:textColor="@android:color/darker_gray"
+            android:paddingBottom="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginVertical="8dp" />
+
+        <TextView
+            android:id="@+id/selectCredentialHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Credential"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/credentialSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dropdown"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnSendProof"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Accept and send proof"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

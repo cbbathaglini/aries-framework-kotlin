@@ -1,0 +1,13 @@
+<com.journeyapps.barcodescanner.DecoratedBarcodeView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/zxing_barcode_surface"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <com.journeyapps.barcodescanner.ViewfinderView
+        android:id="@+id/zxing_viewfinder_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+</com.journeyapps.barcodescanner.DecoratedBarcodeView>

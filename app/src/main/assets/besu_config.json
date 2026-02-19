@@ -1,0 +1,58 @@
+{
+  "networks": [
+    {
+      "networkName": "serpro",
+      "chainId": 1337,
+      "nodeAddress": "http://idd.serpro.gov.br/besu",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000018888"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000003333"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0000000000000000000000000000000000005555"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0x0000000000000000000000000000000000004444"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0x0000000000000000000000000000000000002222"
+        }
+      }
+    },
+    {
+      "networkName": "0x16bfab61",
+      "chainId": 381660001,
+      "nodeAddress": "https://staging-id.cpqd.com.br/api/vdr-rpc-proxy",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0xd23b9B2547a8ECF7e07904589060e6d2f8FDf99f"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0054a3ca30a8e042431659012a89547Fb5F37B09"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5"
+        }
+      }
+    }
+  ]
+}
