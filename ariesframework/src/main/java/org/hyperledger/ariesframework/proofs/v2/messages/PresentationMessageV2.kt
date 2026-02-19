@@ -25,8 +25,6 @@ class PresentationMessageV2(
 
     @SerialName("presentations~attach")
     val presentationAttachments: List<Attachment>,
-
-    //@SerialName("~please_ack")
     var pleaseAck: AckDecorator? = null,
 ) : AgentMessage(generateId(), type) {
 

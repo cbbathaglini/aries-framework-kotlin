@@ -64,7 +64,6 @@ open class AgentMessage(
 object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentMessage::class) {
     private val serializers = mutableMapOf<String, KSerializer<AgentMessage>>()
     private val logger = LoggerFactory.getLogger(MessageSerializer::class.java)
-    //private val encoder = Json { serializersModule = didDocServiceModule }
     private val decoder = Json { ignoreUnknownKeys = true; serializersModule = didDocServiceModule }
 
     private val encoder = Json {
