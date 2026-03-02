@@ -152,16 +152,20 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             wallet.initPublicDid(it)
         }
 
-        if (agentConfig.useLedgerService) {
-            ledgerService.initialize()
-        } else if (agentConfig.useBesuLedger) {
-            ledgerService.initialize()
-        }
+        if (agentConfig.useLedgerService || agentConfig.useBesuLedger) {
 
-        if (agentConfig.mediatorConnectionsInvite != null) {
-            mediationRecipient.initialize(agentConfig.mediatorConnectionsInvite!!)
-        } else {
-            setInitialized()
+            if (agentConfig.useLedgerService) {
+                ledgerService.initialize()
+            } else if (agentConfig.useBesuLedger) {
+                ledgerService.initialize()
+            }
+
+            LogUtil.info(this) { "connecting with mediator" }
+            if (agentConfig.mediatorConnectionsInvite != null) {
+                mediationRecipient.initialize(agentConfig.mediatorConnectionsInvite!!)
+            } else {
+                setInitialized()
+            }
         }
     }
 

@@ -255,7 +255,7 @@ class WalletMainActivity : BaseActivity() {
 
             override fun onFinish() {
                 progress.dismiss()
-                showAlert("Failed to initialize agent.")
+                //showAlert("Failed to initialize agent.")
             }
         }
 
