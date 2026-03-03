@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.vc.dataintegrity
 
 import android.content.Context
+import com.google.gson.JsonElement
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
@@ -15,21 +16,15 @@ class W3cJsonLdCredentialService(
     private val appContext: Context = context.applicationContext
 
     suspend fun getExpandedTypesForCredential(
-        credential: W3cJsonLdVerifiableCredential,
+        contextList: List<kotlinx.serialization.json.JsonElement>,
+        types: List<String>
     ): Map<String, List<String>> {
-        val contextList = credential.context
-        val types = credential.type
 
         val expanded = W3cTypeExpander.expandTypes(
             W3cTypeExpander.ContextSpec(contexts = contextList),
             types,
         )
 
-//        val localContexts = mapOf(
-//            "https://www.w3.org/2018/credentials/v1" to W3cCredentialsModuleConfig.loadFile(context= appContext, file= "/types/credentials_2018.json"),
-//            "https://w3id.org/security/data-integrity/v2" to W3cCredentialsModuleConfig.loadFile(context= appContext, file= "/types/security-data-integrity-v2.json")
-//        )
-//        PrintLongLine.print("localcontexts: ${localContexts}")
         return mapOf("type" to expanded)
     }
 }

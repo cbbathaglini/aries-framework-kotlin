@@ -2,6 +2,7 @@
     <string name="app_name">ID Wallet</string>
     <string name="title_credential_list">Credentials</string>
     <string name="title_credential_detail">Credential detail</string>
+    <string name="title_w3c_credential_detail">W3C Credentials detail</string>
     <string name="qrcode_guide">Scan a QR code and wait</string>
     <string name="delete">Delete</string>
     <string name="title_delete_cred">Delete Credential</string>

@@ -182,6 +182,15 @@
                 android:text="Generate Invitation"
                 android:textColor="@color/teal_700"
                 android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/linkW3cCredentials"
+                android:text="W3C Credentials"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/teal_700"
+                android:textSize="16sp"
+                 />
         </LinearLayout>
 
         <TextView

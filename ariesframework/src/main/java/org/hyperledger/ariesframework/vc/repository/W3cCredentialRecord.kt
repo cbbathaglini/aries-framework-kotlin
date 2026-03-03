@@ -52,41 +52,30 @@ class W3cCredentialRecord(
 
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
-        // val stringContexts = this.credential.contexts.filter((ctx): ctx is string => typeof ctx === 'string')
-        tags.putAll(this._tags ?: emptyMap())
-//        if(credential is W3cJsonLdVerifiableCredential){
-//            tags["issuerId"] = credential.issuer.toString()
-//            tags["subjectIds"] = credential.credentialSubject.toString()
-//            tags["schemaIds"] = credential.credentialSchemaIds.toString()
-//            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
-//            tags["givenId"] = credential.id.toString()
-//            tags["claimFormat"] = credential.claimFormat
-//            tags["types"] = credential.type.toString()
-//            tags["proofTypes"] = credential.proofTypes.toString()
-//            tags["cryptosuites"] = credential.dataIntegrityCryptosuites.toString()
-//        }
 
-//            is W3cJwtVerifiableCredential -> {
-//                tags["issuerId"] = credential.issuerId
-//                tags["subjectIds"] = credential.credentialSubjectIds
-//                tags["schemaIds"] = credential.credentialSchemaIds
-//                tags["contexts"] = credential.contexts.filterIsInstance<String>()
-//                tags["givenId"] = credential.id
-//                tags["claimFormat"] = credential.claimFormat.name
-//                tags["types"] = credential.type
-//                tags["algs"] = listOfNotNull(credential.jwt.header.alg)
-//            }
+        val subjectIds = credential.credentialSubject
+            .mapNotNull { it.id?.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
 
-//        tags["issuerId"] = credential.issuerId
-//        tags["subjectIds"] = credential.credentialSubjectIds
-//        tags["schemaIds"] = credential.credentialSchemaIds
-//        tags["contexts"] = stringContexts
-//        tags["givenId"] = credential.id
-//        tags["claimFormat"] = credential.claimFormat.name
-//        tags["types"] = credential.type
-//        tags["algs"] = listOf((credential as? JwtVerifiableCredential)?.jwt?.header?.alg)
+        if (subjectIds.isNotEmpty()) {
+            tags["subjectId"] = subjectIds.first()
+            tags["subjectIds"] = subjectIds.joinToString(",")  //list case
+        } else {
+            tags["subjectId"] = ""
+            tags["subjectIds"] = ""
+        }
 
-        return this._tags!!
+        credential.id?.let { tags["givenId"] = it }
+        tags["issuerId"] = credential.issuer.toString()
+        tags["types"] = credential.type.joinToString(",")
+
+        subjectIds.forEach { sid ->
+            tags["subjectId:$sid"] = "1"
+        }
+
+        _tags = tags
+        return tags
     }
 
     fun getTagsAux(): Tags {

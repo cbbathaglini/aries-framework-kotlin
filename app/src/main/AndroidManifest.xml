@@ -94,6 +94,11 @@
             android:parentActivityName=".CredentialListActivity"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity
+            android:name=".W3cCredentialActivity"
+            android:label="@string/title_w3c_credential_detail"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity android:name=".ProofDetailActivity"
             android:label="Proof detail"
             android:parentActivityName=".ProofListActivity"
