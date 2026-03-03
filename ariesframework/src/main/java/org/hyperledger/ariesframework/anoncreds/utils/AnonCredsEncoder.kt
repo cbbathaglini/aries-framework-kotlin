@@ -7,39 +7,67 @@ import java.security.MessageDigest
 class AnonCredsEncoder {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AnonCredsEncoder::class.java)
+        //
         fun encodeCredentialValue(value: Any?): String {
-            val isEmptyString = value is String && value.isEmpty()
 
-            // Boolean: converte para número (true → 1, false → 0)
+            // 1️⃣ Boolean → "1"/"0"
             if (value is Boolean) {
                 return if (value) "1" else "0"
             }
 
-            // Int32: mantém como string
-            if (value is Int) {
-                return value.toString()
+            // 2️⃣ Number handling (similar ao JS/credo-ts)
+            if (value is Number) {
+                val doubleValue = value.toDouble()
+
+                // is int32 exato?
+                if (doubleValue.isFinite()
+                    && doubleValue == kotlin.math.floor(doubleValue)
+                    && doubleValue >= Int.MIN_VALUE
+                    && doubleValue <= Int.MAX_VALUE
+                ) {
+                    return doubleValue.toInt().toString()
+                }
+
+                // não é int32 → vira string e será hasheado
+                return sha256ToDecimal(value.toString())
             }
 
-            // String representando Int32
-            if (value is String && !isEmptyString && value.toIntOrNull() != null) {
-                val intVal = value.toIntOrNull()
-                if (intVal != null) return intVal.toString()
+            // 3️⃣ String handling
+            if (value is String) {
+
+                // string numérica inteira válida?
+                if (value.isNotEmpty()
+                    && value.matches(Regex("^[+-]?\\d+$"))
+                ) {
+                    val parsed = value.toLongOrNull()
+                    if (parsed != null &&
+                        parsed >= Int.MIN_VALUE &&
+                        parsed <= Int.MAX_VALUE
+                    ) {
+                        return parsed.toInt().toString()
+                    }
+                }
+
+                // qualquer outra string (inclusive "") → hash
+                return sha256ToDecimal(value)
             }
 
-            // Null ou indefinido: retorna 'None'
-            val normalized = when (value) {
-                null -> "None"
-                is Number -> value.toString()
-                else -> value.toString()
+            // 4️⃣ null → "None" → hash
+            if (value == null) {
+                return sha256ToDecimal("None")
             }
 
-            // Codifica como SHA-256, inverte os bytes e converte para BigInteger
-            val digest = MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray())
-            // val reversed = digest.reversedArray() // se usasse  little-endian
-            val bigint = BigInteger(1, digest)
-
-            return bigint.toString()
+            // 5️⃣ fallback → string → hash
+            return sha256ToDecimal(value.toString())
         }
+
+        private fun sha256ToDecimal(input: String): String {
+            val digest = MessageDigest
+                .getInstance("SHA-256")
+                .digest(input.toByteArray(Charsets.UTF_8))
+
+            return BigInteger(1, digest).toString(10)
+        }
+
     }
 }
