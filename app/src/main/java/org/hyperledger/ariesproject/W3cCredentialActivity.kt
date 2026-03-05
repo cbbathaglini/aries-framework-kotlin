@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NavUtils
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import anoncreds_uniffi.CredentialConversions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,7 +48,19 @@ class W3cCredentialActivity : BaseActivity() {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
 
-                    val record = app.agent.w3cCredentialService.processAndStorew3cCredential(vcJson)
+                    val record : W3cCredential = app.agent.w3cCredentialService.processAndStorew3cCredential(vcJson)
+
+                    val parsed = json.parseToJsonElement(vcJson).jsonObject
+                    val normalized = W3cCredential.normalizeIncomingW3cPayload(parsed)
+
+                    val credentialW3cStr = CredentialConversions().credentialFromW3cJson(
+                        parsed["credential"].toString()
+                    )
+
+                    LogUtil.info(this) {"credentialW3cStr: $credentialW3cStr"}
+
+                    //val w3cCredential = W3cCredential(credentialW3cStr)
+
 
                     LogUtil.info(this@W3cCredentialActivity) { "Saving VC id=${record.id}" }
 

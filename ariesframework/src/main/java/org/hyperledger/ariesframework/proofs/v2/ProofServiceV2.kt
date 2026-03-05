@@ -677,6 +677,8 @@ class ProofServiceV2(val agent: Agent) {
         LogUtil.info(this) { "processing offline presentation" }
 
         val presentationMessage = message
+        LogUtil.info(this) { "PRESENTATION MESSAGE -> ${presentationMessage.presentationAttachments.first()} " }
+
         val formatServices = getFormatServicesFromMessage(presentationMessage.formats)
 
         val threadId = presentationMessage.threadId

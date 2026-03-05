@@ -71,6 +71,7 @@ import org.hyperledger.ariesframework.toJsonString
 import org.hyperledger.ariesframework.util.Base58
 import org.hyperledger.ariesframework.util.JsonUtils.Companion.toJsonMap
 import org.hyperledger.ariesframework.util.JsonUtils.Companion.toJsonString
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.PrintLongLine
 import org.hyperledger.ariesframework.vc.model.ProcessCredentialOptions
 import org.hyperledger.ariesframework.vc.model.W3cAnonCredsCredentialMetadata
@@ -155,7 +156,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         val credentialW3cStr: String =
             CredentialConversions().credentialToW3cJson(credential, issuerId, "1.1")
-        // logger.info("credentialW3cStr: $credentialW3cStr")
+        logger.info("credentialW3cStr: $credentialW3cStr")
 
         val w3cCredential: W3cCredential = W3cCredential(credentialW3cStr)
 
@@ -666,6 +667,8 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         // logger.info("issuer: $issuer")
 
         val w3cJsonLdStr = Json.encodeToString(credential)
+        LogUtil.info(this) {"w3cJsonLdStr: $w3cJsonLdStr"}
+
         var cleaned = w3cJsonLdStr.replace("\\\"", "")
         cleaned =
             Regex("\"credentialSubject\"\\s*:\\s*\\[(\\{.*?\\})\\]").replace(cleaned) { m ->
@@ -673,22 +676,12 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                 "\"credentialSubject\": $inner"
             }
 
-        // logger.info("cleaned credential JSON: $cleaned")
+        LogUtil.info(this) {"cleaned credential JSON: $cleaned"}
 
         val credentialUniffi: Credential =
             CredentialConversions().credentialFromW3cJson(cleaned)
 
         // logger.info("credentialUniffi: ${credentialUniffi.toJson()}")
-
-        val credentialW3cStr = CredentialConversions().credentialToW3cJson(
-            credentialUniffi,
-            "did:sov:$issuer",
-            "1.1",
-        )
-
-        // logger.info("credentialW3cStr: $credentialW3cStr")
-
-        val w3cCredential = W3cCredential(credentialW3cStr)
 
         if (credential.credentialSubject.size > 1) {
             throw CredoError("Credential subject must be an object, not an array.")

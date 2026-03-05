@@ -43,6 +43,7 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevoked
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
+import org.hyperledger.ariesframework.credentials.utils.EncodeHelper
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.PredicateType
@@ -58,6 +59,7 @@ import org.hyperledger.ariesframework.proofs.v2.formats.ProofFormatService
 import org.hyperledger.ariesframework.proofs.v2.messages.PresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.messages.RequestPresentationMessageV2
 import org.hyperledger.ariesframework.proofs.v2.verifier.VerifyProofOptions
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
 import org.slf4j.LoggerFactory
 
@@ -358,27 +360,47 @@ class AnoncredsProofFormatService(
         val anonCredsProof: AnonCredsProof =
             Json.decodeFromString(presentationAttachment.getDataAsJson())
 
-        // logger.info("anonCredsProof: $anonCredsProof")
+        logger.info("anonCredsProof: $anonCredsProof")
+        LogUtil.info(this) { "VERIFYING MESSAGE -> $anonCredsProof " }
 
-        for ((_, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
-            if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
+        for ((referent, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
+            val sample = EncodeHelper.buildEncSample(
+                referent = referent,
+                raw = attribute.raw,
+                encoded = attribute.encoded,
+            )
+
+            EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attrs", sample)
+
+            if (sample.expected != sample.encoded) {
                 throw CredoError(
-                    "Invalid encoded value for attribute. Raw='${attribute.raw}', Expected='${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}', Actual='${attribute.encoded}'",
+                    "Invalid encoded value for attribute. " +
+                        "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
                 )
             }
         }
 
-        for ((_, group) in anonCredsProof.requestedProof.revealedAttrGroups.orEmpty()) {
+        for ((groupReferent, group) in anonCredsProof.requestedProof.revealedAttrGroups.orEmpty()) {
             for ((attributeName, attribute) in group.values) {
-                if (!checkValidCredentialValueEncoding(attribute.raw, attribute.encoded)) {
+                // aqui eu gosto de colocar "groupReferent.attributeName" pra ficar claro no log
+                val ref = "$groupReferent.$attributeName"
+
+                val sample = EncodeHelper.buildEncSample(
+                    referent = ref,
+                    raw = attribute.raw,
+                    encoded = attribute.encoded,
+                )
+
+                EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attr_groups", sample)
+
+                if (sample.expected != sample.encoded) {
                     throw CredoError(
-                        "Invalid encoded value for attribute '$attributeName'. Raw='${attribute.raw}', " +
-                            "Expected='${AnonCredsEncoder.encodeCredentialValue(attribute.raw)}', Actual='${attribute.encoded}'",
+                        "Invalid encoded value for attribute '$attributeName'. " +
+                            "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
                     )
                 }
             }
         }
-
         val schemasMap: Map<String, AnonCredsSchema> =
             agent.ledgerService.getSchemas(anonCredsProof.identifiers.map { it.schemaId }.toSet())
 

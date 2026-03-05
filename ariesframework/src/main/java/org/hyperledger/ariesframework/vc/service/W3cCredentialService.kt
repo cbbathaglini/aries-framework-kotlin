@@ -1,11 +1,9 @@
 package org.hyperledger.ariesframework.vc.service
 
-
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import org.hyperledger.ariesframework.util.LogUtil
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.model.W3cCredential
 import org.hyperledger.ariesframework.vc.model.W3cJsonLdVerifiableCredential
@@ -33,12 +31,12 @@ class W3cCredentialService(
     suspend fun storeCredentialW3cJsonLdVerifiableCredential(jsonLdVerifiableCredential: W3cJsonLdVerifiableCredential): W3cCredentialRecord {
         val expandedTypes: Map<String, List<String>> = w3cJsonLdCredentialService.getExpandedTypesForCredential(
             jsonLdVerifiableCredential.context,
-            jsonLdVerifiableCredential.type)
+            jsonLdVerifiableCredential.type,
+        )
         // PrintLongLine.print("verifiable: $jsonLdVerifiableCredential")
 
 //        val expandedTypes: Map<String, String> = mapOf("type" to "https://www.w3.org/2018/credentials#VerifiableCredential")
 //        logger.info("expandedTypes: ${expandedTypes.toString()}")
-
 
         val jsonForProof = Json {
             ignoreUnknownKeys = true
@@ -76,7 +74,6 @@ class W3cCredentialService(
         return w3cCredentialRecord
     }
 
-
     suspend fun storeCredentialW3cCredential(w3cCredential: W3cCredential): W3cCredentialRecord {
         val expandedTypes: Map<String, List<String>> = w3cJsonLdCredentialService.getExpandedTypesForCredential(w3cCredential.context, w3cCredential.type)
 
@@ -89,13 +86,13 @@ class W3cCredentialService(
         return w3cCredentialRecord
     }
 
-    suspend fun processAndStorew3cCredential(rawJson: String) : W3cCredential {
+    suspend fun processAndStorew3cCredential(rawJson: String): W3cCredential {
         val parsed = json.parseToJsonElement(rawJson).jsonObject
         val normalized = W3cCredential.normalizeIncomingW3cPayload(parsed)
 
         val credential = json.decodeFromJsonElement(
             W3cCredential.serializer(),
-            normalized
+            normalized,
         )
 
         storeCredentialW3cCredential(credential)

@@ -60,7 +60,7 @@ class W3cCredentialRecord(
 
         if (subjectIds.isNotEmpty()) {
             tags["subjectId"] = subjectIds.first()
-            tags["subjectIds"] = subjectIds.joinToString(",")  //list case
+            tags["subjectIds"] = subjectIds.joinToString(",") // list case
         } else {
             tags["subjectId"] = ""
             tags["subjectIds"] = ""

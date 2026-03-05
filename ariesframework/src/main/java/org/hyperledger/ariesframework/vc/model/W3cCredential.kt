@@ -4,10 +4,12 @@ import W3cCredentialSubject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.serializer
-import kotlinx.serialization.json.*
 
 @Serializable
 data class W3cCredential(
@@ -20,11 +22,10 @@ data class W3cCredential(
     val credentialSubject: List<W3cCredentialSubject>,
     val expirationDate: String? = null,
     val credentialSchema: List<W3cCredentialSchema>? = emptyList(),
-    val credentialStatus: W3cCredentialStatus?  = null,
+    val credentialStatus: W3cCredentialStatus? = null,
 
-
+    // val proofs: List<LinkedDataProofBase>? = emptyList(), // add by me
     @SerialName("proof")
-    //val proofs: List<LinkedDataProofBase>? = emptyList(), // add by me
     val proofs: List<JsonElement>? = emptyList(), // add by me
 
 ) {
@@ -57,7 +58,6 @@ data class W3cCredential(
         fun fromJson(jsonString: String): W3cCredential {
             return json.decodeFromString(serializer(), jsonString)
         }
-
 
         fun normalizeIncomingW3cPayload(root: JsonObject): JsonObject {
             // 1) Unwrap: { format: "...", credential: {...} }
@@ -171,5 +171,4 @@ data class W3cCredential(
 //            return JsonObject(mutable)
 //        }
     }
-
 }

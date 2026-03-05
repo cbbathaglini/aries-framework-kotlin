@@ -23,5 +23,4 @@ class W3cCredentialRepository(agent: Agent) : Repository<W3cCredentialRecord>(
             rec.credential.credentialSubject.any { it.id?.trim() == sid }
         }
     }
-
 }
