@@ -378,8 +378,6 @@ class WalletMainActivity : BaseActivity() {
                 MainMenu.CONNECTION ->
                     context.startActivity(Intent(context, InvitationActivity::class.java))
 
-                MainMenu.W3C ->
-                    context.startActivity(Intent(context, W3cCredentialActivity::class.java))
             }
         }
 

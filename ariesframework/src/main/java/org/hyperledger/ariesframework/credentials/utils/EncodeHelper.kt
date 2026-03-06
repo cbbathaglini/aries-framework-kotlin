@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.credentials.utils
 
+import android.util.Log
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
-import org.hyperledger.ariesframework.util.LogUtil
 
 class EncodeHelper {
     companion object {
@@ -13,12 +13,12 @@ class EncodeHelper {
         )
 
         fun logEncodingSample(tag: String, whenLabel: String, sample: EncodeTemp) {
-            LogUtil.info(this) { "==== $whenLabel ($tag) ====" }
-            LogUtil.info(this) { "atributo : ${sample.referent}" }
-            LogUtil.info(this) { "valor do atributo : ${sample.raw}" }
-            LogUtil.info(this) { "encoded recebido : ${sample.encoded}" }
-            LogUtil.info(this) { "encoded esperado : ${sample.expected}" }
-            LogUtil.info(this) { "match? : ${sample.expected == sample.encoded}" }
+            Log.d("AriesIntegration", "==== $whenLabel ($tag) ====")
+            Log.d("AriesIntegration", "atributo : ${sample.referent}")
+            Log.d("AriesIntegration", "valor do atributo : ${sample.raw}")
+            Log.d("AriesIntegration", "encoded recebido : ${sample.encoded}")
+            Log.d("AriesIntegration", "encoded esperado : ${sample.expected}")
+            Log.d("AriesIntegration", "match? : ${sample.expected == sample.encoded}")
         }
 
         fun buildEncSample(referent: String, raw: Any?, encoded: String): EncodeTemp {

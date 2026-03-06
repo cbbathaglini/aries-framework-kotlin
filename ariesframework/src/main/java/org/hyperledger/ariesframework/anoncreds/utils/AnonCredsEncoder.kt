@@ -1,5 +1,8 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
+import org.hyperledger.ariesframework.credentials.utils.EncodeHelper
+import org.hyperledger.ariesframework.error.CredoError
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -7,6 +10,46 @@ class AnonCredsEncoder {
 
     companion object {
 
+        fun checkEncodes(proof: AnonCredsProof){
+            for ((referent, attribute) in proof.requestedProof.revealedAttrs) {
+                val sample = EncodeHelper.buildEncSample(
+                    referent = referent,
+                    raw = attribute.raw,
+                    encoded = attribute.encoded,
+                )
+
+                EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attrs", sample)
+
+                if (sample.expected != sample.encoded) {
+                    throw CredoError(
+                        "Invalid encoded value for attribute. " +
+                                "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
+                    )
+                }
+            }
+
+            for ((groupReferent, group) in proof.requestedProof.revealedAttrGroups.orEmpty()) {
+                for ((attributeName, attribute) in group.values) {
+                    // aqui eu gosto de colocar "groupReferent.attributeName" pra ficar claro no log
+                    val ref = "$groupReferent.$attributeName"
+
+                    val sample = EncodeHelper.buildEncSample(
+                        referent = ref,
+                        raw = attribute.raw,
+                        encoded = attribute.encoded,
+                    )
+
+                    EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attr_groups", sample)
+
+                    if (sample.expected != sample.encoded) {
+                        throw CredoError(
+                            "Invalid encoded value for attribute '$attributeName'. " +
+                                    "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
+                        )
+                    }
+                }
+            }
+        }
         fun encodeCredentialValue(value: Any?): String {
             // 1️⃣ Boolean → "1"/"0"
             if (value is Boolean) {

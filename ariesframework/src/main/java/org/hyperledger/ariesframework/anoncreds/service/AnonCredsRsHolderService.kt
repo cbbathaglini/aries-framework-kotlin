@@ -156,7 +156,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
         val credentialW3cStr: String =
             CredentialConversions().credentialToW3cJson(credential, issuerId, "1.1")
-        logger.info("credentialW3cStr: $credentialW3cStr")
+        // logger.info("credentialW3cStr: $credentialW3cStr")
 
         val w3cCredential: W3cCredential = W3cCredential(credentialW3cStr)
 
@@ -667,7 +667,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         // logger.info("issuer: $issuer")
 
         val w3cJsonLdStr = Json.encodeToString(credential)
-        LogUtil.info(this) {"w3cJsonLdStr: $w3cJsonLdStr"}
+        LogUtil.info(this) { "w3cJsonLdStr: $w3cJsonLdStr" }
 
         var cleaned = w3cJsonLdStr.replace("\\\"", "")
         cleaned =
@@ -676,7 +676,7 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                 "\"credentialSubject\": $inner"
             }
 
-        LogUtil.info(this) {"cleaned credential JSON: $cleaned"}
+        LogUtil.info(this) { "cleaned credential JSON: $cleaned" }
 
         val credentialUniffi: Credential =
             CredentialConversions().credentialFromW3cJson(cleaned)

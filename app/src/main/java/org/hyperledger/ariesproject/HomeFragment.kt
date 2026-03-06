@@ -86,9 +86,6 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
         }
 
-        binding.linkW3cCredentials.setOnClickListener {
-            startActivity(Intent(requireContext(), W3cCredentialActivity::class.java))
-        }
 
         // 🔹 Connect using invitation URL
         binding.buttonConnect.setOnClickListener {

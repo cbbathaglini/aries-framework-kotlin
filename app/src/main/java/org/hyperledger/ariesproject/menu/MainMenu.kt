@@ -9,6 +9,6 @@ enum class MainMenu(val text: String) {
     SCANREQUESTPROOF("(Holder) Scan request proof"),
     RECEIVING_PRESENTATION_PROOF("(Verifier) Receiving presentation proof"),
     PRESENTATION_LIST("(Holder) Presentation List"),
-    CONNECTION("Generate invitation"),
-    W3C("Generate w3c")
+    CONNECTION("Generate invitation")
+
 }

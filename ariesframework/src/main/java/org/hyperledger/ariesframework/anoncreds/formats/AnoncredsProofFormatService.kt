@@ -363,44 +363,8 @@ class AnoncredsProofFormatService(
         logger.info("anonCredsProof: $anonCredsProof")
         LogUtil.info(this) { "VERIFYING MESSAGE -> $anonCredsProof " }
 
-        for ((referent, attribute) in anonCredsProof.requestedProof.revealedAttrs) {
-            val sample = EncodeHelper.buildEncSample(
-                referent = referent,
-                raw = attribute.raw,
-                encoded = attribute.encoded,
-            )
+        AnonCredsEncoder.checkEncodes(anonCredsProof)
 
-            EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attrs", sample)
-
-            if (sample.expected != sample.encoded) {
-                throw CredoError(
-                    "Invalid encoded value for attribute. " +
-                        "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
-                )
-            }
-        }
-
-        for ((groupReferent, group) in anonCredsProof.requestedProof.revealedAttrGroups.orEmpty()) {
-            for ((attributeName, attribute) in group.values) {
-                // aqui eu gosto de colocar "groupReferent.attributeName" pra ficar claro no log
-                val ref = "$groupReferent.$attributeName"
-
-                val sample = EncodeHelper.buildEncSample(
-                    referent = ref,
-                    raw = attribute.raw,
-                    encoded = attribute.encoded,
-                )
-
-                EncodeHelper.logEncodingSample("ANONCREDS", "VERIFY revealed_attr_groups", sample)
-
-                if (sample.expected != sample.encoded) {
-                    throw CredoError(
-                        "Invalid encoded value for attribute '$attributeName'. " +
-                            "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
-                    )
-                }
-            }
-        }
         val schemasMap: Map<String, AnonCredsSchema> =
             agent.ledgerService.getSchemas(anonCredsProof.identifiers.map { it.schemaId }.toSet())
 
