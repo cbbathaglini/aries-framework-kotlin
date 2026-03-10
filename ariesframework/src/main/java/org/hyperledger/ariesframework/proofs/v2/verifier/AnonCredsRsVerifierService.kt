@@ -15,8 +15,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedAttribute
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRequestedPredicate
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
-import org.hyperledger.ariesframework.credentials.utils.EncodeHelper
-import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.NonRevokedIntervalOverride
 import org.hyperledger.ariesframework.proofs.models.PartialProof
 import org.hyperledger.ariesframework.proofs.models.RequestedItem
@@ -28,7 +26,6 @@ import uniffi.indy_besu_vdr.RevocationStatusList
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.iterator
-import kotlin.collections.orEmpty
 
 class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 

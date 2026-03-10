@@ -327,7 +327,9 @@ class WalletApp : Application() {
     }
 
     private fun notifyBadgeUpdate() {
-        val intent = Intent("org.hyperledger.ariesproject.UPDATE_BADGE")
+        val intent = Intent("org.hyperledger.ariesproject.UPDATE_BADGE").apply {
+            setPackage(packageName)
+        }
         sendBroadcast(intent)
     }
 }

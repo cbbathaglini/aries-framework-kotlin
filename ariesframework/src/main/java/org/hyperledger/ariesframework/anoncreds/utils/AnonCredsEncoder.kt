@@ -10,7 +10,7 @@ class AnonCredsEncoder {
 
     companion object {
 
-        fun checkEncodes(proof: AnonCredsProof){
+        fun checkEncodes(proof: AnonCredsProof) {
             for ((referent, attribute) in proof.requestedProof.revealedAttrs) {
                 val sample = EncodeHelper.buildEncSample(
                     referent = referent,
@@ -23,7 +23,7 @@ class AnonCredsEncoder {
                 if (sample.expected != sample.encoded) {
                     throw CredoError(
                         "Invalid encoded value for attribute. " +
-                                "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
+                            "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
                     )
                 }
             }
@@ -44,7 +44,7 @@ class AnonCredsEncoder {
                     if (sample.expected != sample.encoded) {
                         throw CredoError(
                             "Invalid encoded value for attribute '$attributeName'. " +
-                                    "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
+                                "Raw='${sample.raw}', Expected='${sample.expected}', Actual='${sample.encoded}'",
                         )
                     }
                 }

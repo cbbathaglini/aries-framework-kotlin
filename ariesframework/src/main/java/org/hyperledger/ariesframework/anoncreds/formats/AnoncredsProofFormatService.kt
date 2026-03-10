@@ -43,7 +43,6 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevoked
 import org.hyperledger.ariesframework.anoncreds.model.holder.CreateProofOptions
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsEncoder
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.utils.EncodeHelper
 import org.hyperledger.ariesframework.credentials.utils.JsonEncoder
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.models.PredicateType

@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.SystemClock
@@ -64,6 +65,7 @@ class WalletMainActivity : BaseActivity() {
 
     private var isResetting = false
     private var isLoggingOut = false
+    private var badgeReceiverRegistered = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -224,12 +226,25 @@ class WalletMainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        registerReceiver(badgeReceiver, IntentFilter("org.hyperledger.ariesproject.UPDATE_BADGE"))
+
+        val filter = IntentFilter("org.hyperledger.ariesproject.UPDATE_BADGE")
+
+        ContextCompat.registerReceiver(
+            this,
+            badgeReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        badgeReceiverRegistered = true
     }
 
     override fun onPause() {
+        if (badgeReceiverRegistered) {
+            unregisterReceiver(badgeReceiver)
+            badgeReceiverRegistered = false
+        }
         super.onPause()
-        unregisterReceiver(badgeReceiver)
     }
 
     private fun runOnConfirm(message: String, action: () -> Unit) {
