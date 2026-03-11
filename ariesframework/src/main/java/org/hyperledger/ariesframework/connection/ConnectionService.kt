@@ -443,11 +443,17 @@ class ConnectionService(val agent: Agent) {
      * @return the connection record.
      */
     suspend fun getByThreadId(threadId: String): ConnectionRecord {
-        return connectionRepository.getSingleByQuery(
-            """
+        LogUtil.info(this) { "DEBUG getByThreadId threadId=$threadId" }
+        return try {
+            connectionRepository.getSingleByQuery(
+                """
             {"threadId": "$threadId"}
             """,
-        )
+            )
+        } catch (e: Exception) {
+            LogUtil.info(this) { "DEBUG getByThreadId FAILED threadId=$threadId error=${e.message}" }
+            throw e
+        }
     }
 
     /**

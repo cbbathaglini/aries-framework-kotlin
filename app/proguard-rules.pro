@@ -28,3 +28,15 @@
 # Não remova nada do namespace UniFFI
 -keep class uniffi.** { *; }
 -dontwarn uniffi.**
+
+# Preserve generic signatures so TypeToken<T> retains type information
+-keepattributes Signature
+
+# Keep Gson TypeToken used via reflection/obfuscated code
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Keep Gson annotations on fields (helps reflective deserialization)
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
