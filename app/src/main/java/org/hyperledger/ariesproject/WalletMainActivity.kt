@@ -74,7 +74,22 @@ class WalletMainActivity : BaseActivity() {
         setChildContent(R.layout.activity_wallet_main)
         binding = ActivityWalletMainBinding.bind(findViewById(R.id.baseContainer))
         setSupportActionBar(binding.toolbar)
-        binding.toolbar.title = title
+
+        val appBar = findViewById<com.google.android.material.appbar.AppBarLayout>(R.id.appBar)
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(appBar) { view, insets ->
+            val statusBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+            view.setPadding(
+                view.paddingLeft,
+                statusBars.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
+        supportActionBar?.title = "Wallet"
+
+        //binding.toolbar.title = title
 
         openFragment(HomeFragment())
         updateToolbarAndBackground(
