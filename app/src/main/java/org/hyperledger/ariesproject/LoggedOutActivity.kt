@@ -2,6 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -28,17 +29,34 @@ class LoggedOutActivity : AppCompatActivity() {
     }
 
     private fun startWalletAgain() {
-        val intent = Intent(this, WalletMainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra(EXTRA_REOPEN_WALLET, true)
+        binding.startAgainButton.isEnabled = false
+
+        lifecycleScope.launch {
+            val app = application as WalletApp
+
+            val success = withContext(Dispatchers.IO) {
+                runCatching {
+                    app.prepareForWalletEntry()
+                    true
+                }.getOrElse {
+                    Log.e("LoggedOutActivity", "Failed to reopen wallet", it)
+                    false
+                }
+            }
+
+            if (success) {
+                val intent = Intent(this@LoggedOutActivity, WalletMainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra(EXTRA_REOPEN_WALLET, true)
+                }
+                startActivity(intent)
+                finish()
+            } else {
+                binding.startAgainButton.isEnabled = true
+            }
         }
-        startActivity(intent)
-        finish()
     }
 
-    override fun onBackPressed() {
-        moveTaskToBack(true)
-    }
 
     companion object {
         const val EXTRA_REOPEN_WALLET = "REOPEN_WALLET"

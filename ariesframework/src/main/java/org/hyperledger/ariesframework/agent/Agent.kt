@@ -204,9 +204,6 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
      */
     suspend fun reset() {
         LogUtil.info(this) { "resetting agent" }
-        runCatching { mediationRecipient.close() }
-        runCatching { messageSender.close() }
-        runCatching { wallet.close() }
 
         // double check
         runCatching { credentialExchangeRepository.deleteAll() }
@@ -226,6 +223,10 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
         runCatching { verifierRepository.deleteAll() }
         runCatching { didCommMessageRepository.deleteAll() }
         runCatching { outOfBandRepository.deleteAll() }
+
+        runCatching { mediationRecipient.close() }
+        runCatching { messageSender.close() }
+        runCatching { wallet.close() }
 
         _isInitialized = false
         wallet.delete()

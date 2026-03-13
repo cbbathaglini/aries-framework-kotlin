@@ -37,6 +37,52 @@ class WalletApp : Application() {
     private val appJob = SupervisorJob()
     val appScope = kotlinx.coroutines.CoroutineScope(appJob + Dispatchers.IO)
 
+    override fun onCreate() {
+        super.onCreate()
+
+        Session.startNewSession()
+        notificationHandler = NotificationHandler.getInstance(this)
+
+        appScope.launch {
+            try {
+                prepareForWalletEntry()
+            } catch (e: Exception) {
+                Log.e("WalletApp", "Fatal error during startup", e)
+                walletOpened = false
+            }
+        }
+    }
+
+    suspend fun prepareForWalletEntry() {
+        val prefs = getSharedPreferences("wallet_prefs", MODE_PRIVATE)
+        val resetPending = prefs.getBoolean("RESET_PENDING", false)
+
+        if (resetPending) {
+            prefs.edit().putBoolean("RESET_PENDING", false).apply()
+            Log.i("WalletApp", "RESET_PENDING detected → resetting agent")
+
+            walletOpened = false
+
+            runCatching {
+                if (::agent.isInitialized) {
+                    agent.reset()
+                } else {
+                    val tempAgent = Agent(applicationContext, createAgentConfig())
+                    tempAgent.reset()
+                }
+            }.onFailure {
+                Log.e("WalletApp", "Reset failed", it)
+                throw it
+            }
+        }
+
+        if (!::agent.isInitialized || !agent.isInitialized() || !walletOpened) {
+            openWallet()
+            subscribeAgentEvents()
+            walletOpened = true
+        }
+    }
+
     override fun onTerminate() {
         super.onTerminate()
         appJob.cancel()
@@ -103,63 +149,11 @@ class WalletApp : Application() {
         CacheOperations().updateCache(agent)
     }
 
-
-//    override fun onCreate() {
-//        super.onCreate()
-//        notificationHandler = NotificationHandler.getInstance(this)
-//
-//        GlobalScope.launch(Dispatchers.IO) {
-//            try {
-//                openWallet()
-//                subscribeAgentEvents()
-//                walletOpened = true
-//
-//                // Log.d("WalletApp", "Agent initialized and listeners registered")
-//            } catch (e: Exception) {
-//                // Log.e("WalletApp", "Error initializing agent: ${e.message}", e)
-//            }
-//        }
-//    }
-//
-
-
     fun clearAllNotifications() {
         runCatching { notificationHandler.clearAll() }
         notifyBadgeUpdate()
     }
 
-    override fun onCreate() {
-        super.onCreate()
-
-        Session.startNewSession()
-        notificationHandler = NotificationHandler.getInstance(this)
-
-        val prefs = getSharedPreferences("wallet_prefs", MODE_PRIVATE)
-
-        appScope.launch {
-            try {
-                val resetPending = prefs.getBoolean("RESET_PENDING", false)
-                if (resetPending) {
-                    prefs.edit().putBoolean("RESET_PENDING", false).apply()
-                    Log.i("WalletApp", "RESET_PENDING detected → resetting agent")
-
-                    val tempAgent = Agent(applicationContext, createAgentConfig())
-                    runCatching { tempAgent.reset() }
-                        .onFailure { Log.e("WalletApp", "Reset failed", it) }
-
-                    Log.i("WalletApp", "Reset finished")
-                }
-
-                openWallet()
-                subscribeAgentEvents()
-                walletOpened = true
-
-            } catch (e: Exception) {
-                Log.e("WalletApp", "Fatal error during startup", e)
-                walletOpened = false
-            }
-        }
-    }
 
     private fun createAgentConfig(): AgentConfig {
         val pref = getSharedPreferences(PREFERENCE_NAME, 0)
