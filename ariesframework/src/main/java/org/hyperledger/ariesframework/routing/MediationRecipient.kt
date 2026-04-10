@@ -109,7 +109,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
         } else {
             val connection = agent.connectionService.processInvitation(invitation, outOfBandInvitation, getRouting(), true)
             val message = agent.didExchangeService.createRequest(connection.id)
-            //val message = agent.connectionService.createRequest(connection.id)
+            // val message = agent.connectionService.createRequest(connection.id)
             agent.messageSender.send(message)
 
             if (agent.connectionService.fetchState(connection) != ConnectionState.Complete) {

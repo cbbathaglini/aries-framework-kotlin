@@ -2,7 +2,7 @@
   "networks": [
     {
       "networkName": "serpro",
-      "chainId": 1337,
+      "chainId": 13371313,
       "nodeAddress": "http://idd.serpro.gov.br/besu",
       "contracts": {
         "ethereumDidRegistry": {

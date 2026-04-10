@@ -588,6 +588,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val start = System.nanoTime()
 
         val cached = tailsPathCache.getIfFresh(LedgerCacheDefaults.TAILS_PATH)
+        LogUtil.info(this) { "[getTailsPath] cached path $cached" }
         if (cached != null) {
             val ms = (System.nanoTime() - start) / 1_000_000
             LogUtil.info(this) { "[cache hit] getTailsPath took ${ms}ms" }
