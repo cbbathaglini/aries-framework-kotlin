@@ -21,6 +21,8 @@ class W3cJsonLdCredentialService(
         val expanded = W3cTypeExpander.expandTypes(
             W3cTypeExpander.ContextSpec(contexts = contextList),
             types,
+            agent,
+            w3cCredentialsModuleConfig.documentLoader,
         )
 
         return mapOf("type" to expanded)
