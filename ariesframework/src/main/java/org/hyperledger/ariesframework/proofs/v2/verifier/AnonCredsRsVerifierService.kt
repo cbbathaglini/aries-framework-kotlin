@@ -51,11 +51,6 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
         val presentationRequest = PresentationRequest(requestMessage.anoncredsProofRequest())
 
         val presentation = Presentation(proofJson)
-        val proofUniffi = presentation.proof()
-        val aggregated = proofUniffi.aggregatedProof
-
-        // PrintLongLine.print("VERIFIER PRESENTATION.PROOF - $proofUniffi")
-        // PrintLongLine.print("VERIFIER AGGREGATED - $aggregated")
 
         val schemaIds: Set<String> = schemas.schemas.keys
         val schemasAnoncreds: Map<String, Schema> = RecoverFromLedger.getSchemas(schemaIds, agent)

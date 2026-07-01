@@ -480,12 +480,6 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
                 credDefs = rsCredentialDefinitions,
             )
 
-            val proofUniffi = presentation.proof()
-            val aggr = proofUniffi.aggregatedProof
-
-            // PrintLongLine.print("HOLDER PRESENTATION.PROOF- $proofUniffi")
-            // PrintLongLine.print("HOLDER AGGREGATED- $aggr")
-
             val anonCredsProof: AnonCredsProof =
                 Json.decodeFromString<AnonCredsProof>(presentation.toJson())
 
