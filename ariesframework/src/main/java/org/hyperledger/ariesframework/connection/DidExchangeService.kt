@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.decodeBase64
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.util.DIDParser
+import org.hyperledger.ariesframework.webvh.WebVhDidResolver
 import org.slf4j.LoggerFactory
 
 class DidExchangeService(val agent: Agent) {
@@ -75,7 +76,7 @@ class DidExchangeService(val agent: Agent) {
             outOfBandRecord = outOfBandRecords[0]
         }
 
-        val didDoc = agent.peerDIDService.parsePeerDID(message.did)
+        val didDoc = resolveDidDoc(message.did)
         var connectionRecord = agent.connectionService.createConnection(
             ConnectionRole.Inviter,
             ConnectionState.Invited,
@@ -162,7 +163,7 @@ class DidExchangeService(val agent: Agent) {
 
         verifyDidRotate(message, connectionRecord)
 
-        val didDoc = agent.peerDIDService.parsePeerDID(message.did)
+        val didDoc = resolveDidDoc(message.did)
         connectionRecord.theirDid = didDoc.id
         connectionRecord.theirDidDoc = didDoc
 
@@ -212,6 +213,20 @@ class DidExchangeService(val agent: Agent) {
         updateState(connectionRecord, ConnectionState.Complete)
 
         return OutboundMessage(message, connectionRecord)
+    }
+
+    private suspend fun resolveDidDoc(did: String): org.hyperledger.ariesframework.connection.models.didauth.DidDoc {
+        val method = DIDParser.getMethod(did)
+        return when {
+            method == DID_METHOD_WEBVH && agent.agentConfig.useDidWebvh -> WebVhDidResolver().resolve(did)
+            method == DID_METHOD_PEER -> agent.peerDIDService.parsePeerDID(did)
+            else -> agent.peerDIDService.parsePeerDID(did)
+        }
+    }
+
+    companion object {
+        private const val DID_METHOD_WEBVH = "webvh"
+        private const val DID_METHOD_PEER = "peer"
     }
 
     private suspend fun updateState(connectionRecord: ConnectionRecord, newState: ConnectionState) {

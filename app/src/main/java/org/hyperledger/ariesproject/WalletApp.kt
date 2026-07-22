@@ -133,7 +133,8 @@ class WalletApp : Application() {
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
             useLedgerService = false,
-            useBesuLedger = true,
+            useBesuLedger = false,
+            useDidWebvh = true,
             besuLedgerConfig = besuLedgerConfig,
         )
 

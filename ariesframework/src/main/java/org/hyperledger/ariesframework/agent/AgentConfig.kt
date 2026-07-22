@@ -71,6 +71,7 @@ data class AgentConfig(
     var preferredHandshakeProtocol: HandshakeProtocol = HandshakeProtocol.Connections,
     var useBesuLedger: Boolean = false,
     var besuLedgerConfig: BesuLedgerConfig? = null,
+    var useDidWebvh: Boolean = false,
     var cacheConfigFile: String? = null,
 ) {
     val endpoints: List<String>

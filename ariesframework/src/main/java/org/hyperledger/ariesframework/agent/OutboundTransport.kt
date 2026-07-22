@@ -12,5 +12,6 @@ object AgentHttpClient {
         .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
         .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
         .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+        //.pingInterval(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 }
