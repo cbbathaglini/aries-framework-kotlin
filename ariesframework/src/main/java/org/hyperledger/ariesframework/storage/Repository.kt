@@ -6,6 +6,8 @@ import askar_uniffi.ErrorCode
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
@@ -102,8 +104,27 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
             val records = scan.fetchAll()
             records.map { recordToInstance(it) }
         } catch (e: Exception) {
+            if (e.message != null && e.message!!.contains("Error parsing tag query")) {
+                LogUtil.warn(this) { "Askar tag query failed for '$query', falling back to full scan + Kotlin filter" }
+                val tagFilter = parseTagFilter(query)
+                if (tagFilter != null) {
+                    return getAll().filter { record ->
+                        val tags = record.getTags()
+                        tagFilter.all { (key, value) -> tags[key] == value }
+                    }
+                }
+            }
             LogUtil.error(this) { "Query $query failed with error: ${e.message}" }
             emptyList()
+        }
+    }
+
+    private fun parseTagFilter(query: String): Map<String, String>? {
+        return try {
+            val obj = Json.parseToJsonElement(query).jsonObject
+            obj.mapValues { it.value.jsonPrimitive.content }
+        } catch (e: Exception) {
+            null
         }
     }
 

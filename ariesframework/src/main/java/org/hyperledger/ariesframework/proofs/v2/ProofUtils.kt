@@ -37,9 +37,9 @@ class ProofUtils {
             val lock = Mutex()
 
             schemaIds.concurrentForEach { schemaId ->
-                val anonCredsSchema = agent.ledgerService.getSchemaObj(schemaId)
+                val result = AnonCredsObjects.fetchSchema(agent, schemaId)
                 lock.withLock {
-                    schemas[schemaId] = anonCredsSchema
+                    schemas[schemaId] = result.schema!!
                 }
             }
 
