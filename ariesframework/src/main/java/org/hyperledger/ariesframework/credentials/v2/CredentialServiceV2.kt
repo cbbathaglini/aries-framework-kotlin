@@ -994,7 +994,7 @@ class CredentialServiceV2(val agent: Agent) {
             }
         }
 
-        // [TODO]como faz para colocar o connection se for connectiion-less???? mudei no Outboundmessage
+        // TODO: how to set connection for connection-less exchange?
         agent.messageSender.send(OutboundMessage(credentialProblemReportMessageV2, connectionRecord))
 
         LogUtil.info(this) { "problem report sended" }

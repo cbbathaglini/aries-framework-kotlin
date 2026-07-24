@@ -69,13 +69,13 @@ class AnonCredsEncoder {
                     return doubleValue.toInt().toString()
                 }
 
-                // não é int32 → vira string e será hasheado
+                // not int32 -> becomes string and will be hashed
                 return sha256ToDecimal(value.toString())
             }
 
-            // 3️⃣ String handling
+            // String handling
             if (value is String) {
-                // string numérica inteira válida?
+                // valid integer numeric string?
                 if (value.isNotEmpty() &&
                     value.matches(Regex("^[+-]?\\d+$"))
                 ) {

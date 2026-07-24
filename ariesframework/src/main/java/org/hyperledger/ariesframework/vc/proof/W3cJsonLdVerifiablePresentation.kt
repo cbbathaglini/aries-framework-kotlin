@@ -31,14 +31,14 @@ class W3cJsonLdVerifiablePresentation
 //    }
 //
 //    /**
-//     * O ClaimFormat da apresentação. Para JSON-LD credentials, sempre `ldp_vp`.
+//     * The ClaimFormat of the presentation. For JSON-LD credentials, always `ldp_vp`.
 //     */
 //    val claimFormat: ClaimFormat
 //        get() = ClaimFormat.LdpVp
 //
 //    /**
-//     * Retorna a versão codificada da W3C Verifiable Presentation.
-//     * Para JSON-LD presentations, isto é um objeto JSON.
+//     * Returns the encoded version of the W3C Verifiable Presentation.
+//     * For JSON-LD presentations, this is a JSON object.
 //     */
 //    val encoded: String
 //        get() = toJson()

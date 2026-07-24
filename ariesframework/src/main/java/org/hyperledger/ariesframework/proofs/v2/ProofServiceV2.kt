@@ -1141,7 +1141,7 @@ class ProofServiceV2(val agent: Agent) {
             }
         }
 
-        // 2) Consolida resultados sem concorrência (sem lock)
+        // 2) Consolidate results without concurrency (no lock)
         val retrieved = RetrievedCredentialsAnonCreds()
         retrieved.requestedAttributes.putAll(attrDeferred.awaitAll().toMap())
         retrieved.requestedPredicates.putAll(predDeferred.awaitAll().toMap())

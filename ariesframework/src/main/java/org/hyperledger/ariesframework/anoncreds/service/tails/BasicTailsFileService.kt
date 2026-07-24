@@ -121,7 +121,7 @@ class BasicTailsFileService(agent: Agent) : TailsFileService {
 //            result = result.multiply(base).add(BigInteger.valueOf(digit.toLong()))
 //        }
 //
-//        // Contar os caracteres '1' à esquerda (representam bytes zero no início)
+//        // Count leading '1' characters (represent leading zero bytes)
 //        while (leadingZeroCount < input.length && input[leadingZeroCount] == '1') {
 //            leadingZeroCount++
 //        }
@@ -130,7 +130,7 @@ class BasicTailsFileService(agent: Agent) : TailsFileService {
 //        val stripSignByte = bytes.size > 0 && bytes[0] == 0.toByte()
 //        val decoded = if (stripSignByte) bytes.drop(1).toByteArray() else bytes
 //
-//        // Adicionar os zeros à esquerda que foram representados como '1'
+//        // Add leading zeros that were represented as '1'
 //        return ByteArray(leadingZeroCount) { 0 } + decoded
 //    }
 

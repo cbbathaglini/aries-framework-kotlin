@@ -139,14 +139,14 @@ data class W3cCredential(
 //                null -> null
 //                is JsonArray -> el
 //                is JsonObject -> JsonArray(listOf(el))
-//                is JsonPrimitive -> JsonArray(listOf(el)) // útil p/ alguns campos que aceitam string
+//                is JsonPrimitive -> JsonArray(listOf(el)) // useful for some fields that accept string
 //                else -> null
 //            }
 //
 //            fun contextAsArray(el: JsonElement?): JsonArray? = when (el) {
 //                null -> null
 //                is JsonArray -> el
-//                is JsonPrimitive -> JsonArray(listOf(el)) // "@context": "https://..."
+//                is JsonPrimitive -> JsonArray(listOf(el))
 //                is JsonObject -> JsonArray(listOf(el))
 //                else -> null
 //            }
@@ -159,13 +159,13 @@ data class W3cCredential(
 //            // ✅ proof: objeto -> [obj]
 //            asArray(obj["proof"])?.let { mutable["proof"] = it }
 //
-//            // ✅ credentialSchema às vezes vem como objeto também
+//            // credentialSchema sometimes comes as object too
 //            asArray(obj["credentialSchema"])?.let { mutable["credentialSchema"] = it }
 //
 //            // ✅ @context: string -> [string]
 //            contextAsArray(obj["@context"])?.let { mutable["@context"] = it }
 //
-//            // ✅ type às vezes vem como string
+//            // type sometimes comes as string
 //            asArray(obj["type"])?.let { mutable["type"] = it }
 //
 //            return JsonObject(mutable)

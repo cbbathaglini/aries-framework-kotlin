@@ -3,7 +3,7 @@ package org.hyperledger.ariesframework.credentials.formats.anoncreds
 object MessageValidator {
 
     /**
-     * @throws ClassValidationError se houver erros de validação
+     * @throws ClassValidationError if there are validation errors
      */
     fun validateSync(classInstance: Any) {
         val errors = validate(classInstance)
@@ -17,11 +17,9 @@ object MessageValidator {
         }
     }
 
-    // Simula uma função de validação (você pode integrar com Bean Validation, etc.)
     private fun validate(obj: Any): List<String> {
         val violations = mutableListOf<String>()
 
-        // Exemplo simples: reflexão ou validação manual
         if (obj is AnonCredsCredentialProposal && obj.schemaName.isNullOrBlank()) {
             violations.add("schemaName must not be blank")
         }

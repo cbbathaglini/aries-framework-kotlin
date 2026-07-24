@@ -83,7 +83,7 @@ object MessageSerializer : JsonContentPolymorphicSerializer<AgentMessage>(AgentM
     fun <T : AgentMessage> registerMessage(type: String, clazz: KClass<T>) {
         // KClass<T> -> KType
         val ktype = clazz.createType()
-        val kser = serializer(ktype) // top-level overload aceita KType
+        val kser = serializer(ktype)
 
         @Suppress("UNCHECKED_CAST")
         val asAgent = kser as KSerializer<AgentMessage>

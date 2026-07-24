@@ -37,7 +37,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
 
     override suspend fun getSchema(agent: Agent, schemaId: String): GetSchemaReturn {
         require(supportedIdentifier.matches(schemaId)) {
-            "Schema id não suportado por EthrAnonCredsRegistry: $schemaId"
+            "Schema id not supported by EthrAnonCredsRegistry: $schemaId"
         }
 
         val (name, version) = parseEthrSchemaId(schemaId)

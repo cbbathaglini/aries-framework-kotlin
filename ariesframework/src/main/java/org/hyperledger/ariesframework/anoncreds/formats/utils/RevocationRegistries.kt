@@ -83,7 +83,7 @@ data class RevocationRegistries(val agent: Agent) {
 
             if (info == null) {
                 throw CredoError(
-                    "Credential para referent '$referent' não possui credentialInfo para criar revocation state",
+                    "Credential for referent '$referent' does not have credentialInfo to create revocation state",
                 )
             }
 
@@ -212,7 +212,7 @@ data class RevocationRegistries(val agent: Agent) {
                 async {
                     val registry = agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
 
-                    // 1) Busca definição se ainda não estiver no cache
+                    // 1) Fetch definition if not yet in cache
                     if (revocationRegistries[revocationRegistryId] == null) {
                         val (revocationRegistryDefinition, resolutionMetadata) =
                             registry.getRevocationRegistryDefinition(agent, revocationRegistryId)
@@ -228,7 +228,7 @@ data class RevocationRegistries(val agent: Agent) {
                             RevocationRegistryEntry(definition = revocationRegistryDefinition)
                     }
 
-                    // 2) Busca status list do timestamp se ainda não tiver
+                    // 2) Fetch status list for timestamp if not yet available
                     val entry = revocationRegistries.getValue(revocationRegistryId)
                     if (entry.revocationStatusLists?.get(timestamp) == null) {
                         val (revocationStatusList, statusListResolutionMetadata) =

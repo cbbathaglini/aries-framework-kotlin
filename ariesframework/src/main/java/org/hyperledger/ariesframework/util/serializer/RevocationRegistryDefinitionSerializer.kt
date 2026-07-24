@@ -21,7 +21,7 @@ object RevocationRegistryDefinitionSerializer :
         encoder: Encoder,
         value: uniffi.indy_besu_vdr.RevocationRegistryDefinition,
     ) {
-        // value.value é String (JSON). Precisamos tipar.
+        // value.value is String (JSON). We need to type it.
         val revRegValue: RevocationRegistryValue =
             try {
                 // Json.decodeFromString(RevocationRegistryValue.serializer(), value.value)

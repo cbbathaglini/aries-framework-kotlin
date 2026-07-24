@@ -48,10 +48,10 @@ class GetCredentialsForProofRequestReferent {
         }
 
         /**
-         * Resultado da checagem de revogação.
+         * Result of revocation check.
          */
         data class RevocationStatusResult(
-            val isRevoked: Boolean?, // null/undefined quando não aplicável
+            val isRevoked: Boolean?, // null/undefined when not applicable
             val timestamp: ULong?, // epoch time conforme seu formato
         )
 
@@ -87,7 +87,7 @@ class GetCredentialsForProofRequestReferent {
                 "Fetching credential revocation status for credential revocation id '$credentialRevocationId' with revocation interval from '${requestNonRevoked.from}' to '${requestNonRevoked.to}'"
             }
 
-            // Boas práticas (Aries RFC 0441) <<< DESCOMENTAR?
+            // Best practices (Aries RFC 0441) <<< UNCOMMENT?
             // RevocationInterval.assertBestPracticeRevocationInterval(requestNonRevoked)
 
             val toTs = requestNonRevoked.to ?: dateToTimestamp(Date()).toULong()

@@ -24,7 +24,7 @@ class RevocationMetada {
 //            // RFC 0441 best practices
 //            RevocationInterval.assertBestPracticeRevocationInterval(nonRevokedInterval)
 //
-//            // Definição do Registry
+//            // Registry definition
 //            val revocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 //
 //            val tailsFile = agent.revocationService.downloadTails(revocationRegistryDefinition)
@@ -75,7 +75,7 @@ class RevocationMetada {
 //                val overrideJson = when (val anyVal = overrideResp.revocationStatusList) {
 //                    is JsonObject -> anyVal
 //                    is Map<*, *> -> anyVal as JsonObject
-//                    else -> throw CredoError("Formato inválido de revocationStatusList(override)")
+//                    else -> throw CredoError("Invalid revocationStatusList(override) format")
 //                }
 //                val overrideStatusList = RevocationStatusList.fromJson(overrideJson)
 //
@@ -88,8 +88,8 @@ class RevocationMetada {
 //                    )
 //                } else {
 //                    throw CredoError(
-//                        "VDR timestamp para $requestedFrom não corresponde ao fornecido nos proof identifiers. " +
-//                                "Esperado: $updatedTimestamp e recebido $vdrTimestamp"
+//                        "VDR timestamp for $requestedFrom does not match the one provided in proof identifiers. " +
+//                                "Expected: $updatedTimestamp and received $vdrTimestamp"
 //                    )
 //                }
 //            }

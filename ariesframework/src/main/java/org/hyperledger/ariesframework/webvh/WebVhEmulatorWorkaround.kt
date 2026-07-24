@@ -7,7 +7,7 @@ import java.net.NetworkInterface
 import java.util.Properties
 
 /**
- * Local Android emulator workaround for did:webvh development resources.
+ * Workaround for did:webvh development resources.
  *
  * Remove this file and the calls to it when local IP-based WebVH testing is no longer needed.
  */
