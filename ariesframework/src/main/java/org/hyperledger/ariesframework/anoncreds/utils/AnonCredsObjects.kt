@@ -1,9 +1,14 @@
 package org.hyperledger.ariesframework.anoncreds.utils
 
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult
+import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.error.CredoError
 import org.slf4j.LoggerFactory
 
@@ -11,6 +16,12 @@ class AnonCredsObjects {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AnonCredsObjects::class.java)
+        private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
+        suspend fun fetchSchema(agent: Agent, schemaId: String): GetSchemaReturn {
+            val registry = agent.anonCredsRegistryService.getRegistryForIdentifier(schemaId)
+            return registry.getSchema(agent, schemaId)
+        }
 
         suspend fun fetchCredentialDefinition(
             agent: Agent,
@@ -38,6 +49,14 @@ class AnonCredsObjects {
                 credentialDefinitionId = credentialDefinitionId,
                 indyNamespace = namespace,
             )
+        }
+
+        suspend fun fetchCredentialDefinitionJson(
+            agent: Agent,
+            credentialDefinitionId: String,
+        ): String {
+            val result = fetchCredentialDefinition(agent, credentialDefinitionId)
+            return json.encodeToString(result.credentialDefinition)
         }
 
         suspend fun fetchRevocationStatusList(
@@ -77,6 +96,14 @@ class AnonCredsObjects {
                 revocationRegistryDefinitionId = revocationRegistryDefinitionId,
                 indyNamespace = indyNamespace,
             )
+        }
+
+        suspend fun fetchRevocationRegistryDefinitionJson(
+            agent: Agent,
+            revocationRegistryDefinitionId: String,
+        ): String {
+            val result = fetchRevocationRegistryDefinition(agent, revocationRegistryDefinitionId)
+            return json.encodeToString(result.revocationRegistryDefinition)
         }
     }
 }

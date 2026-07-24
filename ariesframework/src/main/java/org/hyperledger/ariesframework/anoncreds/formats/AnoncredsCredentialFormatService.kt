@@ -238,13 +238,14 @@ class AnoncredsCredentialFormatService(
         offerCredentialMessageV2: OfferCredentialMessageV2,
     ): CredentialFormatCreateReturn {
         LogUtil.info(this) { "accepting offer" }
-        val offer = AnonCredsCredentialOffer.fromAttachment(attachment) // FormatDataUtil.parseAttachmentData<AnonCredsCredentialOffer>(attachment)
+        val offer = AnonCredsCredentialOffer.fromAttachment(attachment)
 
         val credentialOfferJson = offerCredentialMessageV2.getCredentialOfferAttach(attachment.id)
         val credentialOffer = CredentialOffer(credentialOfferJson)
-        // PrintLongLine.print(">>>> offer: ${offer.toString()}")
 
-        val cd = agent.ledgerService.getCredentialDefinition(offer.credDefId)
+        val cd = AnonCredsObjects.fetchCredentialDefinitionJson(agent, offer.credDefId)
+        LogUtil.info(this) { "credential definition resolved: ${offer.credDefId}" }
+        LogUtil.info(this) { "credential definition JSON (first 500 chars): ${cd.take(500)}" }
         val credentialDefinition = cd.replace("\\\"", "\"")
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val holderDid = getHolderDid(credentialExchangeRecord)
@@ -452,26 +453,26 @@ class AnoncredsCredentialFormatService(
         val anonCredsCredential: AnonCredsCredential = Json.decodeFromString(decodedString)
 
         val credentialDefinitionResult =
-            agent.ledgerService.getCredentialDefinition(anonCredsCredential.credDefId)
+            AnonCredsObjects.fetchCredentialDefinitionJson(agent, anonCredsCredential.credDefId)
 
         val anoncredscredentialDefinition = Json.decodeFromString<AnonCredsCredentialDefinition>(credentialDefinitionResult)
 
-        val fetchSchemaReturn_aux = agent.ledgerService.getSchema(anonCredsCredential.schemaId)
-        val jsonElementSchema: JsonElement = Json.parseToJsonElement(fetchSchemaReturn_aux.first)
-        val fetchSchemaReturn: FetchSchemaReturn = FetchSchemaReturn.fromJson(jsonElementSchema, anonCredsCredential.schemaId)
+        val fetchSchemaReturn = AnonCredsObjects.fetchSchema(agent, anonCredsCredential.schemaId)
+        val schemaJson = kotlinx.serialization.json.Json { encodeDefaults = true }.encodeToString(fetchSchemaReturn.schema!!)
+        val jsonElementSchema: JsonElement = Json.parseToJsonElement(schemaJson)
 
         credentialExchangeRecord.credentialDefinitionId = anonCredsCredential.credDefId
 
         var revocationRegistryResult: FetchIntermediateRevocationRegistryDefinitionResult? = null
         if (anonCredsCredential.revRegId != null) {
-            val revocation = agent.ledgerService.getRevocationRegistryDefinition(anonCredsCredential.revRegId)
+            val revocation = AnonCredsObjects.fetchRevocationRegistryDefinitionJson(agent, anonCredsCredential.revRegId)
             revocationRegistryResult = Json.decodeFromString<FetchIntermediateRevocationRegistryDefinitionResult>(revocation)
             revocationRegistryResult.revocationRegistryDefinitionId = anonCredsCredential.revRegId
             credentialExchangeRecord.updateRevocationInfos(anonCredsCredential.revRegId, revocationRegistryResult.revocationRegistryDefinitionId)
         }
 
         val revocationRegistryJson =
-            anonCredsCredential.revRegId?.let { agent.ledgerService.getRevocationRegistryDefinition(it) }
+            anonCredsCredential.revRegId?.let { AnonCredsObjects.fetchRevocationRegistryDefinitionJson(agent, it) }
 
         val revocationRegistry = revocationRegistryJson?.let { RevocationRegistryDefinition(it) }
         if (revocationRegistry != null) {
@@ -520,14 +521,14 @@ class AnoncredsCredentialFormatService(
             credential = anonCredsCredential,
             credentialRequestMetadata = anonCredsCredentialRequestMetadata,
             credentialDefinition = anoncredscredentialDefinition,
-            schema = fetchSchemaReturn.schema,
+            schema = fetchSchemaReturn.schema!!,
             schemaId = anonCredsCredential.schemaId,
             credentialDefinitionId = anonCredsCredential.credDefId,
             credentialId = BaseRecord.generateId(),
             revocationRegistry = revocationRegistryInfo,
         )
 
-        credentialExchangeRecord.updateSchema(anonCredsCredential.schemaId, fetchSchemaReturn.schema)
+        credentialExchangeRecord.updateSchema(anonCredsCredential.schemaId, fetchSchemaReturn.schema!!)
 
         val storeCredentialOptions = StoreCredential.getStoreCredentialOptions(
             options = storeCredential,

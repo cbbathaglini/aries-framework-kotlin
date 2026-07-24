@@ -713,7 +713,7 @@ class AnoncredsProofFormatService(
                 }?.toMutableMap() ?: mutableMapOf()
 
             anonCredsRevocationRegistries[key] = AnonCredsRevocationRegistryEntry(
-                tailsFilePath = agent.ledgerService.getTailsPath(),
+                tailsFilePath = try { agent.ledgerService.getTailsPath() } catch (e: Exception) { logger.warn("getTailsPath() not available", e); "" },
                 tailsHash = value.tailsHash,
                 definition = anonDef,
                 revocationStatusLists = statusLists,

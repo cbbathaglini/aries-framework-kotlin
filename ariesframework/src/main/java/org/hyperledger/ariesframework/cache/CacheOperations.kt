@@ -2,6 +2,7 @@ package org.hyperledger.ariesframework.cache
 
 import android.util.Log
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
 import org.slf4j.LoggerFactory
 
 class CacheOperations {
@@ -19,20 +20,20 @@ class CacheOperations {
         logger.info("-> schemaIds: $schemaIds |  credDefIds: $credDefIds |  revRegIds: $revRegIds ")
 
         for (schemaId in schemaIds) {
-            runCatching { agent.ledgerService.getSchema(schemaId) }
-                .onFailure { e -> Log.w("Cache", "Falha getSchema($schemaId): ${e.message}", e) }
+            runCatching { AnonCredsObjects.fetchSchema(agent, schemaId) }
+                .onFailure { e -> Log.w("Cache", "Failed getSchema($schemaId): ${e.message}", e) }
         }
 
         for (credDefId in credDefIds) {
-            runCatching { agent.ledgerService.getCredentialDefinition(credDefId) }
-                .onFailure { e -> Log.w("Cache", "Falha getCredentialDefinition($credDefId): ${e.message}", e) }
+            runCatching { AnonCredsObjects.fetchCredentialDefinitionJson(agent, credDefId) }
+                .onFailure { e -> Log.w("Cache", "Failed getCredentialDefinition($credDefId): ${e.message}", e) }
         }
         for (revRegId in revRegIds) {
             runCatching { agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revRegId) }
-                .onFailure { e -> Log.w("Cache", "Falha getRevocationRegistryDefinition($revRegId): ${e.message}", e) }
+                .onFailure { e -> Log.w("Cache", "Failed getRevocationRegistryDefinition($revRegId): ${e.message}", e) }
         }
 
         runCatching { agent.ledgerService.getTailsPath() }
-            .onFailure { e -> Log.w("Cache", "Falha getTailsPath(): ${e.message}", e) }
+            .onFailure { e -> Log.w("Cache", "Failed getTailsPath(): ${e.message}", e) }
     }
 }

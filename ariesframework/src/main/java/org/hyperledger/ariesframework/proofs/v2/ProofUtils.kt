@@ -16,6 +16,7 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinit
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequestRestriction
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
+import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
 import org.hyperledger.ariesframework.proofs.models.PredicateType
 import org.hyperledger.ariesframework.proofs.models.ProofFormatSpec
 import org.hyperledger.ariesframework.proofs.models.RetrievedCredentials
@@ -36,9 +37,9 @@ class ProofUtils {
             val lock = Mutex()
 
             schemaIds.concurrentForEach { schemaId ->
-                val anonCredsSchema = agent.ledgerService.getSchemaObj(schemaId)
+                val result = AnonCredsObjects.fetchSchema(agent, schemaId)
                 lock.withLock {
-                    schemas[schemaId] = anonCredsSchema
+                    schemas[schemaId] = result.schema!!
                 }
             }
 
@@ -50,9 +51,10 @@ class ProofUtils {
             val lock = Mutex()
 
             schemaIds.concurrentForEach { schemaId ->
-                val (schema, _) = agent.ledgerService.getSchema(schemaId)
+                val schemaResult = AnonCredsObjects.fetchSchema(agent, schemaId)
+                val schemaJson = Json { encodeDefaults = true }.encodeToString(schemaResult.schema)
                 lock.withLock {
-                    schemas[schemaId] = Schema(schema)
+                    schemas[schemaId] = Schema(schemaJson)
                 }
             }
             return schemas
@@ -67,7 +69,7 @@ class ProofUtils {
 
             credentialDefinitionIds.concurrentForEach { credentialDefinitionId ->
                 val credentialDefinition =
-                    agent.ledgerService.getCredentialDefinition(credentialDefinitionId)
+                    AnonCredsObjects.fetchCredentialDefinitionJson(agent, credentialDefinitionId)
                 lock.withLock {
                     credentialDefinitions[credentialDefinitionId] =
                         CredentialDefinition(credentialDefinition)
@@ -86,7 +88,7 @@ class ProofUtils {
 
             credentialDefinitionIds.concurrentForEach { credentialDefinitionId ->
                 val cd =
-                    agent.ledgerService.getCredentialDefinition(credentialDefinitionId)
+                    AnonCredsObjects.fetchCredentialDefinitionJson(agent, credentialDefinitionId)
                 PrintLongLine.print("cd: $cd")
                 val credentialDefinition = cd.replace("\\\"", "\"")
 //                PrintLongLine.print("cd: ${cd.toString()}")

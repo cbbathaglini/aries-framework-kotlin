@@ -54,6 +54,7 @@ import org.hyperledger.ariesframework.proofs.v2.verifier.AnonCredsRsVerifierServ
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.util.LogUtil
+import org.hyperledger.ariesframework.webvh.WebVhModule
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
@@ -110,10 +111,16 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anonCredsRevocationRegistryDefinitionRepository = AnonCredsRevocationRegistryDefinitionRepository(this)
     val anonCredsLinkSecretRepository = AnonCredsLinkSecretRepository(this)
     val anonCredsCredentialRepository = AnonCredsCredentialRepository(this)
+    val webvhModule = if (agentConfig.useDidWebvh) WebVhModule(this) else null
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
         agent = this,
         options = AnonCredsModuleConfigOptions(
-            registries = listOf<AnonCredsRegistry>(EthrAnonCredsRegistry()),
+            registries = buildList {
+                add(EthrAnonCredsRegistry())
+                if (agentConfig.useDidWebvh) {
+                    add(webvhModule!!.anonCredsRegistry)
+                }
+            },
         ),
     )
     val w3cCredentialsModuleConfig = W3cCredentialsModuleConfig()
@@ -152,19 +159,18 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
             wallet.initPublicDid(it)
         }
 
-        if (agentConfig.useLedgerService || agentConfig.useBesuLedger) {
-            if (agentConfig.useLedgerService) {
-                ledgerService.initialize()
-            } else if (agentConfig.useBesuLedger) {
-                ledgerService.initialize()
-            }
+        if (agentConfig.useLedgerService) {
+            ledgerService.initialize()
+        }
+        if (agentConfig.useBesuLedger && agentConfig.besuLedgerConfig != null) {
+            ledgerService.initialize()
+        }
 
-            LogUtil.info(this) { "connecting with mediator" }
-            if (agentConfig.mediatorConnectionsInvite != null) {
-                mediationRecipient.initialize(agentConfig.mediatorConnectionsInvite!!)
-            } else {
-                setInitialized()
-            }
+        LogUtil.info(this) { "connecting with mediator" }
+        if (agentConfig.mediatorConnectionsInvite != null) {
+            mediationRecipient.initialize(agentConfig.mediatorConnectionsInvite!!)
+        } else {
+            setInitialized()
         }
     }
 
