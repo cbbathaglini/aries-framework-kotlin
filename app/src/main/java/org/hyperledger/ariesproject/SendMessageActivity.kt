@@ -16,7 +16,7 @@ class SendMessageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_send_message)  // Layout que você vai criar
+        setContentView(R.layout.activity_send_message)
 
         // Pega os elementos pelo ID
         val messageEditText = findViewById<EditText>(R.id.messageEditText)

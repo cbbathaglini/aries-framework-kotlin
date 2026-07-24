@@ -32,7 +32,7 @@ class ReceivingPresentationActivity : AppCompatActivity() {
     private lateinit var bluetoothServer: BluetoothServer
     private var agent: Agent? = null
 
-    // === NOVO: launcher de permissão ===
+    // === NEW: permission launcher ===
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -176,7 +176,7 @@ class ReceivingPresentationActivity : AppCompatActivity() {
             }
         }
 
-        // ⚠️ Corrigido: não use `context` ou `onLog` fora do BluetoothServer
+        // Fixed: do not use `context` or `onLog` outside BluetoothServer
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
             != PackageManager.PERMISSION_GRANTED

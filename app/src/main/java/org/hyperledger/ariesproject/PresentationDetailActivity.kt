@@ -42,7 +42,7 @@ class PresentationDetailActivity : AppCompatActivity() {
     private val devices = mutableListOf<String>()
     private lateinit var devicesAdapter: ArrayAdapter<String>
 
-    // === Novo: lista de permissões BLE (ajustada por versão) ===
+    // === New: BLE permission list (adjusted by version) ===
     private val blePermissions: Array<String> by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
@@ -63,7 +63,7 @@ class PresentationDetailActivity : AppCompatActivity() {
 //            startBleScan()
 //        } else {
 //            appendLog("❌ Permissões negadas.")
-//            Toast.makeText(this, "Permissões necessárias para Bluetooth", Toast.LENGTH_LONG).show()
+//            Toast.makeText(this, "Bluetooth permissions required", Toast.LENGTH_LONG).show()
 //        }
 //    }
 
@@ -141,7 +141,7 @@ class PresentationDetailActivity : AppCompatActivity() {
 //        btnSendBluetoothAndroid.setOnClickListener {
 //            record?.let {
 //                pendingJson = loadJSONPreview(it)
-//                appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
+//                appendLog("Connection already active - sending JSON directly...")
 //                sendJSONSafelyAndroid(pendingJson!!)
 //            } ?: run {
 //                Toast.makeText(this, "❌ Nenhum registro carregado.", Toast.LENGTH_SHORT).show()

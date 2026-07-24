@@ -40,7 +40,7 @@ open class BaseActivity : AppCompatActivity() {
             }
         }
 
-        // Define ícone ativo
+        // Set active icon
         updateBottomNavSelection(bottomNav)
     }
 

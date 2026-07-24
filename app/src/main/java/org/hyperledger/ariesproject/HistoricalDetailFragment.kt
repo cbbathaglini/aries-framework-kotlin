@@ -94,7 +94,7 @@ class HistoricalDetailFragment : Fragment() {
         binding.threadId.text = record.threadId ?: "—"
         binding.theirLabel.text = record.theirLabel ?: "—"
 
-        // 🔹 Conversão segura da data
+        // Safe date conversion
         val dateFormatted = try {
             when (val createdAt = record.createdAt) {
                 is Date -> {

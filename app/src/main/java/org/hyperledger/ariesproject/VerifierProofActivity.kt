@@ -332,7 +332,7 @@ class VerifierProofActivity : BaseActivity() {
 //    }
 //
 //    /**
-//     * Lê o anoncreds proof JSON do attachment (base64) do PresentationMessageV2
+//     * Reads the anoncreds proof JSON from the attachment (base64) of PresentationMessageV2
 //     * (API 24 ok, usando android.util.Base64)
 //     */
 //    private fun decodeAnoncredsProofJson(pres: PresentationMessageV2, json: Json): JsonObject {
@@ -345,7 +345,7 @@ class VerifierProofActivity : BaseActivity() {
 //    }
 //
 //    /**
-//     * Altera APENAS 1 raw (mantém encoded) em requested_proof.revealed_attrs OU revealed_attr_groups.
+//     * Changes ONLY 1 raw (keeps encoded) in requested_proof.revealed_attrs OR revealed_attr_groups.
 //     */
 //    private fun tamperRevealedRawByReferent(
 //        proofObj: JsonObject,
@@ -381,7 +381,7 @@ class VerifierProofActivity : BaseActivity() {
 //
 //    /**
 //     * Executa o check raw->encoded em todos os revealed attrs e groups.
-//     * Lança exception no primeiro mismatch.
+//     * Throws exception on the first mismatch.
 //     */
 //    private fun encodeanoncredsproof(proofObj: JsonObject) {
 //        val requestedProof = proofObj["requested_proof"]?.jsonObject

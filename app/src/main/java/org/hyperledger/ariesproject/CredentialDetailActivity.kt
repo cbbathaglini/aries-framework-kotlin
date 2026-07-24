@@ -23,7 +23,7 @@ class CredentialDetailActivity : BaseActivity() {
         binding.detailToolbar.setTitleTextColor(getColor(R.color.white))
 
 //        binding.fab.setOnClickListener { view ->
-//            Snackbar.make(view, "Ação ainda não implementada", Snackbar.LENGTH_SHORT).show()
+//            Snackbar.make(view, "Action not yet implemented", Snackbar.LENGTH_SHORT).show()
 //        }
 
         if (savedInstanceState == null) {
