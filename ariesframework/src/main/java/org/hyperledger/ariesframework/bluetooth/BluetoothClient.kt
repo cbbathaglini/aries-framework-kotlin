@@ -46,29 +46,29 @@ class BluetoothClient(private val context: Context) {
     private val writeQueue: ArrayDeque<ByteArray> = ArrayDeque()
 
     @Volatile private var isWriting = false
-    private var negotiatedMtu: Int = 23 // padrão
+    private var negotiatedMtu: Int = 23
 
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN])
     fun startScan() {
         if (bluetoothGatt != null) {
-            onLog?.invoke("⚠️ Já conectado — ignorando novo scan.")
+            onLog?.invoke("Already connected - ignoring new scan.")
             return
         }
 
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
-            onLog?.invoke("⚠️ Bluetooth desativado ou não suportado")
+            onLog?.invoke("Bluetooth disabled or not supported")
             return
         }
 
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
-            onLog?.invoke("⚠️ Bluetooth desativado ou não suportado")
+            onLog?.invoke("Bluetooth disabled or not supported")
             return
         }
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            onLog?.invoke("❌ Permissão BLUETOOTH_SCAN não concedida")
+            onLog?.invoke("BLUETOOTH_SCAN permission not granted")
             return
         }
 
@@ -89,7 +89,7 @@ class BluetoothClient(private val context: Context) {
             }
         }
 
-        onLog?.invoke("🔍 Iniciando scan por periféricos BLE com UUID: $serviceUUID")
+        onLog?.invoke("Starting BLE peripheral scan with UUID: $serviceUUID")
 
         val filter = ScanFilter.Builder()
             .setServiceUuid(ParcelUuid(serviceUUID))
@@ -112,10 +112,10 @@ class BluetoothClient(private val context: Context) {
     fun connectToNamedDevice(name: String) {
         val device = discoveredDevices.values.find { it.name == name }
         if (device != null) {
-            onLog?.invoke("🔗 Conectando a $name...")
+            onLog?.invoke("Connecting to $name...")
             connectToDevice(device)
         } else {
-            onLog?.invoke("❌ Dispositivo $name não encontrado entre os descobertos.")
+            onLog?.invoke("Device $name not found among discovered devices.")
         }
     }
 
@@ -134,13 +134,13 @@ class BluetoothClient(private val context: Context) {
                 if (discoveredDevices.containsKey(address)) return
 
                 discoveredDevices[address] = device
-                onLog?.invoke("📡 Encontrado: $name (RSSI: ${it.rssi})")
+                onLog?.invoke("Found: $name (RSSI: ${it.rssi})")
                 onDeviceFound?.invoke(name)
 
                 if (name.contains("IDDiOS", ignoreCase = true) ||
                     name.contains("BLE-Proof-Transfer", ignoreCase = true)
                 ) {
-                    onLog?.invoke("📱 Conectando automaticamente a $name")
+                    onLog?.invoke("Auto-connecting to $name")
                     stopScan()
                     connectToDevice(device)
                 }
@@ -148,7 +148,7 @@ class BluetoothClient(private val context: Context) {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            onLog?.invoke("❌ Falha no scan: $errorCode")
+            onLog?.invoke("Scan failed: $errorCode")
         }
     }
 
@@ -156,11 +156,11 @@ class BluetoothClient(private val context: Context) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            onLog?.invoke("❌ Permissão BLUETOOTH_CONNECT não concedida")
+            onLog?.invoke("BLUETOOTH_CONNECT permission not granted")
             return
         }
 
-        onLog?.invoke("🔗 Conectando a ${device.name ?: "desconhecido"}...")
+        onLog?.invoke("Connecting to ${device.name ?: "unknown"}...")
         bluetoothGatt = device.connectGatt(context, false, gattCallback)
     }
 
@@ -169,13 +169,13 @@ class BluetoothClient(private val context: Context) {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    onLog?.invoke("✅ Conectado ao periférico ${gatt.device.name}")
+                    onLog?.invoke("Connected to peripheral ${gatt.device.name}")
                     onConnected?.invoke(gatt.device.name ?: "Desconhecido")
                     gatt.discoverServices()
                 }
 
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    onLog?.invoke("❌ Desconectado de ${gatt.device.name}")
+                    onLog?.invoke("Disconnected from ${gatt.device.name}")
                     bluetoothGatt = null
                 }
             }
@@ -183,25 +183,25 @@ class BluetoothClient(private val context: Context) {
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                onLog?.invoke("❌ Falha ao descobrir serviços (status=$status)")
+                onLog?.invoke("Failed to discover services (status=$status)")
                 return
             }
 
             val service = gatt.getService(serviceUUID)
             if (service == null) {
-                onLog?.invoke("❌ Serviço não encontrado: $serviceUUID")
+                onLog?.invoke("Service not found: $serviceUUID")
                 return
             }
 
             targetCharacteristic = service.getCharacteristic(characteristicUUID)
             if (targetCharacteristic == null) {
-                onLog?.invoke("❌ Característica não encontrada: $characteristicUUID")
+                onLog?.invoke("Characteristic not found: $characteristicUUID")
                 return
             }
 
-            onLog?.invoke("🧭 Serviço e característica encontrados — pronto para envio e leitura.")
+            onLog?.invoke("Service and characteristic found - ready for sending and reading.")
 
-            // 🔹 Habilita notificações para receber dados do iOS
+            // Enable notifications to receive data from iOS
             gatt.setCharacteristicNotification(targetCharacteristic, true)
             val descriptor = targetCharacteristic!!.getDescriptor(
                 UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
@@ -214,7 +214,7 @@ class BluetoothClient(private val context: Context) {
         override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 negotiatedMtu = mtu
-                onLog?.invoke("📏 MTU negociada: $mtu")
+                onLog?.invoke("MTU negotiated: $mtu")
             }
         }
 
@@ -228,12 +228,12 @@ class BluetoothClient(private val context: Context) {
             if (chunk == "<EOF>") {
                 val full = receivedBuffer.toByteArray()
                 val json = String(full)
-                onLog?.invoke("📥 JSON completo recebido (${full.size} bytes)")
+                onLog?.invoke("Full JSON received (${full.size} bytes)")
                 onJSONReceived?.invoke(json)
                 receivedBuffer.clear()
             } else {
                 receivedBuffer.addAll(value.toList())
-                onLog?.invoke("⬇️ Recebido ${value.size} bytes (${receivedBuffer.size} total)")
+                onLog?.invoke("Received ${value.size} bytes (${receivedBuffer.size} total)")
             }
         }
 
@@ -246,7 +246,7 @@ class BluetoothClient(private val context: Context) {
                 isWriting = false
                 writeNext()
             } else {
-                onLog?.invoke("❌ onCharacteristicWrite status=$status — reintentando")
+                onLog?.invoke("onCharacteristicWrite status=$status - retrying")
                 isWriting = false
                 writeNext()
             }
@@ -266,25 +266,25 @@ class BluetoothClient(private val context: Context) {
             ch.value = data.copyOfRange(i, end)
             gatt.writeCharacteristic(ch)
             i = end
-            Thread.sleep(10) // leve atraso para não saturar buffer BLE
+            Thread.sleep(10)
         }
         ch.value = "<EOF>".toByteArray(Charsets.UTF_8)
         gatt.writeCharacteristic(ch)
-        onLog?.invoke("✅ JSON enviado (${data.size} bytes).")
+        onLog?.invoke("JSON sent (${data.size} bytes).")
     }
 
     fun sendJSON(json: String) {
         val gatt = bluetoothGatt
         val ch = targetCharacteristic
 
-        // write com resposta garante ordem/entrega
+        // write with response guarantees order/delivery
         ch?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
         val data = json.toByteArray(Charsets.UTF_8)
         val payload = (negotiatedMtu - 3).coerceAtLeast(20)
         writeQueue.clear()
 
-        // fatia em chunks seguros
+        // split into safe chunks
         var i = 0
         while (i < data.size) {
             val end = minOf(i + payload, data.size)
@@ -294,87 +294,22 @@ class BluetoothClient(private val context: Context) {
         // EOF
         writeQueue.addLast("<EOF>".toByteArray(Charsets.UTF_8))
 
-        onLog?.invoke("📤 Enfileirados ${writeQueue.size} writes (payload≈$payload)")
+        onLog?.invoke("Queued ${writeQueue.size} writes (payload≈$payload)")
         if (!isWriting) writeNext()
     }
 
-    // 🔹 Envia o próximo pedaço quando o anterior concluir
-//    private fun writeNext() {
-//        val gatt = bluetoothGatt ?: return
-//        val ch = targetCharacteristic ?: return
-//
-//        val next = writeQueue.pollFirst() ?: run {
-//            isWriting = false
-//            onLog?.invoke("✅ JSON enviado completamente.")
-//            return
-//        }
-//        isWriting = true
-//        ch.value = next
-//        val ok = gatt.writeCharacteristic(ch)
-//        if (!ok) {
-//            onLog?.invoke("❌ writeCharacteristic falhou (stack ocupado). Tentando novamente…")
-//            // re-enfila e tenta depois; aqui é simples: recoloca no início
-//            writeQueue.addFirst(next)
-//            isWriting = false
-//        } else {
-//            onLog?.invoke("➡️ Enviado chunk, restantes: ${writeQueue.size}")
-//        }
-//    }
+    // Sends the next chunk when the previous one completes
 
-//    private fun writeNext() {
-//        val gatt = bluetoothGatt ?: return
-//        val ch = targetCharacteristic ?: return
-//
-//        val next = writeQueue.pollFirst() ?: run {
-//            onLog?.invoke("✅ JSON enviado completamente.")
-//            return
-//        }
-//
-//        ch.value = next
-//        val ok = gatt.writeCharacteristic(ch)
-//        onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
-//
-//        // 🔹 envia próximo após 50 ms (sem esperar callback)
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            writeNext()
-//        }, 50)
-//    }
-
-//    private fun writeNext() {
-//        val gatt = bluetoothGatt ?: return
-//        val ch = targetCharacteristic ?: return
-//
-//        // 🔒 impede execuções simultâneas
-//        if (isWriting) return
-//        isWriting = true
-//
-//        val next = writeQueue.pollFirst() ?: run {
-//            isWriting = false
-//            onLog?.invoke("✅ JSON enviado")
-//            return
-//        }
-//
-//        ch.value = next
-//        val ok = gatt.writeCharacteristic(ch)
-//        onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
-//
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            isWriting = false
-//            writeNext()
-//        }, 50)
-//    }
     private fun writeNext() {
         val gatt = bluetoothGatt ?: return
         val ch = targetCharacteristic ?: return
 
-        // 🔒 Impede chamadas paralelas
         synchronized(writeQueue) {
             if (isWriting) return
             isWriting = true
 
             val next = writeQueue.pollFirst() ?: run {
                 isWriting = false
-                // onLog?.invoke("✅ JSON enviado completamente.") // apenas uma vez
                 return
             }
 
@@ -382,10 +317,7 @@ class BluetoothClient(private val context: Context) {
             val ok = gatt.writeCharacteristic(ch)
 
             if (ok) {
-                // 🔹 Log imediato de progresso
-                // onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
 
-                // Aguarda 30–50 ms e envia o próximo
                 Handler(Looper.getMainLooper()).postDelayed({
                     synchronized(writeQueue) {
                         isWriting = false
@@ -393,8 +325,8 @@ class BluetoothClient(private val context: Context) {
                     }
                 }, 40)
             } else {
-                onLog?.invoke("⚠️ Falha ao enviar chunk — reintentando...")
-                writeQueue.addFirst(next) // reenvia o mesmo
+                onLog?.invoke("Failed to send chunk - retrying...")
+                writeQueue.addFirst(next)
                 isWriting = false
                 Handler(Looper.getMainLooper()).postDelayed({
                     writeNext()
@@ -403,37 +335,9 @@ class BluetoothClient(private val context: Context) {
         }
     }
 
-//    private fun writeNext() {
-//        val gatt = bluetoothGatt ?: return
-//        val ch = targetCharacteristic ?: return
-//
-//        synchronized(writeQueue) {
-//            if (isWriting) return
-//            isWriting = true
-//
-//            val next = writeQueue.pollFirst() ?: run {
-//                isWriting = false
-//                onLog?.invoke("✅ JSON sendo enviado")
-//                return
-//            }
-//
-//            ch.value = next
-//            val ok = gatt.writeCharacteristic(ch)
-//            onLog?.invoke("➡️ Enviado chunk (${next.size} bytes), restantes: ${writeQueue.size}")
-//
-//            Handler(Looper.getMainLooper()).postDelayed({
-//                synchronized(writeQueue) {
-//                    isWriting = false
-//                    if (writeQueue.isNotEmpty()) writeNext()
-//                    else onLog?.invoke("✅ JSON enviado completamente (final real).")
-//                }
-//            }, 30)
-//        }
-//    }
-
     fun disconnect() {
         bluetoothGatt?.close()
         bluetoothGatt = null
-        onLog?.invoke("🔌 Conexão BLE encerrada.")
+        onLog?.invoke("BLE connection closed.")
     }
 }
