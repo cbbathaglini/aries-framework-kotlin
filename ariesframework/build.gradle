@@ -1,0 +1,197 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+    id "org.jlleitschuh.gradle.ktlint" version '11.4.2'
+    id 'maven-publish'
+}
+
+//group = "org.hyperledger.ariesframework"
+//version = VERSION_NAME
+
+
+
+android {
+    namespace 'org.hyperledger.ariesframework'
+    compileSdk 36
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 36
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+        freeCompilerArgs += [
+                '-opt-in=kotlinx.serialization.InternalSerializationApi',
+                '-opt-in=kotlinx.serialization.ExperimentalSerializationApi'
+        ]
+    }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+}
+
+ktlint {
+    version = "0.49.1"
+    reporters {
+        reporter "checkstyle"
+    }
+}
+
+
+dependencies {
+    //implementation project(':libraryanoncredsuniffi')
+
+    implementation("org.hyperledger:indy_vdr_uniffi:0.3.0-wrapper.0") {
+        exclude group: "net.java.dev.jna", module: "jna"
+    }
+
+    implementation("org.hyperledger:askar_uniffi:0.3.0-wrapper.0") {
+        exclude group: "net.java.dev.jna", module: "jna"
+    }
+
+    implementation("com.github.jsonld-java:jsonld-java:0.13.6") {
+        exclude group: "org.apache.httpcomponents", module: "httpclient-osgi"
+        exclude group: "org.apache.httpcomponents", module: "httpcore-osgi"
+        exclude group: "org.apache.httpcomponents", module: "fluent-hc"
+    }
+
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
+
+    implementation("org.hyperledger:anoncreds-uniffi:1.0.18-SNAPSHOT")
+
+    implementation 'org.web3j:core:4.9.4'
+    implementation 'org.web3j:crypto:4.9.4'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0'
+
+    //implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0'
+    //implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation "org.jetbrains.kotlin:kotlin-reflect:2.1.0"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0'
+    //implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'org.didcommx:peerdid:0.5.0'
+
+    implementation 'com.google.code.gson:gson:2.8.8'
+
+    implementation 'io.github.decentralized-identity:didwebvh-core:0.3.1'
+
+
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation project(':ledger-besu-wrapper')
+    //implementation project(':libraryanoncredsuniffi')
+
+    //implementation("org.hyperledger:ledger-besu-wrapper:1.0.5-SNAPSHOT")
+    //implementation files('./anoncreds_uniffi-release.aar')
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+
+    androidTestImplementation 'org.mockito:mockito-core:5.16.0' // Core Mockito
+    androidTestImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0' // Mockito Kotlin extensions
+    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito-inline:2.28.3' // Required for mocking final classes
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+
+}
+
+ext["githubUsername"] = null
+ext["githubToken"] = null
+ext["version"] = null
+
+def secretPropsFile = project.rootProject.file("local.properties")
+if (secretPropsFile.exists()) {
+    Properties properties = new Properties()
+    secretPropsFile.withInputStream { properties.load(it) }
+    properties.each { k, v -> ext[k] = v }
+} else {
+    ext["githubUsername"] = System.getenv("GITHUB_ACTOR")
+    ext["githubToken"] = System.getenv("GITHUB_TOKEN")
+    ext["version"] = System.getenv("VERSION")
+}
+
+if (ext["version"] != null) {
+    ext["version"] = ext["version"].replaceFirst("v", "")
+} else {
+    ext["version"] = VERSION_NAME
+}
+
+def getExtraString(name) {
+    try {
+        return ext[name]
+    } catch (ignored) {
+        return ""
+    }
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+
+
+            // Detectar se a versão é SNAPSHOT
+            def versionName = getExtraString("VERSION_NAME")
+            def isSnapshot = versionName.endsWith("SNAPSHOT")
+
+                maven {
+                    name = "github"
+                    url = uri("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
+                    credentials {
+                        username = getExtraString("githubUsername")
+                        password = getExtraString("githubToken")
+                    }
+                }
+            }
+
+            maven {
+                url = uri(
+                    isSnapshot
+                )
+
+                credentials {
+                }
+            }
+        }
+
+        publications {
+            snapshot(MavenPublication) {
+                from components.release
+                groupId = getExtraString("GROUP")
+                version = getExtraString("VERSION_NAME")
+                artifactId = 'aries-framework-kotlin'
+            }
+        }
+    }
+}
