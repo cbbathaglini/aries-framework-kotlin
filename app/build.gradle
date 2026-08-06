@@ -8,11 +8,6 @@ android {
     namespace 'org.hyperledger.ariesproject'
     compileSdk 36
 
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/jniLibs']
-        }
-    }
 
     defaultConfig {
         applicationId "org.hyperledger.ariesproject"
@@ -47,19 +42,10 @@ android {
 }
 
 dependencies {
-    //implementation(name: 'anoncreds_uniffi-release', ext: 'aar')
+
     implementation project(path: ':ariesframework')
 
-    //implementation("org.hyperledger:aries-framework-kotlin:0.58.8-SNAPSHOT") {
-    //    exclude group: "ch.qos.logback", module: "logback-classic"
-    //}
-
-    implementation("org.hyperledger:anoncreds-uniffi:1.0.3-SNAPSHOT")
-    //implementation project(':libraryanoncredsuniffi')
-
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
-//    implementation("org.hyperledger:aries-framework-kotlin:2.1.0")
-    //implementation("org.hyperledger:anoncreds_uniffi:0.1.1-wrapper.1")
 
     implementation 'com.otaliastudios:cameraview:2.7.2'
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'

@@ -1,13 +1,10 @@
 package org.hyperledger.ariesproject
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.MenuItem
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
 import org.hyperledger.ariesproject.databinding.ActivityProofRequestDetailBinding
 
-class ProofRequestDetailActivity : AppCompatActivity() {
+class ProofRequestDetailActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProofRequestDetailBinding
 
@@ -15,11 +12,10 @@ class ProofRequestDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = ActivityProofRequestDetailBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        setSupportActionBar(binding.detailToolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Request proof detail"
+        binding.toolbar.title = "Request proof detail"
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         if (savedInstanceState == null) {
             val proofId = intent.getStringExtra(ProofRequestDetailFragment.ARG_PROOF_ID)
@@ -36,13 +32,4 @@ class ProofRequestDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 }

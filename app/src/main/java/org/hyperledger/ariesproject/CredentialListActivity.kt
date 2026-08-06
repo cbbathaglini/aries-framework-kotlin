@@ -1,16 +1,15 @@
 package org.hyperledger.ariesproject
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
@@ -19,6 +18,8 @@ import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeR
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialListBinding
 import org.hyperledger.ariesproject.databinding.CredentialListContentBinding
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class CredentialListActivity : BaseActivity() {
     private lateinit var binding: ActivityCredentialListBinding
@@ -30,10 +31,8 @@ class CredentialListActivity : BaseActivity() {
         binding = ActivityCredentialListBinding.inflate(layoutInflater)
         findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
         binding.toolbar.title = title
-
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbar.setNavigationOnClickListener { finish() }
         connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
     }
 
@@ -42,15 +41,6 @@ class CredentialListActivity : BaseActivity() {
         updateNotificationBadge()
         setupRecyclerView(binding.credentialList.credentialList)
     }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
-            android.R.id.home -> {
-                NavUtils.navigateUpFromSameTask(this)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp
@@ -111,20 +101,38 @@ class CredentialListActivity : BaseActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = values[position]
-            val dateFormatter = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
 
             when (item) {
                 is CredentialExchangeRecord -> {
                     holder.contentView.text = item.id
-                    val date = item.createdAt ?: java.util.Date()
-                    holder.dateView.text = "Created at: $date"
-                    holder.typeView.text = "Is revoked?: ${item.state == CredentialState.Revoked}"
+                    holder.dateView.text = formatDate(item.createdAt)
+                    bindStatusBadge(holder.typeView, item.state == CredentialState.Revoked)
                 }
             }
 
             with(holder.itemView) {
                 tag = item
                 setOnClickListener(onClickListener)
+            }
+        }
+
+        private fun formatDate(date: kotlinx.datetime.Instant?): String {
+            val value = date?.toEpochMilliseconds() ?: System.currentTimeMillis()
+            return SimpleDateFormat("MMM dd, yyyy  hh:mm a", Locale.US).format(java.util.Date(value))
+        }
+
+        private fun bindStatusBadge(view: TextView, isRevoked: Boolean) {
+            val color = if (isRevoked) {
+                parentActivity.getColor(R.color.status_failed)
+            } else {
+                parentActivity.getColor(R.color.status_verified)
+            }
+            view.text = if (isRevoked) "Revoked" else "Active"
+            view.setTextColor(Color.WHITE)
+            view.background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = parentActivity.resources.displayMetrics.density * 12
+                setColor(color)
             }
         }
 

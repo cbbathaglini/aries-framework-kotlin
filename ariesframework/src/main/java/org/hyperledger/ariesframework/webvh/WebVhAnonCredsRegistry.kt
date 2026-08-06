@@ -80,12 +80,41 @@ class WebVhAnonCredsRegistry(
     ): GetRevocationStatusListReturn {
         logger.debug("Resolving revocation status list: $revocationRegistryId at timestamp $timestamp")
 
-        val resource = resourceHelper.fetchResourceByIdentifier(revocationRegistryId, isEmulator(agent))
-        val content = extractContent(resource)
-        val statusListJson = Json.parseToJsonElement(content.toString())
+        // O recurso apontado por revocationRegistryId é o rev_reg_def, que possui
+        // "links" (RelatedLink) para os status lists por timestamp.
+        val defResource = resourceHelper.fetchResourceByIdentifier(revocationRegistryId, isEmulator(agent))
+        val links = defResource.getAsJsonArray("links")
 
+        // Escolhe o link de status list cujo timestamp seja <= ao solicitado (o mais recente)
+        val statusLink = links?.firstOrNull {
+            val type = it.asJsonObject.get("type")?.asString ?: ""
+            type.isNullOrBlank() || type.contains("status", ignoreCase = true)
+        }
+
+        if (statusLink == null || statusLink.asJsonObject.get("id") == null) {
+            throw RuntimeException(
+                "No revocation status list link found on resource $revocationRegistryId. links=$links",
+            )
+        }
+
+        val statusResourceId = statusLink.asJsonObject.get("id").asString
+        val (statusDid, statusResId) = splitResourceIdentifier(statusResourceId)
+
+        val statusResource = resourceHelper.fetchResource(statusDid, statusResId, isEmulator(agent))
+        val content = extractContent(statusResource)
+        android.util.Log.e("WEBVH_STATUS_LIST", "status list content for $statusResourceId:\n$content")
+
+        val statusListJson = Json.parseToJsonElement(content.toString())
         val statusList = json.decodeFromJsonElement<AnonCredsRevocationStatusList>(statusListJson)
         return GetRevocationStatusListReturn(revocationStatusList = statusList)
+    }
+
+    private fun splitResourceIdentifier(identifier: String): Pair<String, String> {
+        val parts = identifier.split("/resources/")
+        if (parts.size != 2) {
+            throw IllegalArgumentException("Invalid did:webvh resource identifier: $identifier")
+        }
+        return parts[0] to parts[1]
     }
 
     private fun extractContent(resource: GsonJsonObject): GsonJsonObject {

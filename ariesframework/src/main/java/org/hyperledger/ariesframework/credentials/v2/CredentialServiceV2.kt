@@ -55,7 +55,6 @@ import org.hyperledger.ariesframework.util.composeAutoAccept
 import java.util.UUID
 
 class CredentialServiceV2(val agent: Agent) {
-    // private val logger = LoggerFactory.getLogger(CredentialServiceV2::class.java)
     private val credentialExchangeRepository = agent.credentialExchangeRepository
     private val didCommMessageRepository = agent.didCommMessageRepository
     private val credentialFormats = listOf<CredentialFormatService<*>>(AnoncredsCredentialFormatService(agent = agent), LegacyIndyCredentialFormatService(agent = agent))
@@ -369,7 +368,6 @@ class CredentialServiceV2(val agent: Agent) {
         LogUtil.info(this) { "processing offer" }
         val connection = messageContext.connection
         val offerMessage = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as OfferCredentialMessageV2
-        // PrintLongLine.print("offer message long: $offerMessage")
 
         LogUtil.info(this) { "Processing credential offer with id ${offerMessage.id}" }
 
@@ -689,7 +687,7 @@ class CredentialServiceV2(val agent: Agent) {
         val autoAcceptCredential = options.autoAcceptCredential
 
         credentialExchangeRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V2)
-        credentialExchangeRecord.assertState(CredentialState.OfferSent)
+        credentialExchangeRecord.assertState(CredentialState.RequestReceived)
 
         var formatServices = getFormatServices(options.credentialFormats ?: emptyMap())
         if (formatServices.isEmpty()) {

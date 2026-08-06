@@ -401,6 +401,7 @@ class ProofRequestDetailFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
+                Log.e("ProofRequestDetail", "Error creating/sending presentation", e)
                 withContext(Dispatchers.Main) {
                     binding.loadingProgress.visibility = View.GONE
                     binding.proofStatusMessage.text = "Error creating/sending presentation: ${e.localizedMessage}"

@@ -79,6 +79,10 @@ class GetCredentialsForProofRequestReferent {
             val credentialRevocationId = credentialInfo.credentialRevocationId
             val revocationRegistryId = credentialInfo.revocationRegistryId
 
+            LogUtil.info(this) {
+                "GETREVSTATUS requestNonRevoked=$requestNonRevoked credentialRevocationId=$credentialRevocationId revocationRegistryId=$revocationRegistryId"
+            }
+
             if (requestNonRevoked == null || credentialRevocationId == null || revocationRegistryId.isNullOrBlank()) {
                 return RevocationStatusResult(isRevoked = null, timestamp = null)
             }

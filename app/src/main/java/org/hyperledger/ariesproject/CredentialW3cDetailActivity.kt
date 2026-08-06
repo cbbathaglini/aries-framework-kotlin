@@ -1,9 +1,7 @@
 package org.hyperledger.ariesproject
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
@@ -17,14 +15,16 @@ class CredentialW3cDetailActivity : AppCompatActivity() {
 
         binding = ActivityCredentialW3cDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.detailToolbar)
 
         binding.fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.detailToolbar.title = "Credential Detail"
+        binding.detailToolbar.setNavigationOnClickListener {
+            navigateUpTo(android.content.Intent(this, CredentialListActivity::class.java))
+        }
 
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
@@ -50,12 +50,4 @@ class CredentialW3cDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
-            android.R.id.home -> {
-                navigateUpTo(Intent(this, CredentialListActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
 }

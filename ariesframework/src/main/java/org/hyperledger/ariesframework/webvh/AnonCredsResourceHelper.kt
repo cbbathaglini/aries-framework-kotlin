@@ -18,7 +18,7 @@ class AnonCredsResourceHelper {
         .build()
 
     suspend fun fetchResource(did: String, resourceId: String, emulator: Boolean = false): JsonObject {
-        val httpsBase = didToUrl(did, emulator)
+        val httpsBase = didToUrl(did, emulator).removeSuffix("/did.jsonl")
         val resourceUrl = "$httpsBase/resources/$resourceId"
 
         logger.info("Fetching attested resource from: $resourceUrl")

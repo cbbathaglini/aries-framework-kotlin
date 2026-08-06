@@ -20,6 +20,7 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.GetCredentials
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.anoncreds.model.holder.CredentialForProofRequest
+import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
 import org.hyperledger.ariesframework.error.CredoError
@@ -829,7 +830,6 @@ class ProofServiceV2(val agent: Agent) {
     suspend fun createProblemReport(problemParam: CreateProofProblemReportOptions): Pair<PresentationProblemReportMessageV2, ProofExchangeRecord> {
         val (proofRecord, description) = problemParam
         val message = PresentationProblemReportMessageV2(proofRecord.threadId)
-        updateState(proofRecord, ProofState.Declined)
 
         message.setThread(
             threadId = proofRecord.threadId,
@@ -1186,6 +1186,19 @@ class ProofServiceV2(val agent: Agent) {
 
         if (agent.agentConfig.ignoreRevocationCheck) {
             return Pair(false, requestNonRevoked.to?.toInt())
+        }
+
+        // WebVH: revocation status vem do servidor via registry anoncreds (não passa pelo ledger indy/besu)
+        if (revocationRegistryId.startsWith("did:webvh:")) {
+            val toTs = requestNonRevoked.to ?: (System.currentTimeMillis() / 1000).toULong()
+            val statusList = AnonCredsObjects.fetchRevocationStatusList(
+                agent = agent,
+                revocationRegistryId = revocationRegistryId,
+                timestamp = toTs,
+            )
+            val index = credentialRevocationId.toInt()
+            val isRevoked = statusList.revocationList.getOrElse(index) { 0 } == 1
+            return Pair(isRevoked, statusList.timestamp.toInt())
         }
 
         return agent.revocationService.getRevocationStatusAnonCreds(

@@ -10,10 +10,12 @@ import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsReque
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsSelectedCredentials
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProof
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsProofRequest
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryEntry
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistriesForRequestResult
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryBucket
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
+import org.hyperledger.ariesframework.anoncreds.service.tails.GetTailsFileOptions
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.v2.verifier.RevocationRegistryEntry
 import org.hyperledger.ariesframework.util.LogUtil
@@ -102,31 +104,43 @@ data class RevocationRegistries(val agent: Agent) {
                     "Presentation is requesting proof of non revocation for referent '$referent', creating revocation state for credential: nonRevoked=$nonRevoked, credentialRevocationId=$credentialRevocationId, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp"
                 }
 
+                LogUtil.info(this) {
+                    "REVREG_DECISION isWebVh=${isWebVh(revocationRegistryId)} revocationRegistryId=$revocationRegistryId method=${runCatching { agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId).methodName }.getOrElse { "?" }}"
+                }
+
                 // descomentar depois? ver oq fazer
                 // RevocationInterval.assertBestPracticeRevocationInterval(nonRevoked)
 
-                val revocationRegistry: RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
+                if (isWebVh(revocationRegistryId)) {
+                    val webvhEntry = fetchWebVhRevocationRegistryEntry(revocationRegistryId)
+                    revocationRegistries.put(
+                        key = revocationRegistryId,
+                        value = RevocationRegistryBucket(
+                            definition = null,
+                            tailsFilePath = webvhEntry.tailsFilePath,
+                            tailsHash = webvhEntry.tailsHash,
+                            webvhEntry = webvhEntry,
+                        ),
+                    )
+                } else {
+                    val revocationRegistry: RevocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 
-                if (revocationRegistry == null) {
-                    throw Exception("Could not retrieve revocation registry definition for revocation registry $revocationRegistryId")
+                    if (revocationRegistry == null) {
+                        throw Exception("Could not retrieve revocation registry definition for revocation registry $revocationRegistryId")
+                    }
+
+                    val revRegValue: RevocationRegistryValue =
+                        Json.decodeFromString(revocationRegistry.value)
+
+                    revocationRegistries.put(
+                        key = revocationRegistryId,
+                        value = RevocationRegistryBucket(
+                            tailsFilePath = agent.ledgerService.getTailsPath(),
+                            tailsHash = revRegValue.tailsHash,
+                            definition = revocationRegistry,
+                        ),
+                    )
                 }
-
-//                val revRegValue: RevocationRegistryValue = Json.decodeFromString(
-//                    RevocationRegistryValue.serializer(),
-//                    revocationRegistry.value
-//                )
-
-                val revRegValue: RevocationRegistryValue =
-                    Json.decodeFromString(revocationRegistry.value)
-
-                revocationRegistries.put(
-                    key = revocationRegistryId,
-                    value = RevocationRegistryBucket(
-                        tailsFilePath = agent.ledgerService.getTailsPath(),
-                        tailsHash = revRegValue.tailsHash,
-                        definition = revocationRegistry,
-                    ),
-                )
             }
 
             val timestampToFetch: ULong? = timestamp ?: nonRevoked?.to
@@ -135,7 +149,35 @@ data class RevocationRegistries(val agent: Agent) {
                 "referent '$referent',: revocationRegistryId=$revocationRegistryId, revocationRegistries=${revocationRegistries[revocationRegistryId]}, revocationRegistryId=$revocationRegistryId, timestamp=$timestamp"
             }
 
-            if (timestampToFetch != null &&
+            val isWebVhBucket = revocationRegistryId != null &&
+                revocationRegistries[revocationRegistryId]?.webvhEntry != null
+
+            if (timestampToFetch != null && revocationRegistryId != null && isWebVhBucket) {
+                val webvhEntry = revocationRegistries[revocationRegistryId]!!.webvhEntry!!
+                if (webvhEntry.revocationStatusLists?.get(timestampToFetch) == null) {
+                    val registry =
+                        agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
+                    val (statusList, _) =
+                        registry.getRevocationStatusList(agent, revocationRegistryId, timestampToFetch)
+                            ?: throw CredoError(
+                                "Could not retrieve webvh revocation status list for revocation registry " +
+                                    "$revocationRegistryId",
+                            )
+                    val nonNullStatusList = statusList ?: throw CredoError(
+                        "Could not retrieve webvh revocation status list for revocation registry " +
+                            "$revocationRegistryId",
+                    )
+                    val statusMap = webvhEntry.revocationStatusLists?.toMutableMap() ?: mutableMapOf()
+                    statusMap[timestampToFetch] = nonNullStatusList
+                    revocationRegistries[revocationRegistryId] =
+                        RevocationRegistryBucket(
+                            definition = null,
+                            tailsFilePath = webvhEntry.tailsFilePath,
+                            tailsHash = webvhEntry.tailsHash,
+                            webvhEntry = webvhEntry.copy(revocationStatusLists = statusMap),
+                        )
+                }
+            } else if (timestampToFetch != null &&
                 revocationRegistryId != null &&
                 revocationRegistries.isNotEmpty() &&
                 revocationRegistries[revocationRegistryId]?.revocationStatusLists?.get(timestampToFetch) == null
@@ -251,5 +293,41 @@ data class RevocationRegistries(val agent: Agent) {
         jobs.awaitAll()
 
         revocationRegistries
+    }
+
+    private fun isWebVh(id: String): Boolean {
+        return id.startsWith("did:webvh:") ||
+            id.startsWith("did:web:")
+    }
+
+    private suspend fun fetchWebVhRevocationRegistryEntry(
+        revocationRegistryId: String,
+    ): AnonCredsRevocationRegistryEntry {
+        val registry = agent.anonCredsRegistryService.getRegistryForIdentifier(revocationRegistryId)
+
+        val result =
+            registry.getRevocationRegistryDefinition(agent, revocationRegistryId)
+                ?: throw CredoError(
+                    "Could not retrieve webvh revocation registry definition for revocation registry $revocationRegistryId",
+                )
+        val revocationRegistryDefinition = result.revocationRegistryDefinition
+            ?: throw CredoError(
+                "Could not retrieve webvh revocation registry definition for revocation registry $revocationRegistryId",
+            )
+
+        val tailsBasePath = agent.anoncredsmodulesconfig.tailsFileService.getTailsBasePath()
+        agent.anoncredsmodulesconfig.tailsFileService.getTailsFile(
+            options = GetTailsFileOptions(
+                revocationRegistryDefinition = revocationRegistryDefinition,
+                revocationRegistryDefinitionId = null,
+            ),
+        )
+
+        return AnonCredsRevocationRegistryEntry(
+            tailsFilePath = tailsBasePath,
+            tailsHash = revocationRegistryDefinition.value.tailsHash,
+            definition = revocationRegistryDefinition,
+            revocationStatusLists = mutableMapOf(),
+        )
     }
 }

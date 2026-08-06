@@ -3,15 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="14dp"
-    app:cardElevation="2dp"
-    app:strokeColor="@color/gray_200"
-    app:strokeWidth="1dp">
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,42 +19,50 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/content"
+                android:id="@+id/threadId"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Credential ID"
+                android:text="Thread: —"
                 android:textColor="@color/gray_900"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
             <TextView
-                android:id="@+id/type"
+                android:id="@+id/statusBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:text="Active"
-                android:textColor="@color/white"
                 android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp"
+                android:gravity="center" />
+
         </LinearLayout>
 
         <TextView
-            android:id="@+id/date"
+            android:id="@+id/presentationCount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Jul 27, 2026 05:03 PM"
-            android:textColor="@color/gray_600"
-            android:textSize="13sp" />
+            android:text="Presentations: 0"
+            android:textColor="@color/gray_700"
+            android:textSize="13sp"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/createdAt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Created at: —"
+            android:textColor="@color/gray_500"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

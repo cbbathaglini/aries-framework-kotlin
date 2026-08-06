@@ -99,6 +99,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         }
     }
 
+    @kotlinx.serialization.Serializable
     private data class CredDefVdrCacheDto(
         val issuerId: String,
         val schemaId: String,

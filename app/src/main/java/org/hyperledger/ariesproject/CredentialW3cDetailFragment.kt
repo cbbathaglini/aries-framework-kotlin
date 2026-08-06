@@ -12,8 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialDetailBinding
-import anoncreds_uniffi.Credential
-import anoncreds_uniffi.W3cCredential
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialW3cDetailBinding

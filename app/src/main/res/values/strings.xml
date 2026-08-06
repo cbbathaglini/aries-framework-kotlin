@@ -20,4 +20,10 @@
     <string name="send_message">Send message</string>
     <string name="request_proof">Request Proof</string>
     <string name="delete_connection">Delete connection</string>
+    <string name="action_scan_invite">Scan invite</string>
+    <string name="title_received_proofs">Received Proofs</string>
+    <string name="last_updated">Last updated: —</string>
+    <string name="last_updated_at">Last updated: %s</string>
+    <string name="refresh">Refresh</string>
+    <string name="no_received_presentations">No received presentations yet.</string>
 </resources>

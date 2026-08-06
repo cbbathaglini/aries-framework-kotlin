@@ -9,6 +9,7 @@ import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
 import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.EthrAnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.LedgerAnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsModuleConfigOptions
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
@@ -120,6 +121,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
                 if (agentConfig.useDidWebvh) {
                     add(webvhModule!!.anonCredsRegistry)
                 }
+                add(LedgerAnonCredsRegistry())
             },
         ),
     )

@@ -111,7 +111,7 @@ data class CredentialExchangeRecord(
         this.schemaId = schemaId
         this.schemaName = schema.name
         this.schemaIssuerId = schema.issuerId
-        this.schemaVersion = schemaVersion
+        this.schemaVersion = schema.version
     }
     fun updateRevocationInfos(revRegId: String, revRegDefId: String?) {
         this.revRegDefId = revRegDefId
