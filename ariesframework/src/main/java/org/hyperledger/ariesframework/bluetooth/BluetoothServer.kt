@@ -100,8 +100,6 @@ class BluetoothServer(private val context: Context) {
         Handler(Looper.getMainLooper()).post {
             openGattServerAndAddService()
         }
-
-
     }
 
     fun stopServer() {

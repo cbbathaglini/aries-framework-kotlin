@@ -6,11 +6,6 @@ plugins {
     id 'maven-publish'
 }
 
-//group = "org.hyperledger.ariesframework"
-//version = VERSION_NAME
-
-
-
 android {
     namespace 'org.hyperledger.ariesframework'
     compileSdk 36
@@ -63,7 +58,7 @@ ktlint {
 
 
 dependencies {
-
+    implementation project(':ledger-besu-wrapper')
     implementation("org.hyperledger:anoncreds_uniffi:0.3.1")
     implementation("org.hyperledger:indy_vdr_uniffi:0.3.1")
     implementation("org.hyperledger:askar_uniffi:0.3.1")
@@ -97,7 +92,6 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
-    implementation project(':ledger-besu-wrapper')
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'

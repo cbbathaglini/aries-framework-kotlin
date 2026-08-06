@@ -33,7 +33,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
             "did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/(?:\\d+|CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)" +
             "|" +
             "(?:[A-Za-z0-9]+:)+(?:\\d+:)?[A-Za-z0-9._-]+" +
-        ")\$",
+            ")\$",
         RegexOption.IGNORE_CASE,
     )
 

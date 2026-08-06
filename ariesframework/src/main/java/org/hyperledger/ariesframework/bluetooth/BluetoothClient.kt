@@ -317,7 +317,6 @@ class BluetoothClient(private val context: Context) {
             val ok = gatt.writeCharacteristic(ch)
 
             if (ok) {
-
                 Handler(Looper.getMainLooper()).postDelayed({
                     synchronized(writeQueue) {
                         isWriting = false

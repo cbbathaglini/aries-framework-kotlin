@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.webvh
 
-import com.google.gson.JsonObject as GsonJsonObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -16,6 +15,7 @@ import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionRet
 import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
 import org.slf4j.LoggerFactory
+import com.google.gson.JsonObject as GsonJsonObject
 
 class WebVhAnonCredsRegistry(
     override val methodName: String = "webvh",

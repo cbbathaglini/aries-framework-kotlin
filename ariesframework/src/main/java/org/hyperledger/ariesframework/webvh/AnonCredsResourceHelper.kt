@@ -3,7 +3,6 @@ package org.hyperledger.ariesframework.webvh
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import io.github.decentralizedidentity.didwebvh.core.url.DidToHttpsTransformer
-import io.github.decentralizedidentity.didwebvh.core.url.DidWebVhUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.slf4j.LoggerFactory

@@ -1,7 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.GetRevocationRegistryDefinitionReturn
@@ -14,7 +13,6 @@ import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionReturn
 import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
-import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import uniffi.indy_besu_vdr.RevocationStatusList
@@ -81,7 +79,8 @@ class LedgerAnonCredsRegistry(override val methodName: String = "ledger") : Anon
     ): GetRevocationStatusListReturn {
         try {
             val statusList: RevocationStatusList = agent.ledgerService.getRevocationStatusList(
-                revocationRegistryId, timestamp,
+                revocationRegistryId,
+                timestamp,
             )
             return GetRevocationStatusListReturn(
                 revocationStatusList = AnonCredsRevocationStatusList(

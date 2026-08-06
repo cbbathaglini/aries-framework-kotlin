@@ -6,7 +6,6 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory

@@ -1,13 +1,11 @@
 package org.hyperledger.ariesframework.webvh
 
 import com.google.gson.JsonParser
-import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.connection.models.didauth.publicKey.Ed25119Sig2018
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 
 class WebVhDidResolverTest {
 

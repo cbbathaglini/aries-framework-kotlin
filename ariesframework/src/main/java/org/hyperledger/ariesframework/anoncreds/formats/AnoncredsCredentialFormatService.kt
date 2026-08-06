@@ -36,7 +36,6 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsLinkSecretBlindin
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
-import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredential
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
