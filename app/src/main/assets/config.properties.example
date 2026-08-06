@@ -11,19 +11,9 @@
 # invitation_url=https://example.com/mediator?oob=<your-invitation>
 # endpoint=https://example.com/mediator
 
-# --------- Besu network ---------
-# "des", "chainId", "nodeAddress" for the target chain
-#besu_chainId=1337
-#besu_nodeAddress=https://example.com/besu
-
-# --------- Contract addresses (zeroed placeholders) ---------
-DID_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000001
-SCHEMA_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000002
-CRED_DEF_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000003
-REVOCATION_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000004
-
 # --------- emulator workaround ---------
-# When true, 192.168.x.x is mapped to 10.0.2.2 for local did:webvh resources
+# Enable only when the did:webvh server is running locally;
+# maps 192.168.x.x to 10.0.2.2 for local did:webvh resources.
 emulator=false
 
 # --------- cache ---------
