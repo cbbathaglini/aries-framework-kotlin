@@ -52,13 +52,11 @@ local.properties
 docs/
 
 # Configuration files with internal endpoints/addresses
-besu_config.json
 genesiscpqd.txn
 genesisvon2.txn
 von.txn
 bcovrin-genesis.txn
 config.properties
-**/assets/besu_config.json
 **/assets/*.txn
 **/assets/config.properties
 **/androidTest/assets/*.txn
