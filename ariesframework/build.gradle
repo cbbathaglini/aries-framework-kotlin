@@ -63,15 +63,6 @@ ktlint {
 
 
 dependencies {
-    //implementation project(':libraryanoncredsuniffi')
-//
-//    implementation("org.hyperledger:indy_vdr_uniffi:0.3.0-wrapper.0") {
-//        exclude group: "net.java.dev.jna", module: "jna"
-//    }
-//
-//    implementation("org.hyperledger:askar_uniffi:0.3.0-wrapper.0") {
-//        exclude group: "net.java.dev.jna", module: "jna"
-//    }
 
     implementation("org.hyperledger:anoncreds_uniffi:0.3.1")
     implementation("org.hyperledger:indy_vdr_uniffi:0.3.1")
@@ -89,11 +80,9 @@ dependencies {
     implementation 'org.web3j:crypto:4.9.4'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0'
 
-    //implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0'
-    //implementation 'org.slf4j:slf4j-api:1.7.32'
     implementation "org.jetbrains.kotlin:kotlin-reflect:2.1.0"
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0'
-    //implementation 'org.slf4j:slf4j-api:1.7.32'
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
@@ -109,10 +98,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation project(':ledger-besu-wrapper')
-    //implementation project(':libraryanoncredsuniffi')
-
-    //implementation("org.hyperledger:ledger-besu-wrapper:1.0.5-SNAPSHOT")
-    //implementation files('./anoncreds_uniffi-release.aar')
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
@@ -162,29 +147,16 @@ afterEvaluate {
     publishing {
         repositories {
 
-
-            // Detectar se a versão é SNAPSHOT
-            def versionName = getExtraString("VERSION_NAME")
-            def isSnapshot = versionName.endsWith("SNAPSHOT")
-
-                maven {
-                    name = "github"
-                    url = uri("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
-                    credentials {
-                        username = getExtraString("githubUsername")
-                        password = getExtraString("githubToken")
-                    }
-                }
-            }
-
+            // Publicar no GitHub
             maven {
-                url = uri(
-                    isSnapshot
-                )
-
+                name = "github"
+                url = uri("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
                 credentials {
+                    username = getExtraString("githubUsername")
+                    password = getExtraString("githubToken")
                 }
             }
+
         }
 
         publications {

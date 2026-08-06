@@ -25,11 +25,6 @@ def getExtraString(name) {
     }
 }
 
-def getExtraStringOrEnv(name) {
-    def value = getExtraString(name)
-    return value ?: System.getenv(name) ?: ""
-}
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -37,15 +32,6 @@ dependencyResolutionManagement {
         mavenCentral()
         google()
 
-        maven {
-            credentials {
-            }
-        }
-
-//        maven {
-//            credentials {
-//            }
-//        }
         maven {
             setUrl("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
             credentials {

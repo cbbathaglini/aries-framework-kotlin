@@ -82,19 +82,6 @@ afterEvaluate {
     publishing {
         repositories {
 
-            // Detecta se é snapshot
-            def versionName = getExtraString("VERSION_NAME")
-            def isSnapshot = versionName.endsWith("SNAPSHOT")
-
-            // Publicar RELEASES ou SNAPSHOTS dinamicamente
-            maven {
-                url = uri(
-                        isSnapshot
-                )
-                credentials {
-                }
-            }
-
             // opcional
             mavenLocal()
         }
