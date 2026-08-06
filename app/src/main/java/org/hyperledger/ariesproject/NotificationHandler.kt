@@ -89,7 +89,7 @@ class NotificationHandler private constructor(private val context: Context) {
         val jsonString = json.encodeToString(_notifications)
         prefs.edit().putString("notifications_list", jsonString).apply()
 
-        Log.d("NOTIFICATION_HANDLER", "💾 Saved ${_notifications.size} notifications")
+        Log.d("NOTIFICATION_HANDLER", "Saved ${_notifications.size} notifications")
     }
 
     fun loadFromStorage() {
@@ -101,7 +101,7 @@ class NotificationHandler private constructor(private val context: Context) {
         if (jsonString.isNullOrEmpty()) {
             _notifications = mutableListOf()
 
-            Log.d("NOTIFICATION_HANDLER", "⚠️ No saved notifications")
+            Log.d("NOTIFICATION_HANDLER", "No saved notifications")
             return
         }
 
@@ -110,12 +110,12 @@ class NotificationHandler private constructor(private val context: Context) {
             _notifications.clear()
             _notifications.addAll(loaded)
 
-            Log.d("NOTIFICATION_HANDLER", "📥 Loaded ${_notifications.size} notifications")
+            Log.d("NOTIFICATION_HANDLER", "Loaded ${_notifications.size} notifications")
         } catch (e: Exception) {
             e.printStackTrace()
             _notifications = mutableListOf()
 
-            Log.e("NOTIFICATION_HANDLER", "❌ Error loading notifications: ${e.message}")
+            Log.e("NOTIFICATION_HANDLER", "Error loading notifications: ${e.message}")
         }
     }
 }

@@ -43,7 +43,7 @@ interface AnonCredsHolderService {
 
     suspend fun createProof(
         options: CreateProofOptions,
-    ): AnonCredsProof? // remover ?
+    ): AnonCredsProof? // remove ?
 
     //
 //    suspend fun getCredentials(

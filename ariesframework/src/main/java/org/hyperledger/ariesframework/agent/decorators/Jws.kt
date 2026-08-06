@@ -25,7 +25,7 @@ abstract class Jws
 object JwsSerializer : JsonContentPolymorphicSerializer<Jws>(Jws::class) {
     override fun selectDeserializer(element: JsonElement): KSerializer<out Jws> =
         when (element.jsonObject.size) {
-            1 -> serializer<JwsFlattenedFormat>() // em vez de JwsFlattenedFormat.serializer()
-            else -> serializer<JwsGeneralFormat>() // em vez de JwsGeneralFormat.serializer()
+            1 -> serializer<JwsFlattenedFormat>() // instead of JwsFlattenedFormat.serializer()
+            else -> serializer<JwsGeneralFormat>() // instead of JwsGeneralFormat.serializer()
         }
 }

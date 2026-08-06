@@ -12,12 +12,12 @@ interface Purposes {
 }
 
 object JsonLdSuites : Suites {
-    override val linkedDataSignature: Any = Any() // substituir com a classe real
-    override val linkedDataProof: Any = Any() // substituir com a classe real
+    override val linkedDataSignature: Any = Any() // replace with the real class
+    override val linkedDataProof: Any = Any() // replace with the real class
 }
 
 object JsonLdPurposes : Purposes {
-    override val assertionProofPurpose: Any = Any() // substituir com a classe real
+    override val assertionProofPurpose: Any = Any() // replace with the real class
 }
 
 object JsonLdConstants

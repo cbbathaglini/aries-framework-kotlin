@@ -107,7 +107,7 @@ class ProofRequestDetailFragment : Fragment() {
                 setOnClickListener { sendProof(record.id) }
             }
         } else {
-            binding.selectCredentialHeader.text = "❌ Proof declined or abandoned — cannot select credentials."
+            binding.selectCredentialHeader.text = "Proof declined or abandoned — cannot select credentials."
             binding.credentialSpinner.visibility = View.GONE
             binding.btnSendProof.visibility = View.GONE
         }
@@ -253,13 +253,13 @@ class ProofRequestDetailFragment : Fragment() {
 
     private fun updateStatusCard(state: ProofState?) {
         val (bgColor, message) = when (state) {
-            ProofState.Done -> Pair("#C8E6C9", "✅ Proof completed.")
+            ProofState.Done -> Pair("#C8E6C9", "Proof completed.")
             ProofState.PresentationSent, ProofState.PresentationReceived ->
-                Pair("#BBDEFB", "📤 Proof being presented.")
+                Pair("#BBDEFB", "Proof being presented.")
             ProofState.RequestReceived ->
-                Pair("#E1BEE7", "📨 Proof request received.")
+                Pair("#E1BEE7", "Proof request received.")
             ProofState.Abandoned, ProofState.Declined ->
-                Pair("#FFCDD2", "❌ Proof declined or abandoned.")
+                Pair("#FFCDD2", "Proof declined or abandoned.")
             else -> Pair("#E0E0E0", "State: ${state ?: "Unknown"}")
         }
 
@@ -401,6 +401,7 @@ class ProofRequestDetailFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
+                Log.e("ProofRequestDetail", "Error creating/sending presentation", e)
                 withContext(Dispatchers.Main) {
                     binding.loadingProgress.visibility = View.GONE
                     binding.proofStatusMessage.text = "Error creating/sending presentation: ${e.localizedMessage}"

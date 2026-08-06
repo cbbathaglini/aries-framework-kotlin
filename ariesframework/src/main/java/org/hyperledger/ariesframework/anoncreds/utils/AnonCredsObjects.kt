@@ -3,8 +3,6 @@ package org.hyperledger.ariesframework.anoncreds.utils
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.CredentialDefinitionResult
 import org.hyperledger.ariesframework.anoncreds.model.FetchRevocationRegistryDefinitionResult

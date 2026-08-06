@@ -20,14 +20,14 @@ data class PresentationVerifier(
 
 @Serializable
 class VerifierRecord(
-    // Campos serializáveis normais
+    // Normal serializable fields
     val offline: Boolean? = null,
     var globalThreadId: String? = null,
     var proofRequest: AnonCredsProofRequest? = null,
     var requestMessage: RequestPresentationMessageV2? = null,
     var presentation: MutableList<PresentationVerifier>? = mutableListOf(),
 
-    // 🔹 Campos herdados do BaseRecord — marcados como @Transient (não serializados)
+    // Fields inherited from BaseRecord - marked as @Transient (not serialized)
     @Transient override var id: String = generateId(),
     @Transient override var _tags: Tags? = null,
     @Transient override val createdAt: Instant = Clock.System.now(),

@@ -139,8 +139,7 @@
             android:noHistory="true" />
 
         <activity android:name=".InvitationActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:noHistory="true" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".RequestProofActivity"
             android:theme="@style/AppTheme.NoActionBar"

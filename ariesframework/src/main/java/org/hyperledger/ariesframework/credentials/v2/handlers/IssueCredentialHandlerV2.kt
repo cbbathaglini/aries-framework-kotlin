@@ -19,7 +19,7 @@ class IssueCredentialHandlerV2(val agent: Agent) : MessageHandler {
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         LogUtil.info(this) { "issue credential - issue step" }
 
-        // PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // aq ja tem o encode
+        // PrintLongLine.print("IssueCredentialHandlerV2 init: ${messageContext.plaintextMessage}") // it already has the encode here
         val credentialRecord = agent.credentialServiceV2.processCredential(messageContext)
 
         val shouldAutoRespond = agent.credentialServiceV2.shouldAutoRespondToCredential(

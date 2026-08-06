@@ -3,23 +3,30 @@ package org.hyperledger.ariesproject
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import android.widget.FrameLayout
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesframework.connection.messages.ConnectionInvitationMessage
 import org.hyperledger.ariesframework.connection.messages.TrustPingMessage
 import org.hyperledger.ariesframework.oob.models.CreateOutOfBandInvitationConfig
+import org.hyperledger.ariesproject.databinding.ActivityInvitationBinding
 
-class InvitationActivity : AppCompatActivity() {
+class InvitationActivity : BaseActivity() {
+
+    private lateinit var binding: ActivityInvitationBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_invitation)
+
+        binding = ActivityInvitationBinding.inflate(layoutInflater)
+        findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
+
+        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).setNavigationOnClickListener {
+            finish()
+        }
 
         if (savedInstanceState == null) {
-            // Chama a Coroutine para gerar a invitation
             lifecycleScope.launch {
                 val invitationUrl = generateInvitation()
 
@@ -42,7 +49,6 @@ class InvitationActivity : AppCompatActivity() {
             Settings.Secure.ANDROID_ID
         )
 
-        // 2) Monte o label, por ex. "SimpleApp-<ANDROID_ID>"
         val agentLabel = "SimpleApp-$androidId"
         val config = CreateOutOfBandInvitationConfig(
             label = agentLabel,
@@ -50,7 +56,7 @@ class InvitationActivity : AppCompatActivity() {
         )
         val app = application as WalletApp
         val properties = ConfigLoader.loadProperties(this)
-        val endpoint =  properties.getProperty("endpoint") //app.agent.agentConfig.endpoints.get(0);
+        val endpoint =  properties.getProperty("endpoint")
         val outOfBandRecord = app.agent.oob.createInvitation(config)
         val invitation: String = outOfBandRecord.outOfBandInvitation.toUrl(endpoint)
         Log.e("URL", invitation);

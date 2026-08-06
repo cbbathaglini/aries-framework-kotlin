@@ -96,18 +96,28 @@ class CredentialDetailFragment : Fragment() {
 
             val keyView = TextView(requireContext()).apply {
                 text = key
-                textSize = 16f
+                textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(resources.getColor(R.color.gray_600, null))
             }
 
             val valueView = TextView(requireContext()).apply {
                 text = value
-                textSize = 14f
-                setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                textSize = 15f
+                setTextColor(resources.getColor(R.color.gray_900, null))
+            }
+
+            val divider = View(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+                ).apply { setMargins(0, 8, 0, 0) }
+                setBackgroundResource(android.R.color.darker_gray)
             }
 
             attrLayout.addView(keyView)
             attrLayout.addView(valueView)
+            attrLayout.addView(divider)
             binding.attributesContainer.addView(attrLayout)
         }
     }

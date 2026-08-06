@@ -19,7 +19,7 @@ data class AnonCredsSelectedCredentials(
 ) {
     companion object {
         fun convert(proofFormats: Map<String, JsonElement>?): AnonCredsSelectedCredentials {
-            val json = Json { ignoreUnknownKeys = true } // ignora campos extras no JSON
+            val json = Json { ignoreUnknownKeys = true } // ignores extra fields in the JSON
 
             val attributes = proofFormats?.get("requested_attributes")?.let {
                 json.decodeFromJsonElement<Map<String, AnonCredsRequestedAttributeMatch>>(it)

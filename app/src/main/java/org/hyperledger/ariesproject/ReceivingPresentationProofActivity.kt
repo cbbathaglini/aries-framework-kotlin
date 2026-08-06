@@ -32,16 +32,16 @@ class ReceivingPresentationActivity : AppCompatActivity() {
     private lateinit var bluetoothServer: BluetoothServer
     private var agent: Agent? = null
 
-    // === NOVO: launcher de permissão ===
+    // === NEW: permission launcher ===
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.all { it.value }
         if (allGranted) {
-            appendLog("✅ Permissões concedidas, iniciando servidor BLE…")
+            appendLog("Permissions granted, starting BLE server…")
             startBluetoothServer()
         } else {
-            Toast.makeText(this, "❌ Permissões Bluetooth negadas.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Bluetooth permissions denied.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -72,7 +72,7 @@ class ReceivingPresentationActivity : AppCompatActivity() {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
             val clip = android.content.ClipData.newPlainText("Logs BLE", logs)
             clipboard.setPrimaryClip(clip)
-            Toast.makeText(this, "📋 Logs copiados para a área de transferência", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "📋 Logs copied to the clipboard", Toast.LENGTH_SHORT).show()
         }
 
         agent = (application as? WalletApp)?.agent
@@ -98,36 +98,34 @@ class ReceivingPresentationActivity : AppCompatActivity() {
         }
 
         if (missing.isEmpty()) {
-            appendLog("✅ Todas as permissões BLE já concedidas.")
+            appendLog("All BLE permissions already granted.")
             startBluetoothServer()
         } else {
-            appendLog("⚠️ Solicitando permissões BLE faltantes: ${missing.joinToString()}")
+            appendLog("Requesting missing BLE permissions: ${missing.joinToString()}")
             permissionLauncher.launch(missing.toTypedArray())
         }
     }
 
-    // ==================================================
-    // 🔹 INICIALIZA O SERVIDOR
-    // ==================================================
+
     private fun startBluetoothServer() {
         bluetoothServer = BluetoothServer(this).apply {
 
             onDeviceConnected = { deviceName ->
                 runOnUiThread {
-                    txtDevice.text = "Dispositivo conectado: $deviceName"
+                    txtDevice.text = "Connected device: $deviceName"
                 }
             }
 
             onLog = { log ->
                 runOnUiThread {
-                    txtBluetoothState.text = "Último evento: $log"
+                    txtBluetoothState.text = "Last event: $log"
                     appendLog(log)
                 }
             }
 
             onJSONReceived = { jsonString ->
                 runOnUiThread {
-                    txtStatus.text = "📥 Apresentação recebida!"
+                    txtStatus.text = "📥 Presentation received!"
                     progressBar.visibility = ProgressBar.VISIBLE
                 }
 
@@ -150,17 +148,15 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                         runOnUiThread {
                             txtJsonPreview.text = formattedJson
                             progressBar.visibility = ProgressBar.GONE
-                            txtStatus.text = "✅ Apresentação recebida e exibida!"
+                            txtStatus.text = "Presentation received and displayed!"
                             layoutResult.setBackgroundColor(getColor(android.R.color.holo_green_light))
                         }
 
                         val (proofRecord, result) = agent!!.proofCommandV2.processPresentationOffline(jsonString)
-                        Log.e("fake error: ", "thread: ${proofRecord.threadId} state: ${proofRecord.state} || verified: ${proofRecord.isVerified}")
-
                         agent?.proofCommandV2?.processOfflineAck(proofRecord)
 
                         runOnUiThread {
-                            txtStatus.text = "✅ Apresentação verificada? " + result
+                            txtStatus.text = "Presentation verified? " + result
                         }
 
 
@@ -168,7 +164,7 @@ class ReceivingPresentationActivity : AppCompatActivity() {
                         e.printStackTrace()
                         runOnUiThread {
                             progressBar.visibility = ProgressBar.GONE
-                            txtStatus.text = "❌ Erro ao processar: ${e.message}"
+                            txtStatus.text = "Error processing: ${e.message}"
                             layoutResult.setBackgroundColor(getColor(android.R.color.holo_red_light))
                         }
                     }
@@ -176,21 +172,18 @@ class ReceivingPresentationActivity : AppCompatActivity() {
             }
         }
 
-        // ⚠️ Corrigido: não use `context` ou `onLog` fora do BluetoothServer
+        // Fixed: do not use `context` or `onLog` outside BluetoothServer
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            appendLog("⚠️ Permissão BLUETOOTH_ADVERTISE não concedida (Android 12+).")
+            appendLog("⚠BLUETOOTH_ADVERTISE permission not granted (Android 12+).")
             return
         }
 
         bluetoothServer.startServer()
     }
 
-    // ==================================================
-    // 🔹 LOGGING UTIL
-    // ==================================================
     private fun appendLog(msg: String) {
         txtLogs.append("\n$msg")
         scrollLogs.post { scrollLogs.fullScroll(ScrollView.FOCUS_DOWN) }

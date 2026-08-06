@@ -1,56 +1,56 @@
 {
   "networks": [
     {
-      "networkName": "serpro",
-      "chainId": 13371313,
-      "nodeAddress": "http://idd.serpro.gov.br/besu",
+      "networkName": "example-mainnet",
+      "chainId": 1,
+      "nodeAddress": "https://rpc.example.com/besu",
       "contracts": {
         "ethereumDidRegistry": {
           "specPath": "/abi/EthereumExtDidRegistry.json",
-          "address": "0x0000000000000000000000000000000000018888"
+          "address": "0x0000000000000000000000000000000000000001"
         },
         "indyDidRegistry": {
           "specPath": "/abi/IndyDidRegistry.json",
-          "address": "0x0000000000000000000000000000000000003333"
+          "address": "0x0000000000000000000000000000000000000002"
         },
         "schemaRegistry": {
           "specPath": "/abi/SchemaRegistry.json",
-          "address": "0x0000000000000000000000000000000000005555"
+          "address": "0x0000000000000000000000000000000000000003"
         },
         "credDefRegistry": {
           "specPath": "/abi/CredentialDefinitionRegistry.json",
-          "address": "0x0000000000000000000000000000000000004444"
+          "address": "0x0000000000000000000000000000000000000004"
         },
         "revocationRegistry": {
           "specPath": "/abi/RevocationRegistry.json",
-          "address": "0x0000000000000000000000000000000000002222"
+          "address": "0x0000000000000000000000000000000000000005"
         }
       }
     },
     {
-      "networkName": "0x16bfab61",
-      "chainId": 381660001,
-      "nodeAddress": "https://staging-id.cpqd.com.br/api/vdr-rpc-proxy",
+      "networkName": "example-testnet",
+      "chainId": 12345,
+      "nodeAddress": "https://rpc-testnet.example.com/besu",
       "contracts": {
         "ethereumDidRegistry": {
           "specPath": "/abi/EthereumExtDidRegistry.json",
-          "address": "0xab3B5F6401B2Ee297646E0CB3a761b3B041CbDc1"
+          "address": "0x0000000000000000000000000000000000000011"
         },
         "indyDidRegistry": {
           "specPath": "/abi/IndyDidRegistry.json",
-          "address": "0xd23b9B2547a8ECF7e07904589060e6d2f8FDf99f"
+          "address": "0x0000000000000000000000000000000000000012"
         },
         "schemaRegistry": {
           "specPath": "/abi/SchemaRegistry.json",
-          "address": "0x0054a3ca30a8e042431659012a89547Fb5F37B09"
+          "address": "0x0000000000000000000000000000000000000013"
         },
         "credDefRegistry": {
           "specPath": "/abi/CredentialDefinitionRegistry.json",
-          "address": "0xC8f58773F6FE01C27813dde0F9c84BfC7400dDf0"
+          "address": "0x0000000000000000000000000000000000000014"
         },
         "revocationRegistry": {
           "specPath": "/abi/RevocationRegistry.json",
-          "address": "0xa43c29909dB932075274Dd255EeDd426f0e3b3F5"
+          "address": "0x0000000000000000000000000000000000000015"
         }
       }
     }

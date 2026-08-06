@@ -16,13 +16,13 @@ class SendMessageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_send_message)  // Layout que você vai criar
+        setContentView(R.layout.activity_send_message)
 
-        // Pega os elementos pelo ID
+        // Gets the elements by their IDs
         val messageEditText = findViewById<EditText>(R.id.messageEditText)
         val sendButton = findViewById<Button>(R.id.sendButton)
 
-        // Recebe a Connection ID passada
+        // Receives the passed Connection ID
         connectionId = intent.getStringExtra("CONNECTION_ID")
 
         sendButton.setOnClickListener {
@@ -31,7 +31,7 @@ class SendMessageActivity : AppCompatActivity() {
             if (messageText.isNotBlank()) {
                 sendMessage(messageText)
             } else {
-                Toast.makeText(this, "Digite uma mensagem para enviar", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Type a message to send", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -48,12 +48,12 @@ class SendMessageActivity : AppCompatActivity() {
                 app.agent.messageSender.send(messageOut)
 
                 runOnUiThread {
-                    Toast.makeText(this@SendMessageActivity, "Mensagem enviada: $message", Toast.LENGTH_LONG).show()
-                    finish()  // Fecha a Activity depois do envio
+                    Toast.makeText(this@SendMessageActivity, "Message sent: $message", Toast.LENGTH_LONG).show()
+                    finish()  // Closes the Activity after sending
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    Toast.makeText(this@SendMessageActivity, "Erro ao enviar mensagem: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@SendMessageActivity, "Error sending message: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }

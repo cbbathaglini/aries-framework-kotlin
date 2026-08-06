@@ -26,4 +26,9 @@
     <color name="gray_700">#616161</color>
     <color name="gray_800">#424242</color>
     <color name="gray_900">#212121</color>
+
+    <!-- Status colors -->
+    <color name="status_verified">#2E7D32</color>
+    <color name="status_failed">#C62828</color>
+    <color name="status_pending">#EF6C00</color>
 </resources>

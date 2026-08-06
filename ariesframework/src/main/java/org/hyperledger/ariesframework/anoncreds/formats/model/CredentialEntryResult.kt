@@ -26,7 +26,7 @@ data class CredentialEntryResult(
 
 @Serializable
 data class CredentialEntry(
-    val credential: JsonElement, // aceita tanto Credential serializado quanto JsonObject
+    val credential: JsonElement, // accepts either a serialized Credential or a JsonObject
     val timestamp: ULong? = null,
     val revocationState: JsonElement? = null,
 ) {

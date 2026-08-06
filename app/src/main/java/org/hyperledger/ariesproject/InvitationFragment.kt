@@ -30,6 +30,17 @@ class InvitationFragment : Fragment() {
         val bitmap = generateQRCode(url)
         qrCodeImageView.setImageBitmap(bitmap)
 
+        val copyButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.copyButton)
+        copyButton.setOnClickListener {
+            val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val clip = android.content.ClipData.newPlainText("Invitation URL", qrCodeTextView.text)
+            clipboard.setPrimaryClip(clip)
+            copyButton.text = "Copied!"
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                copyButton.text = "Copy URL"
+            }, 2000)
+        }
+
         return view
     }
 

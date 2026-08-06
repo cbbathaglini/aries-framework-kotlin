@@ -63,7 +63,7 @@ class PresentationsFromRecordActivity : AppCompatActivity() {
                 intent.putExtra(ProofDetailFragment.ARG_PROOF_ID, proofId)
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "ID da apresentação não encontrado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Presentation ID not found", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -75,7 +75,7 @@ class PresentationsFromRecordActivity : AppCompatActivity() {
             try {
                 val verifierRecord = agent?.verifierRepository?.getById(verifierRecordId!!)
                 if (verifierRecord == null) {
-                    Toast.makeText(this@PresentationsFromRecordActivity, "Registro não encontrado", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@PresentationsFromRecordActivity, "Record not found", Toast.LENGTH_LONG).show()
                     finish()
                     return@launch
                 }
@@ -89,16 +89,16 @@ class PresentationsFromRecordActivity : AppCompatActivity() {
                 }
 
                 val items = presentations.mapIndexed { index, pres ->
-                    val verified = if (pres.isVerified!!) "✅ Verificada" else "⚠️ Não verificada"
+                    val verified = if (pres.isVerified!!) "✅ Verified" else "⚠️ Not verified"
                     val offline = if (pres.isOffline!!) "📴 Offline" else "🌐 Online"
                     val id = pres.proofRecordId ?: "N/A"
 
                     """
-                        <b>Apresentação #${index + 1}</b><br>
+                        <b>Presentation #${index + 1}</b><br>
                         <font color="#777777" size="-1">
                         ID: $id<br>
                         Status: $verified<br>
-                        Origem: $offline
+                        Origin: $offline
                         </font>
                     """.trimIndent()
                 }
@@ -109,7 +109,7 @@ class PresentationsFromRecordActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(this@PresentationsFromRecordActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@PresentationsFromRecordActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

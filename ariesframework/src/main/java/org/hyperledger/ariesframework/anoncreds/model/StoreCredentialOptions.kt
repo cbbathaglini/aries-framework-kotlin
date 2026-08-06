@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
 data class StoreCredentialOptions(
-    val credential: Any, // Pode ser W3cJsonLdVerifiableCredential ou AnonCredsCredential
+    val credential: Any, // Can be a W3cJsonLdVerifiableCredential or an AnonCredsCredential
     val credentialRequestMetadata: AnonCredsCredentialRequestMetadata,
     val credentialDefinition: AnonCredsCredentialDefinition,
     val schema: AnonCredsSchema,

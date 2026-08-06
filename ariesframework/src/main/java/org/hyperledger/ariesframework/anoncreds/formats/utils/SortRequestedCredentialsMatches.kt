@@ -6,7 +6,7 @@ import java.util.Date
 
 class SortRequestedCredentialsMatches {
     companion object {
-        // Genérica: você informa como extrair revoked e updatedAt
+        // Generic: you provide how to extract revoked and updatedAt
         fun <T> sortRequestedCredentialsMatches(
             credentials: List<T>,
             revokedOf: (T) -> Boolean?,
@@ -19,14 +19,14 @@ class SortRequestedCredentialsMatches {
                 true -> 2
             }
 
-            // sortedWith cria uma NOVA lista (não modifica a original)
+            // sortedWith creates a NEW list (does not modify the original)
             return credentials.sortedWith { a, b ->
                 val ra = rank(revokedOf(a))
                 val rb = rank(revokedOf(b))
                 if (ra != rb) {
                     ra - rb
                 } else {
-                    // desempate por updatedAt DESC (mais recente primeiro)
+                    // tie-break by updatedAt DESC (most recent first)
                     val ta = updatedAtOf(a).time
                     val tb = updatedAtOf(b).time
                     (tb - ta).coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()

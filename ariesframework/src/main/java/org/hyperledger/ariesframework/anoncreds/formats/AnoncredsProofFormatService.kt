@@ -696,28 +696,36 @@ class AnoncredsProofFormatService(
         val anonCredsRevocationRegistries = mutableMapOf<String, AnonCredsRevocationRegistryEntry>()
 
         revocationRegistries.mapValues { (key, value) ->
-            val revRegValue =
-                Json.decodeFromString<RevocationRegistryValue>(value.definition.value.toString())
+            if (value.webvhEntry != null) {
+                // WebVH: already converted to the neutral AnonCreds* types
+                anonCredsRevocationRegistries[key] = value.webvhEntry
+            } else {
+                val definition = value.definition
+                    ?: throw CredoError("Revocation registry definition is null for $key")
 
-            val anonDef = AnonCredsRevocationRegistryDefinition(
-                issuerId = value.definition.issuerId,
-                revocDefType = value.definition.revocDefType,
-                credDefId = value.definition.credDefId,
-                tag = value.definition.tag,
-                value = revRegValue,
-            )
+                val revRegValue =
+                    Json.decodeFromString<RevocationRegistryValue>(definition.value.toString())
 
-            val statusLists =
-                value.revocationStatusLists?.mapValues { (_, v) ->
-                    AnonCredsRevocationStatusList.toAnonCreds(v)
-                }?.toMutableMap() ?: mutableMapOf()
+                val anonDef = AnonCredsRevocationRegistryDefinition(
+                    issuerId = definition.issuerId,
+                    revocDefType = definition.revocDefType,
+                    credDefId = definition.credDefId,
+                    tag = definition.tag,
+                    value = revRegValue,
+                )
 
-            anonCredsRevocationRegistries[key] = AnonCredsRevocationRegistryEntry(
-                tailsFilePath = try { agent.ledgerService.getTailsPath() } catch (e: Exception) { logger.warn("getTailsPath() not available", e); "" },
-                tailsHash = value.tailsHash,
-                definition = anonDef,
-                revocationStatusLists = statusLists,
-            )
+                val statusLists =
+                    value.revocationStatusLists?.mapValues { (_, v) ->
+                        AnonCredsRevocationStatusList.toAnonCreds(v)
+                    }?.toMutableMap() ?: mutableMapOf()
+
+                anonCredsRevocationRegistries[key] = AnonCredsRevocationRegistryEntry(
+                    tailsFilePath = try { agent.ledgerService.getTailsPath() } catch (e: Exception) { logger.warn("getTailsPath() not available", e); "" },
+                    tailsHash = value.tailsHash,
+                    definition = anonDef,
+                    revocationStatusLists = statusLists,
+                )
+            }
         }
 
         val anonSchemas = AnonCredsSchemas(schemas)

@@ -12,7 +12,7 @@ class W3cCredentialsModuleConfig(
 
     companion object {
         fun loadFile(context: Context, file: String): JSONObject {
-            val inputStream = context.assets.open(file.trimStart('/')) // Remove a barra inicial
+            val inputStream = context.assets.open(file.trimStart('/')) // Remove the leading slash
             val content = inputStream.bufferedReader().use { it.readText() }
             val jsonObject = JSONObject(content)
 

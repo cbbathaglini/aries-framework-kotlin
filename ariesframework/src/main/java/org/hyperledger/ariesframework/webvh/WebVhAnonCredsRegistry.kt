@@ -1,6 +1,5 @@
 package org.hyperledger.ariesframework.webvh
 
-import com.google.gson.JsonObject as GsonJsonObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -16,6 +15,7 @@ import org.hyperledger.ariesframework.anoncreds.model.GetCredentialDefinitionRet
 import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
 import org.slf4j.LoggerFactory
+import com.google.gson.JsonObject as GsonJsonObject
 
 class WebVhAnonCredsRegistry(
     override val methodName: String = "webvh",
@@ -80,12 +80,41 @@ class WebVhAnonCredsRegistry(
     ): GetRevocationStatusListReturn {
         logger.debug("Resolving revocation status list: $revocationRegistryId at timestamp $timestamp")
 
-        val resource = resourceHelper.fetchResourceByIdentifier(revocationRegistryId, isEmulator(agent))
-        val content = extractContent(resource)
-        val statusListJson = Json.parseToJsonElement(content.toString())
+        // The resource pointed to by revocationRegistryId is the rev_reg_def, which has
+        // "links" (RelatedLink) to the status lists per timestamp.
+        val defResource = resourceHelper.fetchResourceByIdentifier(revocationRegistryId, isEmulator(agent))
+        val links = defResource.getAsJsonArray("links")
 
+        // Choose the status list link whose timestamp is <= the requested one (the most recent)
+        val statusLink = links?.firstOrNull {
+            val type = it.asJsonObject.get("type")?.asString ?: ""
+            type.isNullOrBlank() || type.contains("status", ignoreCase = true)
+        }
+
+        if (statusLink == null || statusLink.asJsonObject.get("id") == null) {
+            throw RuntimeException(
+                "No revocation status list link found on resource $revocationRegistryId. links=$links",
+            )
+        }
+
+        val statusResourceId = statusLink.asJsonObject.get("id").asString
+        val (statusDid, statusResId) = splitResourceIdentifier(statusResourceId)
+
+        val statusResource = resourceHelper.fetchResource(statusDid, statusResId, isEmulator(agent))
+        val content = extractContent(statusResource)
+        android.util.Log.e("WEBVH_STATUS_LIST", "status list content for $statusResourceId:\n$content")
+
+        val statusListJson = Json.parseToJsonElement(content.toString())
         val statusList = json.decodeFromJsonElement<AnonCredsRevocationStatusList>(statusListJson)
         return GetRevocationStatusListReturn(revocationStatusList = statusList)
+    }
+
+    private fun splitResourceIdentifier(identifier: String): Pair<String, String> {
+        val parts = identifier.split("/resources/")
+        if (parts.size != 2) {
+            throw IllegalArgumentException("Invalid did:webvh resource identifier: $identifier")
+        }
+        return parts[0] to parts[1]
     }
 
     private fun extractContent(resource: GsonJsonObject): GsonJsonObject {

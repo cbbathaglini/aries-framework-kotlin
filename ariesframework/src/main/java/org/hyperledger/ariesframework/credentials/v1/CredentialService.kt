@@ -223,7 +223,7 @@ class CredentialService(val agent: Agent) {
         val offerMessageJson = agent.didCommMessageRepository.getAgentMessage(
             credentialRecord.id,
             OfferCredentialMessage.type,
-            // faltou passar o role receiver
+            // forgot to pass the receiver role
         )
         logger.info("[IDD]offerMessageJson: $offerMessageJson")
         val offerMessage =
