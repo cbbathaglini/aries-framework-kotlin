@@ -55,3 +55,21 @@ cp target/aarch64-linux-android/release/libindy_besu_vdr_uniffi.so \
 
 O wrapper já está configurado para carregar as libs nativas de
 `ledger-besu-wrapper/src/main/jniLibs` (ver `sourceSets.main.jniLibs` do `build.gradle`).
+
+### 4. Gerar os bindings Kotlin (`indy_besu_vdr.kt`)
+
+Para gerar o arquivo de bindings Kotlin `indy_besu_vdr.kt` (necessário para o módulo
+`ledger-besu-wrapper`), é preciso rodar o gerador `uniffi-bindgen` apontando para a
+biblioteca nativa compilada no host (`libindy_besu_vdr_uniffi.dylib` em macOS, ou
+`libindy_besu_vdr_uniffi.so` em Linux), na raiz de `vdr/uniffi`:
+
+```sh
+cargo run --bin uniffi-bindgen generate \
+  --library target/release/libindy_besu_vdr_uniffi.dylib \
+  --language kotlin \
+  --out-dir out
+```
+
+> Para outras linguagens, troque `--language kotlin` por `--language <python|swift>`.
+> A instrução completa também está no `README.md` do projeto `indy-besu`.
+
