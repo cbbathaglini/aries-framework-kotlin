@@ -1,0 +1,17 @@
+package org.hyperledger.ariesframework.anoncreds.model
+
+data class StoreCredentialOptions(
+    val credential: Any, // Can be a W3cJsonLdVerifiableCredential or an AnonCredsCredential
+    val credentialRequestMetadata: AnonCredsCredentialRequestMetadata,
+    val credentialDefinition: AnonCredsCredentialDefinition,
+    val schema: AnonCredsSchema,
+    val schemaId: String? = null,
+    val credentialDefinitionId: String,
+    val credentialId: String? = null,
+    val revocationRegistry: RevocationRegistryInfo? = null,
+)
+
+data class RevocationRegistryInfo(
+    val id: String,
+    val definition: AnonCredsRevocationRegistryDefinition,
+)

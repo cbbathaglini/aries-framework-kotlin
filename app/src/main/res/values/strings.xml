@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">ID Wallet</string>
+    <string name="title_credential_list">Credentials</string>
+    <string name="title_credential_detail">Credential detail</string>
+    <string name="title_w3c_credential_detail">W3C Credentials detail</string>
+    <string name="qrcode_guide">Scan a QR code and wait</string>
+    <string name="delete">Delete</string>
+    <string name="title_delete_cred">Delete Credential</string>
+    <string name="title_delete_cred_detail">Delete the selected credential?</string>
+    <string name="title_historical_list">Connections Historical</string>
+    <string name="title_historical_detail">Historical detail</string>
+    <string name="get_all_credentials_button">get_all_credentials</string>
+    <string name="title_request_proof">Request a proof</string>
+    <string name="title_scan_proof">Scan proof</string>
+    <string name="title_proof_detail">Proof Detail</string>
+    <string name="title_proof_list">Proofs list</string>
+    <string name="get_all_credentials">Get all credentials in this connection</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="send_message">Send message</string>
+    <string name="request_proof">Request Proof</string>
+    <string name="delete_connection">Delete connection</string>
+    <string name="action_scan_invite">Scan invite</string>
+    <string name="title_received_proofs">Received Proofs</string>
+    <string name="last_updated">Last updated: —</string>
+    <string name="last_updated_at">Last updated: %s</string>
+    <string name="refresh">Refresh</string>
+    <string name="no_received_presentations">No received presentations yet.</string>
+</resources>

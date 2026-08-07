@@ -1,0 +1,58 @@
+{
+  "networks": [
+    {
+      "networkName": "example-mainnet",
+      "chainId": 1,
+      "nodeAddress": "https://rpc.example.com/besu",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000000001"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000000002"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0000000000000000000000000000000000000003"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0x0000000000000000000000000000000000000004"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0x0000000000000000000000000000000000000005"
+        }
+      }
+    },
+    {
+      "networkName": "example-testnet",
+      "chainId": 12345,
+      "nodeAddress": "https://rpc-testnet.example.com/besu",
+      "contracts": {
+        "ethereumDidRegistry": {
+          "specPath": "/abi/EthereumExtDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000000011"
+        },
+        "indyDidRegistry": {
+          "specPath": "/abi/IndyDidRegistry.json",
+          "address": "0x0000000000000000000000000000000000000012"
+        },
+        "schemaRegistry": {
+          "specPath": "/abi/SchemaRegistry.json",
+          "address": "0x0000000000000000000000000000000000000013"
+        },
+        "credDefRegistry": {
+          "specPath": "/abi/CredentialDefinitionRegistry.json",
+          "address": "0x0000000000000000000000000000000000000014"
+        },
+        "revocationRegistry": {
+          "specPath": "/abi/RevocationRegistry.json",
+          "address": "0x0000000000000000000000000000000000000015"
+        }
+      }
+    }
+  ]
+}
