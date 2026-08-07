@@ -1,18 +1,24 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.10'
+    id 'org.jetbrains.kotlin.plugin.serialization'
     id "org.jlleitschuh.gradle.ktlint" version '11.4.2'
     id 'maven-publish'
 }
 
 android {
     namespace 'org.hyperledger.ariesframework'
-    compileSdk 33
+    compileSdk 36
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
 
     defaultConfig {
-        minSdk 24
-        targetSdk 33
+        minSdk 26
+        targetSdk 36
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -22,14 +28,19 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources false
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '17'
+        freeCompilerArgs += [
+                '-opt-in=kotlinx.serialization.InternalSerializationApi',
+                '-opt-in=kotlinx.serialization.ExperimentalSerializationApi'
+        ]
     }
     publishing {
         singleVariant("release") {
@@ -45,28 +56,56 @@ ktlint {
     }
 }
 
-dependencies {
-    implementation 'org.hyperledger:anoncreds_uniffi:0.2.0-wrapper.1'
-    implementation 'org.hyperledger:indy_vdr_uniffi:0.2.1-wrapper.2'
-    implementation 'org.hyperledger:askar_uniffi:0.2.0-wrapper.1'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0'
-    implementation 'org.slf4j:slf4j-api:1.7.32'
-    implementation 'ch.qos.logback:logback-classic:1.2.6'
+dependencies {
+    implementation project(':ledger-besu-wrapper')
+    implementation("org.hyperledger:anoncreds_uniffi:0.3.1")
+    implementation("org.hyperledger:indy_vdr_uniffi:0.3.1")
+    implementation("org.hyperledger:askar_uniffi:0.3.1")
+
+    implementation("com.github.jsonld-java:jsonld-java:0.13.6") {
+        exclude group: "org.apache.httpcomponents", module: "httpclient-osgi"
+        exclude group: "org.apache.httpcomponents", module: "httpcore-osgi"
+        exclude group: "org.apache.httpcomponents", module: "fluent-hc"
+    }
+
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
+
+    implementation 'org.web3j:core:4.9.4'
+    implementation 'org.web3j:crypto:4.9.4'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0'
+
+    implementation "org.jetbrains.kotlin:kotlin-reflect:2.1.0"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0'
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     implementation 'org.didcommx:peerdid:0.5.0'
+
+    implementation 'com.google.code.gson:gson:2.8.8'
+
+    implementation 'io.github.decentralized-identity:didwebvh-core:0.3.1'
+
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
+
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+
+    androidTestImplementation 'org.mockito:mockito-core:5.16.0' // Core Mockito
+    androidTestImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0' // Mockito Kotlin extensions
+    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito-inline:2.28.3' // Required for mocking final classes
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+
 }
 
 ext["githubUsername"] = null
@@ -87,7 +126,7 @@ if (secretPropsFile.exists()) {
 if (ext["version"] != null) {
     ext["version"] = ext["version"].replaceFirst("v", "")
 } else {
-    ext["version"] = "2.0.0"
+    ext["version"] = VERSION_NAME
 }
 
 def getExtraString(name) {
@@ -101,21 +140,25 @@ def getExtraString(name) {
 afterEvaluate {
     publishing {
         repositories {
+
+            // Publicar no GitHub
             maven {
                 name = "github"
-                setUrl("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-framework-kotlin")
+                url = uri("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
                 credentials {
                     username = getExtraString("githubUsername")
                     password = getExtraString("githubToken")
                 }
             }
+
         }
+
         publications {
-            release(MavenPublication) {
+            snapshot(MavenPublication) {
                 from components.release
-                groupId 'org.hyperledger'
-                artifactId 'aries-framework-kotlin'
-                version getExtraString("version")
+                groupId = getExtraString("GROUP")
+                version = getExtraString("VERSION_NAME")
+                artifactId = 'aries-framework-kotlin'
             }
         }
     }

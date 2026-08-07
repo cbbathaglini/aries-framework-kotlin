@@ -19,3 +19,24 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+-dontwarn java.awt.Component
+-dontwarn java.awt.GraphicsEnvironment
+-dontwarn java.awt.HeadlessException
+-dontwarn java.awt.Window
+# Não remova nada do namespace UniFFI
+-keep class uniffi.** { *; }
+-dontwarn uniffi.**
+
+# Preserve generic signatures so TypeToken<T> retains type information
+-keepattributes Signature
+
+# Keep Gson TypeToken used via reflection/obfuscated code
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Keep Gson annotations on fields (helps reflective deserialization)
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}

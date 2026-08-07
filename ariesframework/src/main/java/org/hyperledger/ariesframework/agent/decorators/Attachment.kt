@@ -1,6 +1,7 @@
 package org.hyperledger.ariesframework.agent.decorators
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -12,15 +13,19 @@ import java.util.UUID
 
 @Serializable
 class AttachmentData(
-    val base64: String? = null,
+    var base64: String? = null,
     val json: JsonObject? = null,
     val links: List<String>? = null,
     var jws: Jws? = null,
     val sha256: String? = null,
-)
+) {
+    override fun toString(): String {
+        return "AttachmentData(base64=$base64, json=$json, links=$links, jws=$jws, sha256=$sha256)"
+    }
+}
 
 @Serializable
-class Attachment(
+data class Attachment(
     @SerialName("@id")
     val id: String,
     val description: String? = null,
@@ -34,11 +39,29 @@ class Attachment(
     val data: AttachmentData,
 ) {
     fun getDataAsString(): String {
+        val b64 = data.base64
         return when {
-            data.base64 != null -> String(data.base64.decodeBase64())
+            b64 != null -> String(b64.decodeBase64())
             data.json != null -> Json.encodeToString(data.json)
             else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
         }
+    }
+
+    fun getDataAsJson(): String {
+        val b64 = data.base64
+        return when {
+            b64 != null -> {
+                val decoded = String(b64.decodeBase64())
+                decoded // JSON as string
+            }
+            data.json != null -> Json.encodeToString(data.json)
+            else -> throw Exception("No attachment data found in `json` or `base64` data fields.")
+        }
+    }
+
+    fun <T> Attachment.getDataAsJsonByType(deserializer: DeserializationStrategy<T>): T {
+        val jsonString = this.getDataAsJson()
+        return Json.decodeFromString(deserializer, jsonString)
     }
 
     fun addJws(jws: JwsGeneralFormat) {
@@ -47,9 +70,9 @@ class Attachment(
             return
         }
 
-        when (data.jws) {
-            is JwsFlattenedFormat -> (data.jws as JwsFlattenedFormat).signatures.add(jws)
-            is JwsGeneralFormat -> data.jws = JwsFlattenedFormat(arrayListOf(data.jws as JwsGeneralFormat, jws))
+        when (val current = data.jws) {
+            is JwsFlattenedFormat -> current.signatures.add(jws)
+            is JwsGeneralFormat -> data.jws = JwsFlattenedFormat(arrayListOf(current, jws))
             else -> throw Exception("Unknown JWS type")
         }
     }
@@ -62,5 +85,9 @@ class Attachment(
                 data = AttachmentData(base64 = data.encodeBase64()),
             )
         }
+    }
+
+    override fun toString(): String {
+        return "Attachment(id='$id', description=$description, filename=$filename, mimetype=$mimetype, lastModified=$lastModified, byteCount=$byteCount, data=$data)"
     }
 }

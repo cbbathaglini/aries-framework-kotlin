@@ -1,66 +1,72 @@
 package org.hyperledger.ariesproject
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.Manifest
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
-import com.google.android.gms.tasks.Tasks
-import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
-import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
-import com.google.firebase.ml.vision.common.FirebaseVisionImage
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
 
 class BarcodeScannerActivity : BaseCameraActivity() {
+    private val CAMERA_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST_CODE)
+        }
+
         binding.cameraView.addFrameProcessor {
-            val metadata = FirebaseVisionImageMetadata.Builder()
-                .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_NV21)
-                .setHeight(it.size.height)
-                .setWidth(it.size.width)
-                .build()
-            runBarcodeScanner(FirebaseVisionImage.fromByteArray(it.getData(), metadata))
+            val image = InputImage.fromByteArray(
+                it.getData(),
+                it.size.width,
+                it.size.height,
+                0,
+                InputImage.IMAGE_FORMAT_NV21
+            )
+            runBarcodeScanner(image)
         }
     }
 
-    private fun runBarcodeScanner(image: FirebaseVisionImage) {
-        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
-            .setBarcodeFormats(
-                FirebaseVisionBarcode.FORMAT_QR_CODE,
-            )
+    private fun runBarcodeScanner(image: InputImage) {
+        val options = BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .build()
 
-        val detector = FirebaseVision.getInstance().getVisionBarcodeDetector(options)
-        val task = detector.detectInImage(image)
-            .addOnSuccessListener {
-                for (firebaseBarcode in it) {
-                    when (firebaseBarcode.valueType) {
-                        FirebaseVisionBarcode.TYPE_URL -> {
-                            baseContext.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(firebaseBarcode.displayValue),
-                                ).setPackage("com.android.chrome"),
-                            )
-                        }
+        val scanner: BarcodeScanner = BarcodeScanning.getClient(options)
 
-                        FirebaseVisionBarcode.TYPE_TEXT -> {
-                            val data = Intent()
-                            data.putExtra("qrcode", firebaseBarcode.rawValue)
-                            setResult(RESULT_OK, data)
-                            finish()
-                        }
+        scanner.process(image)
+        .addOnSuccessListener { barcodes ->
+            for (barcode in barcodes) {
+                when (barcode.valueType) {
+                    Barcode.TYPE_URL -> {
+                        val data = Intent()
+                        data.putExtra("qrcode", barcode.rawValue)
+                        setResult(RESULT_OK, data)
+                        finish()
+                    }
+                    Barcode.TYPE_TEXT -> {
+                        val data = Intent()
+                        data.putExtra("qrcode", barcode.rawValue)
+                        setResult(RESULT_OK, data)
+                        finish()
                     }
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(baseContext, "Sorry, something went wrong!", Toast.LENGTH_SHORT).show()
-            }
-            .addOnCompleteListener {
-            }
-        Tasks.await(task)
+        }
+        .addOnFailureListener {
+            Toast.makeText(baseContext, "Sorry, something went wrong!", Toast.LENGTH_SHORT).show()
+        }
+
     }
 }

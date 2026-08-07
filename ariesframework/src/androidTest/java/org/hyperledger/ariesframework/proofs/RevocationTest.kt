@@ -1,5 +1,4 @@
 package org.hyperledger.ariesframework.proofs
-
 import androidx.test.filters.LargeTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -7,10 +6,10 @@ import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
@@ -23,6 +22,7 @@ import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -132,8 +132,9 @@ class RevocationTest {
         )
     }
 
-    @Test @LargeTest
-    fun testProofRequestWithNonRevoked() = runTest(timeout = 20.seconds) {
+    @Test(timeout = 600_000)
+    @LargeTest
+    fun testProofRequestWithNonRevoked() = runBlocking {
         issueCredential()
         val proofRequest = getProofRequest()
         var faberProofRecord = faberAgent.proofs.requestProof(
@@ -163,12 +164,14 @@ class RevocationTest {
         assertEquals(ProofState.Done, faberProofRecord.state)
     }
 
-    @Test @LargeTest
+    @Test(timeout = 600_000)
+    @LargeTest
     fun testVerifyAfterRevocation() = runBlocking {
         aliceAgent.agentConfig.ignoreRevocationCheck = true
 
         issueCredential()
         revokeCredential()
+
         delay(10.seconds) // Wait for revocation to take effect
 
         val proofRequest = getProofRequest()

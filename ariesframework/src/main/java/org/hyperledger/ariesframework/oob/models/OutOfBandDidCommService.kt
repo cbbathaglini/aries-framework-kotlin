@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.oob.models
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -10,6 +11,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.util.DIDParser
 
@@ -18,11 +20,23 @@ abstract class OutOfBandDidCommService {
     abstract fun asDidCommService(): DidCommService?
 }
 
-object OutOfBandDidCommServiceSerializer : JsonContentPolymorphicSerializer<OutOfBandDidCommService>(OutOfBandDidCommService::class) {
-    override fun selectDeserializer(element: JsonElement) = when (element is JsonPrimitive) {
-        true -> PublicDidService.serializer()
-        false -> OutOfBandDidDocumentService.serializer()
-    }
+// object OutOfBandDidCommServiceSerializer : JsonContentPolymorphicSerializer<OutOfBandDidCommService>(OutOfBandDidCommService::class) {
+//    override fun selectDeserializer(element: JsonElement) = when (element is JsonPrimitive) {
+//        true -> PublicDidService.serializer()
+//        false -> OutOfBandDidDocumentService.serializer()
+//    }
+// }
+
+@OptIn(ExperimentalSerializationApi::class)
+object OutOfBandDidCommServiceSerializer :
+    JsonContentPolymorphicSerializer<OutOfBandDidCommService>(OutOfBandDidCommService::class) {
+
+    override fun selectDeserializer(element: JsonElement): KSerializer<out OutOfBandDidCommService> =
+        if (element is JsonPrimitive) {
+            serializer<PublicDidService>() // antes: PublicDidService.serializer()
+        } else {
+            serializer<OutOfBandDidDocumentService>() // antes: OutOfBandDidDocumentService.serializer()
+        }
 }
 
 @Serializable

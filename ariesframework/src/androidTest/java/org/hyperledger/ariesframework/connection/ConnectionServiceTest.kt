@@ -100,7 +100,7 @@ class ConnectionServiceTest {
         val outboundMessage = connectionService.createRequest(connection.id)
         val message = outboundMessage.payload as ConnectionRequestMessage
 
-        assertEquals(outboundMessage.connection.state, ConnectionState.Requested)
+        assertEquals(outboundMessage.connection!!.state, ConnectionState.Requested)
         assertEquals(message.label, config.label)
         assertEquals(message.connection.did, "test-did")
 

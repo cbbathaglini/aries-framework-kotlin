@@ -36,6 +36,7 @@ class OfferCredentialMessageV2(
         }
 
         const val INDY_CREDENTIAL_OFFER_ATTACHMENT_ID = "indy"
+        const val ANONCREDS_CREDENTIAL_OFFER_ATTACHMENT_ID = "anoncreds"
         const val type = CredentialsConstants.OFFER_CREDENTIAL_V2
     }
 
@@ -52,6 +53,10 @@ class OfferCredentialMessageV2(
         return attachment?.getDataAsString() ?: throw Exception("Credential offer attachment not found")
     }
 
+    fun getCredentialOfferAttach(attachId: String): String {
+        val attachment = getOfferAttachmentById(attachId)
+        return attachment?.getDataAsString() ?: throw Exception("Credential offer attachment not found")
+    }
     fun validateIndyAttachId() {
         checkNotNull(this.findIndyFormatByAttachId()) {
             "Indy attachment with id $INDY_CREDENTIAL_OFFER_ATTACHMENT_ID not found in offer message"

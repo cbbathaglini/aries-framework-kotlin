@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.delay
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentConfig
+import org.hyperledger.ariesframework.agent.BesuLedgerConfig
 import org.hyperledger.ariesframework.agent.SubjectOutboundTransport
 import org.hyperledger.ariesframework.connection.messages.ConnectionInvitationMessage
 import org.hyperledger.ariesframework.connection.models.ConnectionRole
@@ -12,7 +13,7 @@ import org.hyperledger.ariesframework.connection.models.ConnectionState
 import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
@@ -31,7 +32,7 @@ object TestHelper {
     val logger = LoggerFactory.getLogger(TestHelper::class.java)
     val bcovrin = "bcovrin-genesis.txn"
 
-    fun getBaseConfig(name: String = "alice", useLedgerSerivce: Boolean = false): AgentConfig {
+    fun getBaseConfig(name: String = "alice", useLedgerService: Boolean = false): AgentConfig {
         val key = "HfyxAyKK8Z2xVzWbXXy2erY32B9Bnr8WFgR5HfzjAnGx"
         copyResourceFile(bcovrin)
         return AgentConfig(
@@ -43,7 +44,7 @@ object TestHelper {
             label = "Agent_$name",
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = useLedgerSerivce,
+            useLedgerService = useLedgerService,
             publicDidSeed = "00000000000000000000000AFKIssuer", // this should be registered as an endorser on bcovrin
         )
     }
@@ -177,6 +178,7 @@ object TestHelper {
         )
         delay(0.1.seconds)
         val (schema, seqNo) = agent.ledgerService.getSchema(schemaId)
+
         return agent.ledgerService.registerCredentialDefinition(
             didInfo,
             CredentialDefinitionTemplate(schema, "default", false, seqNo),
@@ -192,12 +194,32 @@ object TestHelper {
 
         delay(waitFor)
 
-        agentAConnection = agentA.connectionRepository.getById(agentAConnection.id)
-        agentBConnection = agentB.connectionRepository.getById(agentBConnection.id)
+        agentAConnection = agentA.connectionRepository.getById(agentAConnection!!.id)
+        agentBConnection = agentB.connectionRepository.getById(agentBConnection!!.id)
         check(agentAConnection.state == ConnectionState.Complete && agentBConnection.state == ConnectionState.Complete) {
             "Connection is not complete yet."
         }
 
         return Pair(agentAConnection, agentBConnection)
+    }
+
+    fun getBesuBaseConfig(name: String = "alice", useBesuLedger: Boolean = true): AgentConfig {
+        val key = "HfyxAyKK8Z2xVzWbXXy2erY32B9Bnr8WFgR5HfzjAnGx"
+        val besuLedgerContig = BesuLedgerConfig(
+            configFile = "/path/to/besu/config.toml",
+            multiledger = false,
+        )
+        return AgentConfig(
+            walletId = "AFSTestWallet_$name",
+            walletKey = key,
+            poolName = name,
+            mediatorConnectionsInvite = null,
+            label = "Agent_$name",
+            autoAcceptCredential = AutoAcceptCredential.Never,
+            autoAcceptProof = AutoAcceptProof.Never,
+            useBesuLedger = useBesuLedger,
+            besuLedgerConfig = besuLedgerContig,
+            publicDidSeed = "00000000000000000000000AFKIssuer", // this should be registered as an endorser on bcovrin
+        )
     }
 }

@@ -18,6 +18,7 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.decodeBase64url
 import org.hyperledger.ariesframework.encodeBase64url
 import org.hyperledger.ariesframework.util.Base58
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -57,9 +58,9 @@ class Wallet(private val agent: Agent) {
         }
 
     suspend fun initialize() {
-        logger.info("Initializing wallet for ${agent.agentConfig.label}")
+        LogUtil.info(this) { "Initializing wallet for ${agent.agentConfig.label}" }
         if (store != null) {
-            logger.warn("Wallet already initialized.")
+            LogUtil.warn(this) { "Wallet already initialized." }
             close()
         }
 
@@ -90,7 +91,7 @@ class Wallet(private val agent: Agent) {
     }
 
     suspend fun close() {
-        logger.debug("Closing wallet")
+        LogUtil.info(this) { "Closing wallet" }
         session?.close()
         store?.close()
 
@@ -100,7 +101,7 @@ class Wallet(private val agent: Agent) {
     }
 
     suspend fun delete() {
-        logger.debug("Deleting wallet")
+        LogUtil.info(this) { "Deleting wallet" }
         if (store != null) {
             close()
         }
@@ -111,8 +112,7 @@ class Wallet(private val agent: Agent) {
                 throw RuntimeException("remove() returned false")
             }
         } catch (e: Exception) {
-            logger.debug("Wallet deletion failed: ${e.message}")
-            logger.warn("Cannot delete wallet. Try to delete wallet file manually.")
+            LogUtil.error(this, e) { "Wallet deletion failed: ${e.message}" }
             File(storePath).delete()
         }
 
@@ -141,9 +141,9 @@ class Wallet(private val agent: Agent) {
         try {
             session!!.insertKey(verkey, key, null, null, null)
         } catch (e: Exception) {
-            logger.error("Ignoring error. Failed to insert key: ${e.message}")
+            LogUtil.error(this, e) { "Ignoring error. Failed to insert key: ${e.message}" }
         }
-        logger.debug("Created DID $did with verkey $verkey")
+        LogUtil.info(this) { "Created DID $did with verkey $verkey" }
 
         return DidInfo(did, verkey)
     }
@@ -235,8 +235,8 @@ class Wallet(private val agent: Agent) {
         for (recipient in protected.recipients) {
             val kid = recipient.header?.get("kid")
                 ?: throw RuntimeException("Blank recipient key")
-            val sender = recipient.header?.get("sender")?.decodeBase64url()
-            val iv = recipient.header?.get("iv")?.decodeBase64url()
+            val sender = recipient.header.get("sender")?.decodeBase64url()
+            val iv = recipient.header.get("iv")?.decodeBase64url()
             if (sender != null && iv == null) {
                 throw RuntimeException("Missing IV")
             } else if (sender == null && iv != null) {

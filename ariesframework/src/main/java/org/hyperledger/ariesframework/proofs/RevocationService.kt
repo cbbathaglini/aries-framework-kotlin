@@ -8,6 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.hyperledger.ariesframework.agent.Agent
+import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevokedInterval
 import org.hyperledger.ariesframework.proofs.models.IndyCredentialInfo
 import org.hyperledger.ariesframework.proofs.models.PartialProof
 import org.hyperledger.ariesframework.proofs.models.ProofRequest
@@ -15,8 +16,8 @@ import org.hyperledger.ariesframework.proofs.models.RequestedCredentials
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.proofs.models.RevocationStatusList
+import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
 
@@ -32,7 +33,6 @@ private data class ReferentCredential(
 )
 
 class RevocationService(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(RevocationService::class.java)
 
     suspend fun getRevocationRegistries(proof: PartialProof): String {
         val revocationRegistries = mutableMapOf<String, MutableMap<String, JsonObject>>()
@@ -73,7 +73,8 @@ class RevocationService(val agent: Agent) {
                     identifier.timestamp,
                 )
                 val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryJson)
-                logger.debug("Revocation registry at time ${identifier.timestamp}: $revocationRegistryJson")
+
+                LogUtil.warn(this) { "Revocation registry at time ${identifier.timestamp}: $revocationRegistryJson" }
                 val revocationStatusList = RevocationStatusList(
                     revocationRegistryDefinition.issuerId(),
                     revocationRegistryDelta.accum,
@@ -97,6 +98,24 @@ class RevocationService(val agent: Agent) {
             revocationRegistryId,
             revocationInterval.to!!,
             0,
+        )
+
+        val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)
+        val credentialRevocationIdInt = credentialRevocationId.toInt()
+        val revoked = revocationRegistryDelta.revoked?.contains(credentialRevocationIdInt) ?: false
+
+        return Pair(revoked, deltaTimestamp)
+    }
+
+    suspend fun getRevocationStatusAnonCreds(
+        credentialRevocationId: String,
+        revocationRegistryId: String,
+        revocationInterval: AnonCredsNonRevokedInterval,
+    ): Pair<Boolean, Int> {
+        val (revocationRegistryDeltaJson, deltaTimestamp) = agent.ledgerService.getRevocationRegistryDelta(
+            revocationRegistryId,
+            revocationInterval.to!!.toInt(),
+            revocationInterval.from!!.toInt(),
         )
         val revocationRegistryDelta = Json.decodeFromString<RevocationRegistryDelta>(revocationRegistryDeltaJson)
         val credentialRevocationIdInt = credentialRevocationId.toInt()
@@ -197,25 +216,55 @@ class RevocationService(val agent: Agent) {
     }
 
     suspend fun downloadTails(revocationRegistryDefinition: RevocationRegistryDefinition): File {
-        logger.debug("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}")
+        LogUtil.info(this) { "Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.revRegId()}" }
+
         val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
         if (!tailsFolder.exists()) {
             tailsFolder.mkdir()
         }
 
         val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
+
         if (!tailsFile.exists()) {
             val tailsLocation = revocationRegistryDefinition.tailsLocation()
-            logger.debug("Downloading tails file from: $tailsLocation")
             val url = if (tailsLocation.startsWith("http")) {
                 URL(tailsLocation)
             } else {
                 File(tailsLocation).toURI().toURL()
             }
-            val tailsData = url.readBytes()
-            tailsFile.writeBytes(tailsData)
+
+            try {
+                val tailsData = url.readBytes()
+                tailsFile.writeBytes(tailsData)
+            } catch (e: Exception) {
+                throw Exception("cannot read tails data from url $url")
+            }
         }
 
         return tailsFile
     }
+
+//    suspend fun downloadTailsBesu(revocationRegistryDefinition: uniffi.indy_besu_vdr.RevocationRegistryDefinition): File {
+//        logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.r()}")
+//        val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
+//        if (!tailsFolder.exists()) {
+//            tailsFolder.mkdir()
+//        }
+//
+//        val tailsFile = File(tailsFolder, revocationRegistryDefinition.tailsHash())
+//
+//        if (!tailsFile.exists()) {
+//
+//            val tailsLocation = revocationRegistryDefinition.tailsLocation()
+//            val url = if (tailsLocation.startsWith("http")) {
+//                URL(tailsLocation)
+//            } else {
+//                File(tailsLocation).toURI().toURL()
+//            }
+//            val tailsData = url.readBytes()
+//            tailsFile.writeBytes(tailsData)
+//        }
+//
+//        return tailsFile
+//    }
 }

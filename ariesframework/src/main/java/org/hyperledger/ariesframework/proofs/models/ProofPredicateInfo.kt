@@ -16,6 +16,18 @@ enum class PredicateType {
 
     @SerialName(">=")
     GreaterThanOrEqualTo,
+
+    ;
+
+    companion object {
+        fun fromString(value: String): PredicateType = when (value) {
+            "<", "LessThan" -> LessThan
+            "<=", "LessThanOrEqualTo" -> LessThanOrEqualTo
+            ">", "GreaterThan" -> GreaterThan
+            ">=", "GreaterThanOrEqualTo" -> GreaterThanOrEqualTo
+            else -> throw IllegalArgumentException("Unknown PredicateType: $value")
+        }
+    }
 }
 
 @Serializable

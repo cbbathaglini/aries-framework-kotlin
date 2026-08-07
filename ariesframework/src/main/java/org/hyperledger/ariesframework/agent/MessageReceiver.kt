@@ -7,14 +7,15 @@ import org.hyperledger.ariesframework.connection.models.didauth.DidCommService
 import org.hyperledger.ariesframework.connection.models.didauth.DidDoc
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
 import org.hyperledger.ariesframework.routing.Routing
-import org.slf4j.LoggerFactory
+import org.hyperledger.ariesframework.util.LogUtil
 
 class MessageReceiver(val agent: Agent) {
-    private val logger = LoggerFactory.getLogger(MessageReceiver::class.java)
 
     suspend fun receiveMessage(encryptedMessage: EncryptedMessage) {
         try {
             val decryptedMessage = agent.wallet.unpack(encryptedMessage)
+            LogUtil.info(this) { "decrypted message: $decryptedMessage" }
+
             val message = MessageSerializer.decodeFromString(decryptedMessage.plaintextMessage)
             val connection = findConnection(decryptedMessage, message)
             val messageContext = InboundMessageContext(
@@ -24,9 +25,10 @@ class MessageReceiver(val agent: Agent) {
                 decryptedMessage.senderKey,
                 decryptedMessage.recipientKey,
             )
+
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
-            logger.error("failed to receive message: $e")
+            LogUtil.error(this, e) { "failed to receive message: ${e.message}" }
         }
     }
 
@@ -42,7 +44,7 @@ class MessageReceiver(val agent: Agent) {
             )
             agent.dispatcher.dispatch(messageContext)
         } catch (e: Exception) {
-            logger.error("failed to receive message: $e")
+            LogUtil.error(this, e) { "failed to receive message: ${e.message}" }
         }
     }
 
@@ -85,9 +87,15 @@ class MessageReceiver(val agent: Agent) {
     }
 
     private suspend fun findConnectionByMessageKeys(decryptedMessage: DecryptedMessageContext): ConnectionRecord? {
-        return agent.connectionService.findByKeys(
+//        logger.info("findConnectionByMessageKeys method")
+//        logger.info("decryptedMessage.senderKey: ${decryptedMessage.senderKey}")
+//        logger.info("decryptedMessage.recipientKey: ${decryptedMessage.recipientKey}")
+
+        val conn = agent.connectionService.findByKeys(
             decryptedMessage.senderKey ?: "",
             decryptedMessage.recipientKey ?: "",
         )
+
+        return conn
     }
 }

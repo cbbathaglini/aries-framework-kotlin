@@ -19,6 +19,8 @@ import org.hyperledger.ariesframework.credentials.v1.messages.IssueCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.slf4j.LoggerFactory
 
 class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
@@ -94,11 +96,22 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun acceptOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createRequest(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
 
         // printAttributesOfCredential(credentialRecord.credentialAttributes);
 
         agent.messageSender.send(OutboundMessage(message, connection))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferAccepted.name,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = credentialRecord.id,
+                credentialPreviewAttr = credentialRecord.credentialAttributes,
+                credentials = credentialRecord.credentials,
+            ),
+        )
 
         return credentialRecord
     }
@@ -112,8 +125,18 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun declineOffer(options: AcceptOfferOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createOfferDeclinedProblemReport(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
         agent.messageSender.send(OutboundMessage(message, connection))
+
+        agent.historyRepository.save(
+            HistoryRecord(
+                historyType = HistoryType.CredentialOfferDeclined.name,
+                connectionId = connection.id,
+                theirLabel = connection.theirLabel,
+                associatedRecordId = options.credentialRecordId,
+                credentialPreviewAttr = credentialRecord.credentialAttributes,
+            ),
+        )
 
         return credentialRecord
     }
@@ -128,7 +151,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun acceptRequest(options: AcceptRequestOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createCredential(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
         agent.messageSender.send(OutboundMessage(message, connection))
 
         return credentialRecord
@@ -144,7 +167,7 @@ class CredentialsCommand(val agent: Agent, private val dispatcher: Dispatcher) {
     suspend fun acceptCredential(options: AcceptCredentialOptions): CredentialExchangeRecord {
         val message = agent.credentialService.createAck(options)
         val credentialRecord = agent.credentialExchangeRepository.getById(options.credentialRecordId)
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
         agent.messageSender.send(OutboundMessage(message, connection))
 
         return credentialRecord

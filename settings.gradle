@@ -1,13 +1,11 @@
 pluginManagement {
     repositories {
-        google()
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
+        google()
     }
 }
 
-ext["githubUsername"] = null
-ext["githubToken"] = null
 
 def secretPropsFile = file("local.properties")
 if (secretPropsFile.exists()) {
@@ -30,9 +28,10 @@ def getExtraString(name) {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
-        mavenLocal()
+        //mavenLocal()
         mavenCentral()
+        google()
+
         maven {
             setUrl("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
             credentials {
@@ -40,10 +39,14 @@ dependencyResolutionManagement {
                 password = getExtraString("githubToken")
             }
         }
-        maven { url 'https://jitpack.io' }
+        maven { url = uri('https://jitpack.io') }
+//        flatDir {
+//            dirs file('app/libs')
+//        }
     }
 }
 
 rootProject.name = "aries-framework-kotlin"
 include ':app'
 include ':ariesframework'
+include ':ledger-besu-wrapper'

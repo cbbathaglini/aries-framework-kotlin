@@ -4,50 +4,44 @@ Aries Framework Kotlin is an Android framework for [Aries](https://github.com/hy
 
 ## Features
 
-Aries Framework Kotlin supports most of [AIP 1.0](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0302-aries-interop-profile#aries-interop-profile-version-10) features for mobile agents.
+Aries Framework Kotlin is an Android framework for the [Aries](https://github.com/hyperledger/aries) protocol, covering most of [AIP 1.0](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0302-aries-interop-profile#aries-interop-profile-version-10) and parts of AIP 2.0.
 
 ### Supported features
-- ✅ ([RFC 0160](https://github.com/hyperledger/aries-rfcs/blob/master/features/0160-connection-protocol/README.md)) Connection Protocol
-- ✅ ([RFC 0211](https://github.com/hyperledger/aries-rfcs/blob/master/features/0211-route-coordination/README.md)) Mediator Coordination Protocol
-- ✅ ([RFC 0095](https://github.com/hyperledger/aries-rfcs/blob/master/features/0095-basic-message/README.md)) Basic Message Protocol
-- ✅ ([RFC 0036](https://github.com/hyperledger/aries-rfcs/blob/master/features/0036-issue-credential/README.md)) Issue Credential Protocol
-- ✅ ([RFC 0037](https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof/README.md)) Present Proof Protocol
-  - Does not implement alternate begining (Prover begins with proposal)
-- ✅ HTTP & WebSocket Transport
-- ✅ ([RFC 0434](https://github.com/hyperledger/aries-rfcs/blob/main/features/0434-outofband/README.md)) Out of Band Protocol (AIP 2.0)
-- ✅ ([RFC 0023](https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-exchange)) DID Exchange Protocol (AIP 2.0)
+
+**Protocols / RFCs**
+- ✅ ([RFC 0160](https://github.com/hyperledger/aries-rfcs/blob/master/features/0160-connection-protocol/README.md)) Connection Protocol (`connections/1.0`)
+- ✅ ([RFC 0023](https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-exchange)) DID Exchange Protocol (AIP 2.0) (`didexchange/1.1`)
+- ✅ ([RFC 0434](https://github.com/hyperledger/aries-rfcs/blob/main/features/0434-outofband/README.md)) Out-of-Band Protocol (AIP 2.0) (`out-of-band/1.1`, handshake-reuse)
+- ✅ ([RFC 0211](https://github.com/hyperledger/aries-rfcs/blob/master/features/0211-route-coordination/README.md)) Mediator Coordination Protocol (`coordinate-mediation/1.0`)
+- ✅ ([RFC 0212](https://github.com/hyperledger/aries-rfcs/tree/main/features/0212-pickup) / pickup) Message Pickup (`messagepickup/1.0`, strategies `PickUpV1` and `Implicit`)
+- ✅ ([RFC 0095](https://github.com/hyperledger/aries-rfcs/blob/master/features/0095-basic-message/README.md)) Basic Message Protocol (`basicmessage/1.0`)
+- ✅ ([RFC 0036](https://github.com/hyperledger/aries-rfcs/blob/master/features/0036-issue-credential/README.md)) Issue Credential v1 (`issue-credential/1.0`)
+- ✅ ([RFC 0453](https://github.com/hyperledger/aries-rfcs/blob/main/features/0453-issue-credential-v2/README.md)) Issue Credential v2 (AIP 2.0) (`issue-credential/2.0`)
+- ✅ ([RFC 0037](https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof/README.md)) Present Proof v1 (`present-proof/1.0`)
+  - Does not implement the proposal path (Prover starts by receiving the request)
+- ✅ ([RFC 0454](https://github.com/hyperledger/aries-rfcs/blob/main/features/0454-present-proof-v2/README.md)) Present Proof v2 (AIP 2.0) (`present-proof/2.0`)
+- ✅ ([RFC 0035](https://github.com/hyperledger/aries-rfcs/blob/main/features/0035-report-problem/README.md)) Report Problem Protocol (`problem-report` for connections, issue-credential, present-proof, mediation)
+- ✅ ([RFC 0183](https://github.com/hyperledger/aries-rfcs/blob/main/features/0183-revocation-notification/README.md) v1 & [RFC 0721](https://github.com/hyperledger/aries-rfcs/blob/main/features/0721-revocation-notification-v2/README.md) v2) Revocation Notification (`revocation_notification/1.0`, `.../2.0`)
+
+**Credentials / Identity**
+- ✅ AnonCreds — holder, issuer and verifier services, plus `AnonCreds`, `LegacyIndy`, `Ledger`, `Ethereum (ethr)`, `in-memory` and `did:webvh` registries
+- ✅ W3C Verifiable Credentials — JSON-LD (Data Integrity) and JWT formats; Verifiable Presentation
+- ✅ `did:webvh` — DID resolver and AnonCreds registry (enabled via `useDidWebvh`)
+
+**Ledgers**
+- ✅ Indy ledger service (genesis-based)
+- ✅ Besu ledger service (`ledger-besu-wrapper`, enabled via `useBesuLedger`)
+- ✅ Askar wallet with AnonCreds link secret and public DID
+
+**Transports**
+- ✅ HTTP
+- ✅ WebSocket
+- ✅ BLE / Bluetooth
 
 ### Not supported yet
-- ❌ ([RFC 0035](https://github.com/hyperledger/aries-rfcs/blob/main/features/0035-report-problem/README.md)) Report Problem Protocol
 - ❌ ([RFC 0056](https://github.com/hyperledger/aries-rfcs/blob/main/features/0056-service-decorator/README.md)) Service Decorator
-
-## Requirements & Installation
-
-Aries Framework Kotlin requires Android 7.0+. It is distributed as a Maven package hosted by GitHub Packages.
-
-You can add a dependency to your app's build.gradle file:
-```groovy
-dependencies {
-    implementation("org.hyperledger:aries-framework-kotlin:2.0.0")
-}
-```
-
-You need to add the following to your project's build.gradle file to use GitHub Packages:
-```groovy
-allprojects {
-    repositories {
-        maven {
-            setUrl("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-framework-kotlin")
-            credentials {
-                // You should put these in the local.properties file
-                username = "your github username"
-                password = "your github token for read:packages"
-            }
-        }
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
+- ❌ Message Pickup v2
+- ⚠️ The **proposal/negotiation** receive path is connected for `issue-credential/2.0`; receiving proposals on `present-proof` (v1 and v2) and on `issue-credential/1.0` is not fully wired.
 
 ## Usage
 
@@ -59,6 +53,11 @@ App development using Aries Framework Kotlin is done in following steps:
 ### Create an Agent instance
 
 ```kotlin
+    val besuLedgerConfig = BesuLedgerConfig(
+        configFile = "besu_config.json",
+        multiledger = true,
+    )
+
     val config = AgentConfig(
         walletKey = key,
         genesisPath = File(applicationContext.filesDir.absolutePath, genesisPath).absolutePath,
@@ -67,10 +66,24 @@ App development using Aries Framework Kotlin is done in following steps:
         label = "SampleApp",
         autoAcceptCredential = AutoAcceptCredential.Never,
         autoAcceptProof = AutoAcceptProof.Never,
+        useLedgerService = true,
+        useBesuLedger = true,
+        useDidWebvh = false,
+        besuLedgerConfig = besuLedgerConfig,
     )
     val agent = Agent(applicationContext, config)
     agent.initialize()
 ```
+
+The `AgentConfig` supports additional fields to control which registry/ledger backend is used:
+
+- `useLedgerService` — enables the ledger service (Indy). Default `false`.
+- `useBesuLedger` — uses the Besu-based ledger service instead of (or alongside) Indy. Default `false`.
+- `besuLedgerConfig` — a `BesuLedgerConfig(configFile, multiledger)` pointing to the Besu network JSON
+  (see the [Ledger Besu Wrapper](#ledger-besu-wrapper-besu) section for building the native library).
+- `useDidWebvh` — enables the `did:webvh` support (AnonCreds registry, DID resolver, emulator workaround). Default `false`.
+- `cacheConfigFile` — asset file name used for ledger cache settings (defaults to `config.properties`).
+- `ignoreRevocationCheck` — skips revocation checks when creating a presentation. Default `false`. For testing.
 
 To create an agent, first create a key to encrypt the wallet and save it in the [EncryptedSharedPreferences](https://developer.android.com/reference/androidx/security/crypto/EncryptedSharedPreferences).
 ```Kotlin
@@ -79,7 +92,7 @@ To create an agent, first create a key to encrypt the wallet and save it in the 
 
 A genesis file for the indy pool should be included as a resource in the app bundle and should be copied to the file system before initializing the agent.
 ```kotlin
-    val genesisPath = "genesis.txn"
+    val genesisPath = "von.txn"
     val inputStream = applicationContext.assets.open(genesisPath)
     val file = File(applicationContext.filesDir.absolutePath, genesisPath)
     if (!file.exists()) {
@@ -177,13 +190,59 @@ For your information, Aries Framework Kotlin refers to [Aries Framework Swift](h
 
 The agent is created in the `WalletApp.kt` file and you can set a mediator connection invitation url there, if you want.
 
-There is a genesis files in the `app/src/main/assets` directory.
+There are genesis files in the `app/src/main/assets` directory.
+- `von.txn` is the default used by the sample app (`WalletApp.kt`).
 - `bcovrin-genesis.txn` is for the [GreenLight Dev Ledger](http://dev.greenlight.bcovrin.vonx.io/)
+
+## Ledger Besu Wrapper (besu)
+
+To use the Besu network via the `ledger-besu-wrapper`, you must **compile** the native library
+[`vdr/uniffi` from the `indy-besu` project](https://github.com/hyperledger-indy/indy-besu/tree/main/vdr/uniffi)
+and place the resulting `.so` under `ledger-besu-wrapper/src/main/jniLibs/<abi>/`.
+
+For Kotlin/Android you **do not** use `cargo run` (which runs on the host). Build with `cross`:
+
+```sh
+cargo install cross --git https://github.com/cross-rs/cross
+
+# from the root of vdr/uniffi
+cross build --release --target x86_64-linux-android    # x86_64
+cross build --release --target aarch64-linux-android   # arm64-v8a
+cross build --release --target armv7-linux-androideabi # armeabi-v7a
+cross build --release --target i686-linux-android      # x86
+```
+
+To generate the Kotlin bindings file `indy_besu_vdr.kt`:
+
+```sh
+cargo run --bin uniffi-bindgen generate \
+  --library target/release/libindy_besu_vdr_uniffi.dylib \
+  --language kotlin \
+  --out-dir out
+```
+
+Copy the `.so` generated by `cross build` into the matching ABI folder:
+
+| Target (`cross build --target`) | Android ABI (`src/main/jniLibs/<abi>`) |
+|--------------------------------|----------------------------------------|
+| `x86_64-linux-android`         | `x86_64`                               |
+| `aarch64-linux-android`        | `arm64-v8a`                            |
+| `armv7-linux-androideabi`      | `armeabi-v7a`                          |
+| `i686-linux-android`           | `x86`                                  |
+
+Example:
+
+```sh
+# from the root of vdr/uniffi
+cp target/aarch64-linux-android/release/libindy_besu_vdr_uniffi.so \
+   <repo>/ledger-besu-wrapper/src/main/jniLibs/arm64-v8a/libindy_besu_vdr_uniffi.so
+```
+
+The wrapper is configured to load the native libs from
+`ledger-besu-wrapper/src/main/jniLibs` (see `sourceSets.main.jniLibs` in its `build.gradle`).
 
 ## Contributing
 
-We welcome contributions to Aries Framework Kotlin. Please see our [Developer Guide](DEVELOP.md) for more information.
 
 ## License
 
-Aries Framework Kotlin is licensed under the [Apache License 2.0](LICENSE).

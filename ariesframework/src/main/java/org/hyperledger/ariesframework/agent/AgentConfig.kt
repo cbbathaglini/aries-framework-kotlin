@@ -2,7 +2,7 @@ package org.hyperledger.ariesframework.agent
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.oob.models.HandshakeProtocol
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
 import org.hyperledger.ariesframework.routing.Routing
@@ -15,6 +15,12 @@ enum class MediatorPickupStrategy {
     @SerialName("Implicit")
     Implicit,
 }
+
+@Serializable
+data class BesuLedgerConfig(
+    val configFile: String,
+    val multiledger: Boolean,
+)
 
 /**
  * Configuration for the agent.
@@ -39,11 +45,12 @@ enum class MediatorPickupStrategy {
  * @property useReturnRoute Whether to use the transport-return-route. Default is true.
  * @property preferredHandshakeProtocol The preferred handshake protocol to use. Default is [HandshakeProtocol.Connections].
  * @property endpoints The endpoints of the agent. Read only.
+ * @property useBesuLedger Whether to use the ledger Besu service. Default is true.
  */
 @Serializable
 data class AgentConfig(
     var walletKey: String,
-    var genesisPath: String,
+    var genesisPath: String? = null,
     var walletId: String = "AFKDefaultWallet",
     var poolName: String = "AFKDefaultPool",
     var mediatorConnectionsInvite: String? = null,
@@ -56,12 +63,16 @@ data class AgentConfig(
     var autoAcceptCredential: AutoAcceptCredential = AutoAcceptCredential.Always,
     var autoAcceptProof: AutoAcceptProof = AutoAcceptProof.Always,
     var ignoreRevocationCheck: Boolean = false,
-    var useLedgerService: Boolean = true,
-    var useLegacyDidSovPrefix: Boolean = true,
+    var useLedgerService: Boolean = false,
+    var useLegacyDidSovPrefix: Boolean = false,
     var publicDidSeed: String? = null,
     var agentEndpoints: List<String>? = null,
     var useReturnRoute: Boolean = true,
     var preferredHandshakeProtocol: HandshakeProtocol = HandshakeProtocol.Connections,
+    var useBesuLedger: Boolean = false,
+    var besuLedgerConfig: BesuLedgerConfig? = null,
+    var useDidWebvh: Boolean = false,
+    var cacheConfigFile: String? = null,
 ) {
     val endpoints: List<String>
         get() = agentEndpoints ?: listOf(Routing.DID_COMM_TRANSPORT_QUEUE)

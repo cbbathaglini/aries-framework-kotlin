@@ -6,6 +6,7 @@ import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.credentials.v2.handlers.CredentialAckHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.handlers.IssueCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.handlers.OfferCredentialHandlerV2
+import org.hyperledger.ariesframework.credentials.v2.handlers.ProposeCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.handlers.RequestCredentialHandlerV2
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
 import org.hyperledger.ariesframework.credentials.v2.messages.IssueCredentialMessageV2
@@ -24,6 +25,7 @@ class Registers(val agent: Agent) {
         dispatcher.registerHandler(CredentialAckHandlerV2(agent))
         dispatcher.registerHandler(IssueCredentialHandlerV2(agent))
         dispatcher.registerHandler(OfferCredentialHandlerV2(agent))
+        dispatcher.registerHandler(ProposeCredentialHandlerV2(agent))
         dispatcher.registerHandler(RequestCredentialHandlerV2(agent))
     }
 

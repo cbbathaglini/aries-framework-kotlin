@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.connection
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.InboundMessageContext
@@ -7,6 +8,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.AgentEvents
+import org.hyperledger.ariesframework.agent.AgentMessage
 import org.hyperledger.ariesframework.agent.MessageSerializer
 import org.hyperledger.ariesframework.agent.decorators.SignatureDecorator
 import org.hyperledger.ariesframework.agent.decorators.ThreadDecorator
@@ -23,9 +25,13 @@ import org.hyperledger.ariesframework.connection.models.didauth.ReferencedAuthen
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.connection.models.didauth.publicKey.Ed25119Sig2018
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
+import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.oob.messages.OutOfBandInvitation
 import org.hyperledger.ariesframework.oob.repository.OutOfBandRecord
 import org.hyperledger.ariesframework.routing.Routing
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class ConnectionService(val agent: Agent) {
@@ -74,7 +80,7 @@ class ConnectionService(val agent: Agent) {
             authentication = listOf(auth),
         )
 
-        return ConnectionRecord(
+        val connectionRecord = ConnectionRecord(
             _tags = tags,
             state = state,
             role = role,
@@ -90,6 +96,20 @@ class ConnectionService(val agent: Agent) {
             multiUseInvitation = multiUseInvitation,
             mediatorId = routing.mediatorId,
         )
+
+        runBlocking {
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.ConnectionCreated.name,
+                    connectionId = connectionRecord.id,
+                    theirLabel = theirLabel,
+                    associatedRecordId = connectionRecord.id,
+                    content = invitation.toString(),
+                ),
+            )
+        }
+
+        return connectionRecord
     }
 
     /**
@@ -204,7 +224,7 @@ class ConnectionService(val agent: Agent) {
         imageUrl: String? = null,
         autoAcceptConnection: Boolean? = null,
     ): OutboundMessage {
-        logger.debug("Creating connection request for connection: $connectionId")
+        LogUtil.info(this) { "Creating connection request for connection: $connectionId" }
         var connectionRecord = connectionRepository.getById(connectionId)
         assert(connectionRecord.state == ConnectionState.Invited)
         assert(connectionRecord.role == ConnectionRole.Invitee)
@@ -423,11 +443,27 @@ class ConnectionService(val agent: Agent) {
      * @return the connection record.
      */
     suspend fun getByThreadId(threadId: String): ConnectionRecord {
-        return connectionRepository.getSingleByQuery(
-            """
+        LogUtil.info(this) { "DEBUG getByThreadId threadId=$threadId" }
+        return try {
+            connectionRepository.getSingleByQuery(
+                """
             {"threadId": "$threadId"}
             """,
-        )
+            )
+        } catch (e: Exception) {
+            LogUtil.info(this) { "DEBUG getByThreadId FAILED threadId=$threadId error=${e.message}" }
+            throw e
+        }
+    }
+
+    /**
+     * Retrieve a connection record by id.
+     *
+     * @param id
+     * @return the connection record.
+     */
+    suspend fun getById(id: String): ConnectionRecord {
+        return connectionRepository.getById(id)
     }
 
     /**
@@ -443,5 +479,63 @@ class ConnectionService(val agent: Agent) {
             {"verkey": "$recipientKey", "theirKey": "$senderKey"}
             """,
         )
+    }
+
+    /**
+     * Assert that an inbound message either has a connection associated with it,
+     * or has everything correctly set up for connection-less exchange (optionally with out of band)
+     *
+     * @param messageContext - the inbound message context
+     */
+    suspend fun assertConnectionOrOutOfBandExchange(
+        messageContext: InboundMessageContext,
+        lastReceivedMessage: AgentMessage? = null,
+        lastSentMessage: AgentMessage? = null,
+        expectedConnectionId: String? = null,
+    ) {
+        val connection = messageContext.connection
+        val message: AgentMessage = messageContext.message
+        val senderVerkey = messageContext.senderVerkey
+        val recipientVerkey = messageContext.recipientVerkey
+
+        if (expectedConnectionId != null && connection == null) {
+            throw CredoError("Expected incoming message to be from connection $expectedConnectionId but no connection found.")
+        }
+
+        if (expectedConnectionId != null && connection?.id != expectedConnectionId) {
+            throw CredoError("Expected incoming message to be from connection $expectedConnectionId but connection is ${connection?.id}.")
+        }
+
+        if (connection != null) {
+            connection.assertReady()
+            logger.debug("Processing message with id ${message.id} and connection id ${connection.id}", mapOf("type" to message.type))
+        } else {
+            logger.debug("Processing connection-less message with id ${message.id}", mapOf("type" to message.type))
+
+            val recipientKey = recipientVerkey
+            val senderKey = senderVerkey
+
+            // TODO: verify where the service came from
+        }
+    }
+
+    /**
+     * If knownConnectionId is passed, it will compare the incoming connection id with the knownConnectionId, and skip the other validation.
+     *
+     * If no known connection id is passed, it asserts that the incoming message is in response to an attached request message to an out of band invitation.
+     * If is the case, and the state of the out of band record is still await response, the state will be updated to done
+     *
+     */
+    suspend fun matchIncomingMessageToRequestMessageInOutOfBandExchange(
+        messageContext: InboundMessageContext,
+        expectedConnectionId: String? = null,
+    ) {
+        val actualConnectionId = messageContext.connection?.id
+
+        if (expectedConnectionId != null && actualConnectionId != expectedConnectionId) {
+            throw CredoError(
+                "Expecting incoming message to have connection $expectedConnectionId, but incoming connection is ${actualConnectionId ?: "undefined"}",
+            )
+        }
     }
 }

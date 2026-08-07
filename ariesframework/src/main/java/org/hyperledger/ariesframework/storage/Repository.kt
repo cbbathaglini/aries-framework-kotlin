@@ -6,11 +6,14 @@ import askar_uniffi.ErrorCode
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.models.didauth.didDocServiceModule
 import org.hyperledger.ariesframework.toJsonString
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
@@ -30,7 +33,9 @@ data class WalletRecordList(
 open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Agent) {
     private val wallet = agent.wallet
     private val logger = LoggerFactory.getLogger(Repository::class.java)
-    private val jsonFormat = Json { serializersModule = didDocServiceModule }
+    private val jsonFormat = Json {
+        serializersModule = didDocServiceModule
+    }
 
     private val DEFAULT_QUERY_OPTIONS = """
     {
@@ -43,6 +48,13 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         inline operator fun <reified T : BaseRecord> invoke(agent: Agent) = Repository(T::class, agent)
     }
 
+    suspend fun deleteAll() {
+        val allRecords = getAll()
+        allRecords.forEach { record ->
+            delete(record)
+        }
+    }
+
     @OptIn(InternalSerializationApi::class)
     fun recordToInstance(record: AskarEntry): T {
         val instance = jsonFormat.decodeFromString(type.serializer(), String(record.value()))
@@ -53,7 +65,6 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
         return instance
     }
 
-    @OptIn(InternalSerializationApi::class)
     open suspend fun save(record: T) {
         val value = jsonFormat.encodeToString(type.serializer(), record).toByteArray()
         val tags = record.getTags().toJsonString()
@@ -73,9 +84,9 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun deleteById(id: String) {
         wallet.session!!.update(AskarEntryOperation.REMOVE, type.simpleName!!, id, ByteArray(0), null, null)
+        LogUtil.error(this) { "deleted $id" }
     }
 
-    @OptIn(InternalSerializationApi::class)
     suspend fun getById(id: String): T {
         val record = wallet.session!!.fetch(type.simpleName!!, id, false)
             ?: throw ErrorCode.NotFound("Record not found")
@@ -88,12 +99,32 @@ open class Repository<T : BaseRecord>(private val type: KClass<T>, val agent: Ag
 
     suspend fun findByQuery(query: String): List<T> {
         return try {
+            LogUtil.info(this) { "find by query: $query" }
             val scan = wallet.store!!.scan(null, type.simpleName!!, query, null, null)
             val records = scan.fetchAll()
             records.map { recordToInstance(it) }
         } catch (e: Exception) {
-            logger.debug("Query $query failed with error: ${e.message}")
+            if (e.message != null && e.message!!.contains("Error parsing tag query")) {
+                LogUtil.warn(this) { "Askar tag query failed for '$query', falling back to full scan + Kotlin filter" }
+                val tagFilter = parseTagFilter(query)
+                if (tagFilter != null) {
+                    return getAll().filter { record ->
+                        val tags = record.getTags()
+                        tagFilter.all { (key, value) -> tags[key] == value }
+                    }
+                }
+            }
+            LogUtil.error(this) { "Query $query failed with error: ${e.message}" }
             emptyList()
+        }
+    }
+
+    private fun parseTagFilter(query: String): Map<String, String>? {
+        return try {
+            val obj = Json.parseToJsonElement(query).jsonObject
+            obj.mapValues { it.value.jsonPrimitive.content }
+        } catch (e: Exception) {
+            null
         }
     }
 

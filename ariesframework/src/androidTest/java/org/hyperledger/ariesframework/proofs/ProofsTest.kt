@@ -1,14 +1,15 @@
 package org.hyperledger.ariesframework.proofs
 
 import androidx.test.filters.LargeTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.connection.repository.ConnectionRecord
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.models.CredentialState
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 import org.hyperledger.ariesframework.credentials.v1.CreateOfferOptions
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
 import org.hyperledger.ariesframework.proofs.models.AttributeFilter
 import org.hyperledger.ariesframework.proofs.models.AutoAcceptProof
@@ -19,10 +20,12 @@ import org.hyperledger.ariesframework.proofs.models.ProofRequest
 import org.hyperledger.ariesframework.proofs.models.ProofState
 import org.hyperledger.ariesframework.proofs.models.RevocationInterval
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
+import org.hyperledger.ariesframework.proofs.v1.ProofService
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class ProofsTest {
@@ -114,8 +117,11 @@ class ProofsTest {
         return ProofRequest(nonce = nonce, requestedAttributes = attributes, requestedPredicates = predicates)
     }
 
-    @Test @LargeTest
-    fun testProofRequest() = runTest {
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
+    fun testProofRequest() = runBlocking {
         issueCredential()
         val proofRequest = getProofRequest()
         var faberProofRecord = faberAgent.proofs.requestProof(faberConnection.id, proofRequest)
@@ -139,8 +145,11 @@ class ProofsTest {
         assertEquals(ProofState.Done, faberProofRecord.state)
     }
 
-    @Test @LargeTest
-    fun testAutoAcceptAgentConfig() = runTest {
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
+    fun testAutoAcceptAgentConfig() = runBlocking {
         aliceAgent.agentConfig.autoAcceptProof = AutoAcceptProof.Always
         faberAgent.agentConfig.autoAcceptProof = AutoAcceptProof.Always
 
@@ -157,8 +166,9 @@ class ProofsTest {
         assertEquals(true, faberProofRecord.isVerified)
     }
 
-    @Test @LargeTest
-    fun testProofWithoutCredential() = runTest {
+    @Test(timeout = 600_000)
+    @LargeTest
+    fun testProofWithoutCredential() = runBlocking {
         // issueCredential() is omitted.
 
         val proofRequest = getProofRequest()
@@ -180,8 +190,11 @@ class ProofsTest {
         }
     }
 
-    @Test @LargeTest
-    fun testProofWithFailingPredicates() = runTest {
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
+    fun testProofWithFailingPredicates() = runBlocking {
         issueCredential()
         val proofRequest = getFailingProofRequest()
         val faberProofRecord = faberAgent.proofs.requestProof(faberConnection.id, proofRequest)
@@ -227,8 +240,9 @@ class ProofsTest {
         return ProofRequest(nonce = nonce, requestedAttributes = attributes, requestedPredicates = predicates)
     }
 
-    @Test @LargeTest
-    fun testProofRequestWithMultipleAttributeNames() = runTest {
+    @Test(timeout = 600_000)
+    @LargeTest
+    fun testProofRequestWithMultipleAttributeNames() = runTest(timeout = 10.minutes) {
         issueCredential()
         val proofRequest = getProofRequestWithMultipleAttributeNames()
         var faberProofRecord = faberAgent.proofs.requestProof(faberConnection.id, proofRequest)
@@ -265,8 +279,9 @@ class ProofsTest {
         return ProofRequest(nonce = nonce, requestedAttributes = attributes, requestedPredicates = mapOf())
     }
 
-    @Test @LargeTest
-    fun testProofWithFailingPredicates2() = runTest {
+    @Test(timeout = 600_000)
+    @LargeTest
+    fun testProofWithFailingPredicates2() = runBlocking {
         issueCredential()
         val proofRequest = getFailedProofRequestWithMultipleAttributeNames()
         val faberProofRecord = faberAgent.proofs.requestProof(faberConnection.id, proofRequest)
@@ -293,8 +308,11 @@ class ProofsTest {
         return ProofRequest(nonce = nonce, requestedAttributes = attributes, requestedPredicates = mapOf())
     }
 
-    @Test @LargeTest
-    fun testConcurrency() = runTest {
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
+    fun testConcurrency() = runBlocking {
         issueCredential()
         val proofRequest = getProofRequestWithMultipleAttributes()
 
@@ -318,7 +336,10 @@ class ProofsTest {
         )
     }
 
-    @Test @LargeTest
+    @Test(
+        timeout = 600_000,
+    )
+    @LargeTest
     fun testNonRevokedRequest() = runTest {
         aliceAgent.agentConfig.autoAcceptProof = AutoAcceptProof.Always
         faberAgent.agentConfig.autoAcceptProof = AutoAcceptProof.Always

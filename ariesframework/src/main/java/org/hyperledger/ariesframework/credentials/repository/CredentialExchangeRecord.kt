@@ -5,12 +5,15 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
+import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.credentials.CredentialsConstants
 import org.hyperledger.ariesframework.credentials.models.CredentialPreviewAttribute
 import org.hyperledger.ariesframework.credentials.models.CredentialRole
 import org.hyperledger.ariesframework.credentials.models.CredentialState
-import org.hyperledger.ariesframework.credentials.models.AutoAcceptCredential
+import org.hyperledger.ariesframework.credentials.v1.models.AutoAcceptCredential
 import org.hyperledger.ariesframework.credentials.v1.models.IndyCredentialView
+import org.hyperledger.ariesframework.credentials.v2.models.Format
+import org.hyperledger.ariesframework.revocationnotification.model.RevocationNotification
 import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
@@ -28,7 +31,8 @@ data class CredentialExchangeRecord(
     override val createdAt: Instant = Clock.System.now(),
     override var updatedAt: Instant? = null,
 
-    var connectionId: String,
+    var comment: String? = null,
+    var connectionId: String?,
     var threadId: String,
     var parentThreadId: String? = null,
     var state: CredentialState,
@@ -39,14 +43,36 @@ data class CredentialExchangeRecord(
     var credentialAttributes: List<CredentialPreviewAttribute>? = null,
     var indyRequestMetadata: String? = null,
     var credentialDefinitionId: String? = null,
+    var schemaId: String? = null,
+    var schemaName: String? = null,
+    var schemaVersion: String? = null,
+    var schemaIssuerId: String? = null,
+    var revRegId: String? = null,
+    var revRegDefId: String? = null,
     var role: CredentialRole? = null,
+    var revocationNotification: RevocationNotification? = null,
+    var formats: List<Format>? = emptyList(),
+    var w3cCredentialId: String? = null,
+
 ) : BaseRecord() {
+
+    fun logSummary(): String =
+        "id=$id state=$state role=$role threadId=$threadId connId=$connectionId " +
+            "schemaId=$schemaId credDefId=$credentialDefinitionId revRegId=$revRegId " +
+            "w3cId=$w3cCredentialId"
+
     override fun getTags(): Tags {
         val tags = (_tags ?: mutableMapOf()).toMutableMap()
 
-        tags["connectionId"] = connectionId
+        if (connectionId != null) {
+            tags["connectionId"] = connectionId!!
+        }
         tags["threadId"] = threadId
         tags["state"] = state.name
+
+        if (role != null) {
+            tags["role"] = role!!.name
+        }
 
         return tags
     }
@@ -73,8 +99,23 @@ data class CredentialExchangeRecord(
         }
     }
 
+    fun updateComment(comment: String?) {
+        this.comment = comment
+    }
+
     fun setToState(newState: CredentialState) {
         this.state = newState
+    }
+
+    fun updateSchema(schemaId: String, schema: AnonCredsSchema) {
+        this.schemaId = schemaId
+        this.schemaName = schema.name
+        this.schemaIssuerId = schema.issuerId
+        this.schemaVersion = schema.version
+    }
+    fun updateRevocationInfos(revRegId: String, revRegDefId: String?) {
+        this.revRegDefId = revRegDefId
+        this.revRegId = revRegId
     }
 
     fun setToProtocolVersionV1() {

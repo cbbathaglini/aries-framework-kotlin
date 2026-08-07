@@ -11,7 +11,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.OutboundPackage
-import org.slf4j.LoggerFactory
+import org.hyperledger.ariesframework.util.LogUtil
 
 enum class DidCommMimeType(val value: String) {
     V0("application/ssi-agent-wire"),
@@ -19,10 +19,9 @@ enum class DidCommMimeType(val value: String) {
 }
 
 class HttpOutboundTransport(val agent: Agent) : OutboundTransport {
-    private val logger = LoggerFactory.getLogger(HttpOutboundTransport::class.java)
 
     override suspend fun sendPackage(_package: OutboundPackage) {
-        logger.debug("Sending outbound message to endpoint: {}", _package.endpoint)
+        LogUtil.info(this) { "Sending outbound message to endpoint: ${_package.endpoint}" }
 
         val responseText = withContext(Dispatchers.IO) {
             val request = okhttp3.Request.Builder()
@@ -34,7 +33,8 @@ class HttpOutboundTransport(val agent: Agent) : OutboundTransport {
                 )
                 .build()
             val response = AgentHttpClient.client.newCall(request).execute()
-            logger.debug("response with status code: {}", response.code)
+
+            LogUtil.info(this) { "response with status code: ${response.code}" }
             response.body?.string() ?: ""
         }
 
@@ -42,13 +42,14 @@ class HttpOutboundTransport(val agent: Agent) : OutboundTransport {
             val encryptedMessage = Json.decodeFromString<EncryptedMessage>(responseText)
             agent.receiveMessage(encryptedMessage)
         } else if (_package.responseRequested) {
-            logger.debug("Requested response but got no data. Will initiate message pickup if necessary.")
+            LogUtil.info(this) { "Requested response but got no data. Will initiate message pickup if necessary." }
+
             GlobalScope.launch {
                 delay(agent.agentConfig.mediatorEmptyReturnRetryInterval * 1000)
                 agent.mediationRecipient.pickupMessages()
             }
         } else {
-            logger.debug("No data received")
+            LogUtil.info(this) { "No data received" }
         }
     }
 }

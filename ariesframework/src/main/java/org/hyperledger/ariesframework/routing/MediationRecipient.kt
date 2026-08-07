@@ -34,6 +34,7 @@ import org.hyperledger.ariesframework.routing.repository.MediationRepository
 import org.hyperledger.ariesframework.routing.repository.MediationRole
 import org.hyperledger.ariesframework.routing.repository.MediationState
 import org.hyperledger.ariesframework.util.DIDParser
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 import java.util.Timer
 import kotlin.concurrent.timer
@@ -95,7 +96,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
     }
 
     suspend fun initialize(mediatorConnectionsInvite: String) {
-        logger.debug("Initialize mediation with invitation: $mediatorConnectionsInvite")
+        LogUtil.info(this) { "Initialize mediation with invitation: $mediatorConnectionsInvite" }
 
         val (outOfBandInvitation, invitation) = InvitationUrlParser.parseUrl(mediatorConnectionsInvite)
         val recipientKey = outOfBandInvitation?.invitationKey() ?: invitation?.recipientKeys?.first()
@@ -107,7 +108,8 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
             requestMediationIfNecessry(connection)
         } else {
             val connection = agent.connectionService.processInvitation(invitation, outOfBandInvitation, getRouting(), true)
-            val message = agent.connectionService.createRequest(connection.id)
+            val message = agent.didExchangeService.createRequest(connection.id)
+            // val message = agent.connectionService.createRequest(connection.id)
             agent.messageSender.send(message)
 
             if (agent.connectionService.fetchState(connection) != ConnectionState.Complete) {
@@ -183,7 +185,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
             try {
                 agent.messageSender.send(message)
             } catch (e: Exception) {
-                logger.debug("Pickup messages failed with the following error: ${e.message}")
+                LogUtil.error(this, e) { "Pickup messages failed with the following error: ${e.message}" }
             }
         } else if (agent.agentConfig.mediatorPickupStrategy == MediatorPickupStrategy.Implicit) {
             // For implicit pickup, responseRequested must be set to false.
@@ -193,7 +195,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
             try {
                 agent.messageSender.send(message, "ws")
             } catch (e: Exception) {
-                logger.debug("Pickup messages failed with the following error: ${e.message}")
+                LogUtil.error(this, e) { "Pickup messages failed with the following error: ${e.message}" }
             }
         } else {
             throw RuntimeException("Unsupported mediator pickup strategy: ${agent.agentConfig.mediatorPickupStrategy}")
@@ -262,7 +264,7 @@ class MediationRecipient(private val agent: Agent, private val dispatcher: Dispa
         }
         val message = MessageSerializer.decodeFromString(messageContext.plaintextMessage) as BatchMessage
 
-        logger.debug("Get ${message.messages.size} batch messages")
+        LogUtil.info(this) { "Get ${message.messages.size} batch messages" }
         val forwardedMessages = message.messages
         for (forwardedMessage in forwardedMessages) {
             agent.receiveMessage(forwardedMessage.message)

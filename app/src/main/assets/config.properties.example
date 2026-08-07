@@ -1,0 +1,23 @@
+# =============================================================
+# Example configuration template (config.properties.example)
+#
+# Copy this file to config.properties and fill in your own
+# endpoints / addresses. The real config.properties is NOT
+# tracked by git (see .gitignore) so internal URLs and keys
+# never end up in the repository.
+# =============================================================
+
+# --------- Mediators (out-of-band invitations) ---------
+# invitation_url=https://example.com/mediator?oob=<your-invitation>
+# endpoint=https://example.com/mediator
+
+# --------- emulator workaround ---------
+# Enable only when the did:webvh server is running locally;
+# maps 192.168.x.x to 10.0.2.2 for local did:webvh resources.
+emulator=false
+
+# --------- cache ---------
+cache.default.ttl.days=1
+cache.schema.ttl.days=30
+cache.revreg.ttl.days=30
+cache.tails.ttl.days=30

@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Mantenha todo o SDK Aries
+-keep class org.hyperledger.ariesframework.** { *; }
+-dontwarn org.hyperledger.ariesframework.**
+-dontwarn java.lang.invoke.**
+
+# Mantenha também o módulo app que usa reflection
+-keep class org.hyperledger.ariesproject.** { *; }

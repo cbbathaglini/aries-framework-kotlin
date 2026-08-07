@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 data class RequestedProof(
     @SerialName("revealed_attrs")
     val revealedAttributes: Map<String, ProofAttribute>,
+
     @SerialName("self_attested_attrs")
     val selfAttestedAttributes: Map<String, String>,
 )

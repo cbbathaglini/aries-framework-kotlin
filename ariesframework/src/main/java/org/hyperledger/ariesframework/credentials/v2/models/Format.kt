@@ -2,11 +2,12 @@ package org.hyperledger.ariesframework.credentials.v2.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.hyperledger.ariesframework.storage.BaseRecord
 
 @Serializable
 class Format(
     @SerialName("attach_id")
-    var attachId: String? = null,
+    var attachId: String = BaseRecord.generateId(),
 
     @SerialName("format")
     var format: String,

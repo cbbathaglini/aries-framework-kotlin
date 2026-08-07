@@ -5,6 +5,7 @@ import org.hyperledger.ariesframework.OutboundMessage
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.v2.messages.CredentialAckMessageV2
+import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class CredentialAckHandlerV2(val agent: Agent) : MessageHandler {
@@ -13,7 +14,7 @@ class CredentialAckHandlerV2(val agent: Agent) : MessageHandler {
     override val messageType = CredentialAckMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
-        logger.debug("CredentialAckHandlerV2 init")
+        LogUtil.info(this) { "issue credential - ack step" }
         agent.credentialServiceV2.processAck(messageContext)
         return null
     }

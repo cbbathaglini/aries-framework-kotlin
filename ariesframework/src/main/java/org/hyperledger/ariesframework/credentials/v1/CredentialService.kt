@@ -38,6 +38,9 @@ import org.hyperledger.ariesframework.credentials.v1.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v1.messages.ProposeCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.messages.RequestCredentialMessage
 import org.hyperledger.ariesframework.credentials.v1.models.CredentialPreview
+import org.hyperledger.ariesframework.error.CredoError
+import org.hyperledger.ariesframework.history.models.HistoryType
+import org.hyperledger.ariesframework.history.repository.HistoryRecord
 import org.hyperledger.ariesframework.problemreports.messages.CredentialProblemReportMessage
 import org.hyperledger.ariesframework.storage.BaseRecord
 import org.hyperledger.ariesframework.storage.DidCommMessageRole
@@ -186,6 +189,19 @@ class CredentialService(val agent: Agent) {
             )
             credentialExchangeRepository.save(credentialRecord)
 
+            if (credentialRecord.connectionId == null) {
+                throw CredoError("Connection id not found")
+            }
+
+            agent.historyRepository.save(
+                HistoryRecord(
+                    historyType = HistoryType.CredentialOfferReceived.name,
+                    connectionId = credentialRecord.connectionId!!,
+                    theirLabel = connection.theirLabel,
+                    associatedRecordId = credentialRecord.id,
+                ),
+            )
+
             agent.eventBus.publish(AgentEvents.CredentialEvent(credentialRecord.copy()))
         }
 
@@ -200,21 +216,24 @@ class CredentialService(val agent: Agent) {
      */
     suspend fun createRequest(options: AcceptOfferOptions): RequestCredentialMessage {
         val credentialRecord = credentialExchangeRepository.getById(options.credentialRecordId)
+        logger.info("[IDD]credentialRecord create request: $credentialRecord")
         credentialRecord.assertProtocolVersion(CredentialsConstants.PROTOCOL_VERSION_V1)
         credentialRecord.assertState(CredentialState.OfferReceived)
 
         val offerMessageJson = agent.didCommMessageRepository.getAgentMessage(
             credentialRecord.id,
             OfferCredentialMessage.type,
+            // forgot to pass the receiver role
         )
+        logger.info("[IDD]offerMessageJson: $offerMessageJson")
         val offerMessage =
             MessageSerializer.decodeFromString(offerMessageJson) as OfferCredentialMessage
         val offerAttachment =
             offerMessage.getOfferAttachmentById(OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID)
+
         checkNotNull(offerAttachment) {
             "Indy attachment with id ${OfferCredentialMessage.INDY_CREDENTIAL_OFFER_ATTACHMENT_ID} not found in offer message"
         }
-
         val holderDid = options.holderDid ?: getHolderDid(credentialRecord)
 
         val credentialOfferJson = offerMessage.getCredentialOffer()
@@ -222,6 +241,7 @@ class CredentialService(val agent: Agent) {
 
         val credentialDefinition =
             ledgerService.getCredentialDefinition(credentialOffer.credDefId())
+        logger.info("cred def: $credentialDefinition")
 
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
         val credReqTuple = Prover().createCredentialRequest(
@@ -400,8 +420,10 @@ class CredentialService(val agent: Agent) {
             issueMessage.threadId,
             messageContext.connection?.id,
         )
+
         val credential = Credential(issueAttachment.getDataAsString())
         logger.debug("Storing credential: ${credential.values()}")
+
         val (schemaJson, _) = ledgerService.getSchema(credential.schemaId())
         val schema = Schema(schemaJson)
         val credentialDefinition =
@@ -439,6 +461,7 @@ class CredentialService(val agent: Agent) {
                 schemaIssuerId = schema.issuerId(),
                 issuerId = credentialDefinition.issuerId(),
                 credentialDefinitionId = processedCredential.credDefId(),
+                revocationNotification = null,
             ),
         )
 
@@ -505,7 +528,10 @@ class CredentialService(val agent: Agent) {
     }
 
     private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId)
+        if (credentialRecord.connectionId == null) {
+            throw CredoError("Connection id not found")
+        }
+        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
         return connection.did
     }
 

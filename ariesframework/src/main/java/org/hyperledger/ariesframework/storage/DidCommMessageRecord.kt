@@ -53,4 +53,8 @@ data class DidCommMessageRecord private constructor(
 
         return tags
     }
+
+    override fun toString(): String {
+        return "DidCommMessageRecord(id='$id', _tags=$_tags, createdAt=$createdAt, updatedAt=$updatedAt, message='$message', role=$role, associatedRecordId=$associatedRecordId), get: ${getTags()}"
+    }
 }

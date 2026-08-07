@@ -2,11 +2,9 @@ package org.hyperledger.ariesframework.storage
 
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.TestHelper
 import org.hyperledger.ariesframework.agent.Agent
-import org.hyperledger.ariesframework.agent.Dispatcher
 import org.hyperledger.ariesframework.connection.messages.ConnectionInvitationMessage
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -96,9 +94,7 @@ class DidCommMessageRepositoryTest {
         assertEquals(decodedUpdate.label, invitationUpdate.label)
 
         var type = ConnectionInvitationMessage.type
-        if (agent.agentConfig.useLegacyDidSovPrefix) {
-            type = Dispatcher.replaceNewDidCommPrefixWithLegacyDidSov(type)
-        }
+
         val updatedRecord = repository.findSingleByQuery(
             """
             {"associatedRecordId": "${record.associatedRecordId!!}",
