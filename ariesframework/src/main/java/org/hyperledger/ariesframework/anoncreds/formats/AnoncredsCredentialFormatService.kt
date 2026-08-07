@@ -36,13 +36,13 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsLinkSecretBlindin
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.FetchIntermediateRevocationRegistryDefinitionResult
-import org.hyperledger.ariesframework.anoncreds.model.FetchSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryInfo
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredential
 import org.hyperledger.ariesframework.anoncreds.model.StoreCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryState
 import org.hyperledger.ariesframework.anoncreds.utils.AnonCredsObjects
+import org.hyperledger.ariesframework.anoncreds.utils.Indyidentifiers
 import org.hyperledger.ariesframework.credentials.formats.CredentialFormatService
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCredentialMetadata
 import org.hyperledger.ariesframework.credentials.formats.anoncreds.AnonCredsCredentialProposal
@@ -56,6 +56,7 @@ import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMes
 import org.hyperledger.ariesframework.credentials.v2.models.Format
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.storage.BaseRecord
+import org.hyperledger.ariesframework.util.Base58
 import org.hyperledger.ariesframework.util.Base64Operations
 import org.hyperledger.ariesframework.util.LogUtil
 import java.util.Date
@@ -86,7 +87,7 @@ class AnoncredsCredentialFormatService(
     ): CredentialFormatCreateProposalReturn {
         LogUtil.info(this) { "creating proposal" }
         val format = Format(format = ANONCREDS_CREDENTIAL_FILTER)
-        // PrintLongLine.print("credentialFormats------- $credentialFormats")
+
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsProposeCredentialFormat>(credentialFormats)
 
         val proposal = AnonCredsCredentialProposal(
@@ -151,7 +152,6 @@ class AnoncredsCredentialFormatService(
         proposalAttachments: Attachment,
     ): CredentialFormatCreateOfferReturn {
         LogUtil.info(this) { "accepting proposal" }
-        // PrintLongLine.print("credentialFormats------- $credentialFormats")
         val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
 
         val proposalJson = proposalAttachments.getDataAsJson() // <AnonCredsCredentialProposalFormat>()
@@ -179,12 +179,12 @@ class AnoncredsCredentialFormatService(
         )
         val credentialFormatCreateOfferReturn = createAnonCredsOffer(createAnoncredsOffer)
 
+        LogUtil.info(this) { "proposal accepted" }
         return CredentialFormatCreateOfferReturn(
             format = credentialFormatCreateOfferReturn.format,
             attachment = credentialFormatCreateOfferReturn.attachment,
             previewAttributes = credentialFormatCreateOfferReturn.previewAttributes,
         )
-        LogUtil.info(this) { "proposal accepted" }
     }
 
     override suspend fun createOffer(
@@ -245,40 +245,10 @@ class AnoncredsCredentialFormatService(
 
         val cd = AnonCredsObjects.fetchCredentialDefinitionJson(agent, offer.credDefId)
         LogUtil.info(this) { "credential definition resolved: ${offer.credDefId}" }
-        LogUtil.info(this) { "credential definition JSON (first 500 chars): ${cd.take(500)}" }
-        val credentialDefinition = cd.replace("\\\"", "\"")
+        val credentialDefinitionUniffi = CredentialDefinition(cd)
         val linkSecret = agent.anoncredsService.getLinkSecret(agent.wallet.linkSecretId!!)
-        val holderDid = getHolderDid(credentialExchangeRecord)
 
-        var credentialDefinitionUniffi: CredentialDefinition? = null
-        try {
-            credentialDefinitionUniffi =
-                CredentialDefinition(credentialDefinition)
-            // PrintLongLine.print(">>>> cred def uniffi: ${credentialDefinitionUniffi.toJson()}")
-        } catch (e: Throwable) {
-            LogUtil.error(this, e) { "error anoncred uniffi: ${e.message}" }
-        }
-
-        var ct: CredentialRequestTuple? = null
-
-        // to do get
-        // val isLegacyIdentifier = Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId)
-        // val entropy = if ((useLegacyProverDid!=null && !useLegacyProverDid) || !isLegacyIdentifier) Verifier().generateNonce() else null //[TODO] anoncreds came from uniffi
-        val entropy = Verifier().generateNonce() // [TODO] anoncreds came from uniffi
-        try {
-            ct = Prover().createCredentialRequest(
-                entropy,
-                null,
-                credentialDefinitionUniffi!!,
-                linkSecret,
-                agent.wallet.linkSecretId!!,
-                credentialOffer,
-            )
-        } catch (e: Throwable) {
-            LogUtil.error(this, e) { "Prover().createCredentialRequest error ${e.message}" }
-        }
-
-        val credReqTuple = ct!!
+        val credReqTuple = createCredentialRequest(credentialOffer, credentialDefinitionUniffi, linkSecret, useLegacyProverDid = null)
         val credentialRequestMetadata = credReqTuple.metadata
 
         credentialExchangeRecord.metadata.set(
@@ -384,7 +354,7 @@ class AnoncredsCredentialFormatService(
         }
 
         val createCredentialOptions = CreateCredentialOptions(
-            credentialOffer = credentialOffer, // AQUI NAO PODE SE RNULO
+            credentialOffer = credentialOffer,
             credentialRequest = credentialRequest,
             credentialValues = Credential.convertAttributesToCredentialValues(credentialAttributes),
             revocationRegistryDefinitionId = revocationRegistryDefinitionId,
@@ -458,8 +428,6 @@ class AnoncredsCredentialFormatService(
         val anoncredscredentialDefinition = Json.decodeFromString<AnonCredsCredentialDefinition>(credentialDefinitionResult)
 
         val fetchSchemaReturn = AnonCredsObjects.fetchSchema(agent, anonCredsCredential.schemaId)
-        val schemaJson = kotlinx.serialization.json.Json { encodeDefaults = true }.encodeToString(fetchSchemaReturn.schema!!)
-        val jsonElementSchema: JsonElement = Json.parseToJsonElement(schemaJson)
 
         credentialExchangeRecord.credentialDefinitionId = anonCredsCredential.credDefId
 
@@ -701,11 +669,25 @@ class AnoncredsCredentialFormatService(
 
     fun dateToTimestamp(date: Date): Long = date.time / 1000
 
-    private suspend fun getHolderDid(credentialRecord: CredentialExchangeRecord): String {
-        if (credentialRecord.connectionId == null) {
-            throw CredoError("Connection id not found")
+    private fun createCredentialRequest(
+        credentialOffer: CredentialOffer,
+        credentialDefinition: CredentialDefinition,
+        linkSecret: String,
+        useLegacyProverDid: Boolean?,
+    ): CredentialRequestTuple {
+        val isLegacyIdentifier = Indyidentifiers.isUnqualifiedCredentialDefinitionId(credentialOffer.credDefId())
+        if (!isLegacyIdentifier && useLegacyProverDid == true) {
+            throw CredoError("Cannot use legacy prover_did with non-legacy identifiers")
         }
-        val connection = agent.connectionRepository.getById(credentialRecord.connectionId!!)
-        return connection.did
+        val entropy = if ((useLegacyProverDid != null && !useLegacyProverDid) || !isLegacyIdentifier) Verifier().generateNonce() else null
+        val proverDid = if (useLegacyProverDid == true) Base58.encode(Verifier().generateNonce().substring(0, 16).toByteArray()) else null
+        return Prover().createCredentialRequest(
+            entropy,
+            proverDid,
+            credentialDefinition,
+            linkSecret,
+            agent.wallet.linkSecretId!!,
+            credentialOffer,
+        )
     }
 }

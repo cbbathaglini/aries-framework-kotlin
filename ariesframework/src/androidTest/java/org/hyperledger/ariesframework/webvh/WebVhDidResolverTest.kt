@@ -1,13 +1,11 @@
 package org.hyperledger.ariesframework.webvh
 
 import com.google.gson.JsonParser
-import kotlinx.coroutines.test.runTest
 import org.hyperledger.ariesframework.connection.models.didauth.publicKey.Ed25119Sig2018
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 
 class WebVhDidResolverTest {
 
@@ -19,20 +17,20 @@ class WebVhDidResolverTest {
         val jsonString = """
         {
             "@context": ["https://www.w3.org/ns/did/v1", "https://www.w3.org/ns/cid/v1"],
-            "id": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd",
+            "id": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd",
             "verificationMethod": [
                 {
-                    "id": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp",
+                    "id": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp",
                     "type": "Multikey",
-                    "controller": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd",
+                    "controller": "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd",
                     "publicKeyMultibase": "z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp"
                 }
             ],
             "authentication": [
-                "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp"
+                "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp"
             ],
             "assertionMethod": [
-                "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp"
+                "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd#z6Mksibjgh4HDo1xv8wq4vWrZMnKxfSGKKeKM8XQzCrVPavp"
             ],
             "service": []
         }
@@ -42,7 +40,7 @@ class WebVhDidResolverTest {
         val didDoc = resolver.parseDidDocument(didDocumentJson)
 
         assertEquals(
-            "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh-idd13647.np.estaleiro.serpro.gov.br:ns-01:d447dd",
+            "did:webvh:QmVn5rY71EWXeJDHMcwwDojEiULPvQbhdFJxqPC2vjyzHh:webvh.example.com:ns-01:d447dd",
             didDoc.id,
         )
         Assert.assertEquals(1, didDoc.publicKey.size)

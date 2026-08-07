@@ -2,9 +2,7 @@ package org.hyperledger.ariesproject
 
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
 import android.widget.FrameLayout
-import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityHistoricalDetailBinding
@@ -19,20 +17,13 @@ class HistoricalDetailActivity : BaseActivity() {
         binding = ActivityHistoricalDetailBinding.inflate(layoutInflater)
         findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = getString(R.string.title_historical_detail)
+        binding.toolbar.title = "Connection Details"
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         binding.deleteConnection.setOnClickListener {
             deleteConnection()
-        }
-
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Connection Details"
-
-        toolbar.setNavigationOnClickListener {
-            finish()
         }
 
         val connectionRecordParcelable =
@@ -81,15 +72,6 @@ class HistoricalDetailActivity : BaseActivity() {
             }
         }
     }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
 
     override fun onResume() {
         super.onResume()

@@ -14,10 +14,10 @@ class EncodeHelper {
 
         fun logEncodingSample(tag: String, whenLabel: String, sample: EncodeTemp) {
             Log.d("AriesIntegration", "==== $whenLabel ($tag) ====")
-            Log.d("AriesIntegration", "atributo : ${sample.referent}")
-            Log.d("AriesIntegration", "valor do atributo : ${sample.raw}")
-            Log.d("AriesIntegration", "encoded recebido : ${sample.encoded}")
-            Log.d("AriesIntegration", "encoded esperado : ${sample.expected}")
+            Log.d("AriesIntegration", "attribute : ${sample.referent}")
+            Log.d("AriesIntegration", "attribute value : ${sample.raw}")
+            Log.d("AriesIntegration", "encoded received : ${sample.encoded}")
+            Log.d("AriesIntegration", "encoded expected : ${sample.expected}")
             Log.d("AriesIntegration", "match? : ${sample.expected == sample.encoded}")
         }
 

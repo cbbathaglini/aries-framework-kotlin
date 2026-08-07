@@ -6,14 +6,14 @@ import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.agent.MessageHandler
 import org.hyperledger.ariesframework.credentials.models.AcceptCredentialProposalOptions
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
-import org.hyperledger.ariesframework.credentials.v2.messages.OfferCredentialMessageV2
+import org.hyperledger.ariesframework.credentials.v2.messages.ProposeCredentialMessageV2
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
 
 class ProposeCredentialHandlerV2(val agent: Agent) : MessageHandler {
 
     private val logger = LoggerFactory.getLogger(ProposeCredentialHandlerV2::class.java)
-    override val messageType = OfferCredentialMessageV2.type
+    override val messageType = ProposeCredentialMessageV2.type
 
     override suspend fun handle(messageContext: InboundMessageContext): OutboundMessage? {
         LogUtil.info(this) { "issue credential - propose step" }

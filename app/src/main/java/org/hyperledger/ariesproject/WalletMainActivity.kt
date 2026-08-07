@@ -63,7 +63,6 @@ class WalletMainActivity : BaseActivity() {
     private var credentialProgress: ProgressDialog? = null
     private var proofProgress: ProgressDialog? = null
 
-    private var isResetting = false
     private var isLoggingOut = false
     private var badgeReceiverRegistered = false
 
@@ -74,19 +73,6 @@ class WalletMainActivity : BaseActivity() {
         setChildContent(R.layout.activity_wallet_main)
         binding = ActivityWalletMainBinding.bind(findViewById(R.id.baseContainer))
         setSupportActionBar(binding.toolbar)
-
-        val appBar = findViewById<com.google.android.material.appbar.AppBarLayout>(R.id.appBar)
-
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(appBar) { view, insets ->
-            val statusBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            view.setPadding(
-                view.paddingLeft,
-                statusBars.top,
-                view.paddingRight,
-                view.paddingBottom
-            )
-            insets
-        }
         supportActionBar?.title = "Wallet"
 
         //binding.toolbar.title = title
@@ -109,20 +95,10 @@ class WalletMainActivity : BaseActivity() {
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.action_reset)?.isEnabled = !(isResetting || isLoggingOut)
-        menu.findItem(R.id.action_logout)?.isEnabled = !(isResetting || isLoggingOut)
-        return super.onPrepareOptionsMenu(menu)
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_reset -> {
-                showResetConfirmDialog()
-                true
-            }
             R.id.action_logout -> {
-                performLogout()
+                showLogoutConfirmDialog()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -228,38 +204,6 @@ class WalletMainActivity : BaseActivity() {
             .setMessage(message)
             .setPositiveButton(R.string.ok, null)
             .show()
-    }
-
-    private val badgeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "org.hyperledger.ariesproject.UPDATE_BADGE") {
-                Log.d(TAG, "Updating badge via broadcast")
-                updateNotificationBadge()
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        val filter = IntentFilter("org.hyperledger.ariesproject.UPDATE_BADGE")
-
-        ContextCompat.registerReceiver(
-            this,
-            badgeReceiver,
-            filter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-
-        badgeReceiverRegistered = true
-    }
-
-    override fun onPause() {
-        if (badgeReceiverRegistered) {
-            unregisterReceiver(badgeReceiver)
-            badgeReceiverRegistered = false
-        }
-        super.onPause()
     }
 
     private fun runOnConfirm(message: String, action: () -> Unit) {
@@ -442,54 +386,26 @@ class WalletMainActivity : BaseActivity() {
         }
     }
 
-    private fun showResetConfirmDialog() {
+    private fun showLogoutConfirmDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Reset wallet?")
-            .setMessage(
-                "This will permanently remove all locally stored wallet data (Askar) and reset " +
-                        "connections, credentials, and proof records. Wallet initialization will be required again."
-            )
+            .setTitle("Close wallet?")
+            .setMessage("Your session will be closed. You can reopen the wallet at any time.")
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("Reset") { _, _ ->
-                performReset()
+            .setPositiveButton("Close") { _, _ ->
+                performLogout()
             }
             .show()
-    }
-
-    private fun performReset() {
-        if (isResetting) return
-        isResetting = true
-
-        val app = application as WalletApp
-        app.clearAllNotifications()
-
-        getSharedPreferences("wallet_prefs", MODE_PRIVATE)
-            .edit()
-            .putBoolean("RESET_PENDING", true)
-            .apply()
-
-        val intent = Intent(this, LoggedOutActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        }
-        startActivity(intent)
-        finish()
     }
 
     private fun performLogout() {
         if (isLoggingOut) return
         isLoggingOut = true
-        invalidateOptionsMenu()
 
-        lifecycleScope.launch(Dispatchers.Main.immediate) {
-            goToLoggedOutClearingBackstack()
-        }
-    }
-
-    private fun goToLoggedOutClearingBackstack() {
         val intent = Intent(this, LoggedOutActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
+        finish()
     }
 
 

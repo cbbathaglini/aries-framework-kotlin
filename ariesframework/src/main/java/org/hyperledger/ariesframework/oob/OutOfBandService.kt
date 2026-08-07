@@ -102,7 +102,7 @@ class OutOfBandService(val agent: Agent) {
         outOfBandRepository.deleteById(outOfBandId)
     }
 
-    // [todo] liberar depois q liberar o ourservice, theirservice
+    // [todo] release later when ourservice and theirservice are released
     /**
      * Extract a resolved didcomm service from an out of band invitation.
      *

@@ -1,43 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/loggedOutRoot"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="top|center_horizontal"
-    android:paddingTop="80dp"
-    android:paddingHorizontal="24dp">
+    android:gravity="center"
+    android:background="#F7FAF9"
+    android:padding="32dp">
 
-    <ImageView
-        android:id="@+id/lockIcon"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:src="@android:drawable/ic_lock_lock"
-        android:layout_marginBottom="24dp" />
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        app:cardCornerRadius="40dp"
+        app:cardBackgroundColor="#E8F5E9"
+        app:cardElevation="0dp"
+        android:layout_marginBottom="24dp">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_lock_lock"
+            android:contentDescription="Lock"
+            android:tint="@color/teal_700" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
-        android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="You have closed your wallet"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_marginBottom="12dp" />
+        android:textColor="#102421"
+        android:layout_marginBottom="8dp" />
 
     <TextView
-        android:id="@+id/descriptionText"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Your session has ended. You can reopen the wallet at any time."
         android:textSize="14sp"
-        android:textColor="@android:color/darker_gray"
+        android:textColor="#607D78"
         android:gravity="center"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="40dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/startAgainButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Wallet Again" />
+        android:layout_height="52dp"
+        android:text="Start Wallet Again"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:backgroundTint="@color/teal_700"
+        app:cornerRadius="14dp"
+        app:icon="@android:drawable/ic_menu_add"
+        app:iconGravity="textStart"
+        app:iconTint="@android:color/white" />
 
 </LinearLayout>

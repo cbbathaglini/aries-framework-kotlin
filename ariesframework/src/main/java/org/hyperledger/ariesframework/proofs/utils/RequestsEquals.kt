@@ -5,7 +5,7 @@ import org.hyperledger.ariesframework.anoncreds.model.holder.AnonCredsNonRevoked
 
 class RequestsEquals {
     companion object {
-        // ---- Deep equality para estruturas "JSON-like" ----
+        // ---- Deep equality for "JSON-like" structures ----
         fun areObjectsEqual(a: Any?, b: Any?): Boolean {
             if (a === b) return true
             if (a == null || b == null) return false
@@ -13,7 +13,7 @@ class RequestsEquals {
             return when {
                 a is Map<*, *> && b is Map<*, *> -> {
                     if (a.size != b.size) return false
-                    // Mesma chave -> valores iguais recursivamente
+                    // Same key -> recursively equal values
                     a.keys.all { k ->
                         b.containsKey(k) && areObjectsEqual(a[k], b[k])
                     } && b.keys.all { k ->
@@ -22,8 +22,8 @@ class RequestsEquals {
                 }
                 a is List<*> && b is List<*> -> {
                     if (a.size != b.size) return false
-                    // Aqui a ordem importa (igual ao comportamento padrão); no TS
-                    // a comparação sem ordem é feita por quem chama (ex.: areRestrictionsEqual)
+                    // Here order matters (same as default behavior); in TS
+                    // the unordered comparison is done by the caller (e.g., areRestrictionsEqual)
                     a.indices.all { i -> areObjectsEqual(a[i], b[i]) }
                 }
                 else -> a == b
@@ -31,17 +31,17 @@ class RequestsEquals {
         }
 
         /**
-         * Checa se dois arrays de nomes são equivalentes (ordem não importa).
-         * Regras:
+         * Checks if two name arrays are equivalent (order does not matter).
+         * Rules:
          * - null == null/empty
-         * - não pode haver duplicatas em nenhum dos lados
-         * - mesmo conjunto de nomes
+         * - no duplicates allowed on either side
+         * - same set of names
          */
         fun areNamesEqual(namesA: List<String>?, namesB: List<String>?): Boolean {
             if (namesA == null) return namesB == null || namesB.isEmpty()
             if (namesB == null) return namesA.isEmpty()
 
-            // Duplicatas não permitidas (como no TS)
+            // Duplicates not allowed (as in TS)
             if (namesA.toSet().size != namesA.size) return false
             if (namesB.toSet().size != namesB.size) return false
 
@@ -65,9 +65,9 @@ class RequestsEquals {
         }
 
         /**
-         * Igualdade de listas de restrições (ordem não importa).
-         * Implementa a mesma lógica do TS: para cada item de A, busca um igual em B (comparação profunda),
-         * removendo-o da lista de B ao casar, para respeitar multiplicidade.
+         * Equality of restriction lists (order does not matter).
+         * Implements the same logic as TS: for each item in A, find an equal one in B (deep comparison),
+         * removing it from the B list when matched, to respect multiplicity.
          */
         fun <T> areRestrictionsEqual(
             restrictionsA: List<T>?,

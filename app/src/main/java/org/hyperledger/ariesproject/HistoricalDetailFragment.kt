@@ -54,7 +54,7 @@ class HistoricalDetailFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("WalletApp", "Erro ao carregar conexão: ${e.message}")
+                Log.e("WalletApp", "Error loading connection: ${e.message}")
             }
         }
 
@@ -64,7 +64,7 @@ class HistoricalDetailFragment : Fragment() {
                 val clipboard =
                     requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("DID", did))
-                Toast.makeText(requireContext(), "DID copiado para a área de transferência", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "DID copied to the clipboard", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -87,21 +87,21 @@ class HistoricalDetailFragment : Fragment() {
     }
 
     private fun preencherCampos(record: ConnectionRecord) {
-        binding.connectionName.text = record.theirLabel ?: "Sem nome"
-        binding.connectionState.text = "Estado: ${record.state}"
+        binding.connectionName.text = record.theirLabel ?: "No name"
+        binding.connectionState.text = "State: ${record.state}"
         binding.connectionId.text = record.id
         binding.connectionDid.text = record.theirDid ?: "—"
         binding.threadId.text = record.threadId ?: "—"
         binding.theirLabel.text = record.theirLabel ?: "—"
 
-        // 🔹 Conversão segura da data
+        // Safe date conversion
         val dateFormatted = try {
             when (val createdAt = record.createdAt) {
                 is Date -> {
                     SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(createdAt)
                 }
                 is String -> {
-                    // tenta interpretar uma ISO string
+                    // try to interpret an ISO string
                     val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
                     parser.timeZone = TimeZone.getTimeZone("UTC")
                     val date = parser.parse(createdAt)
@@ -110,11 +110,11 @@ class HistoricalDetailFragment : Fragment() {
                     else
                         createdAt
                 }
-                else -> "Desconhecido"
+                else -> "Unknown"
             }
         } catch (e: Exception) {
-            Log.e("WalletApp", "Erro ao formatar data: ${e.message}")
-            "Desconhecido"
+            Log.e("WalletApp", "Error formatting date: ${e.message}")
+            "Unknown"
         }
 
         binding.connectionDate.text = dateFormatted

@@ -106,7 +106,7 @@ object Indyidentifiers {
     fun getQualifiedDidIndyDid(identifier: String, namespace: String): String {
         if (isIndyDid(identifier)) return identifier
 
-        // adicionar pq nao ta funfando
+        // add because it wasn't working
         if (namespace.isBlank()) {
             throw IllegalArgumentException("Missing required indy namespace")
         }

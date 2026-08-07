@@ -368,9 +368,10 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
 
             val revState =
                 if (timestamp != null) {
-                    agent.revocationService.createRevocationState(
-                        cred,
-                        timestamp!!.toInt(),
+                    createRevocationStateFromRegistries(
+                        createProofOptions = options,
+                        cred = cred,
+                        timestamp = timestamp!!,
                     )
                 } else {
                     null
@@ -487,6 +488,61 @@ class AnonCredsRsHolderService(val agent: Agent) : AnonCredsHolderService {
         } catch (e: Exception) {
             throw e
         }
+    }
+
+    private fun createRevocationStateFromRegistries(
+        createProofOptions: CreateProofOptions,
+        cred: Credential,
+        timestamp: Int,
+    ): CredentialRevocationState? {
+        val credentialRevocationId = cred.revRegIndex()
+            ?: throw Exception("Credential does not have revocation information.")
+        val revocationRegistryId = cred.revRegId()
+            ?: throw Exception("Credential does not have revocation information.")
+
+        val registryData = createProofOptions.revocationRegistries[revocationRegistryId]
+            ?: throw AnonCredsRsError("Revocation Registry $revocationRegistryId not found")
+
+        val definition: AnonCredsRevocationRegistryDefinition = registryData.definition
+        val revocationStatusLists: MutableMap<ULong, AnonCredsRevocationStatusList> =
+            registryData.revocationStatusLists ?: error("revocationStatusLists missing")
+
+        val statusList: AnonCredsRevocationStatusList =
+            revocationStatusLists[timestamp.toULong()]
+                ?: throw CredoError(
+                    "Revocation status list for registry $revocationRegistryId and timestamp $timestamp not found",
+                )
+
+        val valueJsonElement: JsonElement =
+            Json.encodeToJsonElement(RevocationRegistryValue.serializer(), definition.value)
+        val valueJsonMap: Map<String, Any?> = valueJsonElement.toJsonMap()
+
+        val jsonDict = mapOf(
+            "credDefId" to definition.credDefId,
+            "revRegDefId" to revocationRegistryId,
+            "tag" to definition.tag,
+            "value" to valueJsonMap,
+            "issuerId" to definition.issuerId,
+            "revocDefType" to definition.revocDefType,
+        )
+
+        val jsonString = jsonDict.toJsonString()
+        val revocationRegistryDefinition = RevocationRegistryDefinition(jsonString)
+
+        val revocationStatusListJson = statusList.toJson()
+        val statusListUniffi = RevocationStatusList(revocationStatusListJson)
+
+        val tailsFile = File(registryData.tailsFilePath, registryData.tailsHash!!)
+        if (!tailsFile.exists()) error("Tails file not found: ${tailsFile.path}")
+
+        return Prover().createOrUpdateRevocationState(
+            revRegDef = revocationRegistryDefinition,
+            revStatusList = statusListUniffi,
+            revRegIdx = credentialRevocationId.toUInt(),
+            tailsPath = tailsFile.path,
+            revState = null,
+            oldRevStatusList = null,
+        )
     }
 
     private fun assertLinkSecretsMatch(linkSecretIds: List<String>): String {

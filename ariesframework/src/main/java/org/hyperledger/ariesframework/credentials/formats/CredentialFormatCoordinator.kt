@@ -142,7 +142,7 @@ class CredentialFormatCoordinator(
                 proposalAttachments = proposalAttachment,
             )
 
-            if (credentialFormatCreateOffer.previewAttributes != null && credentialFormatCreateOffer.previewAttributes != null) {
+            if (credentialFormatCreateOffer.previewAttributes != null) {
                 credentialPreview = CredentialPreviewV2(
                     attributes = credentialFormatCreateOffer.previewAttributes,
                 )

@@ -72,7 +72,7 @@ class NotificationsAdapter(
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "❌ Credential declined"
+                                text = "Credential declined"
                                 setTextColor(context.getColor(android.R.color.holo_red_dark))
                             }
                         }
@@ -119,7 +119,7 @@ class NotificationsAdapter(
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "✅ Proof completed"
+                                text = "Proof completed"
                                 setTextColor(context.getColor(R.color.teal_700))
                             }
                         }
@@ -130,7 +130,7 @@ class NotificationsAdapter(
                             binding.btnCheck.visibility = View.GONE
                             binding.txtStatus.apply {
                                 visibility = View.VISIBLE
-                                text = "❌ Proof declined"
+                                text = "Proof declined"
                                 setTextColor(context.getColor(android.R.color.holo_red_dark))
                             }
                         }

@@ -24,12 +24,12 @@ class RevocationMetada {
 //            // RFC 0441 best practices
 //            RevocationInterval.assertBestPracticeRevocationInterval(nonRevokedInterval)
 //
-//            // Definição do Registry
+//            // Registry definition
 //            val revocationRegistryDefinition = agent.ledgerService.getRevocationRegistryDefinitionIndyBesuLib(revocationRegistryId)
 //
 //            val tailsFile = agent.revocationService.downloadTails(revocationRegistryDefinition)
 //
-// //            // Baixar tails
+// //            // Download tails
 // //            val tailsFileService = agentContext
 // //                .dependencyManager
 // //                .resolve(AnonCredsModuleConfig::class.java)
@@ -44,11 +44,11 @@ class RevocationMetada {
 // //                )
 // //            ).tailsFilePath
 //
-//            // Timestamp a buscar
+//            // Timestamp to fetch
 //            val timestampToFetch = providedTimestamp ?: nonRevokedInterval.to
 //            ?: throw CredoError("Timestamp to fetch is required")
 //
-//            // Status list no timestamp solicitado
+//            // Status list at the requested timestamp
 //            val revocationStatusList : RevocationStatusList = agent.ledgerService.getRevocationStatusList(revocationRegistryId, timestampToFetch.toInt())
 //
 //            val updatedTimestamp = providedTimestamp ?: revocationStatusList.timestamp
@@ -59,7 +59,7 @@ class RevocationMetada {
 //                tailsPath = tailsFile.path,
 //                revocationStatusList = revocationStatusList
 //            )
-//            // Revocation State (opcional)
+//            // Revocation State (optional)
 //            val revocationState =
 //                revocationRegistryIndex?.let { idx ->
 //                    CredentialRevocationState(
@@ -67,7 +67,7 @@ class RevocationMetada {
 //                    )
 //                }
 //
-//            // Tratamento do "from" > timestampToFetch
+//            // Handling of "from" > timestampToFetch
 //            val requestedFrom = nonRevokedInterval.from
 //            if (requestedFrom != null && requestedFrom > timestampToFetch) {
 //                val overrideResp =
@@ -75,7 +75,7 @@ class RevocationMetada {
 //                val overrideJson = when (val anyVal = overrideResp.revocationStatusList) {
 //                    is JsonObject -> anyVal
 //                    is Map<*, *> -> anyVal as JsonObject
-//                    else -> throw CredoError("Formato inválido de revocationStatusList(override)")
+//                    else -> throw CredoError("Invalid revocationStatusList(override) format")
 //                }
 //                val overrideStatusList = RevocationStatusList.fromJson(overrideJson)
 //
@@ -88,8 +88,8 @@ class RevocationMetada {
 //                    )
 //                } else {
 //                    throw CredoError(
-//                        "VDR timestamp para $requestedFrom não corresponde ao fornecido nos proof identifiers. " +
-//                                "Esperado: $updatedTimestamp e recebido $vdrTimestamp"
+//                        "VDR timestamp for $requestedFrom does not match the one provided in proof identifiers. " +
+//                                "Expected: $updatedTimestamp and received $vdrTimestamp"
 //                    )
 //                }
 //            }

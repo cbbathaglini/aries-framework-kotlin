@@ -108,7 +108,7 @@ package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 //        var didIndyNamespace: String? = null
 //
 //        if (Indyidentifiers.isUnqualifiedCredentialDefinitionId(revocationRegistryDefinitionId)) {
-//            // parseIndyRevocationRegistryId deve retornar algo como:
+//            // parseIndyRevocationRegistryId should return something like:
 //            // data class RevRegIdParts(val namespaceIdentifier: String, val schemaSeqNo: String, val revocationRegistryTag: String, val namespace: String?)
 //            val parts = Indyidentifiers.parseIndyRevocationRegistryId(revocationRegistryDefinitionId)
 //            val qualifiedRevRegIdEnding =
@@ -116,7 +116,7 @@ package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 //
 //            val unqualifiedRevRegId = revocationRegistryDefinitions.keys.find { it.endsWith(qualifiedRevRegIdEnding) }
 //
-//            // Nota: o TS chama parseIndySchemaId aqui; mantive o mesmo comportamento.
+//            // Note: the TS calls parseIndySchemaId here; I kept the same behavior.
 //            didIndyNamespace = unqualifiedRevRegId?.let { Indyidentifiers.parseIndySchemaId(it).first }
 //        } else if (Indyidentifiers.isIndyDid(revocationRegistryDefinitionId)) {
 //            didIndyNamespace = Indyidentifiers.parseIndyRevocationRegistryId(revocationRegistryDefinitionId).namespace
@@ -148,7 +148,7 @@ package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 //            )
 //        }
 //
-//        // timestamps <= timestamp solicitado
+//        // timestamps <= requested timestamp
 //        val previousTimestamps: List<Long> =
 //            revocationStatusListsForReg.keys
 //                .mapNotNull { it.toLongOrNull() }
@@ -165,7 +165,7 @@ package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 //            )
 //        }
 //
-//        val chosenTs = previousTimestamps.last() // o maior ts <= solicitado
+//        val chosenTs = previousTimestamps.last() // the largest ts <= requested
 //        val statusList = revocationStatusListsForReg[chosenTs.toString()]
 //
 //        return GetRevocationStatusListReturn(

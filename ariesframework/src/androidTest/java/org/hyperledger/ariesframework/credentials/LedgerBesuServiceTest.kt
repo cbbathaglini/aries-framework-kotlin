@@ -15,21 +15,6 @@ import kotlin.time.Duration.Companion.seconds
 class LedgerBesuServiceTest {
     lateinit var agent: Agent
 
-    /*
-     Run a besu as follows:
-       git clone https://github.com/guilherme-funchal/indy-besu.git
-       cd aries-framework-javascriptindy-besu
-       git checkout Revocation_SERPRO
-       ./network/scripts/run.sh
-
-     Generate data test:
-       cd vdr/wrappers/python
-       python3 -m pip install --upgrade build
-       python3 -m build
-       pip3 install eth_keys
-       python3 -m demo.test
-     */
-
     @Before
     fun setUp() = runTest(timeout = 30.seconds) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

@@ -42,7 +42,7 @@ class W3cCredentialService(
             ignoreUnknownKeys = true
             isLenient = true
             encodeDefaults = true
-            // se você já tem um serializersModule global, melhor ainda:
+            // if you already have a global serializersModule, even better:
             // serializersModule = agent.serializersModule
         }
 

@@ -30,7 +30,7 @@ class AnonCredsEncoder {
 
             for ((groupReferent, group) in proof.requestedProof.revealedAttrGroups.orEmpty()) {
                 for ((attributeName, attribute) in group.values) {
-                    // aqui eu gosto de colocar "groupReferent.attributeName" pra ficar claro no log
+                    // here I like to put "groupReferent.attributeName" to make it clear in the log
                     val ref = "$groupReferent.$attributeName"
 
                     val sample = EncodeHelper.buildEncSample(
@@ -56,7 +56,7 @@ class AnonCredsEncoder {
                 return if (value) "1" else "0"
             }
 
-            // 2️⃣ Number handling (similar ao JS/credo-ts)
+            // 2️⃣ Number handling (similar to JS/credo-ts)
             if (value is Number) {
                 val doubleValue = value.toDouble()
 
@@ -69,13 +69,13 @@ class AnonCredsEncoder {
                     return doubleValue.toInt().toString()
                 }
 
-                // não é int32 → vira string e será hasheado
+                // not int32 -> becomes string and will be hashed
                 return sha256ToDecimal(value.toString())
             }
 
-            // 3️⃣ String handling
+            // String handling
             if (value is String) {
-                // string numérica inteira válida?
+                // valid integer numeric string?
                 if (value.isNotEmpty() &&
                     value.matches(Regex("^[+-]?\\d+$"))
                 ) {
@@ -88,7 +88,7 @@ class AnonCredsEncoder {
                     }
                 }
 
-                // qualquer outra string (inclusive "") → hash
+                // any other string (including "") → hash
                 return sha256ToDecimal(value)
             }
 

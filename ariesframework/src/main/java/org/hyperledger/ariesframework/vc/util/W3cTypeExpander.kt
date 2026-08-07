@@ -7,12 +7,12 @@ import com.github.jsonldjava.core.RemoteDocument
 import com.github.jsonldjava.utils.JsonUtils
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import org.hyperledger.ariesframework.agent.Agent
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.hyperledger.ariesframework.agent.Agent
 import java.net.HttpURLConnection
 import java.net.URL
 

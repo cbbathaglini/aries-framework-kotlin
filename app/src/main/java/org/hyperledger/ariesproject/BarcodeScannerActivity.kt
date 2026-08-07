@@ -31,7 +31,7 @@ class BarcodeScannerActivity : BaseCameraActivity() {
                 it.getData(),
                 it.size.width,
                 it.size.height,
-                0, // Rotação (ajuste conforme necessário)
+                0,
                 InputImage.IMAGE_FORMAT_NV21
             )
             runBarcodeScanner(image)

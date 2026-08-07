@@ -1,18 +1,39 @@
 package org.hyperledger.ariesproject
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.datatransport.runtime.logging.Logging
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.hyperledger.ariesproject.notifications.NotificationHandler
 
 open class BaseActivity : AppCompatActivity() {
 
+    companion object {
+        const val BADGE_UPDATE_ACTION = "org.hyperledger.ariesproject.UPDATE_BADGE"
+    }
+
+    private val badgeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == BADGE_UPDATE_ACTION) {
+                Log.d("BADGE", "Updating badge via broadcast in ${this@BaseActivity::class.simpleName}")
+                updateNotificationBadge()
+            }
+        }
+    }
+
+    private var badgeReceiverRegistered = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_base)
+
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
@@ -40,7 +61,7 @@ open class BaseActivity : AppCompatActivity() {
             }
         }
 
-        // Define ícone ativo
+        // Set active icon
         updateBottomNavSelection(bottomNav)
     }
 
@@ -48,6 +69,23 @@ open class BaseActivity : AppCompatActivity() {
         super.onResume()
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         updateBottomNavSelection(bottomNav)
+
+        val filter = IntentFilter(BADGE_UPDATE_ACTION)
+        ContextCompat.registerReceiver(
+            this,
+            badgeReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        badgeReceiverRegistered = true
+    }
+
+    override fun onPause() {
+        if (badgeReceiverRegistered) {
+            unregisterReceiver(badgeReceiver)
+            badgeReceiverRegistered = false
+        }
+        super.onPause()
     }
 
     protected fun setChildContent(layoutResId: Int) {
@@ -60,7 +98,7 @@ open class BaseActivity : AppCompatActivity() {
             is WalletMainActivity -> bottomNav.selectedItemId = R.id.nav_home
             is NotificationsActivity -> bottomNav.selectedItemId = R.id.nav_notifications
             else -> {
-                // ⚡ Reinicia o estado interno do BottomNavigationView
+                // ⚡ Resets the internal BottomNavigationView state
                 bottomNav.menu.setGroupCheckable(0, false, true)
                 bottomNav.menu.findItem(R.id.nav_home).isChecked = false
                 bottomNav.menu.findItem(R.id.nav_notifications).isChecked = false
@@ -98,7 +136,7 @@ open class BaseActivity : AppCompatActivity() {
             Log.d("BADGE", "bottomNavigationView: $bottomNavigationView")
 
         } catch (e: Exception) {
-            android.util.Log.w("BADGE", "Erro ao atualizar badge: ${e.message}")
+            android.util.Log.w("BADGE", "Error updating badge: ${e.message}")
         }
     }
 

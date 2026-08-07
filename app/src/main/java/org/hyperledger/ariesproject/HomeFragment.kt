@@ -65,26 +65,26 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), InvitationActivity::class.java))
         }
 
-        // Offline proofs
-        binding.btnRequestProof.setOnClickListener {
-            startActivity(Intent(requireContext(), RequestProofActivity::class.java))
-        }
-
-        binding.btnScanProof.setOnClickListener {
-            startActivity(Intent(requireContext(), VerifierProofActivity::class.java))
-        }
-
-        binding.btnReceivePresentation.setOnClickListener {
-            startActivity(Intent(requireContext(), ReceivingPresentationActivity::class.java))
-        }
-
-        binding.btnPresentationList.setOnClickListener {
-            startActivity(Intent(requireContext(), PresentationListActivity::class.java))
-        }
-
-        binding.btnShowPresentations.setOnClickListener {
-            startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
-        }
+//        // Offline proofs
+//        binding.btnRequestProof.setOnClickListener {
+//            startActivity(Intent(requireContext(), RequestProofActivity::class.java))
+//        }
+//
+//        binding.btnScanProof.setOnClickListener {
+//            startActivity(Intent(requireContext(), VerifierProofActivity::class.java))
+//        }
+//
+//        binding.btnReceivePresentation.setOnClickListener {
+//            startActivity(Intent(requireContext(), ReceivingPresentationActivity::class.java))
+//        }
+//
+//        binding.btnPresentationList.setOnClickListener {
+//            startActivity(Intent(requireContext(), PresentationListActivity::class.java))
+//        }
+//
+//        binding.btnShowPresentations.setOnClickListener {
+//            startActivity(Intent(requireContext(), PresentationsReceivedListActivity::class.java))
+//        }
 
 
         // 🔹 Connect using invitation URL
@@ -149,11 +149,11 @@ class HomeFragment : Fragment() {
                 updateNotificationBadgeUI()
 
                 (activity as? WalletMainActivity)
-                    ?.showAlert("✅ Connected with ${connection?.theirLabel ?: "Unknown agent"}")
+                    ?.showAlert("Connected with ${connection?.theirLabel ?: "Unknown agent"}")
 
             } catch (e: Exception) {
                 (activity as? WalletMainActivity)
-                    ?.showAlert("❌ Failed to process QR Code: ${e.localizedMessage}")
+                    ?.showAlert("Failed to process QR Code: ${e.localizedMessage}")
             }
         }
     }

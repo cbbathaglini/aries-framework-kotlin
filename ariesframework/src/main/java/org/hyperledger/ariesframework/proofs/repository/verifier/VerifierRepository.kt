@@ -7,24 +7,24 @@ class VerifierRepository(agent: Agent) :
     Repository<VerifierRecord>(VerifierRecord::class, agent) {
 
     /**
-     * Recupera um VerifierRecord pelo proofRecordId.
+     * Retrieves a VerifierRecord by proofRecordId.
      */
     suspend fun getByProofRecordId(proofRecordId: String): VerifierRecord {
         val query = """{"proofRecordId": "$proofRecordId"}"""
-        println("🕵️‍♂️ Query enviada para getSingleByQuery: $query")
+        println("🕵️‍♂️ Query sent to getSingleByQuery: $query")
 
         return try {
             val record = getSingleByQuery(query)
-            println("✅ Registro encontrado: $record")
+            println("✅ Record found: $record")
             record
         } catch (e: Exception) {
-            println("❌ Erro em getByProofRecordId: ${e.message}")
+            println("❌ Error in getByProofRecordId: ${e.message}")
             throw e
         }
     }
 
     /**
-     * Recupera um VerifierRecord pelo globalThreadId.
+     * Retrieves a VerifierRecord by globalThreadId.
      */
     suspend fun getByGlobalThreadId(globalThreadId: String): VerifierRecord {
         val query = """{"globalThreadId": "$globalThreadId"}"""

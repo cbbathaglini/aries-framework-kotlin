@@ -84,13 +84,13 @@ data class W3cCredential(
 
             val mutable = vcObj.toMutableMap()
 
-            // 2) @context pode vir string -> [string]
+            // 2) @context can be a string -> [string]
             contextAsArray(vcObj["@context"])?.let { mutable["@context"] = it }
 
-            // 3) type pode vir string -> [string]
+            // 3) type can be a string -> [string]
             asArray(vcObj["type"])?.let { mutable["type"] = it }
 
-            // 4) credentialSubject pode vir objeto -> [obj]
+            // 4) credentialSubject can be an object -> [obj]
             val subjectArray = asArray(vcObj["credentialSubject"])
             if (subjectArray != null) {
                 val subjects = subjectArray.mapNotNull { it as? JsonObject }
@@ -99,12 +99,12 @@ data class W3cCredential(
                 val cleanedSubjects = subjects.map { subj ->
                     val subjMap = subj.toMutableMap()
 
-                    // ✅ id -> @id (pra bater com @SerialName("@id"))
+                    // ✅ id -> @id (to match @SerialName("@id"))
                     if (subjMap.containsKey("id") && !subjMap.containsKey("@id")) {
                         subjMap["@id"] = subjMap.remove("id")!!
                     }
 
-                    // ✅ se vier proof dentro do subject, sobe pro topo
+                    // ✅ if proof comes inside the subject, lift it to the top
                     val subjProof = subj["proof"]
                     val subjProofArray = asArray(subjProof)?.mapNotNull { it as? JsonObject } ?: emptyList()
 
@@ -118,7 +118,7 @@ data class W3cCredential(
 
                 mutable["credentialSubject"] = JsonArray(cleanedSubjects)
 
-                // 5) proof pode vir no topo e/ou nos subjects -> junta tudo em array
+                // 5) proof may come at the top and/or in the subjects -> merge everything into an array
                 val topProof = vcObj["proof"]
                 val topProofArray = asArray(topProof)?.mapNotNull { it as? JsonObject } ?: emptyList()
 
@@ -128,7 +128,7 @@ data class W3cCredential(
                 }
             }
 
-            // 6) credentialSchema pode vir objeto -> [obj]
+            // 6) credentialSchema can be an object -> [obj]
             asArray(vcObj["credentialSchema"])?.let { mutable["credentialSchema"] = it }
 
             return JsonObject(mutable)
@@ -139,14 +139,14 @@ data class W3cCredential(
 //                null -> null
 //                is JsonArray -> el
 //                is JsonObject -> JsonArray(listOf(el))
-//                is JsonPrimitive -> JsonArray(listOf(el)) // útil p/ alguns campos que aceitam string
+//                is JsonPrimitive -> JsonArray(listOf(el)) // useful for some fields that accept string
 //                else -> null
 //            }
 //
 //            fun contextAsArray(el: JsonElement?): JsonArray? = when (el) {
 //                null -> null
 //                is JsonArray -> el
-//                is JsonPrimitive -> JsonArray(listOf(el)) // "@context": "https://..."
+//                is JsonPrimitive -> JsonArray(listOf(el))
 //                is JsonObject -> JsonArray(listOf(el))
 //                else -> null
 //            }
@@ -159,13 +159,13 @@ data class W3cCredential(
 //            // ✅ proof: objeto -> [obj]
 //            asArray(obj["proof"])?.let { mutable["proof"] = it }
 //
-//            // ✅ credentialSchema às vezes vem como objeto também
+//            // credentialSchema sometimes comes as object too
 //            asArray(obj["credentialSchema"])?.let { mutable["credentialSchema"] = it }
 //
 //            // ✅ @context: string -> [string]
 //            contextAsArray(obj["@context"])?.let { mutable["@context"] = it }
 //
-//            // ✅ type às vezes vem como string
+//            // type sometimes comes as string
 //            asArray(obj["type"])?.let { mutable["type"] = it }
 //
 //            return JsonObject(mutable)

@@ -1,6 +1,5 @@
 package org.hyperledger.ariesproject
 
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -88,7 +87,7 @@ class ProofDetailFragment : Fragment() {
         if (attrs.isEmpty()) {
             val empty = TextView(requireContext()).apply {
                 text = "No requested attributes."
-                setTextColor(Color.GRAY)
+                setTextColor(resources.getColor(R.color.gray_500, null))
             }
             binding.attributesContainer.addView(empty)
             return
@@ -105,6 +104,7 @@ class ProofDetailFragment : Fragment() {
                 text = "• $title"
                 textSize = 16f
                 setTypeface(null, Typeface.BOLD)
+                setTextColor(resources.getColor(R.color.gray_900, null))
             }
             layout.addView(keyView)
 
@@ -112,29 +112,19 @@ class ProofDetailFragment : Fragment() {
                 val subAttr = TextView(requireContext()).apply {
                     text = "  - $it"
                     textSize = 14f
-                    setTextColor(Color.DKGRAY)
+                    setTextColor(resources.getColor(R.color.gray_700, null))
                 }
                 layout.addView(subAttr)
             }
 
-            attr.restrictions?.forEach { r ->
-                r.schemaName?.let { schema ->
-                    val schemaView = TextView(requireContext()).apply {
-                        text = "Schema: $schema"
-                        setTextColor(Color.GRAY)
-                        textSize = 12f
-                    }
-                    layout.addView(schemaView)
-                }
-                r.credDefId?.let { cred ->
-                    val credView = TextView(requireContext()).apply {
-                        text = "CredDefId: $cred"
-                        setTextColor(Color.GRAY)
-                        textSize = 12f
-                    }
-                    layout.addView(credView)
-                }
+            val divider = View(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+                ).apply { setMargins(0, 8, 0, 0) }
+                setBackgroundResource(android.R.color.darker_gray)
             }
+            layout.addView(divider)
 
             binding.attributesContainer.addView(layout)
         }
@@ -146,7 +136,7 @@ class ProofDetailFragment : Fragment() {
         if (predicates.isEmpty()) {
             val empty = TextView(requireContext()).apply {
                 text = "No requested predicates."
-                setTextColor(Color.GRAY)
+                setTextColor(resources.getColor(R.color.gray_500, null))
             }
             binding.predicatesContainer.addView(empty)
             return
@@ -170,27 +160,18 @@ class ProofDetailFragment : Fragment() {
                 text = "• ${pred.name} $symbol ${pred.pValue}"
                 textSize = 16f
                 setTypeface(null, Typeface.BOLD)
+                setTextColor(resources.getColor(R.color.gray_900, null))
             }
             layout.addView(titleView)
 
-            pred.restrictions?.forEach { r ->
-                r.schemaName?.let { schema ->
-                    val schemaView = TextView(requireContext()).apply {
-                        text = "Schema: $schema"
-                        setTextColor(Color.GRAY)
-                        textSize = 12f
-                    }
-                    layout.addView(schemaView)
-                }
-                r.credDefId?.let { cred ->
-                    val credView = TextView(requireContext()).apply {
-                        text = "CredDefId: $cred"
-                        setTextColor(Color.GRAY)
-                        textSize = 12f
-                    }
-                    layout.addView(credView)
-                }
+            val divider = View(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+                ).apply { setMargins(0, 8, 0, 0) }
+                setBackgroundResource(android.R.color.darker_gray)
             }
+            layout.addView(divider)
 
             binding.predicatesContainer.addView(layout)
         }

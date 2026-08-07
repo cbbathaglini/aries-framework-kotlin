@@ -48,5 +48,19 @@ local.properties
 *.dylib
 *.dll
 
+# Generated uniffi bindings (regenerate with cargo/uniffi-bindgen)
+ledger-besu-wrapper/src/main/kotlin/org/hyperledger/indy-besu-vdr/
+ledger-besu-wrapper/src/main/jniLibs/
+
 # Generated reports
 docs/
+
+# Configuration files with internal endpoints/addresses
+genesiscpqd.txn
+genesisvon2.txn
+von.txn
+bcovrin-genesis.txn
+config.properties
+**/assets/*.txn
+**/assets/config.properties
+**/androidTest/assets/*.txn

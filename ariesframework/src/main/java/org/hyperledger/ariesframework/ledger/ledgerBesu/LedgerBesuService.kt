@@ -99,6 +99,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         }
     }
 
+    @kotlinx.serialization.Serializable
     private data class CredDefVdrCacheDto(
         val issuerId: String,
         val schemaId: String,
@@ -550,7 +551,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     fun ensureRevRegId(id: String) {
         require(
             id.contains("/REV_REG_DEF/") || id.contains("/REV_REG/"),
-        ) { "Esperado REV_REG_DEF ou REV_REG id, recebido: $id" }
+        ) { "Expected REV_REG_DEF or REV_REG id, received: $id" }
     }
 
     override suspend fun getRevocationRegistry(id: String, timestamp: Int): Pair<String, Int> {

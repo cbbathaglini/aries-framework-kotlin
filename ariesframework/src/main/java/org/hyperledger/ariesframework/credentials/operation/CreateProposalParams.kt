@@ -5,7 +5,7 @@ import org.hyperledger.ariesframework.credentials.formats.CredentialFormatServic
 import org.hyperledger.ariesframework.credentials.repository.CredentialExchangeRecord
 
 data class CreateProposalParams(
-    val credentialFormats: Map<String, JsonElement>, // ou CredentialFormatPayload se você tipar melhor
+    val credentialFormats: Map<String, JsonElement>,
     val formatServices: List<CredentialFormatService<*>>,
     val credentialRecord: CredentialExchangeRecord,
     val comment: String? = null,

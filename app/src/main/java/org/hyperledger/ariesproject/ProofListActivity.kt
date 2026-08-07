@@ -4,12 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.core.app.NavUtils
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
@@ -29,9 +27,8 @@ class ProofListActivity : BaseActivity() {
         binding = ActivityProofListBinding.inflate(layoutInflater)
         findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
         binding.toolbar.title = "Received Proofs"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         connectionId = intent.getStringExtra("CONNECTION_ID") ?: ""
         Log.d("ProofListActivity", "connectionId: $connectionId")
@@ -42,15 +39,6 @@ class ProofListActivity : BaseActivity() {
         updateNotificationBadge()
         setupRecyclerView(binding.proofList.proofListRecycler)
     }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
-            android.R.id.home -> {
-                NavUtils.navigateUpFromSameTask(this)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         val app = application as WalletApp

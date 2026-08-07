@@ -256,7 +256,7 @@ class ProofUtils {
                 r.schemaIssuerDid?.let { put("schema_issuer_did", JsonPrimitive(it)) }
                 r.issuerDid?.let { put("issuer_did", JsonPrimitive(it)) }
 
-                // attribute markers e values, se existirem
+                // attribute markers and values, if any
                 if (r.attributeMarkers.isNotEmpty()) {
                     r.attributeMarkers.forEach { (k, v) -> put("attr::$k::marker", JsonPrimitive(v)) }
                 }

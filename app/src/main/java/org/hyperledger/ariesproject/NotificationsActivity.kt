@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
@@ -29,7 +30,15 @@ class NotificationsActivity : BaseActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
 
-        binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.setNavigationOnClickListener { goHome() }
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    goHome()
+                }
+            }
+        )
 
         handler.addOnNotificationsChangedListener {
             runOnUiThread { reloadNotifications() }
@@ -95,5 +104,16 @@ class NotificationsActivity : BaseActivity() {
             badge.clearNumber()
             badge.isVisible = false
         }
+    }
+
+    private fun goHome() {
+        startActivity(
+            android.content.Intent(this, WalletMainActivity::class.java).apply {
+                flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+        )
+        finish()
+        overridePendingTransition(0, 0)
     }
 }

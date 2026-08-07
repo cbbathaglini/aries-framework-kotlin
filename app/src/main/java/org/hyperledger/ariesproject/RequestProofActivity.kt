@@ -51,8 +51,8 @@ class RequestProofActivity : BaseActivity() {
         binding = ActivityRequestProofBinding.inflate(layoutInflater)
         findViewById<FrameLayout>(R.id.baseContainer).addView(binding.root)
 
-        val backButton: Button = findViewById(R.id.backButton)
-        backButton.setOnClickListener { finish() }
+        // toolbar handles back via navigation icon
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         connectionId = intent.getStringExtra("CONNECTION_ID")
 

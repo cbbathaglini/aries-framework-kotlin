@@ -29,7 +29,11 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
     // val ETHR_ANONCREDS_REGEX = Regex("""^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/[0-9]+(?:\.[0-9]+)*|CRED_DEF/[^/]+|REV_REG_DEF/.+?/(?:CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+)$""".trimIndent().replace(Regex("""\s+"""), ""), RegexOption.IGNORE_CASE)
     // val ETHR_ANONCREDS_REGEX = Regex("^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/\\d+|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)\$", RegexOption.IGNORE_CASE)
     val ETHR_ANONCREDS_REGEX = Regex(
-        "^did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/(?:\\d+|CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)\$",
+        "^(?:" +
+            "did:ethr:[^/]+/anoncreds/v0/(?:SCHEMA/[^/]+/\\d+(?:\\.\\d+)*|CRED_DEF/[^/]+|REV_REG_DEF/[^/]+/[^/]+/(?:\\d+|CL_ACCUM(?::|/)[A-Za-z0-9._-]+)|REV_REG/[^/]+/CL_ACCUM(?::|/)[A-Za-z0-9._-]+)" +
+            "|" +
+            "(?:[A-Za-z0-9]+:)+(?:\\d+:)?[A-Za-z0-9._-]+" +
+            ")\$",
         RegexOption.IGNORE_CASE,
     )
 
@@ -37,7 +41,7 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
 
     override suspend fun getSchema(agent: Agent, schemaId: String): GetSchemaReturn {
         require(supportedIdentifier.matches(schemaId)) {
-            "Schema id não suportado por EthrAnonCredsRegistry: $schemaId"
+            "Schema id not supported by EthrAnonCredsRegistry: $schemaId"
         }
 
         val (name, version) = parseEthrSchemaId(schemaId)
@@ -142,14 +146,22 @@ class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCred
     }
 
     private fun parseEthrSchemaId(schemaId: String): Pair<String, String> {
-        val parts = schemaId.split('/')
+        if (schemaId.startsWith("did:ethr:")) {
+            val parts = schemaId.split('/')
+            val version = parts.last()
+            val name = parts[parts.size - 2]
+            return name to version
+        }
+        val parts = schemaId.split(':')
         val version = parts.last()
         val name = parts[parts.size - 2]
         return name to version
     }
 
     private fun extractDidEthr(schemaId: String): String? {
-        val m = Regex("""^did:ethr:[^/]+""", RegexOption.IGNORE_CASE).find(schemaId)
-        return m?.value
+        val ethrMatch = Regex("""^did:ethr:[^/]+""", RegexOption.IGNORE_CASE).find(schemaId)
+        if (ethrMatch != null) return ethrMatch.value
+        val indyMatch = Regex("""^[A-Za-z0-9]+""").find(schemaId)
+        return indyMatch?.value
     }
 }

@@ -37,7 +37,7 @@ class JsonUtils {
                         is Number -> JsonPrimitive(v)
                         is String -> JsonPrimitive(v)
                         is JsonElement -> v
-                        else -> Json.encodeToJsonElement(v) // usa kotlinx.serialization se o tipo for @Serializable
+                        else -> Json.encodeToJsonElement(v) // uses kotlinx.serialization if the type is @Serializable
                     }
                 },
             )
@@ -132,7 +132,7 @@ class JsonUtils {
                     is String -> JsonPrimitive(value)
                     is Number -> JsonPrimitive(value)
                     is Boolean -> JsonPrimitive(value)
-                    is Map<*, *> -> mapToJson(value as Map<String, Any?>) // recursão
+                    is Map<*, *> -> mapToJson(value as Map<String, Any?>)
                     is List<*> -> JsonArray(
                         value.map { v ->
                             when (v) {
@@ -142,12 +142,12 @@ class JsonUtils {
                                 is Number -> JsonPrimitive(v)
                                 is Boolean -> JsonPrimitive(v)
                                 is Map<*, *> -> mapToJson(v as Map<String, Any?>)
-                                else -> JsonPrimitive(v.toString()) // fallback
+                                else -> JsonPrimitive(v.toString())
                             }
                         },
                     )
 
-                    else -> JsonPrimitive(value.toString()) // fallback pra tipos desconhecidos
+                    else -> JsonPrimitive(value.toString())
                 }
             }
             return JsonObject(content)
@@ -160,9 +160,9 @@ class JsonUtils {
             is Number -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)
 
-            // Mapas (inclui MutableMap<String, JsonObject> etc.)
+            // Maps (including MutableMap<String, JsonObject> etc.)
             is Map<*, *> -> {
-                // Se já for <String, JsonElement>
+                // If it's already <String, JsonElement>
                 if (value.keys.all { it is String } && value.values.all { it is JsonElement }) {
                     @Suppress("UNCHECKED_CAST")
                     JsonObject(value as Map<String, JsonElement>)

@@ -39,7 +39,7 @@ class W3cCredentialRecord(
         tags.putAll(this._tags ?: emptyMap())
         tags["issuerId"] = credential.issuer.toString()
         tags["subjectIds"] = credential.credentialSubject.toString()
-        // fazer funcionar
+        // make it work
 //            tags["schemaIds"] = credential.credentialSchemaIds.toString()
 //            tags["contexts"] = credential.contexts.filterIsInstance<String>().toString()
         tags["givenId"] = credential.id.toString()

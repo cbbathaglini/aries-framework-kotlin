@@ -24,7 +24,7 @@ object AuthenticationSerializer :
 
     override fun selectDeserializer(element: JsonElement): KSerializer<out Authentication> =
         when (element.jsonObject.size) {
-            2 -> serializer<ReferencedAuthentication>() // antes: ReferencedAuthentication.serializer()
-            else -> serializer<EmbeddedAuthentication>() // antes: EmbeddedAuthentication.serializer()
+            2 -> serializer<ReferencedAuthentication>()
+            else -> serializer<EmbeddedAuthentication>()
         }
 }

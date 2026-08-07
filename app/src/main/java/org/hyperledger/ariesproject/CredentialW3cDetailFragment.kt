@@ -12,8 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.hyperledger.ariesproject.databinding.ActivityCredentialDetailBinding
 import org.hyperledger.ariesproject.databinding.CredentialDetailBinding
-import anoncreds_uniffi.Credential
-import anoncreds_uniffi.W3cCredential
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.anoncreds.storage.CredentialRecord
 import org.hyperledger.ariesproject.databinding.ActivityCredentialW3cDetailBinding
@@ -36,14 +34,10 @@ class CredentialW3cDetailFragment : Fragment() {
                 Log.i("W3C", "it: ${it.getString(ARG_CREDENTIAL_W3C)}")
 
                 item = it.getString(ARG_CREDENTIAL_W3C)
-                //item = it.getString(ARG_CREDENTIAL_W3C)
-                //Log.i("W3C", "w3cCredential: ${w3cCredential.toString()}")
+
                 credentialId = it.getString(ARG_CREDENTIAL_W3C_ID)
                 Log.i("W3C", "credentialId: ${credentialId}")
             }
-
-//            detailBinding = ActivityCredentialDetailBinding.inflate(layoutInflater)
-//            detailBinding.toolbarLayout.title = getString(R.string.title_credential_detail)
 
         }
     }
@@ -56,17 +50,6 @@ class CredentialW3cDetailFragment : Fragment() {
         binding = CredentialW3cDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
         binding.credentialW3cDetail.text =  item
-
-//            if (item != null) {
-//            item?.let {
-//                val attrs = it.values()
-//                binding.credentialDetail.text = attrs.map { attr ->
-//                    "${attr.key}: ${attr.value}"
-//                }.joinToString("\n")
-//
-//                val activity = activity as CredentialDetailActivity
-//                val app = activity.application as WalletApp
-          //  }
 
         return rootView
     }

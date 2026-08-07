@@ -42,7 +42,7 @@ class PresentationDetailActivity : AppCompatActivity() {
     private val devices = mutableListOf<String>()
     private lateinit var devicesAdapter: ArrayAdapter<String>
 
-    // === Novo: lista de permissões BLE (ajustada por versão) ===
+    // === New: BLE permission list (adjusted by version) ===
     private val blePermissions: Array<String> by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
@@ -54,24 +54,12 @@ class PresentationDetailActivity : AppCompatActivity() {
         }
     }
 
-//    private val requestPerms = registerForActivityResult(
-//        ActivityResultContracts.RequestMultiplePermissions()
-//    ) { grants ->
-//        val allGranted = grants.values.all { it }
-//        if (allGranted) {
-//            appendLog("✅ Permissões concedidas. Iniciando scan…")
-//            startBleScan()
-//        } else {
-//            appendLog("❌ Permissões negadas.")
-//            Toast.makeText(this, "Permissões necessárias para Bluetooth", Toast.LENGTH_LONG).show()
-//        }
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_presentation_detail)
 
-        // === Inicializa views ===
+
         txtRecordId        = findViewById(R.id.txtRecordId)
         txtCreatedAt       = findViewById(R.id.txtCreatedAt)
         txtJson            = findViewById(R.id.txtJson)
@@ -79,7 +67,7 @@ class PresentationDetailActivity : AppCompatActivity() {
         btnScanDevices     = findViewById(R.id.btnScanDevices)
         btnSendBluetooth   = findViewById(R.id.btnSendBluetooth)
         btnCopyLogs = findViewById(R.id.btnCopyLogs)
-        //btnSendBluetoothAndroid   = findViewById(R.id.btnSendBluetoothAndroid)
+
         txtBluetoothStatus = findViewById(R.id.txtBluetoothStatus)
         devicesList        = findViewById(R.id.bluetoothDevicesList)
         logsRecycler       = findViewById(R.id.logsRecycler)
@@ -103,21 +91,21 @@ class PresentationDetailActivity : AppCompatActivity() {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 val clip = android.content.ClipData.newPlainText("Presentation JSON", json)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "📋 Conteúdo copiado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "📋 Content copied", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnCopyLogs.setOnClickListener {
-            // Recupera todas as mensagens do adapter
+            // Retrieves all messages from the adapter
             val allLogs = logsAdapter.getAllLogs().joinToString("\n")
 
             if (allLogs.isNotEmpty()) {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 val clip = android.content.ClipData.newPlainText("Logs BLE", allLogs)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "📋 Logs copiados para a área de transferência", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Logs copied to the clipboard", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Nenhum log para copiar", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No logs to copy", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -127,30 +115,21 @@ class PresentationDetailActivity : AppCompatActivity() {
             record?.let {
                 pendingJson = loadJSONPreview(it)
                 if (bluetoothClient.isConnected()) {
-                    appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
+                    appendLog("📡 Connection already active — sending JSON directly…")
                     sendJSONSafely(pendingJson!!)
                 } else {
-                    appendLog("🔍 Ainda não conectado — iniciando scan…")
+                    appendLog("🔍 Not connected yet — starting scan…")
                     checkAndRequestPermsThenScan()
                 }
             } ?: run {
-                Toast.makeText(this, "❌ Nenhum registro carregado.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No record loaded.", Toast.LENGTH_SHORT).show()
             }
         }
 
-//        btnSendBluetoothAndroid.setOnClickListener {
-//            record?.let {
-//                pendingJson = loadJSONPreview(it)
-//                appendLog("📡 Conexão já ativa — enviando JSON diretamente…")
-//                sendJSONSafelyAndroid(pendingJson!!)
-//            } ?: run {
-//                Toast.makeText(this, "❌ Nenhum registro carregado.", Toast.LENGTH_SHORT).show()
-//            }
-//        }
 
         devicesList.setOnItemClickListener { _, _, pos, _ ->
             val device = devices[pos]
-            appendLog("🔗 Conectando a $device…")
+            appendLog("Connecting to $device…")
             bluetoothClient.connectToNamedDevice(device)
         }
     }
@@ -179,15 +158,15 @@ class PresentationDetailActivity : AppCompatActivity() {
             }
             onConnected = { name ->
                 runOnUiThread {
-                    appendLog("🤝 Conectado a $name")
-                    txtBluetoothStatus.text = "Conectado a $name"
+                    appendLog("Connected to $name")
+                    txtBluetoothStatus.text = "Connected to $name"
                     pendingJson?.let { sendJSONSafely(it) }
                 }
             }
         }
     }
 
-    // === CARREGA REGISTRO ===
+
     private suspend fun loadRecord(recordId: String?) {
         if (recordId == null) return
         val rec = agent?.proofRepository?.getById(recordId)
@@ -200,7 +179,7 @@ class PresentationDetailActivity : AppCompatActivity() {
     }
 
     private fun loadJSONPreview(record: ProofExchangeRecord?): String {
-        val presentation = record?.presentationMessage ?: return "Nenhum conteúdo disponível"
+        val presentation = record?.presentationMessage ?: return "No content available"
         return try {
             Json {
                 prettyPrint = true
@@ -209,32 +188,32 @@ class PresentationDetailActivity : AppCompatActivity() {
                 explicitNulls = false
             }.encodeToString(presentation)
         } catch (e: Exception) {
-            appendLog("❌ Erro ao gerar JSON: ${e.localizedMessage}")
+            appendLog("Error generating JSON: ${e.localizedMessage}")
             "{}"
         }
     }
 
-    // === SCAN BLE ===
+    // === BLE SCAN ===
     private val requestPerms =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.all { it.value }
             if (allGranted) {
-                appendLog("BLE = ✅ Permissões concedidas. Aguardando inicialização do Bluetooth...")
+                appendLog("BLE = Permissions granted. Waiting for Bluetooth initialization...")
 
-                // 🔄 Executa o scan depois de 1.5 s usando coroutine
+                // 🔄 Runs the scan after 1.5 s using a coroutine
                 lifecycleScope.launch {
                     kotlinx.coroutines.delay(1500)
-                    appendLog("BLE = 🚀 Iniciando scan automático após permissões.")
+                    appendLog("BLE = 🚀 Starting automatic scan after permissions.")
                     startBleScan()
 
-                    // 🔁 Reexecuta mais uma vez depois de 2 s para garantir descoberta
+                    // 🔁 Runs it again after 2 s to ensure discovery
                     kotlinx.coroutines.delay(2000)
-                    appendLog("BLE = 🔁 Repetindo scan após estabilização do BLE.")
+                    appendLog("BLE = 🔁 Repeating scan after BLE stabilization.")
                     startBleScan()
                 }
             } else {
-                appendLog("BLE = ❌ Permissões não concedidas.")
-                Toast.makeText(this, "Permissões necessárias não concedidas.", Toast.LENGTH_SHORT).show()
+                appendLog("BLE = ❌ Permissions not granted.")
+                Toast.makeText(this, "Required permissions not granted.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -243,28 +222,21 @@ class PresentationDetailActivity : AppCompatActivity() {
             ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         if (needRequest) {
-            appendLog("BLE = 🔐 Solicitando permissões...")
+            appendLog("BLE = 🔐 Requesting permissions...")
             requestPerms.launch(blePermissions)
         } else {
-            appendLog("BLE = 🔎 Iniciando scan…")
+            appendLog("BLE = 🔎 Starting scan…")
             startBleScan()
         }
     }
 
-//    private fun checkAndRequestPermsThenScan() {
-//        val needRequest = blePermissions.any {
-//            ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-//        }
-//        if (needRequest) requestPerms.launch(blePermissions)
-//        else startBleScan()
-//    }
 
     private fun startBleScan() {
         devices.clear()
         devicesAdapter.notifyDataSetChanged()
-        txtBluetoothStatus.text = "🔍 Procurando dispositivos BLE…"
+        txtBluetoothStatus.text = "🔍 Looking for BLE devices…"
 
-        appendLog("🔎 Iniciando scan…")
+        appendLog("🔎 Starting scan…")
         bluetoothClient.startScan()
     }
 
@@ -272,24 +244,13 @@ class PresentationDetailActivity : AppCompatActivity() {
     private fun sendJSONSafely(json: String) {
         try {
             bluetoothClient.sendJSONFast(json)
-            appendLog("✅ JSON enviado com sucesso.")
-            Toast.makeText(this, "📤 Apresentação enviada via Bluetooth", Toast.LENGTH_LONG).show()
+            appendLog("✅ JSON sent successfully.")
+            Toast.makeText(this, "📤 Presentation sent via Bluetooth", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
-            appendLog("❌ Falha ao enviar JSON: ${e.localizedMessage}")
-            Toast.makeText(this, "Erro ao enviar JSON", Toast.LENGTH_LONG).show()
+            appendLog("❌ Failed to send JSON: ${e.localizedMessage}")
+            Toast.makeText(this, "Error sending JSON", Toast.LENGTH_LONG).show()
         }
     }
-
-//    private fun sendJSONSafelyAndroid(json: String) {
-//        try {
-//            bluetoothClientAV = BluetoothClientAV(this)
-//            bluetoothClientAV.start(json)
-//
-//        } catch (e: Exception) {
-//            appendLog("❌ Falha ao enviar JSON: ${e.localizedMessage}")
-//            Toast.makeText(this, "Erro ao enviar JSON", Toast.LENGTH_LONG).show()
-//        }
-//    }
 
     private fun appendLog(line: String) {
         logsAdapter.add(line)

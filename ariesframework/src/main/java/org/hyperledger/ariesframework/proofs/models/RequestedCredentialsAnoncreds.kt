@@ -138,20 +138,20 @@ data class RequestedCredentialsAnoncreds(
             ),
             "self_attested_attributes" to JsonObject(
                 selfAttestedAttributes.mapValues { (_, v) ->
-                    JsonPrimitive(v) // assumindo que é String, se não ajusta
+                    JsonPrimitive(v)
                 },
             ),
         )
     }
 
     /**
-     * Valida serialização campo a campo e retorna uma lista de problemas encontrados.
-     * Use antes de chamar encodeToString(...) para descobrir o "path" que quebra.
+     * Validates serialization field by field and returns a list of issues found.
+     * Use before calling encodeToString(...) to discover which "path" breaks.
      */
     fun validateSerializationPaths(json: Json = Json): List<String> {
         val issues = mutableListOf<String>()
 
-        // requested_attributes: testa item a item
+        // requested_attributes: test each item
         for ((key, value) in requestedAttributes) {
             val oldval = value.copy()
             value.credentialInfo = AnonCredsCredentialInfo()
@@ -168,7 +168,7 @@ data class RequestedCredentialsAnoncreds(
 
             val attrs: Map<String, JsonElement> = value.credentialInfo!!.attributes as Map<String, JsonElement>
             val normalized: Map<String, String> = attrs.mapValues { (_, v) ->
-                v.jsonPrimitive.content // extrai o valor do JsonLiteral como String
+                v.jsonPrimitive.content // extracts the value of the JsonLiteral as a String
             }
             value.credentialInfo!!.attributes = normalized
 
@@ -179,41 +179,40 @@ data class RequestedCredentialsAnoncreds(
             runCatching {
                 json.encodeToString(RequestedAttributeAnonCreds.serializer(), value)
             }.onFailure { t ->
-                issues += "requested_attributes[$key] falhou: ${t.rootCauseMessage()}"
-                // Checagens adicionais úteis:
+                issues += "requested_attributes[$key] failed: ${t.rootCauseMessage()}"
                 if (value.credentialId.isBlank()) {
-                    issues += "  └─ credentialId em requested_attributes[$key] está em branco"
+                    issues += "  └─ credentialId in requested_attributes[$key] is blank"
                 }
             }
         }
 
-        // requested_predicates: testa item a item
+        // requested_predicates: test each item
         for ((key, value) in requestedPredicates) {
             runCatching {
                 json.encodeToString(RequestedPredicateAnonCreds.serializer(), value)
             }.onFailure { t ->
-                issues += "requested_predicates[$key] falhou: ${t.rootCauseMessage()}"
+                issues += "requested_predicates[$key] failed: ${t.rootCauseMessage()}"
                 if (value.credentialId.isBlank()) {
-                    issues += "  └─ credentialId em requested_predicates[$key] está em branco"
+                    issues += "  └─ credentialId in requested_predicates[$key] is blank"
                 }
             }
         }
 
-        // self_attested_attributes: testa o mapa inteiro e, se falhar, testa chave a chave
+        // self_attested_attributes: test the entire map, and if it fails, test key by key
         val mapSer = MapSerializer(String.serializer(), String.serializer())
         runCatching {
             json.encodeToString(mapSer, selfAttestedAttributes)
         }.onFailure { t ->
-            issues += "self_attested_attributes falhou (mapa): ${t.rootCauseMessage()}"
-            // Diagnóstico fino: item por item
+            issues += "self_attested_attributes failed (map): ${t.rootCauseMessage()}"
+            // Fine-grained diagnosis: item by item
             for ((k, v) in selfAttestedAttributes) {
                 runCatching {
                     json.encodeToString(String.serializer(), v)
                 }.onFailure { it2 ->
-                    issues += "  └─ self_attested_attributes[$k] inválido: ${it2.rootCauseMessage()} (valor='$v')"
+                    issues += "  └─ self_attested_attributes[$k] invalid: ${it2.rootCauseMessage()} (value='$v')"
                 }
                 if (v.isBlank()) {
-                    issues += "  └─ self_attested_attributes[$k] está em branco"
+                    issues += "  └─ self_attested_attributes[$k] is blank"
                 }
             }
         }

@@ -99,44 +99,7 @@ class WalletApp : Application() {
     }
 
     private suspend fun openWallet() {
-        val pref = applicationContext.getSharedPreferences(PREFERENCE_NAME, 0)
-        var key = pref.getString("walletKey", null)
-
-        if (key == null) {
-            key = Agent.generateWalletKey()
-            pref.edit().putString("walletKey", key).apply()
-        }
-
-        copyResourceFile(genesisPath)
-        val properties = ConfigLoader.loadProperties(this)
-        val invitationUrl = properties.getProperty("invitation_url")
-
-        val androidId = Settings.Secure.getString(
-            applicationContext.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
-
-        val agentLabel = "SimpleApp-1X_$androidId"
-        // Log.e("app---------------", agentLabel)
-
-        val besuLedgerConfig = BesuLedgerConfig(
-            configFile = "besu_config.json",
-            multiledger = true
-        )
-
-        val config = AgentConfig(
-            walletKey = key,
-            genesisPath = File(applicationContext.filesDir.absolutePath, genesisPath).absolutePath,
-            mediatorConnectionsInvite = invitationUrl,
-            mediatorPickupStrategy = MediatorPickupStrategy.Implicit,
-            label = agentLabel,
-            autoAcceptCredential = AutoAcceptCredential.Never,
-            autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = false,
-            useBesuLedger = false,
-            useDidWebvh = true,
-            besuLedgerConfig = besuLedgerConfig,
-        )
+        val config = buildAgentConfig()
 
         agent = Agent(applicationContext, config)
         agent.initialize()
@@ -157,6 +120,14 @@ class WalletApp : Application() {
 
 
     private fun createAgentConfig(): AgentConfig {
+        return buildAgentConfig()
+    }
+
+    /**
+     * Builds the [AgentConfig] used to initialize/reset the agent.
+     * Shared by [openWallet] and [createAgentConfig].
+     */
+    private fun buildAgentConfig(): AgentConfig {
         val pref = getSharedPreferences(PREFERENCE_NAME, 0)
         var key = pref.getString("walletKey", null)
 
@@ -188,8 +159,9 @@ class WalletApp : Application() {
             label = "SimpleApp-1X_$androidId",
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = false,
+            useLedgerService = true,
             useBesuLedger = true,
+            useDidWebvh = false,
             besuLedgerConfig = besuLedgerConfig,
         )
     }

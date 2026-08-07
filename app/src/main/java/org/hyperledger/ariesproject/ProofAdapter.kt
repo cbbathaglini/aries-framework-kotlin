@@ -1,6 +1,8 @@
 package org.hyperledger.ariesproject
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import org.hyperledger.ariesframework.proofs.repository.ProofExchangeRecord
 import org.hyperledger.ariesproject.databinding.ProofListContentBinding
 import org.hyperledger.ariesframework.proofs.models.ProofState
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ProofAdapter(
     private val parentActivity: ProofListActivity,
@@ -31,14 +36,18 @@ class ProofAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
-        val dateString = item.createdAt?.toString() ?: ""
+        val dateString = item.createdAt?.let {
+            SimpleDateFormat("MMM dd, yyyy  hh:mm a", Locale.US)
+                .format(Date(it.toEpochMilliseconds()))
+        } ?: "-"
 
-        holder.contentView.text = "Proof ID: ${item.id}"
-        holder.dateView.text = "Created at: $dateString"
-        holder.typeView.text = "Status: ${item.state}"
+        holder.contentView.text = "Proof ${item.id}"
+        holder.dateView.text = dateString
+        holder.typeView.text = formatState(item.state)
 
         val color = colorForState(item.state)
-        holder.typeView.setTextColor(color)
+        holder.typeView.background = badgeBackground(color)
+        holder.typeView.setTextColor(Color.WHITE)
 
         with(holder.itemView) {
             tag = item
@@ -48,14 +57,26 @@ class ProofAdapter(
 
     private fun colorForState(state: ProofState): Int {
         return when (state) {
-            ProofState.ProposalSent -> parentActivity.getColor(android.R.color.holo_purple)
-            ProofState.ProposalReceived -> parentActivity.getColor(android.R.color.holo_blue_dark)
-            ProofState.RequestSent -> parentActivity.getColor(android.R.color.holo_orange_light)
-            ProofState.RequestReceived -> parentActivity.getColor(android.R.color.holo_orange_dark)
-            ProofState.PresentationSent -> parentActivity.getColor(android.R.color.holo_green_light)
-            ProofState.Done -> parentActivity.getColor(android.R.color.holo_green_dark)
-            ProofState.Abandoned -> parentActivity.getColor(android.R.color.holo_red_dark)
-            else -> parentActivity.getColor(android.R.color.darker_gray)
+            ProofState.Done -> parentActivity.getColor(R.color.status_verified)
+            ProofState.Abandoned -> parentActivity.getColor(R.color.status_failed)
+            ProofState.RequestReceived,
+            ProofState.RequestSent -> parentActivity.getColor(R.color.status_pending)
+            ProofState.PresentationSent -> parentActivity.getColor(R.color.teal_700)
+            ProofState.ProposalSent,
+            ProofState.ProposalReceived -> parentActivity.getColor(R.color.gray_700)
+            else -> parentActivity.getColor(R.color.gray_500)
+        }
+    }
+
+    private fun formatState(state: ProofState): String {
+        return state.name.replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
+    }
+
+    private fun badgeBackground(color: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = parentActivity.resources.displayMetrics.density * 12
+            setColor(color)
         }
     }
 

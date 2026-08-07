@@ -11,7 +11,7 @@ data class AnonCredsCredentialDefinition(
     val issuerId: String,
     val schemaId: String,
     @SerialName("type")
-    val type: String = "CL", // pode-se usar enum se quiser restringir a valores válidos
+    val type: String = "CL",
     val tag: String,
     val value: CredentialDefinitionValue,
 ) {

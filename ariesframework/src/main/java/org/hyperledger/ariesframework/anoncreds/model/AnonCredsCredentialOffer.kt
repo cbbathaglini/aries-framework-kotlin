@@ -57,7 +57,7 @@ data class AnonCredsCredentialOffer(
 
         private fun convertToValidJson(raw: String?): String {
             if (raw == null) return "{}"
-            // Corrigir = para ":" e adicionar aspas
+            // Fix "=" to ":" and add quotes
             val fixed = raw
                 .replace("=", "\":\"")
                 .replace(", ", "\", \"")

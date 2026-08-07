@@ -1,0 +1,52 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
+
+def secretPropsFile = file("local.properties")
+if (secretPropsFile.exists()) {
+    Properties properties = new Properties()
+    secretPropsFile.withInputStream { properties.load(it) }
+    properties.each { k, v -> ext[k] = v }
+} else {
+    ext["githubUsername"] = System.getenv("GITHUB_ACTOR")
+    ext["githubToken"] = System.getenv("GITHUB_TOKEN")
+}
+
+def getExtraString(name) {
+    try {
+        return ext[name]
+    } catch (ignored) {
+        return ""
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        //mavenLocal()
+        mavenCentral()
+        google()
+
+        maven {
+            setUrl("https://maven.pkg.github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers")
+            credentials {
+                username = getExtraString("githubUsername")
+                password = getExtraString("githubToken")
+            }
+        }
+        maven { url = uri('https://jitpack.io') }
+//        flatDir {
+//            dirs file('app/libs')
+//        }
+    }
+}
+
+rootProject.name = "aries-framework-kotlin"
+include ':app'
+include ':ariesframework'
+include ':ledger-besu-wrapper'

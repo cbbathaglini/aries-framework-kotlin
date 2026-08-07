@@ -7,8 +7,8 @@ import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
 import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
-import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.EthrAnonCredsRegistry
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.LedgerAnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsModuleConfigOptions
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionPrivateRepository
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsCredentialDefinitionRepository
@@ -54,13 +54,13 @@ import org.hyperledger.ariesframework.proofs.v2.verifier.AnonCredsRsVerifierServ
 import org.hyperledger.ariesframework.routing.MediationRecipient
 import org.hyperledger.ariesframework.storage.DidCommMessageRepository
 import org.hyperledger.ariesframework.util.LogUtil
-import org.hyperledger.ariesframework.webvh.WebVhModule
 import org.hyperledger.ariesframework.vc.dataintegrity.W3cJsonLdCredentialService
 import org.hyperledger.ariesframework.vc.modules.W3cCredentialsModuleConfig
 import org.hyperledger.ariesframework.vc.repository.W3cCredentialRepository
 import org.hyperledger.ariesframework.vc.service.W3cCredentialService
 import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
+import org.hyperledger.ariesframework.webvh.WebVhModule
 
 class Agent(val context: Context, val agentConfig: AgentConfig) {
 
@@ -120,6 +120,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
                 if (agentConfig.useDidWebvh) {
                     add(webvhModule!!.anonCredsRegistry)
                 }
+                add(LedgerAnonCredsRegistry())
             },
         ),
     )
