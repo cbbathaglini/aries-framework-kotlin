@@ -1,20 +1,20 @@
 <resources>
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Cores principais -->
+        <!-- Primary colors -->
         <item name="colorPrimary">@color/teal_700</item>
         <item name="colorPrimaryVariant">@color/teal_800</item>
         <item name="colorOnPrimary">@color/white</item>
 
-        <!-- Cores secundárias -->
+        <!-- Secondary colors -->
         <item name="colorSecondary">@color/teal_600</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/white</item>
 
-        <!-- Fundo e texto -->
+        <!-- Background and text -->
         <item name="android:colorBackground">@color/white</item>
         <item name="android:textColor">@color/black</item>
 
-        <!-- Status bar e Navigation -->
+        <!-- Status bar and navigation -->
         <item name="android:statusBarColor">@color/teal_700</item>
         <item name="android:navigationBarColor">@color/white</item>
 

@@ -9,14 +9,14 @@
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="← Voltar"
+        android:text="← Back"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/teal_600"
         android:layout_marginBottom="12dp" />
 
     <TextView
-        android:text="Apresentações Recebidas"
+        android:text="Received Presentations"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_width="wrap_content"
@@ -25,7 +25,7 @@
 
     <TextView
         android:id="@+id/lastUpdatedText"
-        android:text="Última atualização: —"
+        android:text="Last updated: —"
         android:textSize="14sp"
         android:textColor="@android:color/darker_gray"
         android:layout_width="wrap_content"
@@ -36,7 +36,7 @@
         android:id="@+id/refreshButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Atualizar 🔄"
+        android:text="Refresh 🔄"
         android:layout_marginBottom="12dp" />
 
     <ListView
@@ -47,7 +47,7 @@
 
     <TextView
         android:id="@+id/emptyView"
-        android:text="Nenhuma apresentação disponível."
+        android:text="No presentations available."
         android:gravity="center"
         android:textColor="@android:color/darker_gray"
         android:layout_width="match_parent"

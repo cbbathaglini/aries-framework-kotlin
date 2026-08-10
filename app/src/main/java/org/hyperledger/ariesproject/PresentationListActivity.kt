@@ -74,8 +74,8 @@ class PresentationListActivity : AppCompatActivity() {
 
         listView.setOnItemClickListener { _, _, position, _ ->
             val record = records[position]
-            val intent = Intent(this, PresentationDetailActivity::class.java)
-            intent.putExtra("recordId", record.id)
+            val intent = Intent(this, ProofDetailActivity::class.java)
+            intent.putExtra(ProofDetailFragment.ARG_PROOF_ID, record.id)
             startActivity(intent)
         }
 

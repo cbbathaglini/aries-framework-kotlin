@@ -159,9 +159,9 @@ class WalletApp : Application() {
             label = "SimpleApp-1X_$androidId",
             autoAcceptCredential = AutoAcceptCredential.Never,
             autoAcceptProof = AutoAcceptProof.Never,
-            useLedgerService = true,
-            useBesuLedger = true,
-            useDidWebvh = false,
+            useLedgerService = false,
+            useBesuLedger = false,
+            useDidWebvh = true,
             besuLedgerConfig = besuLedgerConfig,
         )
     }

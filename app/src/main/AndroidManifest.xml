@@ -2,52 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!--    &lt;!&ndash; 🔒 Permissões gerais &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.RECORD_AUDIO" />-->
-<!--    <uses-permission android:name="android.permission.INTERNET" />-->
-<!--    <uses-permission android:name="android.permission.CAMERA" />-->
-
-<!--    &lt;!&ndash; 🔵 Permissões Bluetooth (compatíveis com Android 12+) &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH" />-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
-
-<!--    &lt;!&ndash; ✅ Android 12+ (API 31+) - usePermissionFlags evita alertas de localização &ndash;&gt;-->
-<!--    <uses-permission-->
-<!--        android:name="android.permission.BLUETOOTH_SCAN"-->
-<!--        android:usesPermissionFlags="neverForLocation" />-->
-<!--    <uses-permission-->
-<!--        android:name="android.permission.BLUETOOTH_ADVERTISE"-->
-<!--        android:usesPermissionFlags="neverForLocation" />-->
-<!--    <uses-permission-->
-<!--        android:name="android.permission.BLUETOOTH_CONNECT"-->
-<!--        android:usesPermissionFlags="neverForLocation" />-->
-
-<!--    &lt;!&ndash; Câmera obrigatória &ndash;&gt;-->
-<!--    <uses-feature android:name="android.hardware.camera" android:required="true"/>-->
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
 
-    <!-- Android 12+ -->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-
-
-    <!-- 🔵 Permissões introduzidas no Android 12 (API 31) -->
-    <!-- Android 11 e anteriores -->
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
-
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
-    <!-- Câmera obrigatória -->
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
 
     <application
@@ -62,8 +23,6 @@
         tools:ignore="DataExtractionRules">
 
         <uses-library android:name="org.apache.http.legacy" android:required="false" />
-
-        <!-- 🧾 Lista de Activities -->
         <activity
             android:name=".CredentialListActivity"
             android:label="@string/title_credential_list"
@@ -155,22 +114,17 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:exported="false" />
 
-        <activity android:name=".ReceivingPresentationActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar" />
-
         <activity android:name=".PresentationListActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
-
-
-        <activity android:name=".PresentationDetailActivity"
+        <activity android:name=".W3cCredentialListActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
+
 
         <activity android:name=".PresentationsReceivedListActivity"
             android:exported="true"

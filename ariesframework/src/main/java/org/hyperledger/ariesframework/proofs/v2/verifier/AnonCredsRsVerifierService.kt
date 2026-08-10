@@ -31,7 +31,7 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
     override suspend fun verifyProof(options: VerifyProofOptions): Boolean {
         LogUtil.info(this) { "verifying proof" }
-        val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, _) = options
+        val (proofRequest, presentationMessage, requestMessage, proof, schemas, credentialDefinitions, revocationRegistries) = options
 
         val proofJson = presentationMessage.anoncredsProof()
         val partialProof = Json { ignoreUnknownKeys = true }
@@ -80,18 +80,43 @@ class AnonCredsRsVerifierService(val agent: Agent) : AnonCredsVerifierService {
 
         val ts: ULong = holderTimestamp.toULong()
 
-        val revRegDefJson = agent.ledgerService.getRevocationRegistryDefinition(revRegId)
-        val revRegDefUni = RevocationRegistryDefinition(revRegDefJson)
+        val cachedEntry = revocationRegistries[revRegId]
+
+        val revRegDefUni: RevocationRegistryDefinition
+        val statusListUniffi: anoncreds_uniffi.RevocationStatusList
+
+        if (cachedEntry != null) {
+            // WebVH: the revocation registry entry (definition + status lists) was resolved
+            // through the anoncreds registry, not the indy/besu ledger.
+            revRegDefUni = RevocationRegistryDefinition(cachedEntry.definition.toJson())
+
+            val statusList = cachedEntry.revocationStatusLists?.values
+                ?.filter { it.timestamp <= ts }
+                ?.maxByOrNull { it.timestamp }
+                ?: cachedEntry.revocationStatusLists?.values
+                    ?.minByOrNull { it.timestamp }
+
+            if (statusList == null) {
+                LogUtil.error(this) { "No revocation status list available for $revRegId" }
+                return false
+            }
+
+            statusListUniffi = anoncreds_uniffi.RevocationStatusList(statusList.toJson(pretty = false))
+        } else {
+            // Legacy (Indy/Besu) fallback.
+            val revRegDefJson = agent.ledgerService.getRevocationRegistryDefinition(revRegId)
+            revRegDefUni = RevocationRegistryDefinition(revRegDefJson)
+
+            val ledgerStatusList = agent.ledgerService.getRevocationStatusList(revRegId, ts)
+            val statusListJson = indyBesuRevocationStatusListToJson(
+                src = ledgerStatusList,
+                revRegDefId = revRegId,
+                targetTimestamp = ts,
+            )
+            statusListUniffi = anoncreds_uniffi.RevocationStatusList(statusListJson)
+        }
+
         val revRegDefsMap = mapOf(revRegId to revRegDefUni)
-
-        val ledgerStatusList = agent.ledgerService.getRevocationStatusList(revRegId, ts)
-        val statusListJson = indyBesuRevocationStatusListToJson(
-            src = ledgerStatusList,
-            revRegDefId = revRegId,
-            targetTimestamp = ts,
-        )
-
-        val statusListUniffi = anoncreds_uniffi.RevocationStatusList(statusListJson)
 
         return try {
             val verified = Verifier().verifyPresentation(

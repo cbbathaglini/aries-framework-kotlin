@@ -36,7 +36,6 @@ Aries Framework Kotlin is an Android framework for the [Aries](https://github.co
 **Transports**
 - ✅ HTTP
 - ✅ WebSocket
-- ✅ BLE / Bluetooth
 
 ### Not supported yet
 - ❌ ([RFC 0056](https://github.com/hyperledger/aries-rfcs/blob/main/features/0056-service-decorator/README.md)) Service Decorator

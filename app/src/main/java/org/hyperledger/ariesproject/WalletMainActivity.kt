@@ -307,7 +307,6 @@ class WalletMainActivity : BaseActivity() {
                 MainMenu.CONNECTION,
                 MainMenu.REQUESTPROOF,
                 MainMenu.SCANREQUESTPROOF,
-                MainMenu.RECEIVING_PRESENTATION_PROOF,
                 MainMenu.PRESENTATION_LIST
             )
         )
@@ -342,9 +341,6 @@ class WalletMainActivity : BaseActivity() {
 
                 MainMenu.SCANREQUESTPROOF ->
                     context.startActivity(Intent(context, VerifierProofActivity::class.java))
-
-                MainMenu.RECEIVING_PRESENTATION_PROOF ->
-                    context.startActivity(Intent(context, ReceivingPresentationActivity::class.java))
 
                 MainMenu.PRESENTATION_LIST ->
                     context.startActivity(Intent(context, PresentationListActivity::class.java))

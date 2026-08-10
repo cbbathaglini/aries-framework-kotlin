@@ -9,7 +9,7 @@
         android:id="@+id/txt_notifications"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nenhuma notificação no momento."
+        android:text="No notifications at the moment."
         android:textSize="16sp"
         android:textColor="@android:color/black"
         android:layout_gravity="center_horizontal"

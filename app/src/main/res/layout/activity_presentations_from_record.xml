@@ -9,7 +9,7 @@
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="← Voltar"
+        android:text="← Back"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/teal_600"
@@ -17,7 +17,7 @@
 
     <TextView
         android:id="@+id/titleText"
-        android:text="Apresentações do Verifier Record"
+        android:text="Presentations from Verifier Record"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_width="match_parent"
@@ -43,7 +43,7 @@
 
     <TextView
         android:id="@+id/emptyView"
-        android:text="Nenhuma apresentação encontrada."
+        android:text="No presentations found."
         android:gravity="center"
         android:textColor="@android:color/darker_gray"
         android:layout_width="match_parent"

@@ -85,27 +85,54 @@ class WebVhAnonCredsRegistry(
         val defResource = resourceHelper.fetchResourceByIdentifier(revocationRegistryId, isEmulator(agent))
         val links = defResource.getAsJsonArray("links")
 
-        // Choose the status list link whose timestamp is <= the requested one (the most recent)
-        val statusLink = links?.firstOrNull {
-            val type = it.asJsonObject.get("type")?.asString ?: ""
-            type.isNullOrBlank() || type.contains("status", ignoreCase = true)
-        }
+        // Collect all status list links.
+        val statusLinks = links?.mapNotNull { element ->
+            val obj = element.asJsonObject
+            val type = obj.get("type")?.asString ?: ""
+            if (type.isNullOrBlank() || type.contains("status", ignoreCase = true)) {
+                obj.get("id")?.asString?.let { it to obj }
+            } else {
+                null
+            }
+        } ?: emptyList()
 
-        if (statusLink == null || statusLink.asJsonObject.get("id") == null) {
+        if (statusLinks.isEmpty()) {
             throw RuntimeException(
                 "No revocation status list link found on resource $revocationRegistryId. links=$links",
             )
         }
 
-        val statusResourceId = statusLink.asJsonObject.get("id").asString
-        val (statusDid, statusResId) = splitResourceIdentifier(statusResourceId)
+        // Fetch the status list for every link and choose the one whose timestamp is the most
+        // recent among those <= the requested timestamp. The status list resource 'content'
+        // carries its own timestamp; using it (instead of a link field) is robust regardless of
+        // how each link is annotated.
+        val candidates = statusLinks.mapNotNull { (statusResourceId, _) ->
+            val (statusDid, statusResId) = splitResourceIdentifier(statusResourceId)
+            val statusResource = resourceHelper.fetchResource(statusDid, statusResId, isEmulator(agent))
+            val content = extractContent(statusResource)
+            val statusListJson = Json.parseToJsonElement(content.toString())
+            val statusList = try {
+                json.decodeFromJsonElement<AnonCredsRevocationStatusList>(statusListJson)
+            } catch (e: Exception) {
+                logger.warn("Failed to decode revocation status list from $statusResourceId: ${e.message}")
+                null
+            }
+            statusList?.let { Triple(statusResourceId, statusList, content) }
+        }
 
-        val statusResource = resourceHelper.fetchResource(statusDid, statusResId, isEmulator(agent))
-        val content = extractContent(statusResource)
-        android.util.Log.e("WEBVH_STATUS_LIST", "status list content for $statusResourceId:\n$content")
+        if (candidates.isEmpty()) {
+            throw RuntimeException(
+                "Could not decode any revocation status list for $revocationRegistryId. links=$links",
+            )
+        }
 
-        val statusListJson = Json.parseToJsonElement(content.toString())
-        val statusList = json.decodeFromJsonElement<AnonCredsRevocationStatusList>(statusListJson)
+        val (statusResourceId, statusList, statusContent) = candidates
+            .filter { it.second.timestamp <= timestamp }
+            .maxByOrNull { it.second.timestamp }
+            ?: candidates.minByOrNull { it.second.timestamp }!!
+
+        android.util.Log.e("WEBVH_STATUS_LIST", "status list content for $statusResourceId (list timestamp=${statusList.timestamp}, requested=$timestamp):\n$statusContent")
+
         return GetRevocationStatusListReturn(revocationStatusList = statusList)
     }
 

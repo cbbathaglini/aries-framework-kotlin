@@ -65,6 +65,10 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), InvitationActivity::class.java))
         }
 
+        binding.linkW3cCredentials.setOnClickListener {
+            startActivity(Intent(requireContext(), W3cCredentialListActivity::class.java))
+        }
+
 //        // Offline proofs
 //        binding.btnRequestProof.setOnClickListener {
 //            startActivity(Intent(requireContext(), RequestProofActivity::class.java))
@@ -72,10 +76,6 @@ class HomeFragment : Fragment() {
 //
 //        binding.btnScanProof.setOnClickListener {
 //            startActivity(Intent(requireContext(), VerifierProofActivity::class.java))
-//        }
-//
-//        binding.btnReceivePresentation.setOnClickListener {
-//            startActivity(Intent(requireContext(), ReceivingPresentationActivity::class.java))
 //        }
 //
 //        binding.btnPresentationList.setOnClickListener {
