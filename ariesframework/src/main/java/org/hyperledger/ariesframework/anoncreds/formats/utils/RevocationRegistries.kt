@@ -1,5 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.formats.utils
 
+import indy_besu_vdr.RevocationRegistryDefinition
+import indy_besu_vdr.RevocationStatusList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -20,8 +22,6 @@ import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.proofs.v2.verifier.RevocationRegistryEntry
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.RevocationRegistryDefinition
-import uniffi.indy_besu_vdr.RevocationStatusList
 import java.util.Collections
 
 data class RevocationRegistries(val agent: Agent) {

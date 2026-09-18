@@ -5,6 +5,18 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import anoncreds_uniffi.Issuer
+import indy_besu_vdr.ContractConfig
+import indy_besu_vdr.ContractSpec
+import indy_besu_vdr.LedgerClient
+import indy_besu_vdr.LedgerConfiguration
+import indy_besu_vdr.LedgerRouter
+import indy_besu_vdr.RevocationRegistryDefinition
+import indy_besu_vdr.resolveCredentialDefinition
+import indy_besu_vdr.resolveRevocationRegistryDefinition
+import indy_besu_vdr.resolveRevocationRegistryStatusList
+import indy_besu_vdr.resolveRevocationRegistryStatusListFull
+import indy_besu_vdr.resolveSchema
+import indy_besu_vdr.revocationStatusListFromString
 import indy_vdr_uniffi.Pool
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -28,18 +40,6 @@ import org.hyperledger.ariesframework.proofs.models.RevocationRegistryDelta
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.wallet.DidInfo
 import org.json.JSONObject
-import uniffi.indy_besu_vdr.ContractConfig
-import uniffi.indy_besu_vdr.ContractSpec
-import uniffi.indy_besu_vdr.LedgerClient
-import uniffi.indy_besu_vdr.LedgerConfiguration
-import uniffi.indy_besu_vdr.LedgerRouter
-import uniffi.indy_besu_vdr.RevocationRegistryDefinition
-import uniffi.indy_besu_vdr.resolveCredentialDefinition
-import uniffi.indy_besu_vdr.resolveRevocationRegistryDefinition
-import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusList
-import uniffi.indy_besu_vdr.resolveRevocationRegistryStatusListFull
-import uniffi.indy_besu_vdr.resolveSchema
-import uniffi.indy_besu_vdr.revocationStatusListFromString
 import java.io.File
 
 /**
@@ -108,7 +108,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
         val value: String,
     )
 
-    private fun toDto(v: uniffi.indy_besu_vdr.CredentialDefinition): CredDefVdrCacheDto =
+    private fun toDto(v: indy_besu_vdr.CredentialDefinition): CredDefVdrCacheDto =
         CredDefVdrCacheDto(
             issuerId = v.issuerId,
             schemaId = v.schemaId,
@@ -117,8 +117,8 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
             value = v.value,
         )
 
-    private fun fromDto(dto: CredDefVdrCacheDto): uniffi.indy_besu_vdr.CredentialDefinition =
-        uniffi.indy_besu_vdr.CredentialDefinition(
+    private fun fromDto(dto: CredDefVdrCacheDto): indy_besu_vdr.CredentialDefinition =
+        indy_besu_vdr.CredentialDefinition(
             issuerId = dto.issuerId,
             schemaId = dto.schemaId,
             credDefType = dto.credDefType,
@@ -199,6 +199,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun initialize() {
+        BesuVdr.configureNativeLibrary()
         LogUtil.info(this) { "Initializing Besu Ledger Service..." }
 
         if (pool != null) {
@@ -358,7 +359,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
 
     override suspend fun getCredentialDefinitionvVdr(
         credentialId: String,
-    ): uniffi.indy_besu_vdr.CredentialDefinition {
+    ): indy_besu_vdr.CredentialDefinition {
         val start = System.nanoTime()
         val ttlDays = credDefTtlDaysFor(credentialId)
         val cache = credDefVdrCacheFor(credentialId)
@@ -575,7 +576,7 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
     override suspend fun getRevocationStatusList(
         id: String,
         timestamp: ULong,
-    ): uniffi.indy_besu_vdr.RevocationStatusList {
+    ): indy_besu_vdr.RevocationStatusList {
         val client = ledgerClient ?: getLedgerClient(id)
             ?: throw Exception("Ledger not initialized")
         return resolveRevocationRegistryStatusListFull(

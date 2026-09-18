@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 
+import indy_besu_vdr.RevocationStatusList
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.hyperledger.ariesframework.agent.Agent
@@ -17,7 +18,6 @@ import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationSt
 import org.hyperledger.ariesframework.error.CredoError
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.RevocationStatusList
 
 class EthrAnonCredsRegistry(override val methodName: String = "ethr") : AnonCredsRegistry {
 

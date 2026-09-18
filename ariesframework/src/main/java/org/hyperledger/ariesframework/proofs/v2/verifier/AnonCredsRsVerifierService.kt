@@ -6,6 +6,7 @@ import anoncreds_uniffi.PresentationRequest
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.Schema
 import anoncreds_uniffi.Verifier
+import indy_besu_vdr.RevocationStatusList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -22,7 +23,6 @@ import org.hyperledger.ariesframework.proofs.models.TimestampVerificationResult
 import org.hyperledger.ariesframework.proofs.utils.RecoverFromLedger
 import org.hyperledger.ariesframework.util.LogUtil
 import org.hyperledger.ariesframework.util.concurrentForEach
-import uniffi.indy_besu_vdr.RevocationStatusList
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.iterator

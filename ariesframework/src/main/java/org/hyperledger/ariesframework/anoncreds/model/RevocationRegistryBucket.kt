@@ -1,7 +1,7 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
-import uniffi.indy_besu_vdr.RevocationRegistryDefinition
-import uniffi.indy_besu_vdr.RevocationStatusList
+import indy_besu_vdr.RevocationRegistryDefinition
+import indy_besu_vdr.RevocationStatusList
 
 data class RevocationRegistryBucket(
     val definition: RevocationRegistryDefinition? = null,

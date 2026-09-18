@@ -49,4 +49,3 @@ dependencyResolutionManagement {
 rootProject.name = "aries-framework-kotlin"
 include ':app'
 include ':ariesframework'
-include ':ledger-besu-wrapper'
