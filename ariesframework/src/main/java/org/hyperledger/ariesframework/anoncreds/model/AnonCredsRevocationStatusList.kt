@@ -1,8 +1,8 @@
 package org.hyperledger.ariesframework.anoncreds.model
 
+import indy_besu_vdr.RevocationStatusList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import uniffi.indy_besu_vdr.RevocationStatusList
 
 @Serializable
 data class AnonCredsRevocationStatusList(

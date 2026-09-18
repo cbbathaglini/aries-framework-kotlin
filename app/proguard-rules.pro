@@ -28,6 +28,7 @@
 # Não remova nada do namespace UniFFI
 -keep class uniffi.** { *; }
 -dontwarn uniffi.**
+-keep class indy_besu_vdr.** { *; }
 
 # Preserve generic signatures so TypeToken<T> retains type information
 -keepattributes Signature

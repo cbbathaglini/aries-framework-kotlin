@@ -244,7 +244,7 @@ class RevocationService(val agent: Agent) {
         return tailsFile
     }
 
-//    suspend fun downloadTailsBesu(revocationRegistryDefinition: uniffi.indy_besu_vdr.RevocationRegistryDefinition): File {
+//    suspend fun downloadTailsBesu(revocationRegistryDefinition: indy_besu_vdr.RevocationRegistryDefinition): File {
 //        logger.info("Downloading tails file for revocation registry definition: ${revocationRegistryDefinition.r()}")
 //        val tailsFolder = File(agent.context.filesDir.absolutePath, "tails")
 //        if (!tailsFolder.exists()) {

@@ -58,7 +58,7 @@ ktlint {
 
 
 dependencies {
-    implementation project(':ledger-besu-wrapper')
+    implementation("org.hyperledger:indy_besu_vdr:0.3.1.1")
     implementation("org.hyperledger:anoncreds_uniffi:0.3.1")
     implementation("org.hyperledger:indy_vdr_uniffi:0.3.1")
     implementation("org.hyperledger:askar_uniffi:0.3.1")

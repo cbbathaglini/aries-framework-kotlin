@@ -1,5 +1,6 @@
 package org.hyperledger.ariesframework.anoncreds.formats.anoncreds
 
+import indy_besu_vdr.RevocationStatusList
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
@@ -15,7 +16,6 @@ import org.hyperledger.ariesframework.anoncreds.model.GetSchemaReturn
 import org.hyperledger.ariesframework.anoncreds.service.registry.GetRevocationStatusListReturn
 import org.hyperledger.ariesframework.util.LogUtil
 import org.slf4j.LoggerFactory
-import uniffi.indy_besu_vdr.RevocationStatusList
 
 class LedgerAnonCredsRegistry(override val methodName: String = "ledger") : AnonCredsRegistry {
 

@@ -12,14 +12,14 @@ import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistr
 import org.hyperledger.ariesframework.anoncreds.model.RevocationRegistryValue
 
 object RevocationRegistryDefinitionSerializer :
-    KSerializer<uniffi.indy_besu_vdr.RevocationRegistryDefinition> {
+    KSerializer<indy_besu_vdr.RevocationRegistryDefinition> {
 
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("RevocationRegistryDefinition")
 
     override fun serialize(
         encoder: Encoder,
-        value: uniffi.indy_besu_vdr.RevocationRegistryDefinition,
+        value: indy_besu_vdr.RevocationRegistryDefinition,
     ) {
         // value.value is String (JSON). We need to type it.
         val revRegValue: RevocationRegistryValue =
@@ -46,7 +46,7 @@ object RevocationRegistryDefinitionSerializer :
         encoder.encodeSerializableValue(serializer<AnonCredsRevocationRegistryDefinition>(), dto)
     }
 
-    override fun deserialize(decoder: Decoder): uniffi.indy_besu_vdr.RevocationRegistryDefinition {
+    override fun deserialize(decoder: Decoder): indy_besu_vdr.RevocationRegistryDefinition {
         throw NotImplementedError("Only serialization is supported")
     }
 }

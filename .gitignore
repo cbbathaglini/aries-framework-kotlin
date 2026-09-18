@@ -48,7 +48,7 @@ local.properties
 *.dylib
 *.dll
 
-# Generated uniffi bindings (regenerate with cargo/uniffi-bindgen)
+# Legacy local Besu assets (keep ignored when switching to older branches)
 ledger-besu-wrapper/src/main/kotlin/org/hyperledger/indy-besu-vdr/
 ledger-besu-wrapper/src/main/jniLibs/
 

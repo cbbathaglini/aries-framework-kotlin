@@ -1,12 +1,12 @@
 
+import indy_besu_vdr.CredentialDefinition
+import indy_besu_vdr.RevocationRegistryDefinition
+import indy_besu_vdr.RevocationStatusList
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsSchema
 import org.hyperledger.ariesframework.ledger.CredentialDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.RevocationRegistryDefinitionTemplate
 import org.hyperledger.ariesframework.ledger.SchemaTemplate
 import org.hyperledger.ariesframework.wallet.DidInfo
-import uniffi.indy_besu_vdr.CredentialDefinition
-import uniffi.indy_besu_vdr.RevocationRegistryDefinition
-import uniffi.indy_besu_vdr.RevocationStatusList
 
 interface ILedgerService {
     suspend fun initialize()

@@ -181,7 +181,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         return Json.encodeToString(credDef)
     }
 
-    override suspend fun getCredentialDefinitionvVdr(id: String): uniffi.indy_besu_vdr.CredentialDefinition {
+    override suspend fun getCredentialDefinitionvVdr(id: String): indy_besu_vdr.CredentialDefinition {
         throw Exception("not implemented for indy")
     }
 
@@ -274,7 +274,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
         return dataresponse
     }
 
-    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): uniffi.indy_besu_vdr.RevocationRegistryDefinition {
+    override suspend fun getRevocationRegistryDefinitionIndyBesuLib(id: String): indy_besu_vdr.RevocationRegistryDefinition {
         throw Exception("not implemented for indy")
     }
 
@@ -357,7 +357,7 @@ class LedgerIndyService(val agent: Agent) : ILedgerService {
     override suspend fun getRevocationStatusList(
         id: String,
         timestamp: ULong,
-    ): uniffi.indy_besu_vdr.RevocationStatusList {
+    ): indy_besu_vdr.RevocationStatusList {
         throw Exception("not implemented for indy")
     }
 

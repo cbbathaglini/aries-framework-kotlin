@@ -55,7 +55,22 @@ Run the unit tests from the terminal of Android Studio as follows:
 
 As this will run android tests on the connected device, you need to run the emulator before running the tests. Credentials tests, proofs tests, and agent tests are annotated with `@LargeTest` to filter them out.
 
-### Credentials and proofs tests
+### Published Besu VDR smoke tests
+
+`IndyBesuVdrTest` verifies native revocation JSON conversion, framework serialization,
+and ledger routing against the published Android dependency. It does not require a
+running Besu ledger. Run it on an emulator or device, including a 16 KB page-size
+device when available:
+
+```bash
+./gradlew :ariesframework:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=org.hyperledger.ariesframework.credentials.IndyBesuVdrTest
+```
+
+The existing `LedgerBesuServiceTest` still requires a configured Besu network and
+matching schema, credential definition, and revocation resources.
+
+### Credentials and proofs test environment
 
 These tests use `TestHelper.prepareForIssuance()` to register a schema and a credential definition on the ledger.
 `Anoncreds.issuerCreateAndStoreCredentialDef()` function of Indy SDK is used there and hangs very often, so the tests will fail most of the time. You can try to run the tests multiple times to see if they pass when the function does not hang.
