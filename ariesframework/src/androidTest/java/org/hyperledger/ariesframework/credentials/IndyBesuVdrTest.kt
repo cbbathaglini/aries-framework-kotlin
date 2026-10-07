@@ -6,19 +6,12 @@ import indy_besu_vdr.revocationStatusListFromString
 import indy_besu_vdr.revocationStatusListToString
 import kotlinx.serialization.json.Json
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-import org.hyperledger.ariesframework.ledger.ledgerBesu.BesuVdr
 import org.hyperledger.ariesframework.util.serializer.RevocationStatusListSerializer
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
 
 /** Exercises the published native library without requiring a running ledger. */
 class IndyBesuVdrTest {
-    @Before
-    fun configureNativeLibrary() {
-        BesuVdr.configureNativeLibrary()
-    }
-
     @Test
     fun revocationStatusListPreservesNativeAndFrameworkJson() {
         val source = """

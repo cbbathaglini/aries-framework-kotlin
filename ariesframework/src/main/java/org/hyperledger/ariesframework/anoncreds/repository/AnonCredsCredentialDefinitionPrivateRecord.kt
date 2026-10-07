@@ -2,10 +2,10 @@ package org.hyperledger.ariesframework.anoncreds.repository
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.hyperledger.ariesframework.Tags
 import org.hyperledger.ariesframework.storage.BaseRecord
+import org.hyperledger.ariesframework.util.JsonAnyMapSerializer
 
 @Serializable
 class AnonCredsCredentialDefinitionPrivateRecord(
@@ -14,7 +14,8 @@ class AnonCredsCredentialDefinitionPrivateRecord(
     override val createdAt: Instant,
     override var updatedAt: Instant?,
     val credentialDefinitionId: String,
-    val value: Map<String, @Contextual Any>,
+    @Serializable(with = JsonAnyMapSerializer::class)
+    val value: Map<String, Any?>,
 ) : BaseRecord() {
 
     companion object {
@@ -24,7 +25,7 @@ class AnonCredsCredentialDefinitionPrivateRecord(
     constructor(
         tags: Tags? = null,
         credentialDefinitionId: String,
-        value: Map<String, Any>,
+        value: Map<String, Any?>,
     ) : this(
         id = BaseRecord.generateId(),
         _tags = tags,

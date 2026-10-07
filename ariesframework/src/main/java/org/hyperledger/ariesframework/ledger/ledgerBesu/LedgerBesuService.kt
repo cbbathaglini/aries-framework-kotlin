@@ -199,7 +199,6 @@ class LedgerBesuService(val agent: Agent, context: Context) : ILedgerService {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun initialize() {
-        BesuVdr.configureNativeLibrary()
         LogUtil.info(this) { "Initializing Besu Ledger Service..." }
 
         if (pool != null) {

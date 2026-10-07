@@ -92,7 +92,10 @@ class Wallet(private val agent: Agent) {
 
     suspend fun close() {
         LogUtil.info(this) { "Closing wallet" }
+        // Close the async Askar resources before releasing their UniFFI handles.
+        session?.closeSession()
         session?.close()
+        store?.closeStore()
         store?.close()
 
         session = null

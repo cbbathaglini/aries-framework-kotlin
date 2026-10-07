@@ -20,6 +20,7 @@ import org.hyperledger.ariesframework.agent.decorators.Attachment
 import org.hyperledger.ariesframework.anoncreds.exception.ProblemReportError
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsCredentialProposalFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsProposeCredentialFormat
+import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnonCredsOfferCredentialFormat
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.AnoncredsCredentialFormat
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateOfferReturn
 import org.hyperledger.ariesframework.anoncreds.formats.model.CredentialFormatCreateProposalReturn
@@ -194,7 +195,7 @@ class AnoncredsCredentialFormatService(
     ): CredentialFormatCreateOfferReturn {
         LogUtil.info(this) { "creating offer" }
         // PrintLongLine.print("credentialFormats------- $credentialFormats")
-        val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnoncredsCredentialFormat>(credentialFormats)
+        val anoncredsFormat = FormatGeneric.getAnonCredsFormatGeneric<AnonCredsOfferCredentialFormat>(credentialFormats)
 
         val createAnoncredsOffer = CreateAnoncredsOffer(
             credentialExchangeRecord = credentialExchangeRecord,
@@ -202,7 +203,7 @@ class AnoncredsCredentialFormatService(
             attributes = anoncredsFormat.attributes,
             credentialDefinitionId = anoncredsFormat.credentialDefinitionId,
             revocationRegistryDefinitionId = anoncredsFormat.revocationRegistryDefinitionId,
-            revocationRegistryIndex = anoncredsFormat.revocationRegistryIndex,
+            revocationRegistryIndex = anoncredsFormat.revocationRegistryIndex?.toLong(),
             linkedAttachments = anoncredsFormat.linkedAttachments,
         )
         val credentialFormatCreateOfferReturn = createAnonCredsOffer(createAnoncredsOffer)
@@ -390,7 +391,7 @@ class AnoncredsCredentialFormatService(
             format = ANONCREDS_CREDENTIAL,
         )
 
-        val attachment = FormatDataUtil.getFormatData(credential, format.attachId)
+        val attachment = FormatDataUtil.getFormatData(Json.encodeToJsonElement(credential), format.attachId)
 
         LogUtil.info(this) { "request accepted" }
         return CredentialFormatCreateReturn(
@@ -481,8 +482,8 @@ class AnoncredsCredentialFormatService(
 
         val anonCredsCredentialRequestMetadata = AnonCredsCredentialRequestMetadata(
             link_secret_blinding_data = linkSecretBlindingData,
-            link_secret_name = metadataObject.get("link_secret_name").toString(),
-            nonce = metadataObject.get("nonce").toString(),
+            link_secret_name = metadataObject.getValue("link_secret_name").jsonPrimitive.content,
+            nonce = metadataObject.getValue("nonce").jsonPrimitive.content,
         )
 
         val storeCredential = StoreCredentialOptions(
@@ -658,7 +659,7 @@ class AnoncredsCredentialFormatService(
             ),
         )
 
-        val attachment = FormatDataUtil.getFormatData(anoncredsCredentialOffer, format.attachId)
+        val attachment = FormatDataUtil.getFormatData(Json.encodeToJsonElement(anoncredsCredentialOffer), format.attachId)
 
         return CredentialFormatCreateOfferReturn(
             format = format,

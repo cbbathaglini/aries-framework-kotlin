@@ -6,6 +6,7 @@ import RevocationNotificationServiceV2
 import android.content.Context
 import askar_uniffi.AskarStoreManager
 import org.hyperledger.ariesframework.EncryptedMessage
+import org.hyperledger.ariesframework.anoncreds.AnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.AnonCredsModuleConfig
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.EthrAnonCredsRegistry
 import org.hyperledger.ariesframework.anoncreds.formats.anoncreds.LedgerAnonCredsRegistry
@@ -62,7 +63,15 @@ import org.hyperledger.ariesframework.vc.service.W3cJwtCredentialService
 import org.hyperledger.ariesframework.wallet.Wallet
 import org.hyperledger.ariesframework.webvh.WebVhModule
 
-class Agent(val context: Context, val agentConfig: AgentConfig) {
+/**
+ * @param anonCredsRegistries Optional replacement for the default AnonCreds registries.
+ * Useful for custom registry integrations and isolated protocol tests.
+ */
+class Agent @JvmOverloads constructor(
+    val context: Context,
+    val agentConfig: AgentConfig,
+    anonCredsRegistries: List<AnonCredsRegistry>? = null,
+) {
 
     val wallet: Wallet = Wallet(this)
     val eventBus = EventBus()
@@ -115,7 +124,7 @@ class Agent(val context: Context, val agentConfig: AgentConfig) {
     val anoncredsmodulesconfig = AnonCredsModuleConfig(
         agent = this,
         options = AnonCredsModuleConfigOptions(
-            registries = buildList {
+            registries = anonCredsRegistries ?: buildList {
                 add(EthrAnonCredsRegistry())
                 if (agentConfig.useDidWebvh) {
                     add(webvhModule!!.anonCredsRegistry)

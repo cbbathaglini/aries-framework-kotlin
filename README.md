@@ -187,11 +187,101 @@ For your information, Aries Framework Kotlin refers to [Aries Framework Swift](h
 
 `app` directory contains an Android sample app that demonstrates how to use Aries Framework Kotlin. The app receives a connection invitation from a QR code or from a URL input and handles credential offers and proof requests.
 
-The agent is created in the `WalletApp.kt` file and you can set a mediator connection invitation url there, if you want.
+### Run against a local did:webvh server
 
-There are genesis files in the `app/src/main/assets` directory.
-- `von.txn` is the default used by the sample app (`WalletApp.kt`).
-- `bcovrin-genesis.txn` is for the [GreenLight Dev Ledger](http://dev.greenlight.bcovrin.vonx.io/)
+The sample agent is configured in
+`app/src/main/java/org/hyperledger/ariesproject/WalletApp.kt` with:
+
+```kotlin
+useLedgerService = false,
+useBesuLedger = false,
+useDidWebvh = true,
+```
+
+1. Start a did:webvh server on your development computer. For example, follow the
+   [DID WebVH Server setup guide](https://identity.foundation/didwebvh-server-py/getting-started/).
+   From that server's `server` directory, after configuring its environment:
+
+   ```bash
+   uv sync
+   uv run uvicorn app:app --host 0.0.0.0 --port 8000
+   ```
+
+   Its API documentation is at `http://localhost:8000/docs`. The server hosts DID
+   logs and AnonCreds resources; run a separate DIDComm issuer/verifier agent to
+   send credential offers and proof requests. Publish an issuer DID, schema and
+   credential definition using the server's
+   [AnonCreds guide](https://identity.foundation/didwebvh-server-py/guides/anoncreds/).
+   Revocable credentials also need a revocation registry definition, status lists
+   and a tails file accessible to the Android app.
+
+2. Make the published URLs reachable from Android. On the standard Android
+   emulator, `10.0.2.2` reaches the development computer; on a physical device,
+   use the computer's LAN address and allow access through its firewall. Android's
+   `localhost` points to Android itself. For normal DID resolution, expose the
+   local server through an HTTPS hostname with a certificate trusted by Android,
+   and use that hostname when creating the issuer DID. The app derives resource
+   URLs from identifiers such as
+   `did:webvh:<SCID>:<domain>:<namespace>:<alias>/resources/<resource-id>`;
+   there is no separate server-base-URL setting in the app.
+
+3. Create the app's local configuration if it does not already exist:
+
+   ```bash
+   cp -n app/src/main/assets/config.properties.example app/src/main/assets/config.properties
+   ```
+
+   For an HTTPS deployment, leave `emulator=false`. For the existing local HTTP
+   resource fallback, set:
+
+   ```properties
+   emulator=true
+   # Optional: invitation from your DIDComm mediator
+   # invitation_url=<mediator-out-of-band-invitation-url>
+   ```
+
+   **Local HTTP fallback limits:** `emulator=true` is consulted only when the
+   AnonCreds DID-to-HTTPS transformation throws. It then fetches resources from
+   `http://<domain>:8000/<namespace>/<alias>/resources/<resource-id>`. It rewrites
+   the domain to `10.0.2.2` only if it matches an IPv4 address on Android's own
+   network interfaces; arbitrary `192.168.x.x` addresses are not automatically
+   rewritten. It does not retry a failed HTTPS request over HTTP, change DID log
+   resolution, or rewrite DIDComm endpoints or tails URLs. For a physical device,
+   normally keep `emulator=false` and use reachable HTTPS URLs.
+
+   Configure `invitation_url` when using an HTTP-only counterparty, since the
+   wallet needs a mediator to receive subsequent messages. A counterparty that
+   supports WebSocket return routing can be used without a mediator. Ensure all
+   invitation, mediator and DIDComm endpoints are reachable from Android too.
+   Keep `config.properties` untracked; it is already ignored by Git.
+
+4. Configure the package credentials described in
+   [Besu VDR dependency](#besu-vdr-dependency), open the project in Android Studio,
+   sync Gradle, and run the `app` configuration on an emulator or device
+   (Android 8.0 / API 26 or newer). Alternatively, with a device connected:
+
+   ```bash
+   ./gradlew :app:installDebug
+   ```
+
+   Launch the sample app. Rebuild/reinstall after changing the asset configuration.
+
+5. Generate a connection invitation with your issuer/verifier agent, then scan
+   its QR code or paste its URL into the sample app's home screen. Send an
+   Issue Credential 2.0 AnonCreds offer using the published did:webvh credential
+   definition. Open the incoming notification and accept the offer. Send a
+   Present Proof 2.0 request from the verifier, then review and accept it in the
+   app; check the verification result on the verifier agent.
+
+If resource fetching fails, check the exact resource URL in Android Studio's
+Logcat and request it from the device's browser. Connection failures usually
+indicate an unreachable address/port; certificate errors require a trusted HTTPS
+setup; HTTP 404 indicates a missing namespace, alias or resource. For revocation
+failures, also check the status-list links and tails URL.
+
+The `app/src/main/assets` directory also contains `von.txn` and
+`bcovrin-genesis.txn` for Indy configurations. `WalletApp.kt` copies `von.txn`,
+but the did:webvh configuration above does not connect to an Indy or Besu ledger.
 
 ## Besu VDR dependency
 
@@ -199,7 +289,7 @@ The framework uses the published Android/Kotlin dependency from
 [Aries UniFFI Wrappers](https://github.com/LF-Decentralized-Trust-labs/aries-uniffi-wrappers):
 
 ```groovy
-implementation("org.hyperledger:indy_besu_vdr:0.3.1.1")
+implementation("org.hyperledger:indy_besu_vdr:0.3.1.3")
 ```
 
 `settings.gradle` already configures the GitHub Packages repository. Configure
@@ -213,14 +303,8 @@ required. Kotlin imports use `indy_besu_vdr.*` instead of `uniffi.indy_besu_vdr.
 Applications importing VDR types exposed by the framework should declare the same
 VDR dependency explicitly.
 
-Version `0.3.1.1` packages `libindy_besu_vdr_uniffi.so`, while its bindings request
-`libindy_besu_vdr.so`. `LedgerBesuService.initialize()` configures the binding's
-supported library override automatically. If using the VDR directly before
-initializing the service, configure it before the first native call:
-
-```kotlin
-System.setProperty("uniffi.component.indy_besu_vdr.libraryOverride", "indy_besu_vdr_uniffi")
-```
+Version `0.3.1.3` fixes the native library name mismatch. No library-name override
+or call to `BesuVdr.configureNativeLibrary()` is needed.
 
 Keep the Besu network configuration and contract ABI assets used by
 `BesuLedgerConfig`. The dependency change does not replace these application assets.

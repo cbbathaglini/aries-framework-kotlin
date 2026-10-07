@@ -645,7 +645,6 @@ class CredentialServiceV2(val agent: Agent) {
             )
             credentialFormatCoordinator.processRequest(processRequestParams)
 
-            credentialExchangeRepository.save(credentialExchangeRecord)
             updateState(credentialExchangeRecord, CredentialState.RequestReceived)
 
             return credentialExchangeRecord
@@ -694,7 +693,7 @@ class CredentialServiceV2(val agent: Agent) {
             val requestMessage = agent.didCommMessageRepository.getTypedAgentMessage<RequestCredentialMessageV2>(
                 associatedRecordId = credentialExchangeRecord.id,
                 messageType = RequestCredentialMessageV2.type,
-                role = DidCommMessageRole.Sender,
+                role = DidCommMessageRole.Receiver,
             )
 
             formatServices = if (requestMessage != null) getFormatServicesFromMessage(requestMessage.formats) else emptyList()

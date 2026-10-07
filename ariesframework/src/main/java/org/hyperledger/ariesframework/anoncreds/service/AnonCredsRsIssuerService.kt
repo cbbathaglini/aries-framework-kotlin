@@ -1,28 +1,26 @@
 package org.hyperledger.ariesframework.anoncreds.service
 
-import anoncreds_uniffi.Credential
 import anoncreds_uniffi.CredentialDefinition
+import anoncreds_uniffi.CredentialDefinitionPrivate
+import anoncreds_uniffi.CredentialKeyCorrectnessProof
+import anoncreds_uniffi.Issuer
 import anoncreds_uniffi.CredentialOffer
 import anoncreds_uniffi.CredentialRequest
 import anoncreds_uniffi.CredentialRevocationConfig
 import anoncreds_uniffi.RevocationRegistryDefinition
 import anoncreds_uniffi.RevocationRegistryDefinitionPrivate
 import anoncreds_uniffi.RevocationStatusList
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.serializer
 import org.hyperledger.ariesframework.agent.Agent
 import org.hyperledger.ariesframework.anoncreds.exception.AnonCredsError
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredential
-import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialOffer
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsCredentialRequest
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationRegistryDefinition
 import org.hyperledger.ariesframework.anoncreds.model.AnonCredsRevocationStatusList
-import org.hyperledger.ariesframework.anoncreds.model.CredentialOfferJson
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialOptions
 import org.hyperledger.ariesframework.anoncreds.model.issuer.CreateCredentialReturn
 import org.hyperledger.ariesframework.anoncreds.repository.AnonCredsRevocationRegistryState
@@ -31,10 +29,6 @@ import org.hyperledger.ariesframework.util.ConvertMapAnySerializer
 
 class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
     override suspend fun createCredentialOffer(credentialDefinitionId: String): AnonCredsCredentialOffer {
-        var credentialOffer: CredentialOffer? = null
-
-        // try {
-
         val credentialDefinitionRecord = agent.anoncredsCredentialDefinitionRepository
             .getByCredentialDefinitionId(credentialDefinitionId)
             ?: throw AnonCredsError("Credential Definition $credentialDefinitionId not found")
@@ -54,21 +48,12 @@ class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
             )
         }
 
-        val credentialOfferJson = CredentialOfferJson(
-            schemaId = schemaId,
-            credDefId = credentialDefinitionId,
-            keyProof = keyCorrectnessProofRecord.value,
+        val keyProof = CredentialKeyCorrectnessProof(
+            ConvertMapAnySerializer.mapAnyToJsonElement(keyCorrectnessProofRecord.value).toString(),
         )
+        val credentialOffer = Issuer().createCredentialOffer(schemaId, credentialDefinitionId, keyProof)
+        return Json.decodeFromString(credentialOffer.toJson())
 
-        @OptIn(ExperimentalSerializationApi::class)
-        val json = Json.encodeToString(serializer<CredentialOfferJson>(), credentialOfferJson)
-
-        credentialOffer = CredentialOffer(json)
-        return credentialOffer.toJson() as AnonCredsCredentialOffer
-
-//        } finally {
-//            //credentialOffer?.handle?.clear()
-//        }
     }
 
     override suspend fun createCredential(options: CreateCredentialOptions): CreateCredentialReturn {
@@ -116,7 +101,6 @@ class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
             )
         }
 
-        lateinit var revocationStatusListAnoncredsUniffi: RevocationStatusList
         var revocationConfiguration: CredentialRevocationConfig? = null
         if (revocationRegistryDefinitionId != null && revocationStatusList != null && revocationRegistryIndex != null) {
             val revocationRegistryDefinitionRecord = agent.anonCredsRevocationRegistryDefinitionRepository
@@ -137,7 +121,7 @@ class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
             val revocationRegistryDefinitionPrivate = RevocationRegistryDefinitionPrivate(revocationRegistryDefinitionPrivateAnonCreds)
 
             val revocationStatusListAnoncredsJson = Json.encodeToString(serializer<AnonCredsRevocationStatusList>(), revocationStatusList)
-            revocationStatusListAnoncredsUniffi = RevocationStatusList(revocationStatusListAnoncredsJson)
+            val revocationStatusListAnoncredsUniffi = RevocationStatusList(revocationStatusListAnoncredsJson)
 
             revocationConfiguration = CredentialRevocationConfig(
                 regDef = revocationRegistryDefinitionAnonCreds,
@@ -147,7 +131,7 @@ class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
             )
         }
 
-        val credentialDefinitionJson = Json.encodeToString(serializer<AnonCredsCredentialDefinition>(), credentialDefinition)
+        val credentialDefinitionJson = credentialDefinition.toJson()
         val credentialDefinitionUniffi = CredentialDefinition(credentialDefinitionJson)
 
         val credentialOfferJson = credentialOffer.toJsonString() // Json.encodeToString(AnonCredsCredentialOffer.serializer(), credentialOffer)
@@ -156,31 +140,21 @@ class AnonCredsRsIssuerService(val agent: Agent) : AnonCredsIssuerService {
         val credentialRequestJson = Json.encodeToString(serializer<AnonCredsCredentialRequest>(), credentialRequest)
         val credentialRequestUniffi = CredentialRequest(credentialRequestJson)
 
-        val json = buildJsonObject {
-            put("credentialDefinition", Json.parseToJsonElement(credentialDefinitionUniffi.toJson()))
-            put("credentialDefinitionPrivate", ConvertMapAnySerializer.mapAnyToJsonElement(credentialDefinitionPrivateRecord.value))
-            put("credentialOffer", Json.parseToJsonElement(credentialOfferUniffi.toJson()))
-            put("credentialRequest", Json.parseToJsonElement(credentialRequestUniffi.toJson()))
-            put("attributeRawValues", ConvertMapAnySerializer.mapAnyToJsonElement(attributeRawValues))
-            put("attributeEncodedValues", ConvertMapAnySerializer.mapAnyToJsonElement(attributeEncodedValues))
-
-            revocationRegistryDefinitionId?.let {
-                put("revocationRegistryId", Json.parseToJsonElement(it))
-            }
-
-            revocationConfiguration?.let {
-                put("revocationConfiguration", Json.parseToJsonElement(it.toString()))
-            }
-
-            revocationStatusListAnoncredsUniffi?.let {
-                put("revocationStatusList", Json.parseToJsonElement(it.toJson()))
-            }
-        }
-
-        val credential = Credential(json.toString())
+        val credentialDefinitionPrivate = CredentialDefinitionPrivate(
+            ConvertMapAnySerializer.mapAnyToJsonElement(credentialDefinitionPrivateRecord.value).toString(),
+        )
+        val credential = Issuer().createCredential(
+            credentialDefinitionUniffi,
+            credentialDefinitionPrivate,
+            credentialOfferUniffi,
+            credentialRequestUniffi,
+            attributeRawValues,
+            attributeEncodedValues,
+            revocationConfiguration,
+        )
 
         return CreateCredentialReturn(
-            credential = credential.toJson() as AnonCredsCredential,
+            credential = Json.decodeFromString<AnonCredsCredential>(credential.toJson()),
             credentialRevocationId = credential.revRegIndex()?.toString(),
         )
     }

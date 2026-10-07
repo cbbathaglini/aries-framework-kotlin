@@ -12,8 +12,11 @@
 # endpoint=https://example.com/mediator
 
 # --------- emulator workaround ---------
-# Enable only when the did:webvh server is running locally;
-# maps 192.168.x.x to 10.0.2.2 for local did:webvh resources.
+# Enable only for the local HTTP AnonCreds resource fallback (port 8000).
+# Applied only if DID-to-HTTPS transformation fails, not if HTTPS fetching fails.
+# Maps a domain matching an Android interface IPv4 address to 10.0.2.2.
+# Does not rewrite arbitrary LAN addresses, DID logs, DIDComm endpoints or tails URLs.
+# See README.md, "Run against a local did:webvh server".
 emulator=false
 
 # --------- cache ---------

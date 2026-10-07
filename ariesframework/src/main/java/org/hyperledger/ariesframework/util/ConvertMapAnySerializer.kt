@@ -26,7 +26,7 @@ class ConvertMapAnySerializer {
                     val map = value.entries.associate { (k, v) -> k.toString() to v }
                     mapAnyToJsonElement(map)
                 }
-                is List<*> -> JsonArray(value.map { anyToJsonElement(it!!) })
+                is List<*> -> JsonArray(value.map { anyToJsonElement(it) })
                 else -> JsonPrimitive(value.toString()) // Fallback (could also throw)
             }
         }

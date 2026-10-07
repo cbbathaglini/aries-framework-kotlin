@@ -70,6 +70,28 @@ device when available:
 The existing `LedgerBesuServiceTest` still requires a configured Besu network and
 matching schema, credential definition, and revocation resources.
 
+### Issue Credential v2 functional tests
+
+`CredentialsV2Test` runs manual issuance, agent-level automatic acceptance, and
+exchange-level automatic acceptance. It uses two isolated Askar wallets, encrypted
+DIDComm messages, native AnonCreds keys and credentials, and an in-process registry.
+No Indy/Besu network, genesis file, mediator or did:webvh server is required.
+The fixture issues non-revocable credentials; external registry and revocation
+integration should be tested separately.
+
+Start an Android emulator or connect a device, then run:
+
+```bash
+./gradlew :ariesframework:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=org.hyperledger.ariesframework.credentials.v2.CredentialsV2Test
+```
+
+The tests assert the actual v2 protocol, credential values and encoding, holder
+storage, and the final `Done` state on both agents. Each test uses unique wallets
+and closes/removes them afterward. The optional `Agent` constructor argument
+`anonCredsRegistries` supplies the fixture's registry; omitting it keeps the default
+registries.
+
 ### Credentials and proofs test environment
 
 These tests use `TestHelper.prepareForIssuance()` to register a schema and a credential definition on the ledger.

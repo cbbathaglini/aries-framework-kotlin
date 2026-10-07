@@ -198,7 +198,7 @@ class CredentialFormatCoordinator(
         val credentialExchangeRecord = params.credentialRecord
         val credentialFormat = params.credentialFormats
 
-        for (formatService in formatServices) {
+        for (formatService in params.formatServices) {
             val offerCreated = formatService.createOffer(credentialFormat, credentialExchangeRecord)
 
             if (offerCreated.previewAttributes != null) {
@@ -281,7 +281,7 @@ class CredentialFormatCoordinator(
 
         var service: CredentialFormatService<*>? = null
         for (format in offerMessage.formats) {
-            service = findFormatService(format.attachId)
+            service = params.formatServices.find { it.supportsFormat(format.format) }
             if (service != null) {
                 val attachment = getAttachmentForService(
                     service,
@@ -425,7 +425,7 @@ class CredentialFormatCoordinator(
         val formats = mutableListOf<Format>()
         val credentialAttachments = mutableListOf<Attachment>()
 
-        for (formatService in formatServices) {
+        for (formatService in params.formatService) {
             val requestAttachment = getAttachmentForService(
                 credentialFormatService = formatService,
                 formats = requestMessage.formats,
